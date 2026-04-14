@@ -181,12 +181,12 @@ export default function Home() {
       )}
 
       {/* Country overview panel — USA is a special home screen, handled separately */}
-      {!historicalYear && !feedCountry && !homeCountry && selectedCountry && selectedCountry !== "USA" && (
+      {!historicalYear && !homeCountry && selectedCountry && selectedCountry !== "USA" && (
         <CountryPanel
           key={selectedCountry}
           countryCode={selectedCountry}
-          onClose={() => { setSelectedCountry(null); setSecondaryCountries([]); setActiveStrikes(null); setRadarAlertText(null); }}
-          onViewFeed={(code) => { setFeedCountry(code); setSelectedCountry(null); setSecondaryCountries([]); }}
+          onClose={() => { setSelectedCountry(null); setSecondaryCountries([]); setActiveStrikes(null); setRadarAlertText(null); setFeedCountry(null); }}
+          onViewFeed={(code) => { setFeedCountry(code); }}
           onConflictSelect={handleConflictSelect}
           onConflictChange={(id) => id}
           onFocusCountry={(iso) => {

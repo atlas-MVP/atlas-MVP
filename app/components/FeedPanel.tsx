@@ -334,7 +334,7 @@ const SOURCE_ABBR: Record<string, string> = {
   "Financial Times": "FT",
 };
 
-type Filter = "all" | "free" | "paid";
+type Filter = "free" | "all";
 
 interface Props {
   countryCode: string | null;
@@ -344,52 +344,46 @@ interface Props {
 }
 
 export default function FeedPanel({ countryCode, countryName, onClose, onSourceTap }: Props) {
-  const [filter, setFilter] = useState<Filter>("all");
+  const [freeOnly, setFreeOnly] = useState(false);
 
   if (!countryCode) return null;
   const allArticles = FEED_DATA[countryCode] ?? [];
-
-  const articles = allArticles.filter((a) => {
-    if (filter === "free") return !a.paywall;
-    if (filter === "paid") return a.paywall;
-    return true;
-  });
+  const articles = allArticles.filter((a) => freeOnly ? !a.paywall : true);
 
   return (
-    <div className="absolute right-0 top-0 bottom-0 z-20 w-96 flex flex-col"
+    <div className="absolute z-20 flex flex-col w-[460px]"
       style={{
-        background: "rgba(4, 6, 14, 0.94)",
-        backdropFilter: "blur(32px)",
-        borderLeft: "1px solid rgba(255,255,255,0.05)",
-        boxShadow: "-20px 0 60px rgba(0,0,0,0.6)",
+        top: 72, bottom: 24, left: 496,
+        background: "rgba(4,6,16,0.95)",
+        backdropFilter: "blur(28px)",
+        border: "1px solid rgba(255,255,255,0.07)",
+        borderRadius: 12,
+        boxShadow: "0 0 50px rgba(0,0,0,0.8)",
+        overflow: "hidden",
       }}
     >
       {/* Header */}
       <div className="flex items-center justify-between px-5 py-4"
-        style={{ borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
+        style={{ borderBottom: "1px solid rgba(255,255,255,0.05)", flexShrink: 0 }}>
         <div className="flex items-center gap-3">
           <div className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
           <span className="text-white/25 text-xs tracking-widest uppercase font-mono">Live Feed</span>
           <span className="text-white/60 text-xs font-medium">{countryName}</span>
         </div>
-        <button onClick={onClose} className="text-white/20 hover:text-white/60 transition-colors text-xl">×</button>
-      </div>
-
-      {/* Filter: All / Free / Paid */}
-      <div className="flex gap-1.5 px-5 py-3" style={{ borderBottom: "1px solid rgba(255,255,255,0.04)" }}>
-        {(["all", "free", "paid"] as Filter[]).map((f) => (
-          <button key={f}
-            onClick={() => setFilter(f)}
-            className="px-4 py-1.5 rounded-sm text-xs font-mono tracking-widest uppercase transition-all"
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setFreeOnly(v => !v)}
             style={{
-              background: filter === f ? "rgba(255,255,255,0.1)" : "transparent",
-              border: `1px solid ${filter === f ? "rgba(255,255,255,0.2)" : "rgba(255,255,255,0.06)"}`,
-              color: filter === f ? "rgba(255,255,255,0.85)" : "rgba(255,255,255,0.25)",
+              fontSize: 8, fontFamily: "monospace", letterSpacing: "0.10em",
+              padding: "2px 6px", borderRadius: 4, cursor: "pointer",
+              background: freeOnly ? "rgba(255,255,255,0.12)" : "transparent",
+              border: `1px solid ${freeOnly ? "rgba(255,255,255,0.22)" : "rgba(255,255,255,0.08)"}`,
+              color: freeOnly ? "rgba(255,255,255,0.75)" : "rgba(255,255,255,0.25)",
+              textTransform: "uppercase",
             }}
-          >
-            {f === "paid" ? "Paid 🔒" : f}
-          </button>
-        ))}
+          >free</button>
+          <button onClick={onClose} className="text-white/20 hover:text-white/60 transition-colors text-xl">×</button>
+        </div>
       </div>
 
       {/* Feed */}
