@@ -23,10 +23,6 @@ export default function Clock({ onYearClick, displayYear }: Props) {
 
   return (
     <div style={{
-      position: "absolute",
-      bottom: 16,
-      right: 28,
-      zIndex: 10,
       textAlign: "right",
       pointerEvents: "none",
       display: "flex",

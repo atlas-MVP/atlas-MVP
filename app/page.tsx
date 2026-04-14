@@ -270,11 +270,27 @@ export default function Home() {
         </div>
       </div>
 
-      {/* Date / time */}
-      <Clock
-        onYearClick={() => setTimelineOpen(v => !v)}
-        displayYear={previewYear ?? historicalYear ?? undefined}
-      />
+      {/* Date / time + live button */}
+      <div style={{ position: "absolute", bottom: 16, right: 28, zIndex: 10, display: "flex", alignItems: "flex-end", gap: 10, pointerEvents: "none" }}>
+        {historicalYear && (
+          <button
+            onClick={() => { setHistoricalYear(null); setPreviewYear(null); setTimelineOpen(false); }}
+            style={{
+              pointerEvents: "auto",
+              fontSize: 8, letterSpacing: "0.18em", textTransform: "uppercase",
+              padding: "2px 8px", borderRadius: 10, cursor: "pointer",
+              background: "rgba(34,197,94,0.18)",
+              border: "1px solid rgba(34,197,94,0.35)",
+              color: "#22c55e",
+              marginBottom: 2,
+            }}
+          >live</button>
+        )}
+        <Clock
+          onYearClick={() => setTimelineOpen(v => !v)}
+          displayYear={previewYear ?? historicalYear ?? undefined}
+        />
+      </div>
 
       {/* Historical time scrubber */}
       <TimeScrubber
