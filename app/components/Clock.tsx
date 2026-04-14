@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 
-const MONTHS = ["JANUARY","FEBRUARY","MARCH","APRIL","MAY","JUNE","JULY","AUGUST","SEPTEMBER","OCTOBER","NOVEMBER","DECEMBER"];
+const MONTHS = ["january","february","march","april","may","june","july","august","september","october","november","december"];
 
 interface Props {
   onYearClick?: () => void;
@@ -37,15 +37,24 @@ export default function Clock({ onYearClick, displayYear }: Props) {
       alignItems: "flex-end",
       gap: 3,
     }}>
+      {/* Month — above year */}
+      <div style={{
+        color: "rgba(255,255,255,0.8)",
+        fontSize: 14,
+        fontWeight: 300,
+        letterSpacing: "0.3em",
+        textShadow: "0 0 12px rgba(0,0,0,0.9)",
+      }}>
+        {month}
+      </div>
       {/* Year — tappable timeline trigger */}
       <div
         onClick={onYearClick}
         style={{
-          color: "rgba(255,255,255,0.82)",
-          fontSize: 20,
-          fontFamily: "var(--font-exo2), sans-serif",
-          fontWeight: 800,
-          letterSpacing: "0.08em",
+          color: "rgba(255,255,255,0.8)",
+          fontSize: 14,
+          fontWeight: 300,
+          letterSpacing: "0.3em",
           lineHeight: 1,
           textShadow: "0 0 24px rgba(0,0,0,0.95)",
           pointerEvents: onYearClick ? "auto" : "none",
@@ -53,20 +62,10 @@ export default function Clock({ onYearClick, displayYear }: Props) {
           userSelect: "none",
           transition: "color 0.15s",
         }}
-        onMouseEnter={e => { if (onYearClick) (e.currentTarget as HTMLElement).style.color = "rgba(147,197,253,0.95)"; }}
-        onMouseLeave={e => { if (onYearClick) (e.currentTarget as HTMLElement).style.color = "rgba(255,255,255,0.82)"; }}
+        onMouseEnter={e => { if (onYearClick) (e.currentTarget as HTMLElement).style.color = "rgba(255,255,255,1)"; }}
+        onMouseLeave={e => { if (onYearClick) (e.currentTarget as HTMLElement).style.color = "rgba(255,255,255,0.8)"; }}
       >
         {displayYear ?? year}
-      </div>
-      <div style={{
-        color: "rgba(255,255,255,0.45)",
-        fontSize: 10,
-        fontFamily: "monospace",
-        letterSpacing: "0.20em",
-        fontWeight: 600,
-        textShadow: "0 0 12px rgba(0,0,0,0.9)",
-      }}>
-        {month} {day}
       </div>
     </div>
   );

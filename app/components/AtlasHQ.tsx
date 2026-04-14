@@ -350,7 +350,7 @@ export default function AtlasHQ({ onClose, onNavigate, onHeadlinesToggle, onSour
           style={{ position: "fixed", left: 446, top: hoverMidY - 20, paddingLeft: 14, paddingTop: 12, paddingBottom: 16, paddingRight: 20, zIndex: 21, pointerEvents: "auto" }}
         >
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <span style={{ fontSize: 16, fontFamily: "monospace", letterSpacing: "0.12em", color: "rgba(255,255,255,0.35)", flexShrink: 0 }}>CONFIDENCE</span>
+            <span style={{ fontSize: 11, fontFamily: "monospace", letterSpacing: "0.12em", color: "rgba(255,255,255,0.35)", flexShrink: 0 }}>CONFIDENCE</span>
             <div
               onMouseEnter={() => setOpenedSources(activeFeed)}
               onClick={e => { e.stopPropagation(); setOpenedSources(sourcesOpen ? null : activeFeed); }}
@@ -358,7 +358,7 @@ export default function AtlasHQ({ onClose, onNavigate, onHeadlinesToggle, onSour
             >
               <div style={{ width: `${item.confidence}%`, height: "100%", borderRadius: 99, background: confColor, transition: "width 0.3s" }} />
             </div>
-            <span style={{ fontSize: 16, fontFamily: "monospace", fontWeight: 700, color: confColor, flexShrink: 0 }}>{item.confidence}%</span>
+            <span style={{ fontSize: 11, fontFamily: "monospace", fontWeight: 700, color: confColor, flexShrink: 0 }}>{item.confidence}%</span>
           </div>
           {sourcesOpen && (
             <div style={{ marginTop: 7, display: "flex", flexWrap: "wrap", gap: 5, alignItems: "center", padding: "6px 10px", borderRadius: 8, background: "rgba(4,6,18,0.95)", border: "1px solid rgba(255,255,255,0.10)", backdropFilter: "blur(20px)" }}>
