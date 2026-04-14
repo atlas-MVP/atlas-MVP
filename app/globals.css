@@ -49,11 +49,11 @@ body, html {
 .dot-pulse { animation: pulse-dot 1.1s ease-in-out infinite; }
 
 @keyframes pulse-heat {
-  0%   { background: #3b82f6; box-shadow: 0 0 7px #3b82f6cc; }
-  50%  { background: #ef4444; box-shadow: 0 0 10px #ef4444cc; }
-  100% { background: #3b82f6; box-shadow: 0 0 7px #3b82f6cc; }
+  0%   { background: #1e3a8a; box-shadow: 0 0 7px #1e3a8acc; }
+  50%  { background: #991b1b; box-shadow: 0 0 10px #991b1bcc; }
+  100% { background: #1e3a8a; box-shadow: 0 0 7px #1e3a8acc; }
 }
-.dot-heat { animation: pulse-heat 1.8s ease-in-out infinite; }
+.dot-heat { animation: pulse-heat 4s ease-in-out infinite; }
 
 /* Push Mapbox branding just below the visible frame */
 .mapboxgl-ctrl-bottom-left,

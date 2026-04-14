@@ -304,7 +304,7 @@ export default function AtlasHQ({ onClose, onNavigate, onHeadlinesToggle, onSour
                 }}
               >
                 <span style={{ fontSize: 11, fontFamily: "monospace", color: "rgba(255,255,255,0.22)", flexShrink: 0, width: 40, textAlign: "right" }}>{item.time}</span>
-                <div className={item.danger >= 5 ? "dot-heat" : ""} style={{ width: 7, height: 7, borderRadius: "50%", background: item.danger >= 5 ? "#3b82f6" : color, boxShadow: item.danger >= 5 ? "0 0 7px #3b82f6cc" : `0 0 5px ${color}88`, flexShrink: 0 }} />
+                <div className={item.danger >= 5 ? "dot-heat" : ""} style={{ width: 7, height: 7, borderRadius: "50%", background: item.danger >= 5 ? "#1e3a8a" : color, boxShadow: item.danger >= 5 ? "0 0 7px #1e3a8acc" : `0 0 5px ${color}88`, flexShrink: 0 }} />
                 <span style={{ fontSize: 13, lineHeight: 1.5, color: "rgba(255,255,255,0.68)", flex: 1 }}>{item.text}</span>
               </div>
             );

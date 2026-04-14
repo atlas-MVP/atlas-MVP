@@ -1013,7 +1013,7 @@ export default function CountryPanel({ countryCode, onClose, onViewFeed, onConfl
                   onMouseLeave={e => (e.currentTarget.style.background = isPinned ? "rgba(255,255,255,0.04)" : "rgba(255,255,255,0.02)")}
                 >
                   <div style={{ display: "flex", gap: 8, alignItems: "flex-start" }}>
-                    <div className={a.danger >= 5 ? "dot-heat" : ""} style={{ width: 6, height: 6, borderRadius: "50%", background: a.danger >= 5 ? "#3b82f6" : color, boxShadow: a.danger >= 5 ? "0 0 7px #3b82f6cc" : `0 0 5px ${color}`, flexShrink: 0, marginTop: 3 }} />
+                    <div className={a.danger >= 5 ? "dot-heat" : ""} style={{ width: 6, height: 6, borderRadius: "50%", background: a.danger >= 5 ? "#1e3a8a" : color, boxShadow: a.danger >= 5 ? "0 0 7px #1e3a8acc" : `0 0 5px ${color}`, flexShrink: 0, marginTop: 3 }} />
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <span style={{ fontSize: 14, color: "rgba(255,255,255,0.78)", lineHeight: 1.5, fontWeight: isPinned ? 600 : 400 }}>{a.text}</span>
                       <span style={{ fontSize: 9, fontFamily: "monospace", color: "rgba(255,255,255,0.22)", marginLeft: 7 }}>{a.time}</span>
