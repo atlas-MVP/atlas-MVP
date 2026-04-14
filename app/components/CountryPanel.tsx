@@ -1010,10 +1010,10 @@ export default function CountryPanel({ countryCode, onClose, onViewFeed, onConfl
             const rest = allAlerts.filter(a => a !== pinned);
             const renderAlert = (a: LiveAlert, idx: number, isPinned?: boolean) => {
               const color = a.danger >= 5 ? "#ef4444" : a.danger >= 4 ? "#c026d3" : a.danger >= 3 ? "#a855f7" : a.danger >= 2 ? "#818cf8" : "#60a5fa";
-              const isExp = (isPinned && !!initialAlertText) ? true : expandedAlertIdx === idx;
+              const isExp = expandedAlertIdx === idx || (isPinned && !!initialAlertText && expandedAlertIdx === null);
               return (
                 <div key={isPinned ? "pinned" : idx}
-                  onClick={() => { if (!isPinned) setExpandedAlertIdx(isExp ? null : idx); onFocusPosition?.(a.flyTo.center, a.flyTo.zoom); }}
+                  onClick={() => { setExpandedAlertIdx(isExp ? null : idx); onFocusPosition?.(a.flyTo.center, a.flyTo.zoom); }}
                   style={{ padding: "6px 9px", borderRadius: 8, cursor: "pointer", background: isPinned ? "rgba(255,255,255,0.04)" : "rgba(255,255,255,0.02)", border: `1px solid ${isPinned ? "rgba(255,255,255,0.10)" : "rgba(255,255,255,0.06)"}` }}
                   onMouseEnter={e => (e.currentTarget.style.background = isPinned ? "rgba(255,255,255,0.07)" : "rgba(255,255,255,0.04)")}
                   onMouseLeave={e => (e.currentTarget.style.background = isPinned ? "rgba(255,255,255,0.04)" : "rgba(255,255,255,0.02)")}
@@ -1131,18 +1131,6 @@ export default function CountryPanel({ countryCode, onClose, onViewFeed, onConfl
                   </button>
                 </div>
 
-                {/* Legend */}
-                <div style={{ display: "flex", gap: 12, marginBottom: 14, flexWrap: "wrap" }}>
-                  {[
-                    { color: CRIMSON.solid, label: "Iran / proxies attacking" },
-                    { color: AMBER.solid,   label: "Israel / US striking" },
-                  ].map(({ color, label }) => (
-                    <div key={label} style={{ display: "flex", alignItems: "center", gap: 5 }}>
-                      <div style={{ width: 8, height: 8, borderRadius: "50%", background: color, flexShrink: 0 }} />
-                      <span style={{ fontSize: 9, fontFamily: "monospace", color: "rgba(255,255,255,0.25)", letterSpacing: "0.05em" }}>{label}</span>
-                    </div>
-                  ))}
-                </div>
 
                 <div style={{ position: "relative" }}>
                   <div style={{ position: "absolute", left: 5, top: 6, bottom: 6, width: 1, background: "rgba(255,255,255,0.05)" }} />
