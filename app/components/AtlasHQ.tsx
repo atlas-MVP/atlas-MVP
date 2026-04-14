@@ -2,13 +2,12 @@
 
 import { useState, useEffect, useRef } from "react";
 
-// Maps danger level 1–5 to blue → purple → red
+// Maps danger level 1–4 to deep blue → deep purple (danger 5 uses animated heat pulse class)
 function dangerColor(d: number): string {
-  if (d >= 5) return "#ef4444";
-  if (d >= 4) return "#c026d3";
-  if (d >= 3) return "#a855f7";
-  if (d >= 2) return "#818cf8";
-  return "#60a5fa";
+  if (d >= 4) return "#6d28d9";
+  if (d >= 3) return "#4338ca";
+  if (d >= 2) return "#1d4ed8";
+  return "#1e3a8a";
 }
 
 const PRIORITY_COLORS: string[] = ["#ef4444", "#f87171", "#fbbf24", "#60a5fa"];
@@ -305,7 +304,7 @@ export default function AtlasHQ({ onClose, onNavigate, onHeadlinesToggle, onSour
                 }}
               >
                 <span style={{ fontSize: 11, fontFamily: "monospace", color: "rgba(255,255,255,0.22)", flexShrink: 0, width: 40, textAlign: "right" }}>{item.time}</span>
-                <div style={{ width: 7, height: 7, borderRadius: "50%", background: color, boxShadow: `0 0 5px ${color}88`, flexShrink: 0 }} />
+                <div className={item.danger >= 5 ? "dot-heat" : ""} style={{ width: 7, height: 7, borderRadius: "50%", background: item.danger >= 5 ? "#3b82f6" : color, boxShadow: item.danger >= 5 ? "0 0 7px #3b82f6cc" : `0 0 5px ${color}88`, flexShrink: 0 }} />
                 <span style={{ fontSize: 13, lineHeight: 1.5, color: "rgba(255,255,255,0.68)", flex: 1 }}>{item.text}</span>
               </div>
             );

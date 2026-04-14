@@ -1003,7 +1003,7 @@ export default function CountryPanel({ countryCode, onClose, onViewFeed, onConfl
             const pinned = initialAlertText ? allAlerts.find(a => a.text === initialAlertText) ?? allAlerts[0] : allAlerts[0];
             const rest = allAlerts.filter(a => a !== pinned);
             const renderAlert = (a: LiveAlert, idx: number, isPinned?: boolean) => {
-              const color = a.danger >= 5 ? "#ef4444" : a.danger >= 4 ? "#c026d3" : a.danger >= 3 ? "#a855f7" : a.danger >= 2 ? "#818cf8" : "#60a5fa";
+              const color = a.danger >= 4 ? "#6d28d9" : a.danger >= 3 ? "#4338ca" : a.danger >= 2 ? "#1d4ed8" : "#1e3a8a";
               const isExp = expandedAlertIdx === idx || (isPinned && !!initialAlertText && expandedAlertIdx === null);
               return (
                 <div key={isPinned ? "pinned" : idx}
@@ -1013,7 +1013,7 @@ export default function CountryPanel({ countryCode, onClose, onViewFeed, onConfl
                   onMouseLeave={e => (e.currentTarget.style.background = isPinned ? "rgba(255,255,255,0.04)" : "rgba(255,255,255,0.02)")}
                 >
                   <div style={{ display: "flex", gap: 8, alignItems: "flex-start" }}>
-                    <div style={{ width: 6, height: 6, borderRadius: "50%", background: color, boxShadow: `0 0 5px ${color}`, flexShrink: 0, marginTop: 3 }} />
+                    <div className={a.danger >= 5 ? "dot-heat" : ""} style={{ width: 6, height: 6, borderRadius: "50%", background: a.danger >= 5 ? "#3b82f6" : color, boxShadow: a.danger >= 5 ? "0 0 7px #3b82f6cc" : `0 0 5px ${color}`, flexShrink: 0, marginTop: 3 }} />
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <span style={{ fontSize: 14, color: "rgba(255,255,255,0.78)", lineHeight: 1.5, fontWeight: isPinned ? 600 : 400 }}>{a.text}</span>
                       <span style={{ fontSize: 9, fontFamily: "monospace", color: "rgba(255,255,255,0.22)", marginLeft: 7 }}>{a.time}</span>
