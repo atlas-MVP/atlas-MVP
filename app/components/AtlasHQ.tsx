@@ -381,10 +381,9 @@ export default function AtlasHQ({ onClose, onNavigate, onHeadlinesToggle, onSour
 
 function SectionLabel({ label, pulse }: { label: string; pulse?: boolean }) {
   return (
-    <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "14px 14px 8px" }}>
+    <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "14px 18px 12px" }}>
       {pulse && <div className="dot-pulse" style={{ width: 5, height: 5, borderRadius: "50%", background: "#ef4444", boxShadow: "0 0 6px #ef4444", flexShrink: 0 }} />}
       <span style={{ fontSize: 12, fontFamily: "monospace", letterSpacing: "0.18em", color: "rgba(255,255,255,0.75)", fontWeight: 800 }}>{label}</span>
-      <div style={{ flex: 1, height: 1, background: "rgba(255,255,255,0.08)" }} />
     </div>
   );
 }
