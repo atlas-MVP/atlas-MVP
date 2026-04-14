@@ -907,12 +907,6 @@ export default function CountryPanel({ countryCode, onClose, onViewFeed, onConfl
               <span style={{ fontSize: 8, fontFamily: "monospace", letterSpacing: "0.12em", color: "rgba(255,255,255,0.2)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 4, padding: "2px 5px" }}>
                 ACTIVE CONFLICT
               </span>
-              {scrolled && (
-                <button onClick={(e) => { e.stopPropagation(); scrollToTop(); }}
-                  style={{ fontSize: 9, fontFamily: "monospace", color: "rgba(255,255,255,0.3)", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 4, padding: "2px 6px", cursor: "pointer", letterSpacing: "0.08em" }}>
-                  ↑ TOP
-                </button>
-              )}
               <button onClick={() => { onClose(); setSelectedConflictId(null); }}
                 style={{ color: "rgba(255,255,255,0.2)", fontSize: 18, background: "none", border: "none", cursor: "pointer", lineHeight: 1, padding: 0 }}
                 onMouseEnter={e => (e.currentTarget.style.color = "rgba(255,255,255,0.7)")}
@@ -1047,6 +1041,19 @@ export default function CountryPanel({ countryCode, onClose, onViewFeed, onConfl
             );
           })()}
 
+          {/* View Feed */}
+          {conflict && (
+            <div style={{ padding: "8px 14px", borderTop: "1px solid rgba(255,255,255,0.05)" }}>
+              <button
+                onClick={(e) => { e.stopPropagation(); onViewFeed(conflict.feedKey); }}
+                style={{ width: "100%", padding: "9px", fontSize: 10, fontFamily: "monospace", letterSpacing: "0.12em", textTransform: "uppercase", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 8, color: "rgba(255,255,255,0.4)", cursor: "pointer" }}
+                onMouseEnter={e => { e.currentTarget.style.background = "rgba(255,255,255,0.08)"; e.currentTarget.style.color = "rgba(255,255,255,0.8)"; }}
+                onMouseLeave={e => { e.currentTarget.style.background = "rgba(255,255,255,0.04)"; e.currentTarget.style.color = "rgba(255,255,255,0.4)"; }}>
+                View Live Feed →
+              </button>
+            </div>
+          )}
+
           {/* Timeline */}
           {(() => {
             // Color palette — amber for Israel/US action, crimson for Iran/proxy action
@@ -1106,8 +1113,6 @@ export default function CountryPanel({ countryCode, onClose, onViewFeed, onConfl
               return m ? parseInt(m[1]) : null;
             };
 
-            let lastYear: number | null = null;
-
             return (
               <div style={{ padding: "0 16px 16px" }}>
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
@@ -1131,15 +1136,15 @@ export default function CountryPanel({ countryCode, onClose, onViewFeed, onConfl
                   </button>
                 </div>
 
-
                 <div style={{ position: "relative" }}>
                   <div style={{ position: "absolute", left: 5, top: 6, bottom: 6, width: 1, background: "rgba(255,255,255,0.05)" }} />
                   <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
-                    {(timelineExpanded ? conflict.timeline : conflict.timeline.slice(0, 2)).map((event, i) => {
+                    {(timelineExpanded ? conflict.timeline : conflict.timeline.slice(0, 2)).map((event, i, arr) => {
                       const side = getEventSide(event.text, event.date);
-                      const year = extractYear(event.date);
-                      const showYear = year !== null && year !== lastYear;
-                      if (showYear) lastYear = year;
+                      const currentYear = extractYear(event.date);
+                      const nextEvent = arr[i + 1];
+                      const nextYear = nextEvent ? extractYear(nextEvent.date) : null;
+                      const showYearAfter = nextYear !== null && nextYear !== currentYear;
 
                       const palette = side === "crimson" ? CRIMSON
                                     : side === "amber"   ? AMBER
@@ -1147,12 +1152,6 @@ export default function CountryPanel({ countryCode, onClose, onViewFeed, onConfl
 
                       return (
                         <div key={i} {...(event.strikeEvent ? { "data-strike": JSON.stringify(event.strikeEvent) } : {})}>
-                          {showYear && (
-                            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14, paddingLeft: 20 }}>
-                              <span style={{ fontSize: 13, fontWeight: 700, fontFamily: "monospace", color: "rgba(255,255,255,0.28)", letterSpacing: "0.06em" }}>{year}</span>
-                              <div style={{ flex: 1, height: 1, background: "rgba(255,255,255,0.06)" }} />
-                            </div>
-                          )}
                           <div style={{ display: "flex", gap: 12, paddingLeft: 4 }}>
                             <div style={{ flexShrink: 0, marginTop: 3 }}>
                               <div style={{
@@ -1165,43 +1164,44 @@ export default function CountryPanel({ countryCode, onClose, onViewFeed, onConfl
                             <div>
                               <p style={{ margin: "0 0 5px", fontSize: 11, fontFamily: "monospace", fontWeight: 600, color: palette.date, letterSpacing: "0.03em" }}>
                                 {(() => {
-                                  // Strip ", YYYY" or " YYYY" from dates like "February 28, 2026 — Operation Epic Fury"
-                                  // Leave year-only entries (e.g. "2015 — JCPOA") unchanged
                                   const d = event.date;
-                                  if (/^(19|20)\d\d/.test(d)) return d; // year-only or year-leading, keep as is
+                                  if (/^(19|20)\d\d/.test(d)) return d;
                                   return d.replace(/,?\s*(19|20)\d\d/, "");
                                 })()}
                               </p>
                               <p style={{ margin: 0, fontSize: 14, color: palette.text, lineHeight: 1.65 }}>{event.text}</p>
                             </div>
                           </div>
+                          {showYearAfter && (
+                            <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 18, paddingLeft: 20 }}>
+                              <span style={{ fontSize: 13, fontWeight: 700, fontFamily: "monospace", color: "rgba(255,255,255,0.28)", letterSpacing: "0.06em" }}>{nextYear}</span>
+                              <div style={{ flex: 1, height: 1, background: "rgba(255,255,255,0.06)" }} />
+                            </div>
+                          )}
                         </div>
                       );
                     })}
                   </div>
                   {!timelineExpanded && conflict.timeline.length > 2 && (
                     <button
-                      onClick={(e) => { e.stopPropagation(); setTimelineExpanded(true); setTimeout(() => scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" }), 50); }}
-                      style={{ fontSize: 9, fontFamily: "monospace", color: "rgba(255,255,255,0.28)", background: "none", border: "none", cursor: "pointer", padding: "4px 0" }}
+                      onClick={(e) => { e.stopPropagation(); setTimelineExpanded(true); }}
+                      style={{ fontSize: 13, fontFamily: "monospace", color: "rgba(255,255,255,0.35)", background: "none", border: "none", cursor: "pointer", padding: "8px 0 0" }}
+                      onMouseEnter={e => (e.currentTarget.style.color = "rgba(255,255,255,0.7)")}
+                      onMouseLeave={e => (e.currentTarget.style.color = "rgba(255,255,255,0.35)")}
+                    >read full story →</button>
+                  )}
+                  {timelineExpanded && (
+                    <button
+                      onClick={(e) => { e.stopPropagation(); scrollRef.current?.scrollTo({ top: 0, behavior: "smooth" }); }}
+                      style={{ fontSize: 11, fontFamily: "monospace", color: "rgba(255,255,255,0.28)", background: "none", border: "none", cursor: "pointer", padding: "12px 0 0", display: "block" }}
                       onMouseEnter={e => (e.currentTarget.style.color = "rgba(255,255,255,0.6)")}
                       onMouseLeave={e => (e.currentTarget.style.color = "rgba(255,255,255,0.28)")}
-                    >read full story →</button>
+                    >↑ back to top</button>
                   )}
                 </div>
               </div>
             );
           })()}
-
-          {/* View Feed */}
-          <div style={{ padding: "8px 14px 14px", borderTop: "1px solid rgba(255,255,255,0.05)" }}>
-            <button
-              onClick={(e) => { e.stopPropagation(); onViewFeed(conflict.feedKey); }}
-              style={{ width: "100%", padding: "9px", fontSize: 10, fontFamily: "monospace", letterSpacing: "0.12em", textTransform: "uppercase", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 8, color: "rgba(255,255,255,0.4)", cursor: "pointer" }}
-              onMouseEnter={e => { e.currentTarget.style.background = "rgba(255,255,255,0.08)"; e.currentTarget.style.color = "rgba(255,255,255,0.8)"; }}
-              onMouseLeave={e => { e.currentTarget.style.background = "rgba(255,255,255,0.04)"; e.currentTarget.style.color = "rgba(255,255,255,0.4)"; }}>
-              View Live Feed →
-            </button>
-          </div>
         </div>
       </div>
     </div>
