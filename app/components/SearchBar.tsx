@@ -133,7 +133,7 @@ export default function SearchBar({ onSelect }: Props) {
             }
             if (e.key === "Escape") { setQuery(""); setOpen(false); }
           }}
-          placeholder="Search country or conflict..."
+          placeholder="search country or event..."
           style={{
             background: "transparent",
             border: "none",

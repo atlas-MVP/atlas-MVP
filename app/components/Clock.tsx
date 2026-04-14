@@ -34,15 +34,15 @@ export default function Clock({ onYearClick, displayYear }: Props) {
       alignItems: "flex-end",
       gap: 3,
     }}>
-      {/* Month — above year */}
+      {/* Month + Day — above year */}
       <div style={{
         color: "rgba(255,255,255,0.8)",
-        fontSize: 14,
+        fontSize: 13,
         fontWeight: 300,
         letterSpacing: "0.3em",
         textShadow: "0 0 12px rgba(0,0,0,0.9)",
       }}>
-        {month}
+        {month} {day}
       </div>
       {/* Year — tappable timeline trigger */}
       <div
@@ -50,7 +50,7 @@ export default function Clock({ onYearClick, displayYear }: Props) {
         style={{
           color: "rgba(255,255,255,0.8)",
           fontSize: 14,
-          fontWeight: 300,
+          fontWeight: 700,
           letterSpacing: "0.3em",
           lineHeight: 1,
           textShadow: "0 0 24px rgba(0,0,0,0.95)",
