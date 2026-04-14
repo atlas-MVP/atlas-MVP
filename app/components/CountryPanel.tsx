@@ -1021,18 +1021,18 @@ export default function CountryPanel({ countryCode, onClose, onViewFeed, onConfl
                   <div style={{ display: "flex", gap: 8, alignItems: "flex-start" }}>
                     <div style={{ width: 6, height: 6, borderRadius: "50%", background: color, boxShadow: `0 0 5px ${color}`, flexShrink: 0, marginTop: 3 }} />
                     <div style={{ flex: 1, minWidth: 0 }}>
-                      <span style={{ fontSize: 11, color: "rgba(255,255,255,0.78)", lineHeight: 1.5, fontWeight: isPinned ? 600 : 400 }}>{a.text}</span>
+                      <span style={{ fontSize: 14, color: "rgba(255,255,255,0.78)", lineHeight: 1.5, fontWeight: isPinned ? 600 : 400 }}>{a.text}</span>
                       <span style={{ fontSize: 9, fontFamily: "monospace", color: "rgba(255,255,255,0.22)", marginLeft: 7 }}>{a.time}</span>
                     </div>
                     {!isPinned && <span style={{ fontSize: 9, color: "rgba(255,255,255,0.18)", flexShrink: 0, marginTop: 2 }}>{isExp ? "▲" : "▼"}</span>}
                   </div>
-                  {isExp && <p style={{ margin: "8px 0 0 14px", fontSize: 11, color: "rgba(255,255,255,0.45)", lineHeight: 1.65 }}>{a.description}</p>}
+                  {isExp && <p style={{ margin: "8px 0 0 14px", fontSize: 14, color: "rgba(255,255,255,0.45)", lineHeight: 1.65 }}>{a.description}</p>}
                 </div>
               );
             };
             return (
               <div style={{ padding: "8px 14px 6px", borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
-                <p style={{ margin: "0 0 7px", fontSize: 8, fontFamily: "monospace", letterSpacing: "0.14em", color: "rgba(255,255,255,0.22)", textTransform: "uppercase" }}>live alerts</p>
+                <p style={{ margin: "0 0 7px", fontSize: 9, fontFamily: "monospace", letterSpacing: "0.14em", color: "rgba(255,255,255,0.22)", textTransform: "uppercase" }}>live alerts</p>
                 <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
                   {renderAlert(pinned, -1, true)}
                   {alertsExpanded && rest.map((a, i) => renderAlert(a, i))}
