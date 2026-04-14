@@ -23,9 +23,7 @@ const GLOBAL_CONFLICTS = [
 
 const ALL_HOVERABLE = [...HIGHLIGHTED, ...GLOBAL_CONFLICTS];
 
-// Country centers for flyTo
-// zoom chosen so the country + neighbors are visible
-// Zoom levels chosen to show the country + its neighbors clearly
+// Country centers for flyTo — zoom chosen so the country + neighbors are visible
 const COUNTRY_CENTERS: Record<string, { center: [number, number]; zoom: number }> = {
   ISR: { center: [35.0, 31.5], zoom: 5.0 },
   LBN: { center: [35.5, 33.9], zoom: 5.5 },
@@ -96,7 +94,6 @@ interface ActiveStrikesData {
 interface Props {
   onCountryClick?: (code: string) => void;
   flyToCode?: string | null;
-  flyToHome?: boolean | null;
   flyToPosition?: { center: [number, number]; zoom: number; key?: string } | null;
   selectedCountry?: string | null;
   secondaryCountries?: string[];
@@ -108,11 +105,14 @@ interface Props {
 const BOSTON: [number, number] = [-98.5, 39.5];
 const BOSTON_ZOOM = 2.3;
 
-export default function Map({ onCountryClick, flyToCode, flyToHome, flyToPosition, selectedCountry, secondaryCountries = [], activeStrikes, historicalYear }: Props) {
+// Zoom fade range — blue fills/borders disappear when zoomed in past these levels
+const FADE_START = 3.5;
+const FADE_END = 5.5;
+
+export default function Map({ onCountryClick, flyToCode, flyToPosition, selectedCountry, secondaryCountries = [], activeStrikes, historicalYear }: Props) {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
   const hoveredId = useRef<string | number | null>(null);
-  const pulseAnimFrame = useRef<number | null>(null);
   const pulseStart = useRef<number | null>(null);
   // Strike animation
   const strikeTimers = useRef<ReturnType<typeof setTimeout>[]>([]);
@@ -140,7 +140,7 @@ export default function Map({ onCountryClick, flyToCode, flyToHome, flyToPositio
       // trigger it immediately by dispatching current zoom
       else {
         const z = m.getZoom();
-        const fadeStart = 4.5, fadeEnd = 6.5;
+        const fadeStart = FADE_START, fadeEnd = FADE_END;
         const zf = Math.max(0, Math.min(1, 1 - (z - fadeStart) / (fadeEnd - fadeStart)));
         m.setPaintProperty("highlighted-fill", "fill-opacity", 0.72 * zf);
       }
@@ -177,12 +177,6 @@ export default function Map({ onCountryClick, flyToCode, flyToHome, flyToPositio
       map.current.flyTo({ center: entry.center, zoom: entry.zoom, duration: 2800, curve: 1.4, essential: true });
     }
   }, [flyToCode]);
-
-  // Fly home to Boston when ATLAS header is clicked
-  useEffect(() => {
-    if (!flyToHome || !map.current) return;
-    map.current.flyTo({ center: BOSTON, zoom: BOSTON_ZOOM, pitch: 0, bearing: 0, duration: 3000, curve: 1.6, essential: true });
-  }, [flyToHome]);
 
   // Fly to explicit position (conflict-specific view)
   useEffect(() => {
@@ -290,7 +284,7 @@ export default function Map({ onCountryClick, flyToCode, flyToHome, flyToPositio
       const overlayFeatures = (config.overlays ?? []).map((ov: HistoricalOverlay) => ({
         type: "Feature" as const,
         geometry: { type: "Polygon" as const, coordinates: ov.coordinates },
-        properties: { color: ov.color, opacity: 0.07, label: ov.label ?? "" },
+        properties: { color: ov.color, opacity: ov.opacity, label: ov.label ?? "" },
       }));
       (m.getSource("historical-overlays") as mapboxgl.GeoJSONSource).setData({
         type: "FeatureCollection", features: overlayFeatures,
@@ -542,8 +536,6 @@ export default function Map({ onCountryClick, flyToCode, flyToHome, flyToPositio
       });
 
       // --- Zoom-based fade: blue fills/borders disappear when zoomed in ---
-      const FADE_START = 3.5;
-      const FADE_END = 5.5;
       let zoomFactor = 1;
 
       const applyZoomFade = () => {
@@ -598,11 +590,11 @@ export default function Map({ onCountryClick, flyToCode, flyToHome, flyToPositio
       };
 
       // --- Center-based highlight (when mouse is idle) ---
-      const mouseActive = { current: false };
-      const mouseIdleTimer = { current: null as ReturnType<typeof setTimeout> | null };
+      let _mouseActive = false;
+      let _mouseIdleTimer: ReturnType<typeof setTimeout> | null = null;
 
       const highlightCenter = () => {
-        if (mouseActive.current) return;
+        if (_mouseActive) return;
         const canvas = m.getCanvas();
         const cx = canvas.width / (window.devicePixelRatio || 1) / 2;
         const cy = canvas.height / (window.devicePixelRatio || 1) / 2;
@@ -623,10 +615,10 @@ export default function Map({ onCountryClick, flyToCode, flyToHome, flyToPositio
 
       // --- Mouse overrides center ---
       m.on("mousemove", "world-hit", (e) => {
-        mouseActive.current = true;
-        if (mouseIdleTimer.current) clearTimeout(mouseIdleTimer.current);
+        _mouseActive = true;
+        if (_mouseIdleTimer) clearTimeout(_mouseIdleTimer);
         // reset to center mode after 3s of no mouse movement
-        mouseIdleTimer.current = setTimeout(() => { mouseActive.current = false; }, 3000);
+        _mouseIdleTimer = setTimeout(() => { _mouseActive = false; }, 3000);
 
         m.getCanvas().style.cursor = "pointer";
         const feature = e.features?.[0];
@@ -642,7 +634,7 @@ export default function Map({ onCountryClick, flyToCode, flyToHome, flyToPositio
 
       m.on("mouseleave", "world-hit", () => {
         m.getCanvas().style.cursor = "";
-        mouseActive.current = false;
+        _mouseActive = false;
         setHovered(null);
       });
 
@@ -671,7 +663,6 @@ export default function Map({ onCountryClick, flyToCode, flyToHome, flyToPositio
     });
 
     return () => {
-      if (pulseAnimFrame.current) cancelAnimationFrame(pulseAnimFrame.current);
       if (idlePulseFrame.current) cancelAnimationFrame(idlePulseFrame.current);
       map.current?.remove();
       map.current = null;

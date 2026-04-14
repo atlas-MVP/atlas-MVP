@@ -374,7 +374,6 @@ const SOURCE_ABBR: Record<string, string> = {
   "Financial Times": "FT",
 };
 
-type Filter = "free" | "all";
 
 interface Props {
   countryCode: string | null;

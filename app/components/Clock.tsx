@@ -6,7 +6,7 @@ const MONTHS = ["january","february","march","april","may","june","july","august
 
 interface Props {
   onYearClick?: () => void;
-  displayYear?: number | null;
+  displayYear?: number;
 }
 
 export default function Clock({ onYearClick, displayYear }: Props) {
@@ -20,9 +20,6 @@ export default function Clock({ onYearClick, displayYear }: Props) {
   const month = MONTHS[now.getMonth()];
   const day = now.getDate();
   const year = now.getFullYear();
-  const hh = String(now.getHours()); // no leading zero
-  const mm = String(now.getMinutes()).padStart(2, "0");
-  const ss = String(now.getSeconds()).padStart(2, "0");
 
   return (
     <div style={{

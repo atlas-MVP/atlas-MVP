@@ -1,6 +1,5 @@
 export interface HistoricalOverlay {
   id: string;
-  type: "fill";
   coordinates: number[][][];
   color: string;
   opacity: number;
@@ -11,7 +10,6 @@ export interface PeriodConfig {
   year: number;
   camera?: { center: [number, number]; zoom: number };
   isoColors?: Record<string, string>;
-  dimOthers?: boolean;
   overlays?: HistoricalOverlay[];
 }
 
@@ -75,7 +73,7 @@ const USSR_ISOS = ["RUS", "UKR", "BLR", "EST", "LVA", "LTU", "MDA", "GEO", "ARM"
 const NAZI_ISOS = ["DEU", "AUT", "POL", "FRA", "BEL", "NLD", "LUX", "NOR", "DNK", "CZE"];
 
 // Colour palette
-const C_BRITISH = "rgba(251,191,36,0.30)";   // amber
+const C_BRITISH = "rgba(251, 190, 36, 0.3)";   // amber
 const C_FRENCH  = "rgba(167,139,250,0.30)";  // purple
 const C_BLUE    = "rgba(59,130,246,0.35)";   // Israel/Jewish
 const C_GREEN   = "rgba(34,197,94,0.35)";    // Arab/Palestinian
@@ -93,11 +91,9 @@ export const PERIOD_CONFIGS: PeriodConfig[] = [
       IRQ: C_BRITISH, JOR: C_BRITISH, PSE: C_BRITISH,
       SYR: C_FRENCH, LBN: C_FRENCH,
     },
-    dimOthers: true,
     overlays: [
       {
         id: "mandate-palestine-1916",
-        type: "fill",
         coordinates: MANDATE_PALESTINE_COORDS,
         color: C_BRITISH,
         opacity: 0.35,
@@ -105,7 +101,6 @@ export const PERIOD_CONFIGS: PeriodConfig[] = [
       },
       {
         id: "transjordan-1916",
-        type: "fill",
         coordinates: TRANSJORDAN_COORDS,
         color: C_BRITISH,
         opacity: 0.25,
@@ -123,11 +118,9 @@ export const PERIOD_CONFIGS: PeriodConfig[] = [
       PSE: C_BRITISH, JOR: C_BRITISH, IRQ: C_BRITISH,
       SYR: C_FRENCH, LBN: C_FRENCH, FRA: C_FRENCH,
     },
-    dimOthers: true,
     overlays: [
       {
         id: "mandate-palestine-1920",
-        type: "fill",
         coordinates: MANDATE_PALESTINE_COORDS,
         color: C_BRITISH,
         opacity: 0.40,
@@ -135,7 +128,6 @@ export const PERIOD_CONFIGS: PeriodConfig[] = [
       },
       {
         id: "transjordan-1920",
-        type: "fill",
         coordinates: TRANSJORDAN_COORDS,
         color: C_BRITISH,
         opacity: 0.28,
@@ -149,7 +141,6 @@ export const PERIOD_CONFIGS: PeriodConfig[] = [
     year: 1922,
     camera: { center: [55.0, 55.0], zoom: 2.8 },
     isoColors: Object.fromEntries(USSR_ISOS.map(iso => [iso, C_RED])),
-    dimOthers: true,
   },
 
   // ── 1933 — Rise of Third Reich ────────────────────────────────────────────────
@@ -157,7 +148,6 @@ export const PERIOD_CONFIGS: PeriodConfig[] = [
     year: 1933,
     camera: { center: [13.0, 51.0], zoom: 4.2 },
     isoColors: { DEU: C_GREY, AUT: C_GREY },
-    dimOthers: true,
   },
 
   // ── 1939 — WWII Begins ────────────────────────────────────────────────────────
@@ -165,11 +155,9 @@ export const PERIOD_CONFIGS: PeriodConfig[] = [
     year: 1939,
     camera: { center: [18.0, 51.0], zoom: 3.8 },
     isoColors: Object.fromEntries(NAZI_ISOS.map(iso => [iso, C_GREY])),
-    dimOthers: true,
     overlays: [
       {
         id: "eastern-front-1939",
-        type: "fill",
         coordinates: EASTERN_FRONT_COORDS,
         color: C_GREY,
         opacity: 0.25,
@@ -186,7 +174,6 @@ export const PERIOD_CONFIGS: PeriodConfig[] = [
       ...Object.fromEntries(USSR_ISOS.map(iso => [iso, C_RED])),
       DEU: "rgba(100,100,100,0.40)",
     },
-    dimOthers: false,
   },
 
   // ── 1947 — UN Partition Plan ──────────────────────────────────────────────────
@@ -194,11 +181,9 @@ export const PERIOD_CONFIGS: PeriodConfig[] = [
     year: 1947,
     camera: { center: [35.2, 31.8], zoom: 6.5 },
     isoColors: {},
-    dimOthers: false,
     overlays: [
       {
         id: "jewish-partition-1947",
-        type: "fill",
         coordinates: [[
           [34.55, 31.68], [34.75, 32.05], [34.99, 32.82], [35.25, 32.95],
           [35.55, 32.52], [35.52, 31.88], [35.10, 31.30], [34.55, 31.68],
@@ -209,7 +194,6 @@ export const PERIOD_CONFIGS: PeriodConfig[] = [
       },
       {
         id: "arab-partition-1947",
-        type: "fill",
         coordinates: [[
           [35.10, 33.10], [35.57, 33.28], [35.62, 32.99], [35.25, 32.95],
           [34.99, 32.82], [34.75, 32.05], [34.55, 31.68], [34.38, 31.52],
@@ -228,11 +212,9 @@ export const PERIOD_CONFIGS: PeriodConfig[] = [
     year: 1948,
     camera: { center: [35.0, 31.8], zoom: 6.5 },
     isoColors: { ISR: C_BLUE, EGY: C_GREEN, JOR: C_GREEN, SYR: C_GREEN },
-    dimOthers: true,
     overlays: [
       {
         id: "mandate-palestine-1948",
-        type: "fill",
         coordinates: MANDATE_PALESTINE_COORDS,
         color: C_BLUE,
         opacity: 0.35,
@@ -246,11 +228,9 @@ export const PERIOD_CONFIGS: PeriodConfig[] = [
     year: 1949,
     camera: { center: [35.0, 31.8], zoom: 6.5 },
     isoColors: { ISR: C_BLUE, EGY: C_GREEN, JOR: C_GREEN, SYR: C_GREEN },
-    dimOthers: true,
     overlays: [
       {
         id: "israel-1949",
-        type: "fill",
         coordinates: [[
           [35.10, 33.10], [35.57, 33.28], [35.62, 32.99], [35.65, 32.72],
           [35.55, 32.52], [35.20, 32.40], [34.97, 32.10], [34.88, 31.78],
@@ -264,7 +244,6 @@ export const PERIOD_CONFIGS: PeriodConfig[] = [
       },
       {
         id: "west-bank-1949",
-        type: "fill",
         coordinates: WEST_BANK_COORDS,
         color: C_GREEN,
         opacity: 0.35,
@@ -272,7 +251,6 @@ export const PERIOD_CONFIGS: PeriodConfig[] = [
       },
       {
         id: "gaza-1949",
-        type: "fill",
         coordinates: GAZA_COORDS,
         color: C_GREEN,
         opacity: 0.35,
@@ -286,11 +264,9 @@ export const PERIOD_CONFIGS: PeriodConfig[] = [
     year: 1967,
     camera: { center: [35.5, 31.0], zoom: 5.8 },
     isoColors: { ISR: C_BLUE, EGY: C_GREEN, JOR: C_GREEN, SYR: C_GREEN },
-    dimOthers: true,
     overlays: [
       {
         id: "sinai-1967",
-        type: "fill",
         coordinates: SINAI_COORDS,
         color: C_BLUE,
         opacity: 0.40,
@@ -298,7 +274,6 @@ export const PERIOD_CONFIGS: PeriodConfig[] = [
       },
       {
         id: "golan-1967",
-        type: "fill",
         coordinates: GOLAN_COORDS,
         color: C_BLUE,
         opacity: 0.40,
@@ -306,7 +281,6 @@ export const PERIOD_CONFIGS: PeriodConfig[] = [
       },
       {
         id: "west-bank-1967",
-        type: "fill",
         coordinates: WEST_BANK_COORDS,
         color: C_BLUE,
         opacity: 0.35,
@@ -314,7 +288,6 @@ export const PERIOD_CONFIGS: PeriodConfig[] = [
       },
       {
         id: "gaza-1967",
-        type: "fill",
         coordinates: GAZA_COORDS,
         color: C_BLUE,
         opacity: 0.35,
@@ -328,11 +301,9 @@ export const PERIOD_CONFIGS: PeriodConfig[] = [
     year: 1973,
     camera: { center: [35.5, 31.0], zoom: 5.8 },
     isoColors: { ISR: C_BLUE, EGY: C_GREEN, SYR: C_GREEN },
-    dimOthers: true,
     overlays: [
       {
         id: "sinai-1973",
-        type: "fill",
         coordinates: SINAI_COORDS,
         color: "rgba(251,191,36,0.35)",
         opacity: 0.40,
@@ -340,7 +311,6 @@ export const PERIOD_CONFIGS: PeriodConfig[] = [
       },
       {
         id: "golan-1973",
-        type: "fill",
         coordinates: GOLAN_COORDS,
         color: "rgba(251,191,36,0.35)",
         opacity: 0.40,
@@ -358,11 +328,9 @@ export const PERIOD_CONFIGS: PeriodConfig[] = [
       EGY: "rgba(251,191,36,0.35)",
       ISR: C_BLUE,
     },
-    dimOthers: true,
     overlays: [
       {
         id: "sinai-1979",
-        type: "fill",
         coordinates: SINAI_COORDS,
         color: "rgba(251,191,36,0.30)",
         opacity: 0.35,
@@ -376,11 +344,9 @@ export const PERIOD_CONFIGS: PeriodConfig[] = [
     year: 1982,
     camera: { center: [35.0, 30.5], zoom: 5.5 },
     isoColors: { ISR: C_BLUE, EGY: C_GREEN, LBN: "rgba(225,29,72,0.35)" },
-    dimOthers: true,
     overlays: [
       {
         id: "golan-1982",
-        type: "fill",
         coordinates: GOLAN_COORDS,
         color: C_BLUE,
         opacity: 0.40,
@@ -388,7 +354,6 @@ export const PERIOD_CONFIGS: PeriodConfig[] = [
       },
       {
         id: "west-bank-1982",
-        type: "fill",
         coordinates: WEST_BANK_COORDS,
         color: C_BLUE,
         opacity: 0.30,
@@ -408,7 +373,6 @@ export const PERIOD_CONFIGS: PeriodConfig[] = [
       CZE: "rgba(59,130,246,0.25)",
       ...Object.fromEntries(USSR_ISOS.map(iso => [iso, C_DIM])),
     },
-    dimOthers: false,
   },
 
   // ── 1991 — USSR Dissolved ─────────────────────────────────────────────────────
@@ -416,7 +380,6 @@ export const PERIOD_CONFIGS: PeriodConfig[] = [
     year: 1991,
     camera: { center: [55.0, 55.0], zoom: 2.8 },
     isoColors: Object.fromEntries(USSR_ISOS.map(iso => [iso, "rgba(59,130,246,0.25)"])),
-    dimOthers: false,
   },
 
   // ── 1993 — Oslo Accords ───────────────────────────────────────────────────────
@@ -424,11 +387,9 @@ export const PERIOD_CONFIGS: PeriodConfig[] = [
     year: 1993,
     camera: { center: [35.2, 32.0], zoom: 7.0 },
     isoColors: { ISR: C_BLUE, PSE: C_GREEN },
-    dimOthers: true,
     overlays: [
       {
         id: "oslo-west-bank",
-        type: "fill",
         coordinates: WEST_BANK_COORDS,
         color: C_GREEN,
         opacity: 0.40,
@@ -436,7 +397,6 @@ export const PERIOD_CONFIGS: PeriodConfig[] = [
       },
       {
         id: "oslo-gaza",
-        type: "fill",
         coordinates: GAZA_COORDS,
         color: C_GREEN,
         opacity: 0.40,
@@ -450,11 +410,9 @@ export const PERIOD_CONFIGS: PeriodConfig[] = [
     year: 1995,
     camera: { center: [35.2, 32.0], zoom: 7.0 },
     isoColors: { ISR: C_BLUE, PSE: C_GREEN },
-    dimOthers: true,
     overlays: [
       {
         id: "oslo2-west-bank",
-        type: "fill",
         coordinates: WEST_BANK_COORDS,
         color: C_GREEN,
         opacity: 0.38,
@@ -462,7 +420,6 @@ export const PERIOD_CONFIGS: PeriodConfig[] = [
       },
       {
         id: "oslo2-gaza",
-        type: "fill",
         coordinates: GAZA_COORDS,
         color: C_GREEN,
         opacity: 0.42,
@@ -476,11 +433,9 @@ export const PERIOD_CONFIGS: PeriodConfig[] = [
     year: 2000,
     camera: { center: [35.2, 31.8], zoom: 6.5 },
     isoColors: { ISR: C_BLUE, PSE: C_GREEN },
-    dimOthers: true,
     overlays: [
       {
         id: "2000-west-bank",
-        type: "fill",
         coordinates: WEST_BANK_COORDS,
         color: C_GREEN,
         opacity: 0.35,
@@ -488,7 +443,6 @@ export const PERIOD_CONFIGS: PeriodConfig[] = [
       },
       {
         id: "2000-gaza",
-        type: "fill",
         coordinates: GAZA_COORDS,
         color: C_GREEN,
         opacity: 0.35,
@@ -502,7 +456,6 @@ export const PERIOD_CONFIGS: PeriodConfig[] = [
     year: 2001,
     camera: { center: [65.0, 33.0], zoom: 3.8 },
     isoColors: { AFG: "rgba(225,29,72,0.50)", USA: C_BLUE },
-    dimOthers: false,
   },
 
   // ── 2003 — Iraq Invasion ──────────────────────────────────────────────────────
@@ -510,7 +463,6 @@ export const PERIOD_CONFIGS: PeriodConfig[] = [
     year: 2003,
     camera: { center: [44.4, 33.3], zoom: 5.0 },
     isoColors: { IRQ: "rgba(225,29,72,0.50)", USA: C_BLUE, GBR: C_BRITISH },
-    dimOthers: false,
   },
 
   // ── 2005 — Gaza Disengagement ─────────────────────────────────────────────────
@@ -518,11 +470,9 @@ export const PERIOD_CONFIGS: PeriodConfig[] = [
     year: 2005,
     camera: { center: [34.6, 31.5], zoom: 8.0 },
     isoColors: { ISR: C_BLUE, PSE: C_GREEN },
-    dimOthers: true,
     overlays: [
       {
         id: "gaza-2005",
-        type: "fill",
         coordinates: GAZA_COORDS,
         color: C_GREEN,
         opacity: 0.50,
@@ -530,7 +480,6 @@ export const PERIOD_CONFIGS: PeriodConfig[] = [
       },
       {
         id: "west-bank-2005",
-        type: "fill",
         coordinates: WEST_BANK_COORDS,
         color: C_GREEN,
         opacity: 0.35,
@@ -544,11 +493,9 @@ export const PERIOD_CONFIGS: PeriodConfig[] = [
     year: 2007,
     camera: { center: [34.6, 31.5], zoom: 7.8 },
     isoColors: { ISR: C_BLUE, PSE: "rgba(225,29,72,0.40)" },
-    dimOthers: true,
     overlays: [
       {
         id: "hamas-gaza-2007",
-        type: "fill",
         coordinates: GAZA_COORDS,
         color: "rgba(225,29,72,0.50)",
         opacity: 0.55,
@@ -556,7 +503,6 @@ export const PERIOD_CONFIGS: PeriodConfig[] = [
       },
       {
         id: "pa-west-bank-2007",
-        type: "fill",
         coordinates: WEST_BANK_COORDS,
         color: C_GREEN,
         opacity: 0.35,
@@ -576,7 +522,6 @@ export const PERIOD_CONFIGS: PeriodConfig[] = [
       SYR: "rgba(225,29,72,0.40)",
       YEM: "rgba(225,29,72,0.35)",
     },
-    dimOthers: false,
   },
 
   // ── 2011 — Arab Spring ────────────────────────────────────────────────────────
@@ -591,7 +536,6 @@ export const PERIOD_CONFIGS: PeriodConfig[] = [
       BHR: "rgba(251,191,36,0.40)",
       YEM: "rgba(225,29,72,0.50)",
     },
-    dimOthers: false,
   },
 
   // ── 2014 — ISIS Caliphate ─────────────────────────────────────────────────────
@@ -602,11 +546,9 @@ export const PERIOD_CONFIGS: PeriodConfig[] = [
       IRQ: "rgba(75,75,75,0.50)",
       SYR: "rgba(75,75,75,0.40)",
     },
-    dimOthers: false,
     overlays: [
       {
         id: "isis-2014",
-        type: "fill",
         coordinates: ISIS_CALIPHATE_COORDS,
         color: "rgba(75,75,75,0.55)",
         opacity: 0.55,
@@ -624,7 +566,6 @@ export const PERIOD_CONFIGS: PeriodConfig[] = [
       UKR: "rgba(251,191,36,0.50)",
       BLR: "rgba(225,29,72,0.25)",
     },
-    dimOthers: false,
   },
 
   // ── 2023 — Oct 7 Attack ───────────────────────────────────────────────────────
@@ -637,11 +578,9 @@ export const PERIOD_CONFIGS: PeriodConfig[] = [
       LBN: "rgba(225,29,72,0.35)",
       IRN: "rgba(225,29,72,0.35)",
     },
-    dimOthers: true,
     overlays: [
       {
         id: "gaza-2023",
-        type: "fill",
         coordinates: GAZA_COORDS,
         color: "rgba(225,29,72,0.55)",
         opacity: 0.60,
@@ -661,11 +600,9 @@ export const PERIOD_CONFIGS: PeriodConfig[] = [
       IRN: "rgba(225,29,72,0.40)",
       YEM: "rgba(225,29,72,0.35)",
     },
-    dimOthers: true,
     overlays: [
       {
         id: "gaza-2024",
-        type: "fill",
         coordinates: GAZA_COORDS,
         color: "rgba(225,29,72,0.60)",
         opacity: 0.65,
@@ -684,7 +621,6 @@ export const PERIOD_CONFIGS: PeriodConfig[] = [
       IRQ: "rgba(225,29,72,0.35)",
       SYR: "rgba(225,29,72,0.30)",
     },
-    dimOthers: true,
   },
 
   // ── 2026 — Operation Epic Fury ────────────────────────────────────────────────
@@ -697,7 +633,6 @@ export const PERIOD_CONFIGS: PeriodConfig[] = [
       USA: "rgba(59,130,246,0.40)",
       SAU: "rgba(251,191,36,0.30)",
     },
-    dimOthers: true,
   },
 ];
 

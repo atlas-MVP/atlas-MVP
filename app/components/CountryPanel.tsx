@@ -664,12 +664,14 @@ const CASUALTY_ISO: Record<string, string> = {
   "France":    "FRA",
 };
 
+// Maps ISO 3166-1 alpha-3 → casualty country display names
+const ISO_TO_NAME = Object.fromEntries(Object.entries(CASUALTY_ISO).map(([k, v]) => [v, k]));
+
 interface Props {
   countryCode: string | null;
   onClose: () => void;
   onViewFeed: (key: string) => void;
   onConflictSelect?: (conflictId: string) => void;
-  onConflictChange?: (conflictId: string) => void;
   onFocusCountry?: (isoCode: string) => void;
   onFocusPosition?: (center: [number,number], zoom: number) => void;
   onCountryHome?: (isoCode: string) => void;
@@ -687,7 +689,7 @@ function extractSourceName(label: string): string {
   return label.split(" — ")[0].split(" —")[0].trim();
 }
 
-export default function CountryPanel({ countryCode, onClose, onViewFeed, onConflictSelect, onConflictChange, onFocusCountry, onFocusPosition, onCountryHome, onAuthorClick, onTimelineStrike, onSourceTap, initialAlertText }: Props) {
+export default function CountryPanel({ countryCode, onClose, onViewFeed, onConflictSelect, onFocusCountry, onFocusPosition, onCountryHome, onAuthorClick, onTimelineStrike, onSourceTap, initialAlertText }: Props) {
   const [selectedConflictId, setSelectedConflictId] = useState<string | null>(null);
   const [civTooltip, setCivTooltip]       = useState<string | null>(null);
   const [scrolled, setScrolled]           = useState(false);
@@ -750,10 +752,6 @@ export default function CountryPanel({ countryCode, onClose, onViewFeed, onConfl
       }
     });
     if (!found) onTimelineStrike?.(null);
-  };
-
-  const scrollToTop = () => {
-    if (scrollRef.current) scrollRef.current.scrollTop = 0;
   };
 
   // ── Row renderer ──────────────────────────────────────────────────────────
@@ -876,10 +874,7 @@ export default function CountryPanel({ countryCode, onClose, onViewFeed, onConfl
                 </h2>
                 {conflict.sides && countryCode && (() => {
                   // Find display name for this ISO code via reverse CASUALTY_ISO lookup
-                  const isoToName = Object.fromEntries(
-                    Object.entries(CASUALTY_ISO).map(([name, iso]) => [iso, name])
-                  );
-                  const displayName = isoToName[countryCode] ?? countryCode;
+                  const displayName = ISO_TO_NAME[countryCode] ?? countryCode;
                   const isBlueSide = conflict.sides!.blue.some(b =>
                     displayName.toLowerCase().includes(b.toLowerCase()) || b.toLowerCase().includes(displayName.toLowerCase())
                   );
@@ -919,7 +914,7 @@ export default function CountryPanel({ countryCode, onClose, onViewFeed, onConfl
             <div style={{ display: "flex", gap: 6, marginTop: 8 }}>
               {conflictIds.map((id) => (
                 <button key={id}
-                  onClick={(e) => { e.stopPropagation(); setSelectedConflictId(id); onConflictSelect?.(id); onConflictChange?.(id); }}
+                  onClick={(e) => { e.stopPropagation(); setSelectedConflictId(id); onConflictSelect?.(id); }}
                   style={{
                     fontSize: 10, fontFamily: "monospace", letterSpacing: "0.04em",
                     padding: "4px 10px", borderRadius: 6, cursor: "pointer",
@@ -1042,17 +1037,15 @@ export default function CountryPanel({ countryCode, onClose, onViewFeed, onConfl
           })()}
 
           {/* View Feed */}
-          {conflict && (
-            <div style={{ padding: "8px 14px", borderTop: "1px solid rgba(255,255,255,0.05)" }}>
-              <button
-                onClick={(e) => { e.stopPropagation(); onViewFeed(conflict.feedKey); }}
-                style={{ width: "100%", padding: "9px", fontSize: 10, fontFamily: "monospace", letterSpacing: "0.12em", textTransform: "uppercase", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 8, color: "rgba(255,255,255,0.4)", cursor: "pointer" }}
-                onMouseEnter={e => { e.currentTarget.style.background = "rgba(255,255,255,0.08)"; e.currentTarget.style.color = "rgba(255,255,255,0.8)"; }}
-                onMouseLeave={e => { e.currentTarget.style.background = "rgba(255,255,255,0.04)"; e.currentTarget.style.color = "rgba(255,255,255,0.4)"; }}>
-                View Live Feed →
-              </button>
-            </div>
-          )}
+          <div style={{ padding: "8px 14px", borderTop: "1px solid rgba(255,255,255,0.05)" }}>
+            <button
+              onClick={(e) => { e.stopPropagation(); onViewFeed(conflict.feedKey); }}
+              style={{ width: "100%", padding: "9px", fontSize: 10, fontFamily: "monospace", letterSpacing: "0.12em", textTransform: "uppercase", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 8, color: "rgba(255,255,255,0.4)", cursor: "pointer" }}
+              onMouseEnter={e => { e.currentTarget.style.background = "rgba(255,255,255,0.08)"; e.currentTarget.style.color = "rgba(255,255,255,0.8)"; }}
+              onMouseLeave={e => { e.currentTarget.style.background = "rgba(255,255,255,0.04)"; e.currentTarget.style.color = "rgba(255,255,255,0.4)"; }}>
+              View Live Feed →
+            </button>
+          </div>
 
           {/* Timeline */}
           {(() => {

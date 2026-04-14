@@ -17,10 +17,6 @@ interface SnapPoint {
   tier: "historical" | "annual";
 }
 
-interface EraDivider {
-  position: number;
-  label: string;
-}
 
 const HISTORICAL_EVENTS = [
   { year: 1916, label: "Sykes-Picot Agreement" },
@@ -93,13 +89,6 @@ function buildSnapPoints(): SnapPoint[] {
 
 const SNAP_POINTS = buildSnapPoints();
 
-const ERA_DIVIDERS: EraDivider[] = [
-  { position: 0,    label: "ORIGINS" },
-  { position: 0.22, label: "WWII" },
-  { position: 0.35, label: "COLD WAR" },
-  { position: 0.48, label: "ISRAEL" },
-  { position: 0.65, label: "MODERN" },
-];
 
 function nearestSnap(position: number): SnapPoint {
   let best = SNAP_POINTS[0];

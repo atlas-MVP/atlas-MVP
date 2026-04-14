@@ -10,11 +10,7 @@ function dangerColor(d: number): string {
   return "#1e3a8a";
 }
 
-const PRIORITY_COLORS: string[] = ["#ef4444", "#f87171", "#fbbf24", "#60a5fa"];
-
 interface Conflict {
-  rank: number;
-  pulse: boolean;
   label: string;
   sub: string;
   code: string; // country code to open in CountryPanel
@@ -23,14 +19,12 @@ interface Conflict {
 
 const TOP_CONFLICTS: Conflict[] = [
   {
-    rank: 0, pulse: true,
     label: "Israel — Lebanon conflict",
     sub: "cross-border exchanges intensifying. IDF artillery active in southern Lebanon. Hezbollah rockets reported in Galilee.",
     code: "LBN",
     flyTo: { center: [35.2, 33.0] as [number,number], zoom: 7.2 },
   },
   {
-    rank: 1, pulse: true,
     label: "US — Israel — Iran war",
     sub: "regional escalation ongoing. US 5th Fleet conducting operations in Persian Gulf. Iran nuclear program at center of diplomatic breakdown.",
     code: "ISR",
@@ -106,7 +100,6 @@ interface Props {
   onClose: () => void;
   onNavigate?: (code: string | null, center: [number, number], zoom: number, feedItem?: FeedItem) => void;
   onHeadlinesToggle?: () => void;
-  headlinesOpen?: boolean;
   onSourceClick?: (source: string) => void;
 }
 
@@ -128,18 +121,10 @@ export default function AtlasHQ({ onClose, onNavigate, onHeadlinesToggle, onSour
     }, 120);
   };
 
-  const fmt12 = (d: Date) => {
-    const h = d.getHours() % 12 || 12;
-    const m = String(d.getMinutes()).padStart(2, "0");
-    const s = String(d.getSeconds()).padStart(2, "0");
-    const ampm = d.getHours() < 12 ? "am" : "pm";
-    return `${h}:${m}:${s} ${ampm}`;
-  };
-
-  const [clockTime, setClockTime] = useState(() => fmt12(new Date()));
+  const [clockTime, setClockTime] = useState("");
 
   useEffect(() => {
-    const id = setInterval(() => setClockTime(fmt12(new Date())), 1000);
+    const id = setInterval(() => setClockTime(new Date().toLocaleTimeString("en-US", { hour12: true, hour: "numeric", minute: "2-digit", second: "2-digit" })), 1000);
     return () => clearInterval(id);
   }, []);
 
@@ -379,10 +364,9 @@ export default function AtlasHQ({ onClose, onNavigate, onHeadlinesToggle, onSour
   );
 }
 
-function SectionLabel({ label, pulse }: { label: string; pulse?: boolean }) {
+function SectionLabel({ label }: { label: string }) {
   return (
     <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "14px 18px 12px" }}>
-      {pulse && <div className="dot-pulse" style={{ width: 5, height: 5, borderRadius: "50%", background: "#ef4444", boxShadow: "0 0 6px #ef4444", flexShrink: 0 }} />}
       <span style={{ fontSize: 12, fontFamily: "monospace", letterSpacing: "0.18em", color: "rgba(255,255,255,0.75)", fontWeight: 800 }}>{label}</span>
     </div>
   );
