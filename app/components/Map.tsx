@@ -126,6 +126,7 @@ const FADE_END = 5.5;
 export default function Map({ onCountryClick, flyToCode, flyToPosition, selectedCountry, secondaryCountries = [], activeStrikes, homeView = false }: Props) {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
+  const [mapReady, setMapReady] = useState(false);
   const hoveredId = useRef<string | number | null>(null);
   const pulseStart = useRef<number | null>(null);
   // Strike animation
@@ -307,6 +308,9 @@ export default function Map({ onCountryClick, flyToCode, flyToPosition, selected
       map.current!.getCanvas().dispatchEvent(inverted);
     };
     mapContainer.current!.addEventListener("wheel", _wheelHandler, { capture: true, passive: false });
+
+    // Reveal canvas only after every tile has finished rendering at least once
+    map.current.once("idle", () => setMapReady(true));
 
     map.current.on("load", () => {
       const m = map.current!;
@@ -754,8 +758,8 @@ export default function Map({ onCountryClick, flyToCode, flyToPosition, selected
   }, []);
 
   return (
-    <div style={{ width: "100%", height: "100%", position: "relative" }}>
-      <div ref={mapContainer} style={{ width: "100%", height: "100%" }} />
+    <div style={{ width: "100%", height: "100%", position: "relative", background: "#000" }}>
+      <div ref={mapContainer} style={{ width: "100%", height: "100%", visibility: mapReady ? "visible" : "hidden" }} />
 
       {tooltip && (
         <div style={{ position: "absolute", left: tooltip.x + 14, top: tooltip.y - 40, pointerEvents: "none", zIndex: 5 }}>

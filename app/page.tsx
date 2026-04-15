@@ -34,7 +34,10 @@ function NavTime() {
   );
 }
 
-const Map = dynamic(() => import("./components/Map"), { ssr: false });
+const Map = dynamic(() => import("./components/Map"), {
+  ssr: false,
+  loading: () => <div style={{ width: "100%", height: "100%", background: "#000" }} />,
+});
 
 // Map view per conflict (overrides per-country default)
 const CONFLICT_CENTERS: Record<string, { center: [number, number]; zoom: number }> = {
