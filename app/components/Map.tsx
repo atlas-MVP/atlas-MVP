@@ -340,9 +340,9 @@ export default function Map({ onCountryClick, flyToCode, flyToPosition, selected
               m.setPaintProperty(l.id, "line-width", 0.7);
               m.setPaintProperty(l.id, "line-opacity", 0.6);
             } else if (l.id.includes("admin-1")) {
-              m.setPaintProperty(l.id, "line-color", "rgba(255,255,255,0.18)");
-              m.setPaintProperty(l.id, "line-width", 0.35);
-              m.setPaintProperty(l.id, "line-opacity", 0.4);
+              m.setPaintProperty(l.id, "line-color", "rgba(255,255,255,0.45)");
+              m.setPaintProperty(l.id, "line-width", 0.5);
+              m.setPaintProperty(l.id, "line-opacity", 0.55);
             } else {
               m.setLayoutProperty(l.id, "visibility", "none");
             }
