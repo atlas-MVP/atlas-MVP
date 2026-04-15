@@ -12,29 +12,38 @@ import AtlasHQ from "./components/AtlasHQ";
 import HeadlinesPanel from "./components/HeadlinesPanel";
 import SourceInfoPanel from "./components/SourceInfoPanel";
 import AuthorBioPanel from "./components/AuthorBioPanel";
+import SettingsPanel from "./components/SettingsPanel";
 
-function LiveCount() {
-  const dotRef = useRef<HTMLSpanElement>(null);
+function AtlasWordmark() {
+  const WORD = "ATLAS";
+  const [displayed, setDisplayed] = useState("");
   useEffect(() => {
-    let t = 0;
-    const id = setInterval(() => {
-      t += 0.05;
-      const opacity = 0.55 + 0.45 * Math.abs(Math.sin(t));
-      if (dotRef.current) dotRef.current.style.opacity = String(opacity);
-    }, 40);
+    let i = 0;
+    const tick = () => {
+      i++;
+      setDisplayed(WORD.slice(0, i));
+      if (i < WORD.length) setTimeout(tick, 180);
+    };
+    setTimeout(tick, 80);
+  }, []);
+  return (
+    <span className="text-white/80 font-light tracking-[0.3em] text-sm hover:text-white/100 transition-colors">
+      {displayed}
+      {displayed.length < WORD.length && <span style={{ opacity: 0.4 }}>▌</span>}
+    </span>
+  );
+}
+
+function NavTime() {
+  const [t, setT] = useState("");
+  useEffect(() => {
+    const tick = () => setT(new Date().toLocaleTimeString("en-US", { hour12: true, hour: "numeric", minute: "2-digit", second: "2-digit" }));
+    tick();
+    const id = setInterval(tick, 1000);
     return () => clearInterval(id);
   }, []);
   return (
-    <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
-      <span ref={dotRef} style={{
-        display: "inline-block", width: 6, height: 6, borderRadius: "50%",
-        background: "#22c55e", boxShadow: "0 0 6px #22c55e",
-        transition: "opacity 0.1s",
-      }} />
-      <span style={{ color: "rgba(255,255,255,0.35)", fontSize: 10, fontFamily: "monospace", letterSpacing: "0.12em" }}>
-        2 LIVE
-      </span>
-    </div>
+    <span style={{ fontSize: 11, fontFamily: "monospace", letterSpacing: "0.1em", color: "rgba(255,255,255,0.35)" }}>{t}</span>
   );
 }
 
@@ -78,8 +87,10 @@ export default function Home() {
   const [timelineOpen, setTimelineOpen]       = useState(false);
   const [showHeadlines, setShowHeadlines]     = useState(false);
   const [showRadar, setShowRadar]             = useState(true);
+  const [showSettings, setShowSettings]       = useState(false);
   const [activeSource, setActiveSource]       = useState<string | null>(null);
   const [radarAlertText, setRadarAlertText]   = useState<string | null>(null);
+  const [liveReset, setLiveReset]             = useState(0);
 
   const handleCountryHome = (iso: string) => {
     setHomeCountry(iso);
@@ -166,7 +177,7 @@ export default function Home() {
         selectedCountry={selectedCountry ?? homeCountry}
         secondaryCountries={secondaryCountries}
         activeStrikes={activeStrikes}
-        historicalYear={historicalYear}
+        homeView={showRadar && !selectedCountry && !homeCountry && !feedCountry}
       />
 
       {/* Country homepage — loads when pill is tapped from conflict panel */}
@@ -200,6 +211,11 @@ export default function Home() {
           onSourceTap={(s) => setActiveSource(s)}
           initialAlertText={radarAlertText ?? undefined}
         />
+      )}
+
+      {/* Settings panel — opens on second ATLAS tap */}
+      {showSettings && (
+        <SettingsPanel onClose={() => setShowSettings(false)} />
       )}
 
       {/* Radar — only visible when explicitly opened via ATLAS button */}
@@ -249,21 +265,34 @@ export default function Home() {
         <div className="flex items-center gap-3 pointer-events-auto">
           <button
             onClick={() => {
+              if (showRadar) {
+                // Second tap → close radar, open settings
+                setShowRadar(false);
+                setShowSettings(true);
+                return;
+              }
+              // First tap → full reset + open radar + globe camera
               setFeedCountry(null);
               setSelectedCountry(null);
               setHomeCountry(null);
               setSecondaryCountries([]);
               setActiveStrikes(null);
               setShowHeadlines(false);
+              setShowAuthorBio(false);
+              setActiveSource(null);
+              setShowSettings(false);
+              setHistoricalYear(null);
+              setPreviewYear(null);
+              setTimelineOpen(false);
+              setLiveReset(v => v + 1);
               setShowRadar(true);
-              setFlyToCode("USA");
-              setTimeout(() => setFlyToCode(null), 100);
+              setFlyToPosition({ center: [-98.5, 39.5], zoom: 1.8, key: "atlas-globe-" + Date.now() });
             }}
             style={{ background: "none", border: "none", cursor: "pointer", padding: 0 }}
           >
-            <span className="text-white/80 font-light tracking-[0.3em] text-sm hover:text-white/100 transition-colors">ATLAS</span>
+            <AtlasWordmark key={liveReset} />
           </button>
-          <LiveCount />
+          <NavTime />
         </div>
         <div className="pointer-events-auto">
           <SearchBar onSelect={handleSearch} />
@@ -271,21 +300,20 @@ export default function Home() {
       </div>
 
       {/* Date / time + live button */}
-      <div style={{ position: "absolute", bottom: 16, right: 28, zIndex: 10, display: "flex", alignItems: "flex-end", gap: 10, pointerEvents: "none" }}>
-        {historicalYear && (
-          <button
-            onClick={() => { setHistoricalYear(null); setPreviewYear(null); setTimelineOpen(false); }}
-            style={{
-              pointerEvents: "auto",
-              fontSize: 8, letterSpacing: "0.18em", textTransform: "uppercase",
-              padding: "2px 8px", borderRadius: 10, cursor: "pointer",
-              background: "rgba(34,197,94,0.18)",
-              border: "1px solid rgba(34,197,94,0.35)",
-              color: "#22c55e",
-              marginBottom: 2,
-            }}
-          >live</button>
-        )}
+      <div style={{ position: "absolute", bottom: 16, right: 28, zIndex: 10, display: "flex", alignItems: "flex-end", gap: 20, pointerEvents: "none" }}>
+        <button
+          onClick={() => { setHistoricalYear(null); setPreviewYear(null); setLiveReset(v => v + 1); if (!timelineOpen) setTimelineOpen(false); }}
+          style={{
+            pointerEvents: "auto",
+            fontSize: 8, letterSpacing: "0.18em", textTransform: "uppercase",
+            padding: "2px 8px", borderRadius: 10, cursor: "pointer",
+            background: historicalYear ? "rgba(255,255,255,0.06)" : "rgba(34,197,94,0.18)",
+            border: `1px solid ${historicalYear ? "rgba(255,255,255,0.12)" : "rgba(34,197,94,0.35)"}`,
+            color: historicalYear ? "rgba(255,255,255,0.35)" : "#22c55e",
+            marginBottom: 7,
+            transition: "all 0.2s",
+          }}
+        >live</button>
         <Clock
           onYearClick={() => setTimelineOpen(v => !v)}
           displayYear={previewYear ?? historicalYear ?? undefined}
@@ -299,6 +327,7 @@ export default function Home() {
         onYearChange={(year) => setHistoricalYear(year)}
         onPreviewYear={(year) => setPreviewYear(year)}
         currentYear={historicalYear ?? undefined}
+        resetSignal={liveReset}
       />
     </main>
   );

@@ -421,7 +421,7 @@ export default function FeedPanel({ countryCode, countryName, onClose, onSourceT
               textTransform: "uppercase",
             }}
           >free</button>
-          <button onClick={onClose} className="text-white/20 hover:text-white/60 transition-colors text-xl">×</button>
+          <button onClick={onClose} className="hover:text-white/60 transition-colors text-xl" style={{ color: "rgba(255,255,255,0.12)", background: "none", border: "none", cursor: "pointer" }}>×</button>
         </div>
       </div>
 

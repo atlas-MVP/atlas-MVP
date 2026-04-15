@@ -18,9 +18,9 @@ export default function AuthorBioPanel({ onClose }: Props) {
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <span style={{ fontSize: 8, fontFamily: "monospace", letterSpacing: "0.14em", color: "rgba(255,255,255,0.2)", textTransform: "uppercase" }}>Atlas — Editorial</span>
           <button onClick={onClose}
-            style={{ background: "none", border: "none", color: "rgba(255,255,255,0.2)", fontSize: 16, cursor: "pointer", lineHeight: 1, padding: 0 }}
+            style={{ background: "none", border: "none", color: "rgba(255,255,255,0.12)", fontSize: 16, cursor: "pointer", lineHeight: 1, padding: 0 }}
             onMouseEnter={e => (e.currentTarget.style.color = "rgba(255,255,255,0.7)")}
-            onMouseLeave={e => (e.currentTarget.style.color = "rgba(255,255,255,0.2)")}>×</button>
+            onMouseLeave={e => (e.currentTarget.style.color = "rgba(255,255,255,0.12)")}>×</button>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 12, marginTop: 12 }}>
           <div style={{ width: 52, height: 52, borderRadius: "50%", overflow: "hidden", border: "2px solid rgba(167,139,250,0.4)", flexShrink: 0, background: "linear-gradient(135deg,#4f3b78,#a78bfa)" }}>

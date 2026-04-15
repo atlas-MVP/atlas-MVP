@@ -1,83 +1,81 @@
 "use client";
 
 import { useState, useRef } from "react";
+import LiveAlertRow from "./LiveAlertRow";
 
 interface LiveAlert {
   time: string;
   text: string;
   description: string;
   danger: number;
+  confidence: number;
+  sources: string[];
+  pulse?: boolean;
   flyTo: { center: [number,number]; zoom: number };
 }
 
 const CONFLICT_ALERTS: Record<string, LiveAlert[]> = {
   "israel-iran": [
-    {
-      time: "NOW", danger: 5,
+    { time: "NOW",    danger: 5, confidence: 96, sources: ["AP", "Reuters", "ACLED"], pulse: true,
       text: "Israel-Lebanon border exchange — IDF artillery responds to Hezbollah rocket fire in Galilee",
       description: "IDF artillery units opened fire on southern Lebanese villages after Hezbollah launched a salvo of 40+ rockets targeting communities in the Galilee region. Evacuation orders are in effect for several northern Israeli towns. Lebanese civil defense reports casualties in the Bint Jbeil district.",
-      flyTo: { center: [35.2, 33.1] as [number,number], zoom: 7 },
-    },
-    {
-      time: "12m", danger: 5,
+      flyTo: { center: [35.2, 33.1] as [number,number], zoom: 7 } },
+    { time: "12m",    danger: 5, confidence: 93, sources: ["Reuters", "AP"], pulse: true,
       text: "US 5th Fleet announces heightened readiness posture in Persian Gulf",
       description: "The US Navy's 5th Fleet, headquartered in Bahrain, has raised its alert status following intelligence reports of Iranian naval mobilization near the Strait of Hormuz. Two additional destroyers are being repositioned.",
-      flyTo: { center: [50.5, 26.2] as [number,number], zoom: 5 },
-    },
-    {
-      time: "2d ago", danger: 4,
+      flyTo: { center: [50.5, 26.2] as [number,number], zoom: 5 } },
+    { time: "2d ago", danger: 4, confidence: 91, sources: ["NYT", "Haaretz", "AP"],
       text: "IDF strikes Hezbollah command node in Beirut southern suburbs — 3 commanders killed",
-      description: "Israeli Air Force F-35Is struck a Hezbollah command-and-control node beneath a residential building in the Dahieh district of Beirut. IDF confirms three senior Hezbollah field commanders were killed. Lebanese civil defense reports 11 civilians injured in the strike. The operation is the deepest strike inside Beirut since the 2024 ceasefire.",
-      flyTo: { center: [35.5, 33.85] as [number,number], zoom: 9 },
-    },
-    {
-      time: "2d ago", danger: 4,
+      description: "Israeli Air Force F-35Is struck a Hezbollah command-and-control node beneath a residential building in the Dahieh district of Beirut. IDF confirms three senior Hezbollah field commanders were killed. Lebanese civil defense reports 11 civilians injured. The operation is the deepest strike inside Beirut since the 2024 ceasefire.",
+      flyTo: { center: [35.5, 33.85] as [number,number], zoom: 9 } },
+    { time: "2d ago", danger: 4, confidence: 88, sources: ["Reuters", "ACLED"],
       text: "IRGC Navy deploys additional patrol vessels near Strait of Hormuz — tanker diversions begin",
       description: "Iran's Islamic Revolutionary Guard Corps Navy has deployed 14 additional fast-attack craft to patrol sectors near the narrowest point of the Strait of Hormuz. Several major shipping firms have diverted tankers via the longer Cape of Good Hope route. Daily throughput of crude oil through the strait has declined by an estimated 22%.",
-      flyTo: { center: [56.5, 26.5] as [number,number], zoom: 7 },
-    },
-    {
-      time: "3d ago", danger: 3,
+      flyTo: { center: [56.5, 26.5] as [number,number], zoom: 7 } },
+    { time: "3d ago", danger: 3, confidence: 85, sources: ["Haaretz", "Reuters"],
       text: "Israeli cabinet approves expanded Lebanon ground incursion — 3 additional brigades mobilized",
       description: "Israel's Security Cabinet voted 9-2 to authorize an expanded ground operation in southern Lebanon, committing an additional three armored brigades. The IDF Northern Command has issued displacement orders for 14 villages north of the Litani River. UN peacekeeping forces (UNIFIL) have been notified and are consolidating to protected compounds.",
-      flyTo: { center: [35.3, 33.4] as [number,number], zoom: 8 },
-    },
-    {
-      time: "3d ago", danger: 3,
+      flyTo: { center: [35.3, 33.4] as [number,number], zoom: 8 } },
+    { time: "3d ago", danger: 3, confidence: 90, sources: ["Pentagon", "Reuters"],
       text: "US deploys THAAD battery to Qatar — Al Udeid AB reinforced following missile threat intelligence",
       description: "A Terminal High Altitude Area Defense battery has been airlifted to Al Udeid Air Base in Qatar following specific intelligence of Iranian ballistic missile targeting. The Pentagon confirmed the deployment, citing credible threats against US forces in the Gulf. Qatar's defense ministry issued a joint statement affirming coordination.",
-      flyTo: { center: [51.3, 25.1] as [number,number], zoom: 8 },
-    },
-    {
-      time: "4d ago", danger: 4,
+      flyTo: { center: [51.3, 25.1] as [number,number], zoom: 8 } },
+    { time: "4d ago", danger: 4, confidence: 97, sources: ["CENTCOM", "AP"],
       text: "Houthi anti-ship missiles target USS Gravely in Red Sea — missile intercepted, no casualties",
-      description: "The Houthi movement launched two anti-ship ballistic missiles at the USS Gravely, a guided-missile destroyer conducting freedom of navigation operations in the southern Red Sea. Both missiles were successfully intercepted by the ship's SM-2 missile defense system. CENTCOM confirmed no casualties or damage. This is the 34th documented Houthi attack on US naval assets since October 2023.",
-      flyTo: { center: [43.5, 14.0] as [number,number], zoom: 7 },
-    },
+      description: "The Houthi movement launched two anti-ship ballistic missiles at the USS Gravely, a guided-missile destroyer conducting freedom of navigation operations in the southern Red Sea. Both missiles were successfully intercepted by the ship's SM-2 defense system. CENTCOM confirmed no casualties or damage. This is the 34th documented Houthi attack on US naval assets since October 2023.",
+      flyTo: { center: [43.5, 14.0] as [number,number], zoom: 7 } },
   ],
   "israel-gaza": [
-    {
-      time: "55m", danger: 4,
+    { time: "NOW", danger: 5, confidence: 97, sources: ["AP", "Al Jazeera", "Reuters"], pulse: true,
+      text: "Israeli attacks kill 11, including two children, in day of strikes on Gaza",
+      description: "A three-year-old and a 14-year-old were among those killed in Israel's latest strikes on northern Gaza.",
+      flyTo: { center: [34.4, 31.6] as [number,number], zoom: 8 } },
+    { time: "55m", danger: 4, confidence: 94, sources: ["AP", "Al Jazeera"], pulse: true,
       text: "Northern Gaza hospitals running on emergency reserves — collapse imminent",
       description: "Al-Ahli Arab Hospital and Kamal Adwan Hospital in northern Gaza have issued emergency declarations after fuel stocks dropped below 24-hour reserves. UNRWA reports 14 aid trucks held at the Kerem Shalom crossing for 11 days.",
-      flyTo: { center: [34.4, 31.6] as [number,number], zoom: 8 },
-    },
+      flyTo: { center: [34.4, 31.6] as [number,number], zoom: 8 } },
   ],
   "russia-ukraine": [
-    {
-      time: "28m", danger: 4,
+    { time: "28m", danger: 4, confidence: 89, sources: ["NYT", "Reuters"], pulse: true,
       text: "Ukraine reports overnight drone barrage — Kyiv air defenses activated",
       description: "Russia launched 78 Shahed-136 drones in an overnight wave targeting Kyiv, Odessa, and Kharkiv. Ukrainian air defense intercepted 61 drones. Three civilians were killed and 14 injured.",
-      flyTo: { center: [30.5, 50.4] as [number,number], zoom: 6 },
-    },
+      flyTo: { center: [30.5, 50.4] as [number,number], zoom: 6 } },
+  ],
+  "sudan": [
+    { time: "Apr 10", danger: 5, confidence: 91, sources: ["UN", "Sudan Tribune"], pulse: true,
+      text: "SAF drone strike kills 40+ at wedding celebration in North Darfur — RSF-held town targeted",
+      description: "Sudan's armed forces killed at least forty and burned dozens more homes in a drone strike on a wedding celebration in an RSF-held town in North Darfur state. A recent survey describes widespread hunger, separation, and social disruption as families reckon with a lack of access to basic services amid the continued risk of violence.",
+      flyTo: { center: [25.1, 15.6] as [number,number], zoom: 6 } },
+    { time: "41m", danger: 5, confidence: 82, sources: ["Al Jazeera", "ACLED"], pulse: true,
+      text: "RSF forces reported inside Omdurman residential districts — civilian evacuation underway",
+      description: "Rapid Support Forces fighters have pushed into at least four residential neighborhoods in Omdurman, Khartoum's twin city. OCHA reports 80,000 civilians displaced in the past 72 hours. Aid convoys are unable to enter due to active fighting on the Omdurman bridge.",
+      flyTo: { center: [32.5, 15.6] as [number,number], zoom: 6 } },
   ],
   "taiwan-strait": [
-    {
-      time: "1h 10m", danger: 2,
+    { time: "1h 10m", danger: 2, confidence: 79, sources: ["ACLED", "GDELT"],
       text: "PLA carrier group Shandong approaches Taiwan median line — GDELT naval index elevated",
-      description: "The PLA Navy carrier strike group led by the Shandong has approached within 40 nautical miles of the Taiwan Strait median line. Taiwan's MND has scrambled F-16 and Mirage 2000 fighters.",
-      flyTo: { center: [121.5, 24.5] as [number,number], zoom: 6.5 },
-    },
+      description: "The PLA Navy carrier strike group led by the Shandong has approached within 40 nautical miles of the Taiwan Strait median line. Taiwan's MND has scrambled F-16 and Mirage 2000 fighters. The GDELT conflict index for the Taiwan Strait has risen to its highest level since August 2022.",
+      flyTo: { center: [121.5, 24.5] as [number,number], zoom: 6.5 } },
   ],
 };
 
@@ -495,20 +493,21 @@ const CONFLICTS: Record<string, Conflict> = {
   },
   "sudan": {
     id: "sudan",
-    title: "Sudan civil war",
+    title: "Sudan civil war + genocide",
     date: "April 2023 – Present",
     feedKey: "SDN",
     casualties: [{ country: "Sudan", injured: "14,200", killed: "20,079", killedHasMissing: true, missing: "8,000", }],
     xPost: {
       user: "Al Jazeera English",
       handle: "@AJEnglish",
-      text: "Sudan's civil war has displaced more than 10 million people — the world's largest displacement crisis. Mass atrocities reported in Darfur. #Sudan #SudanWar",
+      text: "Sudan's civil war has displaced more than 10 million people — the world's largest displacement crisis. Mass atrocities and genocide reported in Darfur. #Sudan #SudanWar #DarfurGenocide",
       imageUrl: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=600&q=80",
       xUrl: "https://x.com/search?q=%23Sudan",
     },
     timeline: [
-      { date: "2023–Present", text: "Fighting between the Sudanese Armed Forces and the Rapid Support Forces has killed tens of thousands. 10M+ displaced. Famine conditions in Darfur." },
-      { date: "April 2023", text: "Fighting erupts in Khartoum between SAF and RSF, rapidly spreading nationwide.", highlight: true },
+      { date: "April 10, 2026", text: "SAF drone strike kills 40+ civilians at a wedding celebration in an RSF-held town in North Darfur. Dozens of homes burned. UN condemns the attack.", highlight: true },
+      { date: "2024–Present", text: "RSF advances on Khartoum and Omdurman. Famine conditions declared across Darfur. UN and ICC investigators document systematic mass killings and sexual violence consistent with genocide. 20,000+ killed, 10M+ displaced — the world's largest displacement crisis." },
+      { date: "April 2023", text: "Fighting erupts in Khartoum between the Sudanese Armed Forces and the Rapid Support Forces, rapidly spreading to Darfur, Kordofan, and other regions.", highlight: true },
     ],
   },
   "myanmar": {
@@ -693,11 +692,16 @@ export default function CountryPanel({ countryCode, onClose, onViewFeed, onConfl
   const [selectedConflictId, setSelectedConflictId] = useState<string | null>(null);
   const [civTooltip, setCivTooltip]       = useState<string | null>(null);
   const [scrolled, setScrolled]           = useState(false);
-  const [alertsExpanded, setAlertsExpanded]     = useState(false);
-  const [expandedAlertIdx, setExpandedAlertIdx] = useState<number | null>(null);
   const [showAllCasualties, setShowAllCasualties] = useState(false);
   const [timelineExpanded, setTimelineExpanded] = useState(false);
+  const [hoveredAlert,  setHoveredAlert]  = useState<number | null>(null);
+  const [hoverMidY,     setHoverMidY]     = useState(0);
+  const [sourcesOpen,   setSourcesOpen]   = useState(false);
+  const leaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
+
+  const cancelLeave = () => { if (leaveTimer.current) clearTimeout(leaveTimer.current); };
+  const scheduleLeave = () => { cancelLeave(); leaveTimer.current = setTimeout(() => { setHoveredAlert(null); setSourcesOpen(false); }, 8000); };
 
   if (!countryCode) return null;
   const conflictIds = COUNTRY_CONFLICTS[countryCode];
@@ -848,24 +852,29 @@ export default function CountryPanel({ countryCode, onClose, onViewFeed, onConfl
     );
   };
 
+  const alerts = CONFLICT_ALERTS[activeId ?? ""] ?? [];
+  const activeAlert = hoveredAlert !== null ? alerts[hoveredAlert] : null;
+
   return (
+    <>
     <div
       className="absolute left-6 z-20 w-[460px]"
       style={{ top: 72, bottom: 24, display: "flex", flexDirection: "column" }}
       onClick={closeCiv}
     >
       <div style={{
-        background: "rgba(4,6,16,0.95)",
-        backdropFilter: "blur(28px)",
-        border: "1px solid rgba(255,255,255,0.07)",
-        borderRadius: 12,
-        boxShadow: "0 0 50px rgba(0,0,0,0.8)",
+        background: "rgba(4,6,18,0.62)",
+        backdropFilter: "blur(40px)",
+        WebkitBackdropFilter: "blur(40px)",
+        border: "1px solid rgba(255,255,255,0.06)",
+        borderRadius: 16,
+        boxShadow: "0 24px 80px rgba(0,0,0,0.38), 0 1px 3px rgba(0,0,0,0.18)",
         display: "flex", flexDirection: "column",
         height: "100%", overflow: "hidden",
       }}>
 
         {/* ── STICKY HEADER ── */}
-        <div style={{ flexShrink: 0, borderBottom: "1px solid rgba(255,255,255,0.05)", padding: "10px 16px 8px" }}>
+        <div style={{ flexShrink: 0, padding: "10px 18px 8px" }}>
           <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 8 }}>
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ display: "flex", alignItems: "center", gap: 7, flexWrap: "wrap" }}>
@@ -884,12 +893,12 @@ export default function CountryPanel({ countryCode, onClose, onViewFeed, onConfl
                       style={{
                         fontSize: 8, fontFamily: "monospace", letterSpacing: "0.1em",
                         padding: "2px 6px", borderRadius: 4, flexShrink: 0, cursor: "pointer",
-                        background: isBlueSide ? "rgba(59,130,246,0.1)" : "rgba(225,29,72,0.1)",
-                        border: `1px solid ${isBlueSide ? "rgba(59,130,246,0.35)" : "rgba(225,29,72,0.35)"}`,
-                        color: isBlueSide ? "rgba(147,197,253,0.85)" : "rgba(251,113,133,0.85)",
+                        background: "rgba(255,255,255,0.04)",
+                        border: "1px solid rgba(255,255,255,0.10)",
+                        color: "rgba(255,255,255,0.6)",
                       }}
-                      onMouseEnter={e => (e.currentTarget.style.background = isBlueSide ? "rgba(59,130,246,0.2)" : "rgba(225,29,72,0.2)")}
-                      onMouseLeave={e => (e.currentTarget.style.background = isBlueSide ? "rgba(59,130,246,0.1)" : "rgba(225,29,72,0.1)")}
+                      onMouseEnter={e => (e.currentTarget.style.background = "rgba(255,255,255,0.08)")}
+                      onMouseLeave={e => (e.currentTarget.style.background = "rgba(255,255,255,0.04)")}
                     >{displayName.toUpperCase()}</button>
                   );
                 })()}
@@ -899,13 +908,13 @@ export default function CountryPanel({ countryCode, onClose, onViewFeed, onConfl
               </p>
             </div>
             <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
-              <span style={{ fontSize: 8, fontFamily: "monospace", letterSpacing: "0.12em", color: "rgba(255,255,255,0.2)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 4, padding: "2px 5px" }}>
-                ACTIVE CONFLICT
+              <span style={{ fontSize: 8, fontFamily: "monospace", letterSpacing: "0.14em", color: "rgba(255,255,255,0.18)", textTransform: "uppercase" }}>
+                active conflict
               </span>
               <button onClick={() => { onClose(); setSelectedConflictId(null); }}
-                style={{ color: "rgba(255,255,255,0.2)", fontSize: 18, background: "none", border: "none", cursor: "pointer", lineHeight: 1, padding: 0 }}
+                style={{ color: "rgba(255,255,255,0.12)", fontSize: 18, background: "none", border: "none", cursor: "pointer", lineHeight: 1, padding: 0 }}
                 onMouseEnter={e => (e.currentTarget.style.color = "rgba(255,255,255,0.7)")}
-                onMouseLeave={e => (e.currentTarget.style.color = "rgba(255,255,255,0.2)")}>×</button>
+                onMouseLeave={e => (e.currentTarget.style.color = "rgba(255,255,255,0.12)")}>×</button>
             </div>
           </div>
 
@@ -916,11 +925,12 @@ export default function CountryPanel({ countryCode, onClose, onViewFeed, onConfl
                 <button key={id}
                   onClick={(e) => { e.stopPropagation(); setSelectedConflictId(id); onConflictSelect?.(id); }}
                   style={{
-                    fontSize: 10, fontFamily: "monospace", letterSpacing: "0.04em",
-                    padding: "4px 10px", borderRadius: 6, cursor: "pointer",
-                    background: activeId === id ? "rgba(59,130,246,0.14)" : "rgba(255,255,255,0.03)",
-                    border: `1px solid ${activeId === id ? "rgba(59,130,246,0.3)" : "rgba(255,255,255,0.07)"}`,
-                    color: activeId === id ? "rgba(147,197,253,0.9)" : "rgba(255,255,255,0.3)",
+                    fontSize: 9, fontFamily: "monospace", letterSpacing: "0.1em", textTransform: "uppercase",
+                    padding: "4px 10px", borderRadius: 8, cursor: "pointer",
+                    background: activeId === id ? "rgba(255,255,255,0.06)" : "rgba(255,255,255,0.02)",
+                    border: `1px solid ${activeId === id ? "rgba(255,255,255,0.14)" : "rgba(255,255,255,0.06)"}`,
+                    color: activeId === id ? "rgba(255,255,255,0.75)" : "rgba(255,255,255,0.25)",
+                    boxShadow: activeId === id ? "inset 0 1px 0 rgba(255,255,255,0.07)" : "none",
                   }}>
                   {CONFLICTS[id]?.title}
                 </button>
@@ -967,71 +977,30 @@ export default function CountryPanel({ countryCode, onClose, onViewFeed, onConfl
             )}
           </div>
 
-          {/* X Post embed */}
-          <a href={conflict.xPost.xUrl} target="_blank" rel="noopener noreferrer"
-            style={{ display: "block", margin: "12px 14px", borderRadius: 10, overflow: "hidden", border: "1px solid rgba(255,255,255,0.07)", background: "rgba(255,255,255,0.02)", textDecoration: "none" }}
-            onClick={e => e.stopPropagation()}>
-            <div style={{ position: "relative", height: 100, overflow: "hidden" }}>
-              <img src={conflict.xPost.imageUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", opacity: 0.45 }} />
-              <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(0,0,0,0.8), transparent)" }} />
-              <div style={{ position: "absolute", top: 8, right: 8 }}>
-                <svg viewBox="0 0 24 24" width="14" height="14" fill="white" opacity="0.6">
-                  <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.746l7.73-8.835L1.254 2.25H8.08l4.259 5.63zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
-                </svg>
-              </div>
-            </div>
-            <div style={{ padding: "8px 10px" }}>
-              <div style={{ display: "flex", gap: 6, marginBottom: 4, alignItems: "center" }}>
-                <span style={{ fontSize: 11, color: "rgba(255,255,255,0.7)", fontWeight: 600 }}>{conflict.xPost.user}</span>
-                <span style={{ fontSize: 10, color: "rgba(255,255,255,0.2)" }}>{conflict.xPost.handle}</span>
-              </div>
-              <p style={{ fontSize: 11, color: "rgba(255,255,255,0.45)", lineHeight: 1.5, margin: 0, display: "-webkit-box", WebkitLineClamp: 3, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
-                {conflict.xPost.text}
-              </p>
-            </div>
-          </a>
 
           {/* Live alerts */}
           {(() => {
-            const allAlerts = CONFLICT_ALERTS[conflict.id] ?? [];
-            if (allAlerts.length === 0) return null;
-            const pinned = initialAlertText ? allAlerts.find(a => a.text === initialAlertText) ?? allAlerts[0] : allAlerts[0];
-            const rest = allAlerts.filter(a => a !== pinned);
-            const renderAlert = (a: LiveAlert, idx: number, isPinned?: boolean) => {
-              const color = a.danger >= 4 ? "#6d28d9" : a.danger >= 3 ? "#4338ca" : a.danger >= 2 ? "#1d4ed8" : "#1e3a8a";
-              const isExp = expandedAlertIdx === idx || (isPinned && !!initialAlertText && expandedAlertIdx === null);
-              return (
-                <div key={isPinned ? "pinned" : idx}
-                  onClick={() => { setExpandedAlertIdx(isExp ? null : idx); onFocusPosition?.(a.flyTo.center, a.flyTo.zoom); }}
-                  style={{ padding: "6px 9px", borderRadius: 8, cursor: "pointer", background: isPinned ? "rgba(255,255,255,0.04)" : "rgba(255,255,255,0.02)", border: `1px solid ${isPinned ? "rgba(255,255,255,0.10)" : "rgba(255,255,255,0.06)"}` }}
-                  onMouseEnter={e => (e.currentTarget.style.background = isPinned ? "rgba(255,255,255,0.07)" : "rgba(255,255,255,0.04)")}
-                  onMouseLeave={e => (e.currentTarget.style.background = isPinned ? "rgba(255,255,255,0.04)" : "rgba(255,255,255,0.02)")}
-                >
-                  <div style={{ display: "flex", gap: 8, alignItems: "flex-start" }}>
-                    <div className={a.danger >= 5 ? "dot-heat" : ""} style={{ width: 6, height: 6, borderRadius: "50%", background: a.danger >= 5 ? "#1e3a8a" : color, boxShadow: a.danger >= 5 ? "0 0 7px #1e3a8acc" : `0 0 5px ${color}`, flexShrink: 0, marginTop: 3 }} />
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <span style={{ fontSize: 14, color: "rgba(255,255,255,0.78)", lineHeight: 1.5, fontWeight: isPinned ? 600 : 400 }}>{a.text}</span>
-                      <span style={{ fontSize: 9, fontFamily: "monospace", color: "rgba(255,255,255,0.22)", marginLeft: 7 }}>{a.time}</span>
-                    </div>
-                    {!isPinned && <span style={{ fontSize: 9, color: "rgba(255,255,255,0.18)", flexShrink: 0, marginTop: 2 }}>{isExp ? "▲" : "▼"}</span>}
-                  </div>
-                  {isExp && <p style={{ margin: "8px 0 0 14px", fontSize: 14, color: "rgba(255,255,255,0.45)", lineHeight: 1.65 }}>{a.description}</p>}
-                </div>
-              );
-            };
+            const conflictAlerts = CONFLICT_ALERTS[conflict.id] ?? [];
+            if (conflictAlerts.length === 0) return null;
             return (
-              <div style={{ padding: "8px 14px 6px", borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
-                <p style={{ margin: "0 0 7px", fontSize: 9, fontFamily: "monospace", letterSpacing: "0.14em", color: "rgba(255,255,255,0.22)", textTransform: "uppercase" }}>live alerts</p>
-                <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-                  {renderAlert(pinned, -1, true)}
-                  {alertsExpanded && rest.map((a, i) => renderAlert(a, i))}
-                  {rest.length > 0 && (
-                    <button onClick={e => { e.stopPropagation(); setAlertsExpanded(v => !v); }}
-                      style={{ fontSize: 9, fontFamily: "monospace", letterSpacing: "0.12em", color: "rgba(255,255,255,0.28)", background: "none", border: "none", padding: "2px 0", cursor: "pointer", textAlign: "left" }}>
-                      {alertsExpanded ? "▲ show less" : `▼ +${rest.length} more alerts`}
-                    </button>
-                  )}
-                </div>
+              <div style={{ padding: "8px 6px 6px", borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
+                <p style={{ margin: "0 0 4px 8px", fontSize: 9, fontFamily: "monospace", letterSpacing: "0.14em", color: "rgba(255,255,255,0.22)", textTransform: "uppercase" }}>live alerts</p>
+                {conflictAlerts.map((a, i) => (
+                  <LiveAlertRow
+                    key={i}
+                    item={a}
+                    bottomBorder={i < conflictAlerts.length - 1}
+                    showConfidenceInline={false}
+                    expandOnHover={true}
+                    defaultExpanded={!!initialAlertText && a.text === initialAlertText}
+                    isActive={hoveredAlert === i}
+                    onHoverChange={(active, anchorY) => {
+                      cancelLeave();
+                      if (active) { setHoveredAlert(i); setHoverMidY(anchorY); }
+                      else scheduleLeave();
+                    }}
+                  />
+                ))}
               </div>
             );
           })()}
@@ -1110,87 +1079,83 @@ export default function CountryPanel({ countryCode, onClose, onViewFeed, onConfl
               <div style={{ padding: "0 16px 16px" }}>
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
                   <p style={{ fontSize: 9, fontFamily: "monospace", letterSpacing: "0.12em", color: "rgba(255,255,255,0.18)", textTransform: "uppercase", margin: 0 }}>Timeline</p>
-                  <button
-                    onClick={(e) => { e.stopPropagation(); onAuthorClick?.(); }}
-                    style={{ display: "flex", alignItems: "center", gap: 6, background: "none", border: "none", cursor: "pointer", padding: 0 }}
-                    title="About the author"
-                  >
-                    <div style={{ width: 22, height: 22, borderRadius: "50%", overflow: "hidden", border: "1px solid rgba(255,255,255,0.18)", flexShrink: 0, background: "linear-gradient(135deg,#4f3b78,#a78bfa)" }}>
-                      <img
-                        src="https://api.dicebear.com/9.x/notionists/svg?seed=JeniKim&backgroundColor=4f3b78&beardProbability=0&glassesProbability=0"
-                        alt="Jeni Kim"
-                        style={{ width: "100%", height: "100%", objectFit: "cover" }}
-                        onError={e => { (e.currentTarget as HTMLImageElement).style.display = "none"; }}
-                      />
-                    </div>
-                    <span style={{ fontSize: 10, fontFamily: "monospace", color: "rgba(255,255,255,0.35)", letterSpacing: "0.04em", textDecoration: "underline", textDecorationColor: "rgba(255,255,255,0.12)", textUnderlineOffset: 3 }}>
-                      Jeni Kim
-                    </span>
-                  </button>
                 </div>
 
                 <div style={{ position: "relative" }}>
                   <div style={{ position: "absolute", left: 5, top: 6, bottom: 6, width: 1, background: "rgba(255,255,255,0.05)" }} />
-                  <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
-                    {(timelineExpanded ? conflict.timeline : conflict.timeline.slice(0, 2)).map((event, i, arr) => {
+                  {(() => {
+                    const latest = conflict.timeline[0];
+                    // Everything after index 0, reversed so oldest appears first
+                    const chronological = [...conflict.timeline.slice(1)].reverse();
+
+                    const renderEvent = (event: typeof latest, i: number, arr: typeof chronological) => {
                       const side = getEventSide(event.text, event.date);
+                      const palette = side === "crimson" ? CRIMSON : side === "amber" ? AMBER : GREY;
                       const currentYear = extractYear(event.date);
                       const nextEvent = arr[i + 1];
                       const nextYear = nextEvent ? extractYear(nextEvent.date) : null;
                       const showYearAfter = nextYear !== null && nextYear !== currentYear;
-
-                      const palette = side === "crimson" ? CRIMSON
-                                    : side === "amber"   ? AMBER
-                                    : GREY;
-
                       return (
                         <div key={i} {...(event.strikeEvent ? { "data-strike": JSON.stringify(event.strikeEvent) } : {})}>
                           <div style={{ display: "flex", gap: 12, paddingLeft: 4 }}>
                             <div style={{ flexShrink: 0, marginTop: 3 }}>
-                              <div style={{
-                                width: 10, height: 10, borderRadius: "50%",
-                                background: palette.solid,
-                                border: `1px solid ${palette.border}`,
-                                boxShadow: palette.glow,
-                              }} />
+                              <div style={{ width: 10, height: 10, borderRadius: "50%", background: palette.solid, border: `1px solid ${palette.border}`, boxShadow: palette.glow }} />
                             </div>
                             <div>
                               <p style={{ margin: "0 0 5px", fontSize: 11, fontFamily: "monospace", fontWeight: 600, color: palette.date, letterSpacing: "0.03em" }}>
-                                {(() => {
-                                  const d = event.date;
-                                  if (/^(19|20)\d\d/.test(d)) return d;
-                                  return d.replace(/,?\s*(19|20)\d\d/, "");
-                                })()}
+                                {(() => { const d = event.date; if (/^(19|20)\d\d/.test(d)) return d; return d.replace(/,?\s*(19|20)\d\d/, ""); })()}
                               </p>
                               <p style={{ margin: 0, fontSize: 14, color: palette.text, lineHeight: 1.65 }}>{event.text}</p>
                             </div>
                           </div>
                           {showYearAfter && (
-                            <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 18, paddingLeft: 20 }}>
-                              <span style={{ fontSize: 13, fontWeight: 700, fontFamily: "monospace", color: "rgba(255,255,255,0.28)", letterSpacing: "0.06em" }}>{nextYear}</span>
+                            <div style={{ display: "flex", alignItems: "center", gap: 8, margin: "20px 0 2px", paddingLeft: 4 }}>
+                              <span style={{ fontSize: 11, fontWeight: 700, fontFamily: "monospace", color: "rgba(255,255,255,0.22)", letterSpacing: "0.14em" }}>{nextYear}</span>
                               <div style={{ flex: 1, height: 1, background: "rgba(255,255,255,0.06)" }} />
                             </div>
                           )}
                         </div>
                       );
-                    })}
-                  </div>
-                  {!timelineExpanded && conflict.timeline.length > 2 && (
-                    <button
-                      onClick={(e) => { e.stopPropagation(); setTimelineExpanded(true); }}
-                      style={{ fontSize: 13, fontFamily: "monospace", color: "rgba(255,255,255,0.35)", background: "none", border: "none", cursor: "pointer", padding: "8px 0 0" }}
-                      onMouseEnter={e => (e.currentTarget.style.color = "rgba(255,255,255,0.7)")}
-                      onMouseLeave={e => (e.currentTarget.style.color = "rgba(255,255,255,0.35)")}
-                    >read full story →</button>
-                  )}
-                  {timelineExpanded && (
-                    <button
-                      onClick={(e) => { e.stopPropagation(); scrollRef.current?.scrollTo({ top: 0, behavior: "smooth" }); }}
-                      style={{ fontSize: 11, fontFamily: "monospace", color: "rgba(255,255,255,0.28)", background: "none", border: "none", cursor: "pointer", padding: "12px 0 0", display: "block" }}
-                      onMouseEnter={e => (e.currentTarget.style.color = "rgba(255,255,255,0.6)")}
-                      onMouseLeave={e => (e.currentTarget.style.color = "rgba(255,255,255,0.28)")}
-                    >↑ back to top</button>
-                  )}
+                    };
+
+                    return (
+                      <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
+                        {/* Latest update — always on top */}
+                        {latest && renderEvent(latest, 0, [latest])}
+
+                        {/* Divider between present and past */}
+                        {chronological.length > 0 && (
+                          <div style={{ display: "flex", alignItems: "center", gap: 10, margin: "4px 0" }}>
+                            <div style={{ flex: 1, height: 1, background: "rgba(255,255,255,0.08)" }} />
+                            <span style={{ fontSize: 9, fontFamily: "monospace", letterSpacing: "0.18em", color: "rgba(255,255,255,0.18)", textTransform: "uppercase" }}>history</span>
+                            <div style={{ flex: 1, height: 1, background: "rgba(255,255,255,0.08)" }} />
+                          </div>
+                        )}
+
+                        {/* Read full story → expands chronological history below */}
+                        {!timelineExpanded && chronological.length > 0 && (
+                          <button
+                            onClick={(e) => { e.stopPropagation(); setTimelineExpanded(true); }}
+                            style={{ fontSize: 13, fontFamily: "monospace", color: "rgba(255,255,255,0.35)", background: "none", border: "none", cursor: "pointer", padding: "0", textAlign: "left" }}
+                            onMouseEnter={e => (e.currentTarget.style.color = "rgba(255,255,255,0.7)")}
+                            onMouseLeave={e => (e.currentTarget.style.color = "rgba(255,255,255,0.35)")}
+                          >read full story →</button>
+                        )}
+
+                        {/* Chronological history: oldest first, newest last */}
+                        {timelineExpanded && chronological.map((event, i, arr) => renderEvent(event, i, arr))}
+
+                        {timelineExpanded && (
+                          <button
+                            onClick={(e) => { e.stopPropagation(); scrollRef.current?.scrollTo({ top: 0, behavior: "smooth" }); }}
+                            style={{ fontSize: 11, fontFamily: "monospace", color: "rgba(255,255,255,0.28)", background: "none", border: "none", cursor: "pointer", padding: "4px 0 0", display: "block" }}
+                            onMouseEnter={e => (e.currentTarget.style.color = "rgba(255,255,255,0.6)")}
+                            onMouseLeave={e => (e.currentTarget.style.color = "rgba(255,255,255,0.28)")}
+                          >↑ back to top</button>
+                        )}
+                      </div>
+                    );
+                  })()}
                 </div>
               </div>
             );
@@ -1198,5 +1163,48 @@ export default function CountryPanel({ countryCode, onClose, onViewFeed, onConfl
         </div>
       </div>
     </div>
+
+    {/* Floating confidence + sources — sibling outside backdropFilter stacking context */}
+    {activeAlert && (() => {
+      const cc = activeAlert.confidence >= 90 ? "#22c55e" : activeAlert.confidence >= 80 ? "#86efac" : activeAlert.confidence >= 70 ? "#fbbf24" : "#f87171";
+      return (
+        <div
+          onMouseEnter={() => { cancelLeave(); setSourcesOpen(true); }}
+          onMouseLeave={() => { setSourcesOpen(false); scheduleLeave(); }}
+          style={{ position: "fixed", left: 444, top: hoverMidY - 92, paddingLeft: 60, paddingTop: 80, paddingBottom: 80, paddingRight: 60, zIndex: 21, pointerEvents: "auto" }}
+        >
+          <div style={{
+            background: "rgba(4,6,18,0.92)",
+            border: "1px solid rgba(255,255,255,0.08)",
+            borderRadius: 16,
+            boxShadow: "0 8px 60px rgba(0,0,0,0.85), 0 2px 8px rgba(0,0,0,0.5)",
+            backdropFilter: "blur(20px)",
+            padding: "8px 12px 10px",
+          }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <span style={{ fontSize: 9, fontFamily: "monospace", letterSpacing: "0.12em", color: "rgba(255,255,255,0.35)", minWidth: 52 }}>confidence</span>
+            <div style={{ width: 100, height: 6, borderRadius: 99, background: "rgba(255,255,255,0.10)", overflow: "hidden", flexShrink: 0 }}>
+              <div style={{ width: `${activeAlert.confidence}%`, height: "100%", borderRadius: 99, background: cc, transition: "width 0.3s" }} />
+            </div>
+            <span style={{ fontSize: 10, fontFamily: "monospace", fontWeight: 700, color: cc, minWidth: 30 }}>{activeAlert.confidence}%</span>
+          </div>
+          {sourcesOpen && (
+            <div style={{ marginTop: 8, paddingTop: 8, borderTop: "1px solid rgba(255,255,255,0.06)", display: "flex", flexWrap: "wrap", gap: 5, alignItems: "center" }}>
+              <span style={{ fontSize: 9, fontFamily: "monospace", letterSpacing: "0.14em", color: "rgba(255,255,255,0.25)", marginRight: 2 }}>SOURCES</span>
+              {activeAlert.sources.map(s => (
+                <button key={s}
+                  onClick={e => { e.stopPropagation(); onSourceTap?.(s); }}
+                  onMouseEnter={e => { e.currentTarget.style.background = "rgba(255,255,255,0.14)"; e.currentTarget.style.color = "#fff"; }}
+                  onMouseLeave={e => { e.currentTarget.style.background = "rgba(255,255,255,0.07)"; e.currentTarget.style.color = "rgba(255,255,255,0.65)"; }}
+                  style={{ fontSize: 10, fontFamily: "monospace", letterSpacing: "0.08em", padding: "2px 8px", borderRadius: 99, cursor: "pointer", background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.16)", color: "rgba(255,255,255,0.65)" }}
+                >{s}</button>
+              ))}
+            </div>
+          )}
+          </div>
+        </div>
+      );
+    })()}
+    </>
   );
 }

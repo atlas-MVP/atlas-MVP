@@ -3,13 +3,12 @@
 import { useEffect, useRef, useState } from "react";
 import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
-import { getPeriodConfig, type HistoricalOverlay } from "./historicalPeriods";
 
 mapboxgl.accessToken =
   "pk.eyJ1IjoiYXRsYXNib3N0b24iLCJhIjoiY21qejY1c211Nmt2azNlcHMwcnljOGR1dCJ9.Pnq-qa_giDk0LN95OpFvMg";
 
-// Pre-highlighted blue + red pulse on hover
-const HIGHLIGHTED = ["ISR", "LBN", "IRN"];
+// Top-4 conflict countries — always blue base + red idle pulse
+const HIGHLIGHTED = ["LBN", "IRN", "UKR", "RUS", "PSE", "SDN"];
 
 const GLOBAL_CONFLICTS = [
   "UKR", "RUS", "SDN", "MMR", "ETH",
@@ -24,59 +23,74 @@ const GLOBAL_CONFLICTS = [
 const ALL_HOVERABLE = [...HIGHLIGHTED, ...GLOBAL_CONFLICTS];
 
 // Country centers for flyTo — zoom chosen so the country + neighbors are visible
+// Zoom proportional to country area. Reference: USA = 2.3, Lebanon = 7.0 (cities + neighbor edges visible)
 const COUNTRY_CENTERS: Record<string, { center: [number, number]; zoom: number }> = {
-  ISR: { center: [35.0, 31.5], zoom: 5.0 },
-  LBN: { center: [35.5, 33.9], zoom: 5.5 },
-  IRN: { center: [53.7, 32.4], zoom: 4.2 },
-  PSE: { center: [34.3, 31.9], zoom: 5.5 },
-  UKR: { center: [31.2, 48.4], zoom: 4.2 },
-  RUS: { center: [37.6, 55.7], zoom: 3.0 },
-  SDN: { center: [30.2, 15.6], zoom: 4.0 },
-  MMR: { center: [96.1, 19.7], zoom: 4.2 },
-  YEM: { center: [44.2, 15.5], zoom: 4.5 },
-  COD: { center: [23.5, -3.0], zoom: 3.8 },
-  HTI: { center: [-72.3, 18.9], zoom: 5.5 },
-  MEX: { center: [-99.1, 23.6], zoom: 3.8 },
-  CHN: { center: [104.2, 35.9], zoom: 3.0 },
-  TWN: { center: [120.9, 23.7], zoom: 5.5 },
-  SYR: { center: [38.3, 34.8], zoom: 5.0 },
-  IRQ: { center: [44.4, 33.3], zoom: 4.8 },
-  LBY: { center: [17.2, 26.3], zoom: 4.0 },
-  AFG: { center: [67.7, 33.9], zoom: 4.5 },
-  NGA: { center: [8.7,  9.1],  zoom: 4.2 },
-  ETH: { center: [40.5, 9.1],  zoom: 4.2 },
-  USA: { center: [-98.5, 39.5], zoom: 2.3 },  // US-centered full globe — Atlas HQ home
-  // Gulf / casualty countries
-  ARE: { center: [54.4, 23.4], zoom: 5.5 },  // UAE
-  KWT: { center: [47.5, 29.3], zoom: 5.8 },  // Kuwait
-  QAT: { center: [51.2, 25.3], zoom: 5.8 },  // Qatar
-  LKA: { center: [80.7,  7.8], zoom: 5.5 },  // Sri Lanka
-  JOR: { center: [36.2, 30.6], zoom: 5.0 },  // Jordan
-  GBR: { center: [-2.0, 54.0], zoom: 4.0 },  // UK
-  FRA: { center: [2.3,  46.2], zoom: 4.0 },  // France
+  // ~10M km² — widest
+  USA: { center: [-98.5, 39.5], zoom: 2.3 },
+  RUS: { center: [60.0,  60.0], zoom: 2.2 },
+  CHN: { center: [104.2, 35.9], zoom: 2.8 },
+  // ~2M km²
+  COD: { center: [23.5, -3.0],  zoom: 3.6 },
+  SDN: { center: [30.2, 15.6],  zoom: 3.6 },
+  MEX: { center: [-99.1, 23.6], zoom: 3.6 },
+  LBY: { center: [17.2, 26.3],  zoom: 3.6 },
+  // ~1–1.6M km²
+  IRN: { center: [53.7, 32.4],  zoom: 3.9 },
+  ETH: { center: [40.5,  9.1],  zoom: 4.0 },
+  NGA: { center: [8.7,   9.1],  zoom: 4.0 },
+  // ~500–700K km²
+  MMR: { center: [96.1, 19.7],  zoom: 4.4 },
+  AFG: { center: [67.7, 33.9],  zoom: 4.4 },
+  UKR: { center: [31.2, 48.4],  zoom: 4.5 },
+  FRA: { center: [2.3,  46.2],  zoom: 4.5 },
+  // ~400–530K km²
+  YEM: { center: [44.2, 15.5],  zoom: 4.8 },
+  IRQ: { center: [44.4, 33.3],  zoom: 5.0 },
+  // ~200–250K km²
+  GBR: { center: [-2.0, 54.0],  zoom: 5.2 },
+  SYR: { center: [38.3, 34.8],  zoom: 5.4 },
+  // ~60–100K km²
+  ARE: { center: [54.4, 23.4],  zoom: 5.9 },
+  JOR: { center: [36.2, 30.6],  zoom: 5.9 },
+  LKA: { center: [80.7,  7.8],  zoom: 6.0 },
+  // ~25–40K km²
+  TWN: { center: [120.9, 23.7], zoom: 6.4 },
+  HTI: { center: [-72.3, 18.9], zoom: 6.4 },
+  // ~10–22K km²
+  ISR: { center: [35.0, 31.5],  zoom: 6.8 },
+  KWT: { center: [47.5, 29.3],  zoom: 6.8 },
+  QAT: { center: [51.2, 25.3],  zoom: 6.8 },
+  // ~10K km² — tightest standard
+  LBN: { center: [35.5, 33.9],  zoom: 7.0 },
+  // ~6K km² — tightest
+  PSE: { center: [34.4, 31.9],  zoom: 7.5 },
 };
 
 const MOCK_EVENTS = [
-  { id: 1,  lng: 34.8,  lat: 31.5,  title: "Israel — Active Conflict",  type: "conflict" },
-  { id: 2,  lng: 35.5,  lat: 33.9,  title: "Lebanon — Active Conflict", type: "conflict" },
-  { id: 3,  lng: 53.6,  lat: 32.4,  title: "Iran — Active Conflict",    type: "conflict" },
-  { id: 4,  lng: 30.5,  lat: 50.4,  title: "Kyiv — Ongoing War",        type: "conflict" },
-  { id: 5,  lng: 32.5,  lat: 15.5,  title: "Sudan Civil War",           type: "humanitarian" },
-  { id: 6,  lng: 96.1,  lat: 19.7,  title: "Myanmar Civil War",         type: "conflict" },
-  { id: 7,  lng: 44.2,  lat: 15.5,  title: "Yemen Civil War",           type: "conflict" },
-  { id: 8,  lng: 2.3,   lat: 12.3,  title: "Sahel Insurgency",          type: "conflict" },
-  { id: 9,  lng: 23.5,  lat: -3.0,  title: "DR Congo Conflict",         type: "conflict" },
-  { id: 10, lng: -72.3, lat: 18.9,  title: "Haiti Crisis",              type: "humanitarian" },
-  { id: 11, lng: -99.1, lat: 19.4,  title: "Mexico Cartel War",         type: "conflict" },
-  { id: 12, lng: 120.9, lat: 23.7,  title: "Taiwan Strait Crisis",      type: "political" },
+  { id: 1,  lng: 34.8,  lat: 31.5,  title: "Israel — Active Conflict",  type: "war" },
+  { id: 2,  lng: 35.5,  lat: 33.9,  title: "Lebanon — Active Conflict", type: "war" },
+  { id: 3,  lng: 53.6,  lat: 32.4,  title: "Iran — Active Conflict",    type: "war" },
+  { id: 4,  lng: 30.5,  lat: 50.4,  title: "Kyiv — Ongoing War",        type: "war" },
+  { id: 5,  lng: 32.5,  lat: 15.5,  title: "Sudan Civil War + Genocide",type: "genocide" },
+  { id: 6,  lng: 96.1,  lat: 19.7,  title: "Myanmar Civil War",         type: "war" },
+  { id: 7,  lng: 44.2,  lat: 15.5,  title: "Yemen Civil War",           type: "war" },
+  { id: 8,  lng: 2.3,   lat: 12.3,  title: "Sahel Insurgency",          type: "war" },
+  { id: 9,  lng: 23.5,  lat: -3.0,  title: "DR Congo Conflict",         type: "war" },
+  { id: 10, lng: -72.3, lat: 18.9,  title: "Haiti Crisis",              type: "war" },
+  { id: 11, lng: -99.1, lat: 19.4,  title: "Mexico Cartel War",         type: "war" },
+  { id: 12, lng: 120.9, lat: 23.7,  title: "Taiwan Strait Crisis",      type: "war" },
+  { id: 15, lng: 34.4,  lat: 31.5,  title: "Gaza Genocide",             type: "genocide" },
+  { id: 13, lng: 96.0,  lat: 21.9,  title: "Myanmar Earthquake",        type: "disaster" },
+  { id: 14, lng: -118.4,lat: 34.1,  title: "LA Wildfires",              type: "disaster" },
 ];
 
 const TYPE_COLORS: Record<string, string> = {
-  conflict:     "#ef4444",
-  protest:      "#f97316",
-  humanitarian: "#eab308",
-  disaster:     "#60a5fa",
-  political:    "#a78bfa",
+  war:       "#d01228",  // deep crimson red
+  genocide:  "#e05a00",  // deep burnt orange
+  disaster:  "#4422dd",  // deep electric purple-blue
+  conflict:  "#d01228",  // fallback = war
+  political: "#4422dd",  // fallback = disaster color
+  humanitarian: "#e05a00",
 };
 
 interface StrikeMarker {
@@ -98,18 +112,18 @@ interface Props {
   selectedCountry?: string | null;
   secondaryCountries?: string[];
   activeStrikes?: ActiveStrikesData | null;
-  historicalYear?: number | null;
+  homeView?: boolean; // radar is open, no country selected — suppress auto-highlight
 }
 
-// Home view: centered on continental US, zoomed to show full country
+// Home view: centered on continental US, zoomed out until city labels disappear
 const BOSTON: [number, number] = [-98.5, 39.5];
-const BOSTON_ZOOM = 2.3;
+const BOSTON_ZOOM = 2.0;
 
 // Zoom fade range — blue fills/borders disappear when zoomed in past these levels
 const FADE_START = 3.5;
 const FADE_END = 5.5;
 
-export default function Map({ onCountryClick, flyToCode, flyToPosition, selectedCountry, secondaryCountries = [], activeStrikes, historicalYear }: Props) {
+export default function Map({ onCountryClick, flyToCode, flyToPosition, selectedCountry, secondaryCountries = [], activeStrikes, homeView = false }: Props) {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
   const hoveredId = useRef<string | number | null>(null);
@@ -150,21 +164,18 @@ export default function Map({ onCountryClick, flyToCode, flyToPosition, selected
       panelOpen ? 0 : ["case", ["boolean", ["feature-state", "hover"], false], 0.5, 0]
     );
     // Border: only the selected country gets it
-    if (m.getLayer("hover-border")) {
-      if (panelOpen && selectedCountry) {
-        m.setFilter("hover-border", [
-          "all",
-          ["any", ["==", ["get", "worldview"], "all"], ["==", ["get", "worldview"], "US"]],
-          ["==", ["get", "iso_3166_1_alpha_3"], selectedCountry],
-        ]);
-        m.setPaintProperty("hover-border", "line-opacity", 0.85);
-      } else {
-        m.setFilter("hover-border", [
-          "all",
-          ["any", ["==", ["get", "worldview"], "all"], ["==", ["get", "worldview"], "US"]],
-          ["in", ["get", "iso_3166_1_alpha_3"], ["literal", ALL_HOVERABLE]],
-        ]);
-        m.setPaintProperty("hover-border", "line-opacity", 0);
+    const borderFilter = panelOpen && selectedCountry
+      ? ["all", ["any", ["==", ["get", "worldview"], "all"], ["==", ["get", "worldview"], "US"]], ["==", ["get", "iso_3166_1_alpha_3"], selectedCountry]]
+      : ["all", ["any", ["==", ["get", "worldview"], "all"], ["==", ["get", "worldview"], "US"]], ["in", ["get", "iso_3166_1_alpha_3"], ["literal", ALL_HOVERABLE]]];
+    // Tapped-country border: subtle core only, no heavy glow/shadow
+    for (const id of ["hover-border-shadow", "hover-border-glow", "hover-border"] as const) {
+      if (m.getLayer(id)) {
+        m.setFilter(id, borderFilter);
+        m.setPaintProperty(id, "line-opacity",
+          id === "hover-border"        ? (panelOpen ? 0.55 : 0) :
+          id === "hover-border-glow"   ? (panelOpen ? 0.08 : 0) :
+          /* hover-border-shadow */      (panelOpen ? 0.12 : 0)
+        );
       }
     }
   }, [selectedCountry]);
@@ -174,14 +185,14 @@ export default function Map({ onCountryClick, flyToCode, flyToPosition, selected
     if (!flyToCode || !map.current) return;
     const entry = COUNTRY_CENTERS[flyToCode];
     if (entry) {
-      map.current.flyTo({ center: entry.center, zoom: entry.zoom, duration: 2800, curve: 1.4, essential: true });
+      map.current.flyTo({ center: entry.center, zoom: entry.zoom, duration: 1600, curve: 1.2, essential: true });
     }
   }, [flyToCode]);
 
   // Fly to explicit position (conflict-specific view)
   useEffect(() => {
     if (!flyToPosition || !map.current) return;
-    map.current.flyTo({ center: flyToPosition.center, zoom: flyToPosition.zoom, duration: 2400, curve: 1.4, essential: true });
+    map.current.flyTo({ center: flyToPosition.center, zoom: flyToPosition.zoom, duration: 1600, curve: 1.2, essential: true });
   }, [flyToPosition]);
 
   // Secondary (conflict partner) border — turquoise
@@ -255,49 +266,6 @@ export default function Map({ onCountryClick, flyToCode, flyToPosition, selected
     };
   }, [activeStrikes]);
 
-  // Historical year mode
-  useEffect(() => {
-    const m = map.current;
-    if (!m) return;
-
-    // Helper: wait until source/layers are ready
-    const applyHistorical = () => {
-      if (!m.getSource("historical-overlays")) return;
-
-      if (historicalYear == null) {
-        // Clear overlays only — country fills stay normal
-        (m.getSource("historical-overlays") as mapboxgl.GeoJSONSource).setData({
-          type: "FeatureCollection", features: [],
-        });
-        return;
-      }
-
-      const config = getPeriodConfig(historicalYear);
-      if (!config) return;
-
-      // 1. Fly to camera
-      if (config.camera) {
-        m.flyTo({ center: config.camera.center, zoom: config.camera.zoom, duration: 2000, curve: 1.4, essential: true });
-      }
-
-      // 2. Update overlay GeoJSON — outline-only (very low fill, line carries the color)
-      const overlayFeatures = (config.overlays ?? []).map((ov: HistoricalOverlay) => ({
-        type: "Feature" as const,
-        geometry: { type: "Polygon" as const, coordinates: ov.coordinates },
-        properties: { color: ov.color, opacity: ov.opacity, label: ov.label ?? "" },
-      }));
-      (m.getSource("historical-overlays") as mapboxgl.GeoJSONSource).setData({
-        type: "FeatureCollection", features: overlayFeatures,
-      });
-    };
-
-    if (m.isStyleLoaded()) {
-      applyHistorical();
-    } else {
-      m.once("load", applyHistorical);
-    }
-  }, [historicalYear]);
-
   useEffect(() => {
     if (map.current || !mapContainer.current) return;
 
@@ -321,14 +289,100 @@ export default function Map({ onCountryClick, flyToCode, flyToPosition, selected
     map.current.setPitch(0);
     map.current.touchZoomRotate.disableRotation();
 
+    // Inverted scroll zoom: intercept before Mapbox, re-dispatch with negated deltaY
+    // Keeps all native Mapbox behavior: cursor-centered, smooth inertia, trackpad support
+    map.current.scrollZoom.setWheelZoomRate(1 / 36); // ~4.9x faster than default
+    const _processed = new WeakSet<Event>();
+    const _wheelHandler = (e: WheelEvent) => {
+      if (_processed.has(e)) return; // our re-dispatched event — let Mapbox handle it
+      e.preventDefault();
+      e.stopPropagation();
+      const inverted = new WheelEvent("wheel", {
+        deltaX: e.deltaX, deltaY: -e.deltaY, deltaZ: e.deltaZ, deltaMode: e.deltaMode,
+        clientX: e.clientX, clientY: e.clientY, screenX: e.screenX, screenY: e.screenY,
+        ctrlKey: e.ctrlKey, shiftKey: e.shiftKey, altKey: e.altKey, metaKey: e.metaKey,
+        bubbles: true, cancelable: true, composed: true,
+      });
+      _processed.add(inverted);
+      map.current!.getCanvas().dispatchEvent(inverted);
+    };
+    mapContainer.current!.addEventListener("wheel", _wheelHandler, { capture: true, passive: false });
+
     map.current.on("load", () => {
       const m = map.current!;
 
       m.getStyle().layers.forEach((l) => {
-        if (l.id.includes("road")) m.setLayoutProperty(l.id, "visibility", "none");
+        // Hide all road, transit, path, tunnel, bridge layers
+        if (
+          l.id.includes("road") || l.id.includes("tunnel") || l.id.includes("bridge") ||
+          l.id.includes("path") || l.id.includes("transit") || l.id.includes("motorway") ||
+          l.id.includes("highway") || l.id.includes("street") || l.id.includes("turning") ||
+          l.id.includes("ferry") || l.id.includes("aeroway") || l.id.includes("rail") ||
+          l.id.includes("service") || l.id.includes("trunk") || l.id.includes("link") ||
+          l.id.includes("pedestrian") || l.id.includes("steps") || l.id.includes("case")
+        ) m.setLayoutProperty(l.id, "visibility", "none");
+        if (l.id.includes("continent")) m.setLayoutProperty(l.id, "visibility", "none");
+
+        // Country borders: only admin-0 (national). Hide admin-1+ (internal state/province lines)
+        if (l.id.includes("admin") && l.type === "line") {
+          try {
+            if (l.id.includes("admin-0")) {
+              m.setPaintProperty(l.id, "line-color", "rgba(255,255,255,0.7)");
+              m.setPaintProperty(l.id, "line-width", 0.7);
+              m.setPaintProperty(l.id, "line-opacity", 0.6);
+            } else {
+              m.setLayoutProperty(l.id, "visibility", "none");
+            }
+          } catch {}
+        }
         if (l.type === "symbol") {
           try { m.setLayoutProperty(l.id, "text-transform", "lowercase"); } catch {}
         }
+
+        // Country labels: reduce text-size by 1px
+        if (l.id.includes("country-label")) {
+          try {
+            const sz = m.getLayoutProperty(l.id, "text-size");
+            if (typeof sz === "number") {
+              m.setLayoutProperty(l.id, "text-size", Math.max(6, sz - 1));
+            } else if (Array.isArray(sz) && sz[0] === "interpolate") {
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              const mod: any[] = [...sz];
+              for (let i = 4; i < mod.length; i += 2) {
+                if (typeof mod[i] === "number") mod[i] = Math.max(6, mod[i] - 1);
+              }
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              m.setLayoutProperty(l.id, "text-size", mod as any);
+            }
+          } catch {}
+        }
+
+        // City/settlement dots: translucent blue, no border, smaller
+        if ((l.id.startsWith("settlement") || l.id.includes("place-city") || l.id.includes("place-town")) && l.type === "symbol") {
+          try {
+            m.setPaintProperty(l.id, "icon-color", "rgba(30,58,138,0.55)");
+            m.setPaintProperty(l.id, "icon-halo-width", 0);
+            const iconSize = m.getLayoutProperty(l.id, "icon-size");
+            if (typeof iconSize === "number") m.setLayoutProperty(l.id, "icon-size", iconSize * 0.75);
+            else m.setLayoutProperty(l.id, "icon-size", 0.6);
+          } catch {}
+        }
+
+        try {
+          if (l.id === "settlement-major-label") {
+            m.setLayerZoomRange(l.id, 3, 24);
+          } else if (l.id === "settlement-minor-label") {
+            m.setLayerZoomRange(l.id, 10, 24);
+          } else if (l.id === "settlement-subdivision-label") {
+            m.setLayerZoomRange(l.id, 13, 24);
+          } else if (l.id.includes("place-city")) {
+            m.setLayerZoomRange(l.id, 4, 24);
+          } else if (l.id.includes("place-town")) {
+            m.setLayerZoomRange(l.id, 10, 24);
+          } else if (l.id.includes("place-village") || l.id.includes("place-neighborhood") || l.id.includes("place-suburb")) {
+            m.setLayerZoomRange(l.id, 13, 24);
+          }
+        } catch {}
       });
 
       m.setFog({
@@ -336,7 +390,7 @@ export default function Map({ onCountryClick, flyToCode, flyToPosition, selected
         "high-color": "rgb(0,0,0)",
         "space-color": "rgb(0,0,0)",
         "horizon-blend": 0.02,
-        "star-intensity": 0.35,
+        "star-intensity": 0.12,
       } as never);
 
       m.addSource("country-boundaries", {
@@ -360,13 +414,32 @@ export default function Map({ onCountryClick, flyToCode, flyToPosition, selected
         paint: { "fill-color": "#0d2a52", "fill-opacity": 0.72 },
       });
 
+      // Dark shadow — makes white border visible on bright/desert terrain
+      m.addLayer({
+        id: "highlighted-border-shadow",
+        type: "line",
+        source: "country-boundaries",
+        "source-layer": "country_boundaries",
+        filter: ["all", worldviewFilter, ["in", ["get", "iso_3166_1_alpha_3"], ["literal", HIGHLIGHTED]]],
+        paint: { "line-color": "rgba(0,0,0,0.7)", "line-width": 4, "line-blur": 2.5, "line-opacity": 0.55 },
+      });
+      // Outer neon glow
+      m.addLayer({
+        id: "highlighted-border-glow",
+        type: "line",
+        source: "country-boundaries",
+        "source-layer": "country_boundaries",
+        filter: ["all", worldviewFilter, ["in", ["get", "iso_3166_1_alpha_3"], ["literal", HIGHLIGHTED]]],
+        paint: { "line-color": "rgba(255,255,255,0.95)", "line-width": 7, "line-blur": 5, "line-opacity": 0.38 },
+      });
+      // Bright core
       m.addLayer({
         id: "highlighted-border",
         type: "line",
         source: "country-boundaries",
         "source-layer": "country_boundaries",
         filter: ["all", worldviewFilter, ["in", ["get", "iso_3166_1_alpha_3"], ["literal", HIGHLIGHTED]]],
-        paint: { "line-color": "#3b82f6", "line-width": 1.2, "line-opacity": 0.7 },
+        paint: { "line-color": "rgba(255,255,255,1)", "line-width": 1.2, "line-blur": 0, "line-opacity": 0.95 },
       });
 
       // Idle red pulse — always on for HIGHLIGHTED (no hover needed)
@@ -377,16 +450,6 @@ export default function Map({ onCountryClick, flyToCode, flyToPosition, selected
         "source-layer": "country_boundaries",
         filter: ["all", worldviewFilter, ["in", ["get", "iso_3166_1_alpha_3"], ["literal", HIGHLIGHTED]]],
         paint: { "fill-color": "#ef4444", "fill-opacity": 0 },
-      });
-
-      // Hover red pulse layer
-      m.addLayer({
-        id: "pulse-fill",
-        type: "fill",
-        source: "country-boundaries",
-        "source-layer": "country_boundaries",
-        filter: ["==", ["get", "iso_3166_1_alpha_3"], ""],
-        paint: { "fill-color": "#dc2626", "fill-opacity": 0 },
       });
 
       const conflictFilter = [
@@ -418,32 +481,59 @@ export default function Map({ onCountryClick, flyToCode, flyToPosition, selected
         },
       });
 
-      // Border — only shown on selected country when panel is open
+      // Selected border — dark shadow
+      m.addLayer({
+        id: "hover-border-shadow",
+        type: "line",
+        source: "country-boundaries",
+        "source-layer": "country_boundaries",
+        filter: conflictFilter,
+        paint: { "line-color": "rgba(0,0,0,0.7)", "line-width": 3.5, "line-blur": 2.5, "line-opacity": 0 },
+      });
+      // Selected border — outer glow
+      m.addLayer({
+        id: "hover-border-glow",
+        type: "line",
+        source: "country-boundaries",
+        "source-layer": "country_boundaries",
+        filter: conflictFilter,
+        paint: { "line-color": "rgba(255,255,255,0.9)", "line-width": 7, "line-blur": 5, "line-opacity": 0 },
+      });
+      // Selected border — bright core
       m.addLayer({
         id: "hover-border",
         type: "line",
         source: "country-boundaries",
         "source-layer": "country_boundaries",
         filter: conflictFilter,
-        paint: {
-          "line-color": "#3b82f6",
-          "line-width": 1.5,
-          "line-opacity": 0,
-        },
+        paint: { "line-color": "rgba(255,255,255,0.95)", "line-width": 0.8, "line-blur": 0, "line-opacity": 0 },
       });
 
-      // Turquoise border — conflict partners of the selected country
+      // Secondary border — dark shadow
+      m.addLayer({
+        id: "secondary-border-shadow",
+        type: "line",
+        source: "country-boundaries",
+        "source-layer": "country_boundaries",
+        filter: ["all", worldviewFilter, ["in", ["get", "iso_3166_1_alpha_3"], ["literal", [""]]]],
+        paint: { "line-color": "rgba(0,0,0,0.6)", "line-width": 3, "line-blur": 2, "line-opacity": 0 },
+      });
+      // Secondary border — conflict partners (glow)
+      m.addLayer({
+        id: "secondary-border-glow",
+        type: "line",
+        source: "country-boundaries",
+        "source-layer": "country_boundaries",
+        filter: ["all", worldviewFilter, ["in", ["get", "iso_3166_1_alpha_3"], ["literal", [""]]]],
+        paint: { "line-color": "rgba(255,255,255,0.7)", "line-width": 5, "line-blur": 4, "line-opacity": 0 },
+      });
       m.addLayer({
         id: "secondary-border",
         type: "line",
         source: "country-boundaries",
         "source-layer": "country_boundaries",
         filter: ["all", worldviewFilter, ["in", ["get", "iso_3166_1_alpha_3"], ["literal", [""]]]],
-        paint: {
-          "line-color": "#2dd4bf",
-          "line-width": 1.5,
-          "line-opacity": 0,
-        },
+        paint: { "line-color": "rgba(255,255,255,0.85)", "line-width": 0.6, "line-blur": 0, "line-opacity": 0 },
       });
 
       // Crisis event dots
@@ -459,24 +549,24 @@ export default function Map({ onCountryClick, flyToCode, flyToPosition, selected
         },
       });
 
+      // Neon dot: outer halo → mid glow → bright core (no stroke)
+      m.addLayer({
+        id: "events-halo",
+        type: "circle",
+        source: "events",
+        paint: { "circle-radius": 10, "circle-color": ["get", "color"], "circle-opacity": 0.07, "circle-blur": 1, "circle-stroke-width": 0 },
+      });
       m.addLayer({
         id: "events-glow",
         type: "circle",
         source: "events",
-        paint: { "circle-radius": 18, "circle-color": ["get", "color"], "circle-opacity": 0.1, "circle-blur": 1 },
+        paint: { "circle-radius": 5, "circle-color": ["get", "color"], "circle-opacity": 0.20, "circle-blur": 0.9, "circle-stroke-width": 0 },
       });
-
       m.addLayer({
         id: "events-dot",
         type: "circle",
         source: "events",
-        paint: {
-          "circle-radius": 5,
-          "circle-color": ["get", "color"],
-          "circle-opacity": 1,
-          "circle-stroke-width": 1.5,
-          "circle-stroke-color": "#ffffff",
-        },
+        paint: { "circle-radius": 3, "circle-color": ["get", "color"], "circle-opacity": 0.50, "circle-blur": 0, "circle-stroke-width": 0 },
       });
 
       // Strike markers source + layers
@@ -485,57 +575,25 @@ export default function Map({ onCountryClick, flyToCode, flyToPosition, selected
         data: { type: "FeatureCollection", features: [] },
       });
       m.addLayer({
-        id: "strike-outer-glow",
+        id: "strike-halo",
         type: "circle",
         source: "strikes",
-        paint: { "circle-radius": 22, "circle-color": ["get", "color"], "circle-opacity": 0.08, "circle-blur": 1.8 },
+        paint: { "circle-radius": 12, "circle-color": ["get", "color"], "circle-opacity": 0.10, "circle-blur": 1, "circle-stroke-width": 0 },
       });
       m.addLayer({
-        id: "strike-inner-glow",
+        id: "strike-glow",
         type: "circle",
         source: "strikes",
-        paint: { "circle-radius": 11, "circle-color": ["get", "color"], "circle-opacity": 0.22, "circle-blur": 0.7 },
+        paint: { "circle-radius": 6, "circle-color": ["get", "color"], "circle-opacity": 0.38, "circle-blur": 0.9, "circle-stroke-width": 0 },
       });
       m.addLayer({
         id: "strike-dot",
         type: "circle",
         source: "strikes",
-        paint: {
-          "circle-radius": 5,
-          "circle-color": ["get", "color"],
-          "circle-opacity": 0.95,
-          "circle-stroke-width": 1.5,
-          "circle-stroke-color": "#ffffff",
-          "circle-stroke-opacity": 0.65,
-        },
+        paint: { "circle-radius": 2.8, "circle-color": ["get", "color"], "circle-opacity": 0.90, "circle-blur": 0, "circle-stroke-width": 0 },
       });
 
-      // Historical overlays source + layers
-      m.addSource("historical-overlays", {
-        type: "geojson",
-        data: { type: "FeatureCollection", features: [] },
-      });
-      m.addLayer({
-        id: "historical-fill",
-        type: "fill",
-        source: "historical-overlays",
-        paint: {
-          "fill-color": ["get", "color"],
-          "fill-opacity": ["get", "opacity"],
-        },
-      });
-      m.addLayer({
-        id: "historical-outline",
-        type: "line",
-        source: "historical-overlays",
-        paint: {
-          "line-color": ["get", "color"],
-          "line-opacity": 0.75,
-          "line-width": 1.8,
-        },
-      });
-
-      // --- Zoom-based fade: blue fills/borders disappear when zoomed in ---
+      // --- Zoom-based fade: only fires on zoom change, not every pan frame ---
       let zoomFactor = 1;
 
       const applyZoomFade = () => {
@@ -544,30 +602,46 @@ export default function Map({ onCountryClick, flyToCode, flyToPosition, selected
         if (!panelOpenRef.current) {
           if (m.getLayer("highlighted-fill"))
             m.setPaintProperty("highlighted-fill", "fill-opacity", 0.72 * zoomFactor);
-          // Rebuild hover-fill expression scaled by zoom factor
           if (m.getLayer("hover-fill"))
             m.setPaintProperty("hover-fill", "fill-opacity",
               ["case", ["boolean", ["feature-state", "hover"], false], 0.5 * zoomFactor, 0]
             );
         }
+        if (m.getLayer("highlighted-border-shadow"))
+          m.setPaintProperty("highlighted-border-shadow", "line-opacity", 0.55 * zoomFactor);
+        if (m.getLayer("highlighted-border-glow"))
+          m.setPaintProperty("highlighted-border-glow", "line-opacity", 0.38 * zoomFactor);
         if (m.getLayer("highlighted-border"))
-          m.setPaintProperty("highlighted-border", "line-opacity", 0.70 * zoomFactor);
+          m.setPaintProperty("highlighted-border", "line-opacity", 0.95 * zoomFactor);
+        const hoverOp = panelOpenRef.current ? zoomFactor : 0;
+        if (m.getLayer("hover-border-shadow"))
+          m.setPaintProperty("hover-border-shadow", "line-opacity", 0.10 * hoverOp);
+        if (m.getLayer("hover-border-glow"))
+          m.setPaintProperty("hover-border-glow", "line-opacity", 0.06 * hoverOp);
         if (m.getLayer("hover-border"))
-          m.setPaintProperty("hover-border", "line-opacity", panelOpenRef.current ? 0.85 * zoomFactor : 0);
+          m.setPaintProperty("hover-border", "line-opacity", 0.35 * hoverOp);
+        if (m.getLayer("secondary-border-shadow"))
+          m.setPaintProperty("secondary-border-shadow", "line-opacity", 0.4 * zoomFactor);
+        if (m.getLayer("secondary-border-glow"))
+          m.setPaintProperty("secondary-border-glow", "line-opacity", 0.22 * zoomFactor);
         if (m.getLayer("secondary-border"))
-          m.setPaintProperty("secondary-border", "line-opacity", 0.65 * zoomFactor);
+          m.setPaintProperty("secondary-border", "line-opacity", 0.6 * zoomFactor);
       };
 
-      // fire on every camera move (flyTo, pinch, scroll) and once immediately
-      m.on("move", applyZoomFade);
+      // Only recalculate on actual zoom change, not every pan frame
+      m.on("zoom", applyZoomFade);
       applyZoomFade();
 
-      // --- Idle pulse: soft original style ---
+      // --- Idle pulse: throttled to ~20fps (setPaintProperty is expensive at 60fps) ---
+      let lastPulseTs = 0;
       const animateIdle = (ts: number) => {
         if (!pulseStart.current) pulseStart.current = ts;
-        const t = (ts - pulseStart.current) / 2800;
-        const base = 0.06 + 0.12 * Math.abs(Math.sin(t * Math.PI));
-        m.setPaintProperty("idle-pulse-fill", "fill-opacity", base * zoomFactor);
+        if (ts - lastPulseTs >= 50) {
+          lastPulseTs = ts;
+          const t = (ts - pulseStart.current) / 2800;
+          const base = 0.06 + 0.12 * Math.abs(Math.sin(t * Math.PI));
+          m.setPaintProperty("idle-pulse-fill", "fill-opacity", base * zoomFactor);
+        }
         idlePulseFrame.current = requestAnimationFrame(animateIdle);
       };
       idlePulseFrame.current = requestAnimationFrame(animateIdle);
@@ -595,6 +669,7 @@ export default function Map({ onCountryClick, flyToCode, flyToPosition, selected
 
       const highlightCenter = () => {
         if (_mouseActive) return;
+        if (homeView) { setHovered(null); return; } // radar view — no auto-highlight
         const canvas = m.getCanvas();
         const cx = canvas.width / (window.devicePixelRatio || 1) / 2;
         const cy = canvas.height / (window.devicePixelRatio || 1) / 2;
@@ -611,7 +686,14 @@ export default function Map({ onCountryClick, flyToCode, flyToPosition, selected
         }
       };
 
-      m.on("move", highlightCenter);
+      // Throttle center highlight — queryRenderedFeatures at 60fps is very expensive
+      let lastHighlightTs = 0;
+      m.on("move", () => {
+        const now = performance.now();
+        if (now - lastHighlightTs < 120) return;
+        lastHighlightTs = now;
+        highlightCenter();
+      });
 
       // --- Mouse overrides center ---
       m.on("mousemove", "world-hit", (e) => {
@@ -645,7 +727,7 @@ export default function Map({ onCountryClick, flyToCode, flyToPosition, selected
         const code = feature.properties?.iso_3166_1_alpha_3 as string;
         const entry = COUNTRY_CENTERS[code];
         if (entry) {
-          m.flyTo({ center: entry.center, zoom: entry.zoom, duration: 2000, curve: 1.2, essential: true });
+          m.flyTo({ center: entry.center, zoom: entry.zoom, duration: 1400, curve: 1.1, essential: true });
         }
         if (code) onCountryClick?.(code);
       });
@@ -664,6 +746,7 @@ export default function Map({ onCountryClick, flyToCode, flyToPosition, selected
 
     return () => {
       if (idlePulseFrame.current) cancelAnimationFrame(idlePulseFrame.current);
+      mapContainer.current?.removeEventListener("wheel", _wheelHandler, { capture: true });
       map.current?.remove();
       map.current = null;
     };

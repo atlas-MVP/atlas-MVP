@@ -113,9 +113,9 @@ export default function HeadlinesPanel({ onClose }: Props) {
         </div>
         <button
           onClick={onClose}
-          style={{ background: "none", border: "none", color: "rgba(255,255,255,0.2)", fontSize: 22, cursor: "pointer", lineHeight: 1, padding: 0 }}
+          style={{ background: "none", border: "none", color: "rgba(255,255,255,0.12)", fontSize: 22, cursor: "pointer", lineHeight: 1, padding: 0 }}
           onMouseEnter={e => (e.currentTarget.style.color = "rgba(255,255,255,0.6)")}
-          onMouseLeave={e => (e.currentTarget.style.color = "rgba(255,255,255,0.2)")}
+          onMouseLeave={e => (e.currentTarget.style.color = "rgba(255,255,255,0.12)")}
         >×</button>
       </div>
 
@@ -152,7 +152,7 @@ export default function HeadlinesPanel({ onClose }: Props) {
             <div style={{ display: "flex", gap: 12 }}>
               <div style={{ flex: 1 }}>
                 <p style={{ margin: "0 0 6px", fontSize: 13, color: "rgba(255,255,255,0.82)", fontWeight: 600, lineHeight: 1.4 }}>{a.headline}</p>
-                <p style={{ margin: 0, fontSize: 11, color: "rgba(255,255,255,0.30)", lineHeight: 1.55, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{a.excerpt}</p>
+                <p style={{ margin: 0, fontSize: 11, color: "rgba(255,255,255,0.30)", lineHeight: 1.45, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{a.excerpt}</p>
               </div>
               <div style={{ width: 56, height: 56, borderRadius: 6, overflow: "hidden", flexShrink: 0, marginTop: 2, background: "rgba(255,255,255,0.05)" }}>
                 <img src={a.img} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", opacity: 0.55 }}

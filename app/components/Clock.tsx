@@ -2,8 +2,6 @@
 
 import { useEffect, useState } from "react";
 
-const MONTHS = ["january","february","march","april","may","june","july","august","september","october","november","december"];
-
 interface Props {
   onYearClick?: () => void;
   displayYear?: number;
@@ -17,9 +15,10 @@ export default function Clock({ onYearClick, displayYear }: Props) {
     return () => clearInterval(id);
   }, []);
 
-  const month = MONTHS[now.getMonth()];
-  const day = now.getDate();
-  const year = now.getFullYear();
+  // x.xx format — month.day (no leading zero on month, zero-pad day)
+  const month = now.getMonth() + 1;
+  const day   = String(now.getDate()).padStart(2, "0");
+  const year  = now.getFullYear();
 
   return (
     <div style={{
@@ -30,25 +29,31 @@ export default function Clock({ onYearClick, displayYear }: Props) {
       alignItems: "flex-end",
       gap: 3,
     }}>
-      {/* Month + Day — above year */}
+      {/* Date — monospace, 2px smaller than year, right-aligned */}
       <div style={{
-        color: "rgba(255,255,255,0.8)",
-        fontSize: 13,
-        fontWeight: 300,
-        letterSpacing: "0.3em",
+        color: "rgba(255,255,255,0.22)",
+        fontSize: 12,
+        fontFamily: "monospace",
+        fontWeight: 400,
+        letterSpacing: "0.14em",
+        textTransform: "uppercase" as const,
         textShadow: "0 0 12px rgba(0,0,0,0.9)",
+        textAlign: "right",
+        width: "100%",
       }}>
-        {month} {day}
+        {month}.{day}
       </div>
-      {/* Year — tappable timeline trigger */}
+      {/* Year — same font as ATLAS, 14px */}
       <div
         onClick={onYearClick}
         style={{
           color: "rgba(255,255,255,0.8)",
           fontSize: 14,
-          fontWeight: 700,
+          fontWeight: 300,
           letterSpacing: "0.3em",
+          fontFamily: "inherit",
           lineHeight: 1,
+          textAlign: "right",
           textShadow: "0 0 24px rgba(0,0,0,0.95)",
           pointerEvents: onYearClick ? "auto" : "none",
           cursor: onYearClick ? "pointer" : "default",

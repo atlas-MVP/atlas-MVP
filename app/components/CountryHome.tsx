@@ -256,9 +256,9 @@ export default function CountryHome({ countryCode, onClose, onSourceTap }: Props
             </div>
             <button
               onClick={onClose}
-              style={{ color: "rgba(255,255,255,0.2)", fontSize: 20, background: "none", border: "none", cursor: "pointer", lineHeight: 1, padding: 0 }}
+              style={{ color: "rgba(255,255,255,0.12)", fontSize: 20, background: "none", border: "none", cursor: "pointer", lineHeight: 1, padding: 0 }}
               onMouseEnter={e => (e.currentTarget.style.color = "rgba(255,255,255,0.7)")}
-              onMouseLeave={e => (e.currentTarget.style.color = "rgba(255,255,255,0.2)")}>×</button>
+              onMouseLeave={e => (e.currentTarget.style.color = "rgba(255,255,255,0.12)")}>×</button>
           </div>
         </div>
 
@@ -314,7 +314,8 @@ export default function CountryHome({ countryCode, onClose, onSourceTap }: Props
               <div key={label} style={{
                 padding: "8px 10px", borderRadius: 8,
                 background: "rgba(255,255,255,0.03)",
-                border: "1px solid rgba(255,255,255,0.06)",
+                border: "1px solid rgba(255,255,255,0.09)",
+                boxShadow: "inset 0 1px 0 rgba(255,255,255,0.10), 0 4px 14px rgba(0,0,0,0.45)",
               }}>
                 <p style={{ margin: 0, fontSize: 8, fontFamily: "monospace", letterSpacing: "0.1em", color: "rgba(255,255,255,0.2)", textTransform: "uppercase", marginBottom: 3 }}>{label}</p>
                 <p style={{ margin: 0, fontSize: 12, color: "rgba(255,255,255,0.72)", fontWeight: 500 }}>{value}</p>
@@ -333,7 +334,8 @@ export default function CountryHome({ countryCode, onClose, onSourceTap }: Props
               <div key={label} style={{
                 padding: "8px 10px", borderRadius: 8,
                 background: "rgba(255,255,255,0.03)",
-                border: "1px solid rgba(255,255,255,0.06)",
+                border: "1px solid rgba(255,255,255,0.09)",
+                boxShadow: "inset 0 1px 0 rgba(255,255,255,0.10), 0 4px 14px rgba(0,0,0,0.45)",
               }}>
                 <p style={{ margin: 0, fontSize: 8, fontFamily: "monospace", letterSpacing: "0.1em", color: "rgba(255,255,255,0.2)", textTransform: "uppercase", marginBottom: 3 }}>{label}</p>
                 <p style={{ margin: 0, fontSize: 12, color: "rgba(255,255,255,0.72)", fontWeight: 500 }}>{value}</p>

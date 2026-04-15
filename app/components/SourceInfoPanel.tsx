@@ -193,7 +193,7 @@ export default function SourceInfoPanel({ source, onClose }: Props) {
   return (
     <div style={{
       position: "absolute",
-      top: 72, left: 420, zIndex: 28,
+      top: 72, left: 468, zIndex: 28,
       width: 320,
       background: "rgba(4,6,18,0.97)",
       backdropFilter: "blur(28px)",
@@ -208,9 +208,9 @@ export default function SourceInfoPanel({ source, onClose }: Props) {
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <span style={{ fontSize: 8, fontFamily: "monospace", letterSpacing: "0.14em", color: "rgba(255,255,255,0.2)", textTransform: "uppercase" }}>source intelligence</span>
           <button onClick={onClose}
-            style={{ background: "none", border: "none", color: "rgba(255,255,255,0.2)", fontSize: 18, cursor: "pointer", lineHeight: 1, padding: 0 }}
+            style={{ background: "none", border: "none", color: "rgba(255,255,255,0.12)", fontSize: 18, cursor: "pointer", lineHeight: 1, padding: 0 }}
             onMouseEnter={e => (e.currentTarget.style.color = "rgba(255,255,255,0.7)")}
-            onMouseLeave={e => (e.currentTarget.style.color = "rgba(255,255,255,0.2)")}
+            onMouseLeave={e => (e.currentTarget.style.color = "rgba(255,255,255,0.12)")}
           >×</button>
         </div>
 
@@ -240,7 +240,7 @@ export default function SourceInfoPanel({ source, onClose }: Props) {
       {/* Body */}
       <div style={{ padding: "14px 16px 16px", display: "flex", flexDirection: "column", gap: 10 }}>
         {/* Description */}
-        <p style={{ margin: 0, fontSize: 12, color: "rgba(255,255,255,0.52)", lineHeight: 1.65 }}>{data.description}</p>
+        <p style={{ margin: 0, fontSize: 12, color: "rgba(255,255,255,0.52)", lineHeight: 1.45 }}>{data.description}</p>
 
         {/* Key facts grid */}
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6 }}>
@@ -253,7 +253,8 @@ export default function SourceInfoPanel({ source, onClose }: Props) {
             <div key={label} style={{
               padding: "8px 10px", borderRadius: 8,
               background: "rgba(255,255,255,0.03)",
-              border: "1px solid rgba(255,255,255,0.06)",
+              border: "1px solid rgba(255,255,255,0.09)",
+              boxShadow: "inset 0 1px 0 rgba(255,255,255,0.10), 0 4px 14px rgba(0,0,0,0.45)",
             }}>
               <p style={{ margin: 0, fontSize: 7, fontFamily: "monospace", letterSpacing: "0.1em", color: "rgba(255,255,255,0.2)", textTransform: "uppercase", marginBottom: 3 }}>{label}</p>
               <p style={{ margin: 0, fontSize: 11, color: "rgba(255,255,255,0.65)", fontWeight: 500, lineHeight: 1.3 }}>{value}</p>
