@@ -972,11 +972,11 @@ export default function CountryPanel({ countryCode, onClose, onViewFeed, onConfl
             return (
               <div style={{ padding: "14px 6px 6px", borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
                 <p style={{ margin: "0 0 6px 12px", fontSize: 11, fontFamily: "monospace", letterSpacing: "0.18em", color: "rgba(255,255,255,0.28)", textTransform: "uppercase", fontWeight: 500 }}>live alerts</p>
-                {conflictAlerts.map((a, i) => (
+                {conflictAlerts.slice(0, 4).map((a, i, arr) => (
                   <LiveAlertRow
                     key={i}
                     item={a}
-                    bottomBorder={i < conflictAlerts.length - 1}
+                    bottomBorder={i < arr.length - 1}
                     showConfidenceInline={false}
                     expandOnHover={true}
                     defaultExpanded={!!initialAlertText && a.text === initialAlertText}

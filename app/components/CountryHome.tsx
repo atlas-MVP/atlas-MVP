@@ -44,25 +44,24 @@ function ConflictCard({ label, dot, alerts, onSourceTap }: { label: string; dot:
     return () => { cancelRef.current = true; };
   }, [hovered]);
 
+  // Neutral radar aesthetic — no red/pink tinting, no blinking dot
   return (
     <div
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
       style={{
-        padding: hovered ? "12px 12px" : "10px 12px",
-        borderRadius: 8,
-        background: hovered ? "rgba(239,68,68,0.09)" : "rgba(239,68,68,0.04)",
-        border: "1px solid rgba(239,68,68,0.12)",
+        padding: hovered ? "12px 13px" : "10px 13px",
+        borderRadius: 10,
+        background: hovered ? "rgba(255,255,255,0.04)" : "rgba(255,255,255,0.02)",
+        border: "1px solid rgba(255,255,255,0.09)",
+        boxShadow: "inset 0 1px 0 rgba(255,255,255,0.06)",
         transition: "background 0.2s, padding 0.2s",
         cursor: "default",
       }}
     >
       <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-        <div
-          className="dot-pulse"
-          style={{ width: 8, height: 8, borderRadius: "50%", background: dot, boxShadow: `0 0 8px ${dot}`, flexShrink: 0 }}
-        />
-        <span style={{ fontSize: 11, fontFamily: "monospace", letterSpacing: "0.08em", color: "rgba(255,255,255,0.88)", fontWeight: 700 }}>{label}</span>
+        <div style={{ width: 6, height: 6, borderRadius: "50%", background: "rgba(255,255,255,0.35)", flexShrink: 0 }} />
+        <span style={{ fontSize: 13, fontFamily: "monospace", letterSpacing: "0.06em", color: "rgba(255,255,255,0.88)", fontWeight: 700 }}>{label}</span>
       </div>
 
       {hovered && (
@@ -72,7 +71,7 @@ function ConflictCard({ label, dot, alerts, onSourceTap }: { label: string; dot:
               fontSize: 10, color: "rgba(255,255,255,0.60)", lineHeight: 1.5,
               padding: "4px 8px", borderRadius: 5,
               background: "rgba(255,255,255,0.04)",
-              borderLeft: `2px solid ${dot}`,
+              borderLeft: "2px solid rgba(255,255,255,0.25)",
               cursor: "pointer",
             }}>{line}</div>
           ))}
@@ -81,10 +80,10 @@ function ConflictCard({ label, dot, alerts, onSourceTap }: { label: string; dot:
               fontSize: 10, color: "rgba(255,255,255,0.60)", lineHeight: 1.5,
               padding: "4px 8px", borderRadius: 5,
               background: "rgba(255,255,255,0.04)",
-              borderLeft: `2px solid ${dot}`,
+              borderLeft: "2px solid rgba(255,255,255,0.25)",
               cursor: "pointer",
             }}>
-              {currentLine}<span style={{ opacity: 0.5, animation: "none" }}>▌</span>
+              {currentLine}<span style={{ opacity: 0.5 }}>▌</span>
             </div>
           )}
         </div>
@@ -230,46 +229,58 @@ export default function CountryHome({ countryCode, onClose, onSourceTap }: Props
   const data = DATA[countryCode];
   if (!data) return null;
 
+  const StatTile = ({ label, value }: { label: string; value: string }) => (
+    <div style={{
+      padding: "9px 11px", borderRadius: 10,
+      background: "rgba(255,255,255,0.03)",
+      border: "1px solid rgba(255,255,255,0.09)",
+      boxShadow: "inset 0 1px 0 rgba(255,255,255,0.06)",
+    }}>
+      <p style={{ margin: 0, fontSize: 9, fontFamily: "monospace", letterSpacing: "0.14em", color: "rgba(255,255,255,0.28)", textTransform: "uppercase", marginBottom: 4 }}>{label}</p>
+      <p style={{ margin: 0, fontSize: 12, fontFamily: "monospace", color: "rgba(255,255,255,0.78)", fontWeight: 500 }}>{value}</p>
+    </div>
+  );
+
   return (
     <div
       className="absolute left-6 z-20 w-[420px]"
       style={{ top: 72, bottom: 24, display: "flex", flexDirection: "column" }}
     >
       <div style={{
-        background: "rgba(4,6,16,0.95)",
-        backdropFilter: "blur(28px)",
-        border: "1px solid rgba(255,255,255,0.07)",
-        borderRadius: 12,
-        boxShadow: "0 0 50px rgba(0,0,0,0.8)",
+        background: "rgba(4,6,18,0.62)",
+        backdropFilter: "blur(40px)",
+        WebkitBackdropFilter: "blur(40px)",
+        border: "1px solid rgba(255,255,255,0.06)",
+        borderRadius: 16,
+        boxShadow: "0 24px 80px rgba(0,0,0,0.38), 0 1px 3px rgba(0,0,0,0.18)",
         display: "flex", flexDirection: "column",
         height: "100%", overflow: "hidden",
       }}>
 
-        {/* Header */}
-        <div style={{ flexShrink: 0, borderBottom: "1px solid rgba(255,255,255,0.05)", padding: "12px 16px 10px" }}>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <span style={{ fontSize: 22, lineHeight: 1 }}>{data.flag}</span>
-              <h2 style={{ margin: 0, fontSize: 15, fontWeight: 700, color: "rgba(255,255,255,0.92)", letterSpacing: "0.01em" }}>
-                {data.fullName}
-              </h2>
-            </div>
+        {/* Header — no flag, no border */}
+        <div style={{ flexShrink: 0, padding: "14px 18px 4px" }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10 }}>
+            <h2 style={{ margin: 0, fontSize: 15, fontWeight: 600, color: "rgba(255,255,255,0.92)", letterSpacing: "0.01em", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+              {data.fullName}
+            </h2>
             <button
               onClick={onClose}
-              style={{ color: "rgba(255,255,255,0.12)", fontSize: 20, background: "none", border: "none", cursor: "pointer", lineHeight: 1, padding: 0 }}
+              style={{ color: "rgba(255,255,255,0.15)", fontSize: 18, background: "none", border: "none", cursor: "pointer", lineHeight: 1, padding: 0, flexShrink: 0 }}
               onMouseEnter={e => (e.currentTarget.style.color = "rgba(255,255,255,0.7)")}
-              onMouseLeave={e => (e.currentTarget.style.color = "rgba(255,255,255,0.12)")}>×</button>
+              onMouseLeave={e => (e.currentTarget.style.color = "rgba(255,255,255,0.15)")}>×</button>
           </div>
         </div>
 
         {/* Scrollable body */}
         <div style={{ flex: 1, overflowY: "auto", minHeight: 0 }}>
 
-          {/* Active conflicts — shown first */}
+          {/* ACTIVE CONFLICTS — AtlasHQ section-label style */}
           {data.conflicts && (
-            <div style={{ margin: "14px 14px 0" }}>
-              <div style={{ fontSize: 8, fontFamily: "monospace", letterSpacing: "0.2em", color: "rgba(255,255,255,0.3)", marginBottom: 8 }}>ACTIVE CONFLICTS</div>
-              <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
+            <div>
+              <div style={{ padding: "14px 18px 6px" }}>
+                <span style={{ fontSize: 11, fontFamily: "monospace", letterSpacing: "0.18em", color: "rgba(255,255,255,0.28)", textTransform: "uppercase", fontWeight: 500 }}>active conflicts</span>
+              </div>
+              <div style={{ padding: "0 14px", display: "flex", flexDirection: "column", gap: 6 }}>
                 {data.conflicts.map((c) => (
                   <ConflictCard key={c.label} label={c.label} dot={c.dot} alerts={c.alerts} onSourceTap={onSourceTap} />
                 ))}
@@ -277,70 +288,33 @@ export default function CountryHome({ countryCode, onClose, onSourceTap }: Props
             </div>
           )}
 
-          {/* Divider */}
-          {data.conflicts && (
-            <div style={{ margin: "16px 14px 0", height: 1, background: "rgba(255,255,255,0.05)" }} />
-          )}
-
-          {/* Leader card — below conflicts */}
-          <div style={{ margin: "14px 14px 0", borderRadius: 10, overflow: "hidden", border: "1px solid rgba(255,255,255,0.07)", background: "rgba(255,255,255,0.02)" }}>
-            <div style={{ position: "relative", height: 220 }}>
-              <img
-                src={data.leaderPhoto}
-                alt={data.leader}
-                style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: "center top" }}
-                onError={e => {
-                  const el = e.currentTarget as HTMLImageElement;
-                  el.style.display = "none";
-                  (el.parentElement as HTMLElement).style.background = "linear-gradient(160deg, rgba(30,40,70,1), rgba(10,14,30,1))";
-                }}
-              />
-              <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(4,6,16,1) 0%, rgba(4,6,16,0.4) 50%, transparent 100%)" }} />
-              <div style={{ position: "absolute", bottom: 12, left: 14, right: 14 }}>
-                <p style={{ margin: 0, fontSize: 17, fontWeight: 700, color: "rgba(255,255,255,0.95)" }}>{data.leader}</p>
-                <p style={{ margin: "2px 0 0", fontSize: 10, fontFamily: "monospace", color: "rgba(255,255,255,0.35)", letterSpacing: "0.06em" }}>{data.leaderTitle}</p>
-              </div>
-            </div>
+          {/* KEY FACTS */}
+          <div style={{ padding: "20px 18px 6px" }}>
+            <span style={{ fontSize: 11, fontFamily: "monospace", letterSpacing: "0.18em", color: "rgba(255,255,255,0.28)", textTransform: "uppercase", fontWeight: 500 }}>key facts</span>
           </div>
-
-          {/* Key facts */}
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, margin: "12px 14px 0" }}>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6, margin: "0 14px" }}>
             {[
               { label: "Founded", value: data.founded },
               { label: "Capital", value: data.capital },
               { label: "Population", value: data.population },
               { label: "Region", value: data.region },
-            ].map(({ label, value }) => (
-              <div key={label} style={{
-                padding: "8px 10px", borderRadius: 8,
-                background: "rgba(255,255,255,0.03)",
-                border: "1px solid rgba(255,255,255,0.09)",
-                boxShadow: "inset 0 1px 0 rgba(255,255,255,0.10), 0 4px 14px rgba(0,0,0,0.45)",
-              }}>
-                <p style={{ margin: 0, fontSize: 8, fontFamily: "monospace", letterSpacing: "0.1em", color: "rgba(255,255,255,0.2)", textTransform: "uppercase", marginBottom: 3 }}>{label}</p>
-                <p style={{ margin: 0, fontSize: 12, color: "rgba(255,255,255,0.72)", fontWeight: 500 }}>{value}</p>
-              </div>
-            ))}
+            ].map(({ label, value }) => <StatTile key={label} label={label} value={value} />)}
           </div>
 
-          {/* Description */}
-          <div style={{ margin: "12px 14px 0", padding: "10px 12px", borderRadius: 8, background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.05)" }}>
-            <p style={{ margin: 0, fontSize: 13, color: "rgba(255,255,255,0.45)", lineHeight: 1.7 }}>{data.description}</p>
+          {/* OVERVIEW */}
+          <div style={{ padding: "20px 18px 6px" }}>
+            <span style={{ fontSize: 11, fontFamily: "monospace", letterSpacing: "0.18em", color: "rgba(255,255,255,0.28)", textTransform: "uppercase", fontWeight: 500 }}>overview</span>
+          </div>
+          <div style={{ margin: "0 14px", padding: "11px 13px", borderRadius: 10, background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.08)", boxShadow: "inset 0 1px 0 rgba(255,255,255,0.05)" }}>
+            <p style={{ margin: 0, fontSize: 12, color: "rgba(255,255,255,0.58)", lineHeight: 1.65 }}>{data.description}</p>
           </div>
 
-          {/* Stats */}
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, margin: "12px 14px 16px" }}>
-            {data.stats.map(({ label, value }) => (
-              <div key={label} style={{
-                padding: "8px 10px", borderRadius: 8,
-                background: "rgba(255,255,255,0.03)",
-                border: "1px solid rgba(255,255,255,0.09)",
-                boxShadow: "inset 0 1px 0 rgba(255,255,255,0.10), 0 4px 14px rgba(0,0,0,0.45)",
-              }}>
-                <p style={{ margin: 0, fontSize: 8, fontFamily: "monospace", letterSpacing: "0.1em", color: "rgba(255,255,255,0.2)", textTransform: "uppercase", marginBottom: 3 }}>{label}</p>
-                <p style={{ margin: 0, fontSize: 12, color: "rgba(255,255,255,0.72)", fontWeight: 500 }}>{value}</p>
-              </div>
-            ))}
+          {/* ECONOMY */}
+          <div style={{ padding: "20px 18px 6px" }}>
+            <span style={{ fontSize: 11, fontFamily: "monospace", letterSpacing: "0.18em", color: "rgba(255,255,255,0.28)", textTransform: "uppercase", fontWeight: 500 }}>economy</span>
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6, margin: "0 14px 20px" }}>
+            {data.stats.map(({ label, value }) => <StatTile key={label} label={label} value={value} />)}
           </div>
 
         </div>
