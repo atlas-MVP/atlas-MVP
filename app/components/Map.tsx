@@ -169,16 +169,10 @@ export default function Map({ onCountryClick, flyToCode, flyToPosition, selected
     const borderFilter = panelOpen && selectedCountry
       ? ["all", ["any", ["==", ["get", "worldview"], "all"], ["==", ["get", "worldview"], "US"]], ["==", ["get", "iso_3166_1_alpha_3"], selectedCountry]]
       : ["all", ["any", ["==", ["get", "worldview"], "all"], ["==", ["get", "worldview"], "US"]], ["in", ["get", "iso_3166_1_alpha_3"], ["literal", ALL_HOVERABLE]]];
-    // Tapped-country border: subtle core only, no heavy glow/shadow
-    for (const id of ["hover-border-shadow", "hover-border-glow", "hover-border"] as const) {
-      if (m.getLayer(id)) {
-        m.setFilter(id, borderFilter);
-        m.setPaintProperty(id, "line-opacity",
-          id === "hover-border"        ? (panelOpen ? 0.55 : 0) :
-          id === "hover-border-glow"   ? (panelOpen ? 0.08 : 0) :
-          /* hover-border-shadow */      (panelOpen ? 0.12 : 0)
-        );
-      }
+    // Tapped-country border
+    if (m.getLayer("hover-border")) {
+      m.setFilter("hover-border", borderFilter);
+      m.setPaintProperty("hover-border", "line-opacity", panelOpen ? 0.55 : 0);
     }
   }, [selectedCountry]);
 
@@ -328,13 +322,17 @@ export default function Map({ onCountryClick, flyToCode, flyToPosition, selected
         ) m.setLayoutProperty(l.id, "visibility", "none");
         if (l.id.includes("continent")) m.setLayoutProperty(l.id, "visibility", "none");
 
-        // Country borders: only admin-0 (national). Hide admin-1+ (internal state/province lines)
+        // Country borders: admin-0 (national) bright, admin-1 (state/province) subtle
         if (l.id.includes("admin") && l.type === "line") {
           try {
             if (l.id.includes("admin-0")) {
               m.setPaintProperty(l.id, "line-color", "rgba(255,255,255,0.7)");
               m.setPaintProperty(l.id, "line-width", 0.7);
               m.setPaintProperty(l.id, "line-opacity", 0.6);
+            } else if (l.id.includes("admin-1")) {
+              m.setPaintProperty(l.id, "line-color", "rgba(255,255,255,0.18)");
+              m.setPaintProperty(l.id, "line-width", 0.35);
+              m.setPaintProperty(l.id, "line-opacity", 0.4);
             } else {
               m.setLayoutProperty(l.id, "visibility", "none");
             }
@@ -419,32 +417,14 @@ export default function Map({ onCountryClick, flyToCode, flyToPosition, selected
         paint: { "fill-color": "#0d2a52", "fill-opacity": 0.72 },
       });
 
-      // Dark shadow — makes white border visible on bright/desert terrain
-      m.addLayer({
-        id: "highlighted-border-shadow",
-        type: "line",
-        source: "country-boundaries",
-        "source-layer": "country_boundaries",
-        filter: ["all", worldviewFilter, ["in", ["get", "iso_3166_1_alpha_3"], ["literal", HIGHLIGHTED]]],
-        paint: { "line-color": "rgba(0,0,0,0.7)", "line-width": 4, "line-blur": 2.5, "line-opacity": 0.55 },
-      });
-      // Outer neon glow
-      m.addLayer({
-        id: "highlighted-border-glow",
-        type: "line",
-        source: "country-boundaries",
-        "source-layer": "country_boundaries",
-        filter: ["all", worldviewFilter, ["in", ["get", "iso_3166_1_alpha_3"], ["literal", HIGHLIGHTED]]],
-        paint: { "line-color": "rgba(255,255,255,0.95)", "line-width": 7, "line-blur": 5, "line-opacity": 0.38 },
-      });
-      // Bright core
+      // Clean border for highlighted countries
       m.addLayer({
         id: "highlighted-border",
         type: "line",
         source: "country-boundaries",
         "source-layer": "country_boundaries",
         filter: ["all", worldviewFilter, ["in", ["get", "iso_3166_1_alpha_3"], ["literal", HIGHLIGHTED]]],
-        paint: { "line-color": "rgba(255,255,255,1)", "line-width": 1.2, "line-blur": 0, "line-opacity": 0.95 },
+        paint: { "line-color": "rgba(255,255,255,0.9)", "line-width": 1.2, "line-blur": 0, "line-opacity": 0.85 },
       });
 
       // Idle red pulse — always on for HIGHLIGHTED (no hover needed)
@@ -486,59 +466,24 @@ export default function Map({ onCountryClick, flyToCode, flyToPosition, selected
         },
       });
 
-      // Selected border — dark shadow
-      m.addLayer({
-        id: "hover-border-shadow",
-        type: "line",
-        source: "country-boundaries",
-        "source-layer": "country_boundaries",
-        filter: conflictFilter,
-        paint: { "line-color": "rgba(0,0,0,0.7)", "line-width": 3.5, "line-blur": 2.5, "line-opacity": 0 },
-      });
-      // Selected border — outer glow
-      m.addLayer({
-        id: "hover-border-glow",
-        type: "line",
-        source: "country-boundaries",
-        "source-layer": "country_boundaries",
-        filter: conflictFilter,
-        paint: { "line-color": "rgba(255,255,255,0.9)", "line-width": 7, "line-blur": 5, "line-opacity": 0 },
-      });
-      // Selected border — bright core
+      // Selected border — clean
       m.addLayer({
         id: "hover-border",
         type: "line",
         source: "country-boundaries",
         "source-layer": "country_boundaries",
         filter: conflictFilter,
-        paint: { "line-color": "rgba(255,255,255,0.95)", "line-width": 0.8, "line-blur": 0, "line-opacity": 0 },
+        paint: { "line-color": "rgba(255,255,255,0.85)", "line-width": 0.9, "line-blur": 0, "line-opacity": 0 },
       });
 
-      // Secondary border — dark shadow
-      m.addLayer({
-        id: "secondary-border-shadow",
-        type: "line",
-        source: "country-boundaries",
-        "source-layer": "country_boundaries",
-        filter: ["all", worldviewFilter, ["in", ["get", "iso_3166_1_alpha_3"], ["literal", [""]]]],
-        paint: { "line-color": "rgba(0,0,0,0.6)", "line-width": 3, "line-blur": 2, "line-opacity": 0 },
-      });
-      // Secondary border — conflict partners (glow)
-      m.addLayer({
-        id: "secondary-border-glow",
-        type: "line",
-        source: "country-boundaries",
-        "source-layer": "country_boundaries",
-        filter: ["all", worldviewFilter, ["in", ["get", "iso_3166_1_alpha_3"], ["literal", [""]]]],
-        paint: { "line-color": "rgba(255,255,255,0.7)", "line-width": 5, "line-blur": 4, "line-opacity": 0 },
-      });
+      // Secondary border — conflict partners
       m.addLayer({
         id: "secondary-border",
         type: "line",
         source: "country-boundaries",
         "source-layer": "country_boundaries",
         filter: ["all", worldviewFilter, ["in", ["get", "iso_3166_1_alpha_3"], ["literal", [""]]]],
-        paint: { "line-color": "rgba(255,255,255,0.85)", "line-width": 0.6, "line-blur": 0, "line-opacity": 0 },
+        paint: { "line-color": "rgba(255,255,255,0.75)", "line-width": 0.7, "line-blur": 0, "line-opacity": 0 },
       });
 
       // Crisis event dots
@@ -612,23 +557,11 @@ export default function Map({ onCountryClick, flyToCode, flyToPosition, selected
               ["case", ["boolean", ["feature-state", "hover"], false], 0.5 * zoomFactor, 0]
             );
         }
-        if (m.getLayer("highlighted-border-shadow"))
-          m.setPaintProperty("highlighted-border-shadow", "line-opacity", 0.55 * zoomFactor);
-        if (m.getLayer("highlighted-border-glow"))
-          m.setPaintProperty("highlighted-border-glow", "line-opacity", 0.38 * zoomFactor);
         if (m.getLayer("highlighted-border"))
-          m.setPaintProperty("highlighted-border", "line-opacity", 0.95 * zoomFactor);
+          m.setPaintProperty("highlighted-border", "line-opacity", 0.85 * zoomFactor);
         const hoverOp = panelOpenRef.current ? zoomFactor : 0;
-        if (m.getLayer("hover-border-shadow"))
-          m.setPaintProperty("hover-border-shadow", "line-opacity", 0.10 * hoverOp);
-        if (m.getLayer("hover-border-glow"))
-          m.setPaintProperty("hover-border-glow", "line-opacity", 0.06 * hoverOp);
         if (m.getLayer("hover-border"))
           m.setPaintProperty("hover-border", "line-opacity", 0.35 * hoverOp);
-        if (m.getLayer("secondary-border-shadow"))
-          m.setPaintProperty("secondary-border-shadow", "line-opacity", 0.4 * zoomFactor);
-        if (m.getLayer("secondary-border-glow"))
-          m.setPaintProperty("secondary-border-glow", "line-opacity", 0.22 * zoomFactor);
         if (m.getLayer("secondary-border"))
           m.setPaintProperty("secondary-border", "line-opacity", 0.6 * zoomFactor);
       };
