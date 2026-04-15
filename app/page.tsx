@@ -14,36 +14,10 @@ import SourceInfoPanel from "./components/SourceInfoPanel";
 import AuthorBioPanel from "./components/AuthorBioPanel";
 import SettingsPanel from "./components/SettingsPanel";
 
-// ATLAS lights up letter by letter, then the clock fades in as one unit
-const WORDMARK = "ATLAS";
-const LETTER_DELAY = 160; // ms between letters
-
+// ATLAS appears instantly; clock fades in shortly after as one unit
 function AtlasWordmark() {
-  const [litCount, setLitCount] = useState(0);
-  useEffect(() => {
-    setLitCount(0);
-    const timers: ReturnType<typeof setTimeout>[] = [];
-    for (let i = 0; i < WORDMARK.length; i++) {
-      timers.push(setTimeout(() => setLitCount(n => Math.max(n, i + 1)), 60 + i * LETTER_DELAY));
-    }
-    return () => timers.forEach(clearTimeout);
-  }, []);
   return (
-    <span className="font-light tracking-[0.3em] text-sm" style={{ display: "inline-flex" }}>
-      {WORDMARK.split("").map((ch, i) => {
-        const lit = i < litCount;
-        return (
-          <span
-            key={i}
-            style={{
-              color: lit ? "rgba(255,255,255,0.85)" : "rgba(255,255,255,0)",
-              filter: lit ? "blur(0)" : "blur(5px)",
-              transition: "color 0.7s cubic-bezier(0.22,1,0.36,1), filter 0.7s cubic-bezier(0.22,1,0.36,1)",
-            }}
-          >{ch}</span>
-        );
-      })}
-    </span>
+    <span className="font-light tracking-[0.3em] text-sm" style={{ color: "rgba(255,255,255,0.85)" }}>ATLAS</span>
   );
 }
 
@@ -54,8 +28,7 @@ function NavTime() {
     const tick = () => setT(new Date().toLocaleTimeString("en-US", { hour12: true, hour: "numeric", minute: "2-digit", second: "2-digit" }));
     tick();
     const id = setInterval(tick, 1000);
-    // Wait for ATLAS to finish (5 letters * 160ms + ~700ms fade tail), then bloom
-    const litT = setTimeout(() => setLit(true), 60 + WORDMARK.length * LETTER_DELAY + 250);
+    const litT = setTimeout(() => setLit(true), 220);
     return () => { clearInterval(id); clearTimeout(litT); };
   }, []);
   return (
@@ -63,7 +36,7 @@ function NavTime() {
       fontSize: 11, fontFamily: "monospace", letterSpacing: "0.1em",
       color: lit ? "rgba(255,255,255,0.35)" : "rgba(255,255,255,0)",
       filter: lit ? "blur(0)" : "blur(4px)",
-      transition: "color 0.8s cubic-bezier(0.22,1,0.36,1), filter 0.8s cubic-bezier(0.22,1,0.36,1)",
+      transition: "color 0.7s cubic-bezier(0.22,1,0.36,1), filter 0.7s cubic-bezier(0.22,1,0.36,1)",
     }}>{t}</span>
   );
 }
