@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 
 function extractAlertSource(line: string): string {
   return line.split(":")[0].trim();
@@ -8,41 +8,20 @@ function extractAlertSource(line: string): string {
 
 function ConflictCard({ label, dot, alerts, onSourceTap }: { label: string; dot: string; alerts?: string[]; onSourceTap?: (source: string) => void }) {
   const [hovered, setHovered]       = useState(false);
-  const [typedLines, setTypedLines] = useState<string[]>([]);
-  const [currentLine, setCurrentLine] = useState("");
-  const cancelRef = useRef(false);
+  const [litCount, setLitCount]     = useState(0);
 
   useEffect(() => {
     if (!hovered || !alerts?.length) {
-      cancelRef.current = true;
-      setTypedLines([]);
-      setCurrentLine("");
+      setLitCount(0);
       return;
     }
-    cancelRef.current = false;
-    let lineIdx = 0;
-    let charIdx = 0;
-
-    const tick = () => {
-      if (cancelRef.current) return;
-      if (lineIdx >= alerts.length) return;
-      const target = alerts[lineIdx];
-      if (charIdx <= target.length) {
-        setCurrentLine(target.slice(0, charIdx));
-        charIdx++;
-        setTimeout(tick, 22);
-      } else {
-        setTypedLines(prev => [...prev, target]);
-        setCurrentLine("");
-        lineIdx++;
-        charIdx = 0;
-        if (lineIdx < alerts.length) setTimeout(tick, 380);
-      }
-    };
-
-    setTimeout(tick, 80);
-    return () => { cancelRef.current = true; };
-  }, [hovered]);
+    setLitCount(0);
+    const timers: ReturnType<typeof setTimeout>[] = [];
+    alerts.forEach((_, i) => {
+      timers.push(setTimeout(() => setLitCount(n => Math.max(n, i + 1)), 90 + i * 160));
+    });
+    return () => timers.forEach(clearTimeout);
+  }, [hovered, alerts]);
 
   // Neutral radar aesthetic — no red/pink tinting, no blinking dot
   return (
@@ -64,28 +43,24 @@ function ConflictCard({ label, dot, alerts, onSourceTap }: { label: string; dot:
         <span style={{ fontSize: 13, fontFamily: "monospace", letterSpacing: "0.06em", color: "rgba(255,255,255,0.88)", fontWeight: 700 }}>{label}</span>
       </div>
 
-      {hovered && (
+      {hovered && alerts && (
         <div style={{ marginTop: 10, display: "flex", flexDirection: "column", gap: 5, paddingLeft: 18 }}>
-          {typedLines.map((line, i) => (
-            <div key={i} onClick={() => onSourceTap?.(extractAlertSource(line))} style={{
-              fontSize: 10, color: "rgba(255,255,255,0.60)", lineHeight: 1.5,
-              padding: "4px 8px", borderRadius: 5,
-              background: "rgba(255,255,255,0.04)",
-              borderLeft: "2px solid rgba(255,255,255,0.25)",
-              cursor: "pointer",
-            }}>{line}</div>
-          ))}
-          {currentLine && (
-            <div onClick={() => onSourceTap?.(extractAlertSource(currentLine))} style={{
-              fontSize: 10, color: "rgba(255,255,255,0.60)", lineHeight: 1.5,
-              padding: "4px 8px", borderRadius: 5,
-              background: "rgba(255,255,255,0.04)",
-              borderLeft: "2px solid rgba(255,255,255,0.25)",
-              cursor: "pointer",
-            }}>
-              {currentLine}
-            </div>
-          )}
+          {alerts.map((line, i) => {
+            const lit = i < litCount;
+            return (
+              <div key={i} onClick={() => onSourceTap?.(extractAlertSource(line))} style={{
+                fontSize: 10, color: "rgba(255,255,255,0.60)", lineHeight: 1.5,
+                padding: "4px 8px", borderRadius: 5,
+                background: "rgba(255,255,255,0.04)",
+                borderLeft: "2px solid rgba(255,255,255,0.25)",
+                cursor: "pointer",
+                opacity: lit ? 1 : 0,
+                filter: lit ? "blur(0)" : "blur(4px)",
+                transform: lit ? "translateY(0)" : "translateY(3px)",
+                transition: "opacity 0.7s cubic-bezier(0.22,1,0.36,1), filter 0.7s cubic-bezier(0.22,1,0.36,1), transform 0.7s cubic-bezier(0.22,1,0.36,1)",
+              }}>{line}</div>
+            );
+          })}
         </div>
       )}
     </div>

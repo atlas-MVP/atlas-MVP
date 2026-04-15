@@ -14,31 +14,24 @@ const LINES = [
 ];
 
 function TypeLine({ text, delay, dim }: { text: string; delay: number; dim: boolean }) {
-  const [displayed, setDisplayed] = useState("");
-
+  const [lit, setLit] = useState(false);
   useEffect(() => {
-    if (!text) return;
-    let i = 0;
-    const start = setTimeout(() => {
-      const tick = () => {
-        i++;
-        setDisplayed(text.slice(0, i));
-        if (i < text.length) setTimeout(tick, 14);
-      };
-      tick();
-    }, delay);
-    return () => clearTimeout(start);
-  }, [text, delay]);
+    const t = setTimeout(() => setLit(true), delay);
+    return () => clearTimeout(t);
+  }, [delay]);
 
   if (!text) return <div style={{ height: 10 }} />;
-
+  const baseColor = dim ? "rgba(255,255,255,0.28)" : "rgba(255,255,255,0.72)";
   return (
     <div style={{
       fontSize: 10, fontFamily: "monospace", letterSpacing: "0.12em",
-      color: dim ? "rgba(255,255,255,0.28)" : "rgba(255,255,255,0.72)",
+      color: lit ? baseColor : "rgba(255,255,255,0)",
+      filter: lit ? "blur(0)" : "blur(4px)",
+      transform: lit ? "translateY(0)" : "translateY(3px)",
+      transition: "color 0.7s cubic-bezier(0.22,1,0.36,1), filter 0.7s cubic-bezier(0.22,1,0.36,1), transform 0.7s cubic-bezier(0.22,1,0.36,1)",
       lineHeight: 2, whiteSpace: "pre",
     }}>
-      {displayed}
+      {text}
     </div>
   );
 }

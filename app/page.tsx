@@ -15,21 +15,20 @@ import AuthorBioPanel from "./components/AuthorBioPanel";
 import SettingsPanel from "./components/SettingsPanel";
 
 function AtlasWordmark() {
-  const WORD = "ATLAS";
-  const [displayed, setDisplayed] = useState("");
+  const [lit, setLit] = useState(false);
   useEffect(() => {
-    let i = 0;
-    const tick = () => {
-      i++;
-      setDisplayed(WORD.slice(0, i));
-      if (i < WORD.length) setTimeout(tick, 110);
-    };
-    setTimeout(tick, 40);
+    const t = setTimeout(() => setLit(true), 40);
+    return () => clearTimeout(t);
   }, []);
   return (
-    <span className="text-white/80 font-light tracking-[0.3em] text-sm hover:text-white/100 transition-colors">
-      {displayed}
-    </span>
+    <span
+      className="font-light tracking-[0.3em] text-sm transition-colors"
+      style={{
+        color: lit ? "rgba(255,255,255,0.8)" : "rgba(255,255,255,0)",
+        filter: lit ? "blur(0)" : "blur(6px)",
+        transition: "color 0.9s cubic-bezier(0.22,1,0.36,1), filter 0.9s cubic-bezier(0.22,1,0.36,1)",
+      }}
+    >ATLAS</span>
   );
 }
 
@@ -46,7 +45,10 @@ function NavTime() {
   );
 }
 
-const Map = dynamic(() => import("./components/Map"), { ssr: false });
+const Map = dynamic(() => import("./components/Map"), {
+  ssr: false,
+  loading: () => <div style={{ width: "100%", height: "100%", background: "#000" }} />,
+});
 
 // Map view per conflict (overrides per-country default)
 const CONFLICT_CENTERS: Record<string, { center: [number, number]; zoom: number }> = {

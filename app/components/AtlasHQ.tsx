@@ -90,30 +90,22 @@ const LIVE_FEED: FeedItem[] = [
     description: "The PLA Navy carrier strike group led by the Shandong has approached within 40 nautical miles of the Taiwan Strait median line. Taiwan's MND has scrambled F-16 and Mirage 2000 fighters. The GDELT conflict index for the Taiwan Strait has risen to its highest level since August 2022." },
 ];
 
-// Typing animation for alert text (no blinking cursor — just smooth reveal)
+// Smooth fade-in for alert text (no typewriter — "lights opening up")
 function TypingAlert({ text }: { text: string; color?: string }) {
-  const [displayed, setDisplayed] = useState("");
-  const cancelRef = useRef(false);
-
+  const [lit, setLit] = useState(false);
   useEffect(() => {
-    cancelRef.current = false;
-    setDisplayed("");
-    let i = 0;
-    const total = text.length;
-    const perChar = Math.max(6, Math.round(500 / total));
-    const tick = () => {
-      if (cancelRef.current) return;
-      if (i <= total) {
-        setDisplayed(text.slice(0, i));
-        i++;
-        setTimeout(tick, perChar);
-      }
-    };
-    const t = setTimeout(tick, 60);
-    return () => { cancelRef.current = true; clearTimeout(t); };
+    setLit(false);
+    const t = setTimeout(() => setLit(true), 40);
+    return () => clearTimeout(t);
   }, [text]);
-
-  return <span>{displayed}</span>;
+  return (
+    <span style={{
+      opacity: lit ? 1 : 0,
+      filter: lit ? "blur(0)" : "blur(3px)",
+      transition: "opacity 0.7s cubic-bezier(0.22,1,0.36,1), filter 0.7s cubic-bezier(0.22,1,0.36,1)",
+      display: "inline-block",
+    }}>{text}</span>
+  );
 }
 
 interface Props {
@@ -139,7 +131,14 @@ const STAGE_DELAYS = [
 function Reveal({ minStage, stage, children }: { minStage: number; stage: number; children: React.ReactNode }) {
   const visible = stage >= minStage;
   return (
-    <div style={{ opacity: visible ? 1 : 0, transform: visible ? "translateY(0)" : "translateY(4px)", transition: "opacity 0.55s cubic-bezier(0.22,1,0.36,1), transform 0.55s cubic-bezier(0.22,1,0.36,1)", pointerEvents: visible ? "auto" : "none", willChange: "opacity, transform" }}>
+    <div style={{
+      opacity: visible ? 1 : 0,
+      filter: visible ? "blur(0)" : "blur(6px)",
+      transform: visible ? "translateY(0)" : "translateY(6px)",
+      transition: "opacity 0.85s cubic-bezier(0.22,1,0.36,1), filter 0.85s cubic-bezier(0.22,1,0.36,1), transform 0.85s cubic-bezier(0.22,1,0.36,1)",
+      pointerEvents: visible ? "auto" : "none",
+      willChange: "opacity, filter, transform",
+    }}>
       {children}
     </div>
   );

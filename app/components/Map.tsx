@@ -754,8 +754,8 @@ export default function Map({ onCountryClick, flyToCode, flyToPosition, selected
   }, []);
 
   return (
-    <div style={{ width: "100%", height: "100%", position: "relative" }}>
-      <div ref={mapContainer} style={{ width: "100%", height: "100%" }} />
+    <div style={{ width: "100%", height: "100%", position: "relative", background: "#000" }}>
+      <div ref={mapContainer} style={{ width: "100%", height: "100%", background: "#000" }} />
 
       {tooltip && (
         <div style={{ position: "absolute", left: tooltip.x + 14, top: tooltip.y - 40, pointerEvents: "none", zIndex: 5 }}>
