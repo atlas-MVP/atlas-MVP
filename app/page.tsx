@@ -23,21 +23,14 @@ function AtlasWordmark() {
 
 function NavTime() {
   const [t, setT] = useState("");
-  const [lit, setLit] = useState(false);
   useEffect(() => {
     const tick = () => setT(new Date().toLocaleTimeString("en-US", { hour12: true, hour: "numeric", minute: "2-digit", second: "2-digit" }));
     tick();
     const id = setInterval(tick, 1000);
-    const litT = setTimeout(() => setLit(true), 220);
-    return () => { clearInterval(id); clearTimeout(litT); };
+    return () => clearInterval(id);
   }, []);
   return (
-    <span style={{
-      fontSize: 11, fontFamily: "monospace", letterSpacing: "0.1em",
-      color: lit ? "rgba(255,255,255,0.35)" : "rgba(255,255,255,0)",
-      filter: lit ? "blur(0)" : "blur(4px)",
-      transition: "color 0.7s cubic-bezier(0.22,1,0.36,1), filter 0.7s cubic-bezier(0.22,1,0.36,1)",
-    }}>{t}</span>
+    <span style={{ fontSize: 11, fontFamily: "monospace", letterSpacing: "0.1em", color: "rgba(255,255,255,0.35)" }}>{t}</span>
   );
 }
 

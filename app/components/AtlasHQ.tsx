@@ -118,15 +118,15 @@ interface Props {
 // ─── Sequential load stages ──────────────────────────────────────────────────
 // Edit STAGE_DELAYS to tune timing, or add new stages here.
 // Items with minStage > current loadStage are invisible (opacity 0).
-// Stages slightly overlap — each starts ~halfway through the previous fade for a continuous flowing reveal
+// Stages spaced ~600ms apart — each settles meaningfully before the next begins, but flow stays continuous
 const STAGE_DELAYS = [
   0,    // stage 0 – video (instant)
-  80,   // stage 1 – geopolitics label
-  480,  // stage 2 – Israel-Lebanon card
-  880,  // stage 3 – US-Iran card
-  1280, // stage 4 – live alerts label + rows
-  1680, // stage 5 – news label + photo cards
-  2080, // stage 6 – disasters label + cards
+  100,  // stage 1 – geopolitics label
+  720,  // stage 2 – Israel-Lebanon card
+  1340, // stage 3 – US-Iran card
+  1960, // stage 4 – live alerts label + rows
+  2580, // stage 5 – news label + photo cards
+  3200, // stage 6 – disasters label + cards
 ];
 
 function Reveal({ minStage, stage, children }: { minStage: number; stage: number; children: React.ReactNode }) {
