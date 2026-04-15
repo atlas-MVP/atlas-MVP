@@ -584,7 +584,7 @@ export default function Map({ onCountryClick, flyToCode, flyToPosition, selected
         if (ts - lastPulseTs >= 50) {
           lastPulseTs = ts;
           const t = (ts - pulseStart.current) / 2800;
-          const base = 0.03 + 0.07 * Math.abs(Math.sin(t * Math.PI));
+          const base = 0.06 + 0.12 * Math.abs(Math.sin(t * Math.PI));
           m.setPaintProperty("idle-pulse-fill", "fill-opacity", base * zoomFactor);
         }
         idlePulseFrame.current = requestAnimationFrame(animateIdle);
