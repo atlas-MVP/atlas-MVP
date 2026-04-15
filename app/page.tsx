@@ -77,6 +77,7 @@ export default function Home() {
   const [timelineOpen, setTimelineOpen]       = useState(false);
   const [showHeadlines, setShowHeadlines]     = useState(false);
   const [showRadar, setShowRadar]             = useState(true);
+  const [mapReady, setMapReady]                = useState(false);
   const [showSettings, setShowSettings]       = useState(false);
   const [activeSource, setActiveSource]       = useState<string | null>(null);
   const [radarAlertText, setRadarAlertText]   = useState<string | null>(null);
@@ -168,6 +169,7 @@ export default function Home() {
         secondaryCountries={secondaryCountries}
         activeStrikes={activeStrikes}
         homeView={showRadar && !selectedCountry && !homeCountry && !feedCountry}
+        onReady={() => setMapReady(true)}
       />
 
       {/* Country homepage — loads when pill is tapped from conflict panel */}
@@ -209,7 +211,7 @@ export default function Home() {
       )}
 
       {/* Radar — only visible when explicitly opened via ATLAS button */}
-      {!historicalYear && showRadar && !selectedCountry && !homeCountry && !feedCountry && (
+      {mapReady && !historicalYear && showRadar && !selectedCountry && !homeCountry && !feedCountry && (
         <AtlasHQ
           onClose={() => { setShowRadar(false); setShowHeadlines(false); }}
           onNavigate={(code, center, zoom, feedItem) => {

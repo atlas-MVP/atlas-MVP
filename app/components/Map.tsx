@@ -113,6 +113,7 @@ interface Props {
   secondaryCountries?: string[];
   activeStrikes?: ActiveStrikesData | null;
   homeView?: boolean; // radar is open, no country selected — suppress auto-highlight
+  onReady?: () => void; // fires once when first idle event lands (all tiles rendered)
 }
 
 // Home view: centered on continental US, zoomed out until city labels disappear
@@ -123,7 +124,7 @@ const BOSTON_ZOOM = 2.0;
 const FADE_START = 3.5;
 const FADE_END = 5.5;
 
-export default function Map({ onCountryClick, flyToCode, flyToPosition, selectedCountry, secondaryCountries = [], activeStrikes, homeView = false }: Props) {
+export default function Map({ onCountryClick, flyToCode, flyToPosition, selectedCountry, secondaryCountries = [], activeStrikes, homeView = false, onReady }: Props) {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
   const [mapReady, setMapReady] = useState(false);
@@ -310,7 +311,7 @@ export default function Map({ onCountryClick, flyToCode, flyToPosition, selected
     mapContainer.current!.addEventListener("wheel", _wheelHandler, { capture: true, passive: false });
 
     // Reveal canvas only after every tile has finished rendering at least once
-    map.current.once("idle", () => setMapReady(true));
+    map.current.once("idle", () => { setMapReady(true); onReady?.(); });
 
     map.current.on("load", () => {
       const m = map.current!;
