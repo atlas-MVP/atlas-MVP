@@ -122,11 +122,11 @@ interface Props {
 const STAGE_DELAYS = [
   0,    // stage 0 – video (instant)
   100,  // stage 1 – geopolitics label
-  720,  // stage 2 – Israel-Lebanon card
-  1340, // stage 3 – US-Iran card
-  1960, // stage 4 – live alerts label + rows
-  2580, // stage 5 – news label + photo cards
-  3200, // stage 6 – disasters label + cards
+  360,  // stage 2 – Israel-Lebanon card
+  620,  // stage 3 – US-Iran card
+  980,  // stage 4 – live alerts label + rows
+  1290, // stage 5 – news label + photo cards
+  1600, // stage 6 – disasters label + cards
 ];
 
 function Reveal({ minStage, stage, children }: { minStage: number; stage: number; children: React.ReactNode }) {

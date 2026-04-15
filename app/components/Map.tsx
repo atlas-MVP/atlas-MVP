@@ -417,15 +417,6 @@ export default function Map({ onCountryClick, flyToCode, flyToPosition, selected
         paint: { "fill-color": "#0d2a52", "fill-opacity": 0.72 },
       });
 
-      // Clean border for highlighted countries
-      m.addLayer({
-        id: "highlighted-border",
-        type: "line",
-        source: "country-boundaries",
-        "source-layer": "country_boundaries",
-        filter: ["all", worldviewFilter, ["in", ["get", "iso_3166_1_alpha_3"], ["literal", HIGHLIGHTED]]],
-        paint: { "line-color": "rgba(255,255,255,0.9)", "line-width": 1.2, "line-blur": 0, "line-opacity": 0.85 },
-      });
 
       // Idle red pulse — always on for HIGHLIGHTED (no hover needed)
       m.addLayer({
@@ -557,8 +548,6 @@ export default function Map({ onCountryClick, flyToCode, flyToPosition, selected
               ["case", ["boolean", ["feature-state", "hover"], false], 0.5 * zoomFactor, 0]
             );
         }
-        if (m.getLayer("highlighted-border"))
-          m.setPaintProperty("highlighted-border", "line-opacity", 0.85 * zoomFactor);
         const hoverOp = panelOpenRef.current ? zoomFactor : 0;
         if (m.getLayer("hover-border"))
           m.setPaintProperty("hover-border", "line-opacity", 0.35 * hoverOp);
