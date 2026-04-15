@@ -36,6 +36,18 @@ body, html {
 }
 .dot-heat { animation: pulse-heat 4s ease-in-out infinite; }
 
+/* Tooltip pulse — matches map red idle pulse (2.8s sine) */
+@keyframes tooltip-border-pulse {
+  0%, 100% { border-color: rgba(220,38,38,0.25); box-shadow: 0 0 10px rgba(220,38,38,0.08); }
+  50%       { border-color: rgba(220,38,38,0.70); box-shadow: 0 0 16px rgba(220,38,38,0.28); }
+}
+@keyframes tooltip-dot-pulse {
+  0%, 100% { background: rgba(239,68,68,0.45); box-shadow: 0 0 4px rgba(239,68,68,0.3); }
+  50%       { background: rgba(239,68,68,1);    box-shadow: 0 0 8px rgba(239,68,68,0.8); }
+}
+.tooltip-pulse-border { animation: tooltip-border-pulse 2.8s ease-in-out infinite; }
+.tooltip-pulse-dot    { animation: tooltip-dot-pulse    2.8s ease-in-out infinite; }
+
 /* Push Mapbox branding just below the visible frame */
 .mapboxgl-ctrl-bottom-left,
 .mapboxgl-ctrl-bottom-right {

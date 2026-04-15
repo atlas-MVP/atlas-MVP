@@ -167,7 +167,7 @@ export default function Map({ onCountryClick, flyToCode, flyToPosition, selected
         const z = m.getZoom();
         const [fs, fe] = COUNTRY_FADE_RANGES[iso] ?? [FADE_START, FADE_END];
         const factor = Math.max(0, Math.min(1, 1 - (z - fs) / (fe - fs)));
-        m.setPaintProperty(`highlighted-fill-${iso}`, "fill-opacity", 0.28 * factor);
+        m.setPaintProperty(`highlighted-fill-${iso}`, "fill-opacity", 0.48 * factor);
       }
     }
     // Hover fill (all countries)
@@ -425,7 +425,7 @@ export default function Map({ onCountryClick, flyToCode, flyToPosition, selected
           source: "country-boundaries",
           "source-layer": "country_boundaries",
           filter: ["all", worldviewFilter, ["==", ["get", "iso_3166_1_alpha_3"], iso]],
-          paint: { "fill-color": "#0d2a52", "fill-opacity": 0.28 },
+          paint: { "fill-color": "#0d2a52", "fill-opacity": 0.48 },
         });
       }
 
@@ -559,7 +559,7 @@ export default function Map({ onCountryClick, flyToCode, flyToPosition, selected
             const [fs, fe] = COUNTRY_FADE_RANGES[iso] ?? [FADE_START, FADE_END];
             const factor = Math.max(0, Math.min(1, 1 - (z - fs) / (fe - fs)));
             if (m.getLayer(`highlighted-fill-${iso}`))
-              m.setPaintProperty(`highlighted-fill-${iso}`, "fill-opacity", 0.28 * factor);
+              m.setPaintProperty(`highlighted-fill-${iso}`, "fill-opacity", 0.48 * factor);
           }
           if (m.getLayer("hover-fill"))
             m.setPaintProperty("hover-fill", "fill-opacity",
@@ -708,22 +708,28 @@ export default function Map({ onCountryClick, flyToCode, flyToPosition, selected
 
       {tooltip && (
         <div style={{ position: "absolute", left: tooltip.x + 14, top: tooltip.y - 40, pointerEvents: "none", zIndex: 5 }}>
-          <div style={{
-            background: "rgba(2, 6, 18, 0.94)",
-            border: `1px solid ${tooltip.isHighlighted ? "rgba(220,38,38,0.5)" : "rgba(59,130,246,0.4)"}`,
-            borderRadius: "4px",
-            padding: "5px 10px",
-            display: "flex",
-            alignItems: "center",
-            gap: "8px",
-            boxShadow: `0 0 16px ${tooltip.isHighlighted ? "rgba(220,38,38,0.15)" : "rgba(59,130,246,0.1)"}`,
-          }}>
-            <span style={{
-              width: 6, height: 6, borderRadius: "50%",
-              background: tooltip.isHighlighted ? "#ef4444" : "#3b82f6",
-              boxShadow: `0 0 6px ${tooltip.isHighlighted ? "#ef4444" : "#3b82f6"}`,
-              display: "inline-block",
-            }} />
+          <div
+            className={tooltip.isHighlighted ? "tooltip-pulse-border" : ""}
+            style={{
+              background: "rgba(2, 6, 18, 0.94)",
+              border: `1px solid ${tooltip.isHighlighted ? "rgba(220,38,38,0.5)" : "rgba(59,130,246,0.4)"}`,
+              borderRadius: "4px",
+              padding: "5px 10px",
+              display: "flex",
+              alignItems: "center",
+              gap: "8px",
+              boxShadow: tooltip.isHighlighted ? undefined : "0 0 16px rgba(59,130,246,0.1)",
+            }}>
+            <span
+              className={tooltip.isHighlighted ? "tooltip-pulse-dot" : ""}
+              style={{
+                width: 6, height: 6, borderRadius: "50%",
+                background: tooltip.isHighlighted ? "#ef4444" : "#3b82f6",
+                boxShadow: tooltip.isHighlighted ? undefined : "0 0 6px #3b82f6",
+                display: "inline-block",
+                flexShrink: 0,
+              }}
+            />
             <span style={{ color: "rgba(255,255,255,0.4)", fontSize: 10, letterSpacing: "0.12em", fontFamily: "monospace" }}>
               ACTIVE CONFLICT
             </span>
