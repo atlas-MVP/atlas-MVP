@@ -307,11 +307,17 @@ export default function Home() {
             pointerEvents: "auto",
             fontSize: 8, letterSpacing: "0.18em", textTransform: "uppercase",
             padding: "2px 8px", borderRadius: 10, cursor: "pointer",
-            background: historicalYear ? "rgba(255,255,255,0.06)" : "rgba(34,197,94,0.18)",
-            border: `1px solid ${historicalYear ? "rgba(255,255,255,0.12)" : "rgba(34,197,94,0.35)"}`,
-            color: historicalYear ? "rgba(255,255,255,0.35)" : "#22c55e",
+            background: historicalYear
+              ? "rgba(255,255,255,0.06)"
+              : (mapReady ? "rgba(34,197,94,0.18)" : "rgba(255,255,255,0.06)"),
+            border: `1px solid ${historicalYear
+              ? "rgba(255,255,255,0.12)"
+              : (mapReady ? "rgba(34,197,94,0.35)" : "rgba(255,255,255,0.14)")}`,
+            color: historicalYear
+              ? "rgba(255,255,255,0.35)"
+              : (mapReady ? "#22c55e" : "rgba(255,255,255,0.35)"),
             marginBottom: 7,
-            transition: "all 0.2s",
+            transition: "background 0.9s cubic-bezier(0.22,1,0.36,1), border-color 0.9s cubic-bezier(0.22,1,0.36,1), color 0.9s cubic-bezier(0.22,1,0.36,1)",
           }}
         >live</button>
         <Clock
