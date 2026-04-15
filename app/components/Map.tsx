@@ -167,7 +167,7 @@ export default function Map({ onCountryClick, flyToCode, flyToPosition, selected
         const z = m.getZoom();
         const [fs, fe] = COUNTRY_FADE_RANGES[iso] ?? [FADE_START, FADE_END];
         const factor = Math.max(0, Math.min(1, 1 - (z - fs) / (fe - fs)));
-        m.setPaintProperty(`highlighted-fill-${iso}`, "fill-opacity", 0.72 * factor);
+        m.setPaintProperty(`highlighted-fill-${iso}`, "fill-opacity", 0.28 * factor);
       }
     }
     // Hover fill (all countries)
@@ -425,7 +425,7 @@ export default function Map({ onCountryClick, flyToCode, flyToPosition, selected
           source: "country-boundaries",
           "source-layer": "country_boundaries",
           filter: ["all", worldviewFilter, ["==", ["get", "iso_3166_1_alpha_3"], iso]],
-          paint: { "fill-color": "#0d2a52", "fill-opacity": 0.72 },
+          paint: { "fill-color": "#0d2a52", "fill-opacity": 0.28 },
         });
       }
 
@@ -559,7 +559,7 @@ export default function Map({ onCountryClick, flyToCode, flyToPosition, selected
             const [fs, fe] = COUNTRY_FADE_RANGES[iso] ?? [FADE_START, FADE_END];
             const factor = Math.max(0, Math.min(1, 1 - (z - fs) / (fe - fs)));
             if (m.getLayer(`highlighted-fill-${iso}`))
-              m.setPaintProperty(`highlighted-fill-${iso}`, "fill-opacity", 0.72 * factor);
+              m.setPaintProperty(`highlighted-fill-${iso}`, "fill-opacity", 0.28 * factor);
           }
           if (m.getLayer("hover-fill"))
             m.setPaintProperty("hover-fill", "fill-opacity",
@@ -584,7 +584,7 @@ export default function Map({ onCountryClick, flyToCode, flyToPosition, selected
         if (ts - lastPulseTs >= 50) {
           lastPulseTs = ts;
           const t = (ts - pulseStart.current) / 2800;
-          const base = 0.06 + 0.12 * Math.abs(Math.sin(t * Math.PI));
+          const base = 0.03 + 0.07 * Math.abs(Math.sin(t * Math.PI));
           m.setPaintProperty("idle-pulse-fill", "fill-opacity", base * zoomFactor);
         }
         idlePulseFrame.current = requestAnimationFrame(animateIdle);
