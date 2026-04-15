@@ -712,14 +712,7 @@ export default function CountryPanel({ countryCode, onClose, onViewFeed, onConfl
 
   if (!conflict) return null;
 
-  // ── Side helpers ────────────────────────────────────────────────────────────
-  const blueNames = conflict.sides?.blue ?? [];
-  const redNames  = conflict.sides?.red  ?? [];
-  const getSide = (name: string) =>
-    blueNames.some(b => name.toLowerCase().includes(b.toLowerCase())) ? "blue"
-    : redNames.some(r => name.toLowerCase().includes(r.toLowerCase())) ? "red"
-    : null;
-
+  // ── Sorting ─────────────────────────────────────────────────────────────────
   const sorted = [...conflict.casualties].sort(
     (a, b) => parseCasualties(b.killed) - parseCasualties(a.killed)
   );
@@ -760,41 +753,38 @@ export default function CountryPanel({ countryCode, onClose, onViewFeed, onConfl
 
   // ── Row renderer ──────────────────────────────────────────────────────────
   const renderRow = (c: typeof conflict.casualties[0]) => {
-    const side = getSide(c.country);
-    const nameColor = side === "blue" ? "rgba(147,197,253,0.85)"
-      : side === "red" ? "rgba(252,165,165,0.85)"
-      : "rgba(255,255,255,0.65)";
-    const dot = side === "blue" ? "rgba(59,130,246,0.8)"
-      : side === "red" ? "rgba(239,68,68,0.8)" : "rgba(255,255,255,0.12)";
+    // Neutral aesthetic — no blue/red side coloring
+    const nameColor = "rgba(255,255,255,0.78)";
+    const dot = "rgba(255,255,255,0.22)";
     const hasInjured = c.injured && c.injured !== "" && c.injured !== "—";
     return (
       <tr key={c.country}>
         <td className="py-1 pr-2">
           <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-            <span style={{ width: 6, height: 6, borderRadius: "50%", background: dot, flexShrink: 0, display: "inline-block" }} />
+            <span style={{ width: 5, height: 5, borderRadius: "50%", background: dot, flexShrink: 0, display: "inline-block" }} />
             {CASUALTY_ISO[c.country] && onFocusCountry ? (
               <button
                 onClick={(e) => { e.stopPropagation(); onFocusCountry(CASUALTY_ISO[c.country]); }}
-                style={{ fontSize: 12, color: nameColor, background: "none", border: "none", cursor: "pointer", padding: 0, textAlign: "left", textDecoration: "underline", textDecorationColor: "rgba(255,255,255,0.12)", textUnderlineOffset: 3 }}
-                onMouseEnter={e => (e.currentTarget.style.textDecorationColor = nameColor)}
-                onMouseLeave={e => (e.currentTarget.style.textDecorationColor = "rgba(255,255,255,0.12)")}
+                style={{ fontSize: 12, fontFamily: "monospace", color: nameColor, background: "none", border: "none", cursor: "pointer", padding: 0, textAlign: "left", letterSpacing: "0.02em" }}
+                onMouseEnter={e => (e.currentTarget.style.color = "rgba(255,255,255,1)")}
+                onMouseLeave={e => (e.currentTarget.style.color = nameColor)}
               >{c.country}</button>
             ) : (
-              <span style={{ fontSize: 12, color: nameColor }}>{c.country}</span>
+              <span style={{ fontSize: 12, fontFamily: "monospace", color: nameColor }}>{c.country}</span>
             )}
           </div>
         </td>
         {!hasMissingCol && (
-          <td style={{ textAlign: "right", fontSize: 12, fontFamily: "monospace", color: "rgba(251,191,36,0.6)", paddingRight: 8, paddingTop: 4, paddingBottom: 4 }}>
+          <td style={{ textAlign: "right", fontSize: 12, fontFamily: "monospace", color: "rgba(255,255,255,0.35)", paddingRight: 8, paddingTop: 4, paddingBottom: 4 }}>
             {hasInjured ? c.injured : ""}
           </td>
         )}
         {hasMissingCol && (
-          <td style={{ textAlign: "right", fontSize: 12, fontFamily: "monospace", color: "rgba(253,186,116,0.5)", paddingRight: 8 }}>
+          <td style={{ textAlign: "right", fontSize: 12, fontFamily: "monospace", color: "rgba(255,255,255,0.32)", paddingRight: 8 }}>
             {c.missing ?? ""}
           </td>
         )}
-        <td style={{ textAlign: "right", fontSize: 12, fontFamily: "monospace", fontWeight: 600, color: "rgba(248,113,113,0.9)", paddingRight: 8, paddingTop: 4, paddingBottom: 4 }}>
+        <td style={{ textAlign: "right", fontSize: 12, fontFamily: "monospace", fontWeight: 700, color: "rgba(255,255,255,0.88)", paddingRight: 8, paddingTop: 4, paddingBottom: 4 }}>
           {c.killed}{c.killedHasMissing ? "+" : ""}
         </td>
         {hasCivCol && !hasMissingCol && (
@@ -805,8 +795,9 @@ export default function CountryPanel({ countryCode, onClose, onViewFeed, onConfl
                   onClick={(e) => { e.stopPropagation(); setCivTooltip(civTooltip === c.country ? null : c.country); }}
                   style={{
                     fontSize: 10, fontFamily: "monospace", padding: "2px 6px", borderRadius: 4, cursor: "pointer", border: "none",
-                    background: c.civilianPct > 60 ? "rgba(239,68,68,0.12)" : "rgba(255,255,255,0.05)",
-                    color: c.civilianPct > 60 ? "rgba(252,165,165,0.7)" : "rgba(255,255,255,0.3)",
+                    background: "rgba(255,255,255,0.05)",
+                    color: c.civilianPct > 60 ? "rgba(255,255,255,0.72)" : "rgba(255,255,255,0.32)",
+                    fontWeight: c.civilianPct > 60 ? 700 : 400,
                   }}>
                   {c.civilianPct}%
                 </button>
@@ -818,7 +809,7 @@ export default function CountryPanel({ countryCode, onClose, onViewFeed, onConfl
                     boxShadow: "0 4px 24px rgba(0,0,0,0.7)",
                   }}>
                     <p style={{ fontSize: 10, fontFamily: "monospace", color: "rgba(255,255,255,0.5)", lineHeight: 1.6, margin: "0 0 8px" }}>
-                      <span style={{ color: c.civilianPct! > 60 ? "rgba(252,165,165,0.9)" : "rgba(255,255,255,0.85)", fontWeight: 700 }}>{c.civilianPct}%</span> of confirmed deaths were civilians.{" "}
+                      <span style={{ color: "rgba(255,255,255,0.92)", fontWeight: 700 }}>{c.civilianPct}%</span> of confirmed deaths were civilians.{" "}
                       <span style={{ color: "rgba(255,255,255,0.3)" }}>{100 - c.civilianPct!}% were combatants or military personnel.</span>
                     </p>
                     {c.civSources && c.civSources.length > 0 && (
@@ -881,21 +872,17 @@ export default function CountryPanel({ countryCode, onClose, onViewFeed, onConfl
                 <h2 style={{ margin: 0, fontSize: 15, fontWeight: 600, color: "rgba(255,255,255,0.9)", letterSpacing: "0.02em", lineHeight: 1.2, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
                   {conflict.title}
                 </h2>
-                {conflict.sides && countryCode && (() => {
-                  // Find display name for this ISO code via reverse CASUALTY_ISO lookup
+                {countryCode && (() => {
                   const displayName = ISO_TO_NAME[countryCode] ?? countryCode;
-                  const isBlueSide = conflict.sides!.blue.some(b =>
-                    displayName.toLowerCase().includes(b.toLowerCase()) || b.toLowerCase().includes(displayName.toLowerCase())
-                  );
                   return (
                     <button
                       onClick={(e) => { e.stopPropagation(); onCountryHome?.(countryCode); }}
                       style={{
-                        fontSize: 8, fontFamily: "monospace", letterSpacing: "0.1em",
+                        fontSize: 8, fontFamily: "monospace", letterSpacing: "0.12em",
                         padding: "2px 6px", borderRadius: 4, flexShrink: 0, cursor: "pointer",
                         background: "rgba(255,255,255,0.04)",
                         border: "1px solid rgba(255,255,255,0.10)",
-                        color: "rgba(255,255,255,0.6)",
+                        color: "rgba(255,255,255,0.55)",
                       }}
                       onMouseEnter={e => (e.currentTarget.style.background = "rgba(255,255,255,0.08)")}
                       onMouseLeave={e => (e.currentTarget.style.background = "rgba(255,255,255,0.04)")}
@@ -903,12 +890,12 @@ export default function CountryPanel({ countryCode, onClose, onViewFeed, onConfl
                   );
                 })()}
               </div>
-              <p style={{ margin: "3px 0 0", fontSize: 10, fontFamily: "monospace", color: "rgba(96,165,250,0.5)", letterSpacing: "0.06em" }}>
+              <p style={{ margin: "3px 0 0", fontSize: 10, fontFamily: "monospace", color: "rgba(255,255,255,0.32)", letterSpacing: "0.06em" }}>
                 {conflict.date}
               </p>
             </div>
             <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
-              <span style={{ fontSize: 8, fontFamily: "monospace", letterSpacing: "0.14em", color: "rgba(255,255,255,0.18)", textTransform: "uppercase" }}>
+              <span style={{ fontSize: 9, fontFamily: "monospace", letterSpacing: "0.18em", color: "rgba(255,255,255,0.22)", textTransform: "uppercase" }}>
                 active conflict
               </span>
               <button onClick={() => { onClose(); setSelectedConflictId(null); }}
@@ -953,11 +940,11 @@ export default function CountryPanel({ countryCode, onClose, onViewFeed, onConfl
                 <table style={{ width: "100%", borderCollapse: "collapse" }}>
                   <thead>
                     <tr>
-                      <th style={{ textAlign: "left", fontSize: 9, fontFamily: "monospace", color: "rgba(255,255,255,0.15)", fontWeight: "normal", paddingBottom: 4 }}></th>
-                      {!hasMissingCol && <th style={{ textAlign: "right", fontSize: 9, fontFamily: "monospace", color: "rgba(255,255,255,0.15)", fontWeight: "normal", paddingBottom: 4, paddingRight: 8 }}>Injured</th>}
-                      {hasMissingCol && <th style={{ textAlign: "right", fontSize: 9, fontFamily: "monospace", color: "rgba(255,255,255,0.15)", fontWeight: "normal", paddingBottom: 4, paddingRight: 8 }}>Missing</th>}
-                      <th style={{ textAlign: "right", fontSize: 9, fontFamily: "monospace", color: "rgba(255,255,255,0.15)", fontWeight: "normal", paddingBottom: 4, paddingRight: 8 }}>Killed</th>
-                      {hasCivCol && !hasMissingCol && <th style={{ textAlign: "right", fontSize: 9, fontFamily: "monospace", color: "rgba(255,255,255,0.15)", fontWeight: "normal", paddingBottom: 4 }}>Civ %</th>}
+                      <th style={{ textAlign: "left", fontSize: 9, fontFamily: "monospace", color: "rgba(255,255,255,0.22)", fontWeight: "normal", paddingBottom: 4, letterSpacing: "0.08em" }}></th>
+                      {!hasMissingCol && <th style={{ textAlign: "right", fontSize: 9, fontFamily: "monospace", color: "rgba(255,255,255,0.22)", fontWeight: "normal", paddingBottom: 4, letterSpacing: "0.08em", paddingRight: 8 }}>Injured</th>}
+                      {hasMissingCol && <th style={{ textAlign: "right", fontSize: 9, fontFamily: "monospace", color: "rgba(255,255,255,0.22)", fontWeight: "normal", paddingBottom: 4, letterSpacing: "0.08em", paddingRight: 8 }}>Missing</th>}
+                      <th style={{ textAlign: "right", fontSize: 9, fontFamily: "monospace", color: "rgba(255,255,255,0.22)", fontWeight: "normal", paddingBottom: 4, letterSpacing: "0.08em", paddingRight: 8 }}>Killed</th>
+                      {hasCivCol && !hasMissingCol && <th style={{ textAlign: "right", fontSize: 9, fontFamily: "monospace", color: "rgba(255,255,255,0.22)", fontWeight: "normal", paddingBottom: 4, letterSpacing: "0.08em" }}>Civ %</th>}
                     </tr>
                   </thead>
                   <tbody>
@@ -983,8 +970,8 @@ export default function CountryPanel({ countryCode, onClose, onViewFeed, onConfl
             const conflictAlerts = CONFLICT_ALERTS[conflict.id] ?? [];
             if (conflictAlerts.length === 0) return null;
             return (
-              <div style={{ padding: "8px 6px 6px", borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
-                <p style={{ margin: "0 0 4px 8px", fontSize: 9, fontFamily: "monospace", letterSpacing: "0.14em", color: "rgba(255,255,255,0.22)", textTransform: "uppercase" }}>live alerts</p>
+              <div style={{ padding: "14px 6px 6px", borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
+                <p style={{ margin: "0 0 6px 12px", fontSize: 11, fontFamily: "monospace", letterSpacing: "0.18em", color: "rgba(255,255,255,0.28)", textTransform: "uppercase", fontWeight: 500 }}>live alerts</p>
                 {conflictAlerts.map((a, i) => (
                   <LiveAlertRow
                     key={i}
@@ -1018,57 +1005,9 @@ export default function CountryPanel({ countryCode, onClose, onViewFeed, onConfl
 
           {/* Timeline */}
           {(() => {
-            // Color palette — amber for Israel/US action, crimson for Iran/proxy action
-            // Neither implies "good" or "bad" — both feel equally intense/military
-            const AMBER  = { solid: "rgba(59,130,246,0.85)",  border: "rgba(59,130,246,0.4)", glow: "0 0 8px rgba(59,130,246,0.35)", date: "rgba(147,197,253,0.9)",  text: "rgba(210,230,255,0.62)" };
-            const CRIMSON= { solid: "rgba(225,29,72,0.85)",  border: "rgba(225,29,72,0.45)",  glow: "0 0 8px rgba(225,29,72,0.4)",  date: "rgba(251,113,133,0.9)",  text: "rgba(255,210,218,0.62)" };
-            const GREY   = { solid: "rgba(255,255,255,0.08)", border: "rgba(255,255,255,0.14)", glow: "none",                         date: "rgba(255,255,255,0.32)", text: "rgba(255,255,255,0.48)" };
-
-            const getEventSide = (text: string, date: string): "crimson" | "amber" | "both" | "neutral" => {
-              const s = (text + " " + date).toLowerCase();
-
-              const crimsonHits = [
-                // Direct attacks
-                "iran launch", "iran fires", "iran retaliates", "iran attacks", "iranian attack",
-                "iranian strike", "iranian drone", "iranian missile", "iran moves to close",
-                "hezbollah launch", "hezbollah fires", "hezbollah attack", "hezbollah re-enter",
-                "hamas attack", "hamas launch", "hamas kills", "hamas takes",
-                "operation true promise",
-                "irgc gunboat", "irgc quds",
-                "200 ballistic", "300 drones", "hundreds of drones",
-                "550 ballistic",
-                // Buildups / threats from Iran side
-                "khamenei publicly threatens", "iran establishes a toll",
-                "strait of hormuz — $", "iran is \"capable of sinking\"",
-                "iranian security forces unleash",
-              ];
-
-              const amberHits = [
-                // Direct strikes
-                "israel launch", "israel strikes", "israel bombs", "israel attack", "israeli strike",
-                "israeli airstrike", "israeli decapitation", "israeli sabotage", "israeli forces launch",
-                "us and israel", "us strikes", "us joins", "us f-35 shoots",
-                "operation epic fury", "operation days of repentance", "twelve-day war",
-                "b-2s", "b-1s", "b-52s", "tomahawk", "himars",
-                "pager and walkie-talkie", "airstrike in beirut kills",
-                "israel retaliates", "israel assassinate", "targeted strike on",
-                "sabotage operation causes", "decapitation strikes kill",
-                // Military buildups by US/Israel
-                "largest us military", "massive armada", "armada heading",
-                "carrier strike group", "uss gerald r. ford", "uss abraham lincoln",
-                "us deploys", "refueling tankers arrive",
-                "israel's security cabinet authorizes",
-                "trump gives the order",
-              ];
-
-              const hasCrimson = crimsonHits.some(k => s.includes(k));
-              const hasAmber   = amberHits.some(k => s.includes(k));
-
-              if (hasCrimson && hasAmber) return "both";
-              if (hasCrimson) return "crimson";
-              if (hasAmber)   return "amber";
-              return "neutral";
-            };
+            // Neutral radar aesthetic — no blue/red sides, uniform white/dim
+            const NEUTRAL = { solid: "rgba(255,255,255,0.55)", border: "rgba(255,255,255,0.20)", glow: "none", date: "rgba(255,255,255,0.72)", text: "rgba(255,255,255,0.56)" };
+            const HIGHLIGHT = { solid: "rgba(255,255,255,0.85)", border: "rgba(255,255,255,0.3)", glow: "0 0 6px rgba(255,255,255,0.25)", date: "rgba(255,255,255,0.92)", text: "rgba(255,255,255,0.72)" };
 
             const extractYear = (d: string) => {
               const m = d.match(/\b(20\d\d|19\d\d)\b/);
@@ -1077,8 +1016,8 @@ export default function CountryPanel({ countryCode, onClose, onViewFeed, onConfl
 
             return (
               <div style={{ padding: "0 16px 16px" }}>
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
-                  <p style={{ fontSize: 9, fontFamily: "monospace", letterSpacing: "0.12em", color: "rgba(255,255,255,0.18)", textTransform: "uppercase", margin: 0 }}>Timeline</p>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 14, marginBottom: 14 }}>
+                  <p style={{ fontSize: 11, fontFamily: "monospace", letterSpacing: "0.18em", color: "rgba(255,255,255,0.28)", textTransform: "uppercase", margin: 0, fontWeight: 500 }}>timeline</p>
                 </div>
 
                 <div style={{ position: "relative" }}>
@@ -1089,8 +1028,7 @@ export default function CountryPanel({ countryCode, onClose, onViewFeed, onConfl
                     const chronological = [...conflict.timeline.slice(1)].reverse();
 
                     const renderEvent = (event: typeof latest, i: number, arr: typeof chronological) => {
-                      const side = getEventSide(event.text, event.date);
-                      const palette = side === "crimson" ? CRIMSON : side === "amber" ? AMBER : GREY;
+                      const palette = event.highlight ? HIGHLIGHT : NEUTRAL;
                       const currentYear = extractYear(event.date);
                       const nextEvent = arr[i + 1];
                       const nextYear = nextEvent ? extractYear(nextEvent.date) : null;
@@ -1098,8 +1036,8 @@ export default function CountryPanel({ countryCode, onClose, onViewFeed, onConfl
                       return (
                         <div key={i} {...(event.strikeEvent ? { "data-strike": JSON.stringify(event.strikeEvent) } : {})}>
                           <div style={{ display: "flex", gap: 12, paddingLeft: 4 }}>
-                            <div style={{ flexShrink: 0, marginTop: 3 }}>
-                              <div style={{ width: 10, height: 10, borderRadius: "50%", background: palette.solid, border: `1px solid ${palette.border}`, boxShadow: palette.glow }} />
+                            <div style={{ flexShrink: 0, marginTop: 4 }}>
+                              <div style={{ width: 7, height: 7, borderRadius: "50%", background: palette.solid, border: `1px solid ${palette.border}`, boxShadow: palette.glow }} />
                             </div>
                             <div>
                               <p style={{ margin: "0 0 5px", fontSize: 11, fontFamily: "monospace", fontWeight: 600, color: palette.date, letterSpacing: "0.03em" }}>
@@ -1127,7 +1065,7 @@ export default function CountryPanel({ countryCode, onClose, onViewFeed, onConfl
                         {chronological.length > 0 && (
                           <div style={{ display: "flex", alignItems: "center", gap: 10, margin: "4px 0" }}>
                             <div style={{ flex: 1, height: 1, background: "rgba(255,255,255,0.08)" }} />
-                            <span style={{ fontSize: 9, fontFamily: "monospace", letterSpacing: "0.18em", color: "rgba(255,255,255,0.18)", textTransform: "uppercase" }}>history</span>
+                            <span style={{ fontSize: 10, fontFamily: "monospace", letterSpacing: "0.22em", color: "rgba(255,255,255,0.26)", textTransform: "uppercase", fontWeight: 500 }}>history</span>
                             <div style={{ flex: 1, height: 1, background: "rgba(255,255,255,0.08)" }} />
                           </div>
                         )}
