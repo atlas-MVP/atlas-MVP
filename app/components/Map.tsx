@@ -760,7 +760,11 @@ export default function Map({ onCountryClick, flyToCode, flyToPosition, selected
 
   return (
     <div style={{ width: "100%", height: "100%", position: "relative", background: "#000" }}>
-      <div ref={mapContainer} style={{ width: "100%", height: "100%", visibility: mapReady ? "visible" : "hidden" }} />
+      <div ref={mapContainer} style={{ width: "100%", height: "100%" }} />
+      {/* Black overlay hides the map visually until tiles render — pointer-events:none keeps map interactive */}
+      {!mapReady && (
+        <div style={{ position: "absolute", inset: 0, background: "#000", pointerEvents: "none", zIndex: 1 }} />
+      )}
 
       {tooltip && (
         <div style={{ position: "absolute", left: tooltip.x + 14, top: tooltip.y - 40, pointerEvents: "none", zIndex: 5 }}>

@@ -286,7 +286,15 @@ export default function Home() {
           </button>
           <NavTime />
         </div>
-        <div className="pointer-events-auto">
+        <div
+          className="pointer-events-auto"
+          style={{
+            opacity: mapReady ? 1 : 0,
+            filter: mapReady ? "blur(0)" : "blur(5px)",
+            transform: mapReady ? "translateY(0)" : "translateY(5px)",
+            transition: "opacity 0.75s cubic-bezier(0.22,1,0.36,1), filter 0.75s cubic-bezier(0.22,1,0.36,1), transform 0.75s cubic-bezier(0.22,1,0.36,1)",
+          }}
+        >
           <SearchBar onSelect={handleSearch} />
         </div>
       </div>
