@@ -118,14 +118,15 @@ interface Props {
 // ─── Sequential load stages ──────────────────────────────────────────────────
 // Edit STAGE_DELAYS to tune timing, or add new stages here.
 // Items with minStage > current loadStage are invisible (opacity 0).
+// Each stage waits for the previous to fully complete (~900ms fade) before starting
 const STAGE_DELAYS = [
-  0,   // stage 0 – video (instant)
-  120, // stage 1 – geopolitics label
-  240, // stage 2 – Israel-Lebanon card
-  360, // stage 3 – US-Iran card
-  500, // stage 4 – live alerts label + rows
-  640, // stage 5 – news label + photo cards
-  780, // stage 6 – disasters label + cards
+  0,    // stage 0 – video (instant)
+  200,  // stage 1 – geopolitics label
+  1100, // stage 2 – Israel-Lebanon card
+  2000, // stage 3 – US-Iran card
+  2900, // stage 4 – live alerts label + rows
+  3800, // stage 5 – news label + photo cards
+  4700, // stage 6 – disasters label + cards
 ];
 
 function Reveal({ minStage, stage, children }: { minStage: number; stage: number; children: React.ReactNode }) {
@@ -135,7 +136,7 @@ function Reveal({ minStage, stage, children }: { minStage: number; stage: number
       opacity: visible ? 1 : 0,
       filter: visible ? "blur(0)" : "blur(6px)",
       transform: visible ? "translateY(0)" : "translateY(6px)",
-      transition: "opacity 0.85s cubic-bezier(0.22,1,0.36,1), filter 0.85s cubic-bezier(0.22,1,0.36,1), transform 0.85s cubic-bezier(0.22,1,0.36,1)",
+      transition: "opacity 0.9s cubic-bezier(0.22,1,0.36,1), filter 0.9s cubic-bezier(0.22,1,0.36,1), transform 0.9s cubic-bezier(0.22,1,0.36,1)",
       pointerEvents: visible ? "auto" : "none",
       willChange: "opacity, filter, transform",
     }}>
