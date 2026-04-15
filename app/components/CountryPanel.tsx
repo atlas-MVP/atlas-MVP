@@ -701,7 +701,7 @@ export default function CountryPanel({ countryCode, onClose, onViewFeed, onConfl
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const cancelLeave = () => { if (leaveTimer.current) clearTimeout(leaveTimer.current); };
-  const scheduleLeave = () => { cancelLeave(); leaveTimer.current = setTimeout(() => { setHoveredAlert(null); setSourcesOpen(false); }, 8000); };
+  const scheduleLeave = () => { cancelLeave(); leaveTimer.current = setTimeout(() => { setHoveredAlert(null); setSourcesOpen(false); }, 220); };
 
   if (!countryCode) return null;
   const conflictIds = COUNTRY_CONFLICTS[countryCode];

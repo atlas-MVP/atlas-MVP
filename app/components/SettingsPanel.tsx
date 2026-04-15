@@ -15,17 +15,15 @@ const LINES = [
 
 function TypeLine({ text, delay, dim }: { text: string; delay: number; dim: boolean }) {
   const [displayed, setDisplayed] = useState("");
-  const [done, setDone] = useState(false);
 
   useEffect(() => {
-    if (!text) { const t = setTimeout(() => setDone(true), delay); return () => clearTimeout(t); }
+    if (!text) return;
     let i = 0;
     const start = setTimeout(() => {
       const tick = () => {
         i++;
         setDisplayed(text.slice(0, i));
-        if (i < text.length) setTimeout(tick, 22);
-        else setDone(true);
+        if (i < text.length) setTimeout(tick, 14);
       };
       tick();
     }, delay);
@@ -41,7 +39,6 @@ function TypeLine({ text, delay, dim }: { text: string; delay: number; dim: bool
       lineHeight: 2, whiteSpace: "pre",
     }}>
       {displayed}
-      {!done && <span style={{ opacity: 0.45 }}>▌</span>}
     </div>
   );
 }
@@ -63,7 +60,7 @@ export default function SettingsPanel({ onClose }: { onClose: () => void }) {
       pointerEvents: "auto",
     }}>
       {LINES.map((line, i) => (
-        <TypeLine key={i} text={line.text} delay={i * 180} dim={line.dim} />
+        <TypeLine key={i} text={line.text} delay={i * 90} dim={line.dim} />
       ))}
       <button
         onClick={onClose}

@@ -83,7 +83,7 @@ function ConflictCard({ label, dot, alerts, onSourceTap }: { label: string; dot:
               borderLeft: "2px solid rgba(255,255,255,0.25)",
               cursor: "pointer",
             }}>
-              {currentLine}<span style={{ opacity: 0.5 }}>▌</span>
+              {currentLine}
             </div>
           )}
         </div>

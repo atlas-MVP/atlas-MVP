@@ -22,14 +22,13 @@ function AtlasWordmark() {
     const tick = () => {
       i++;
       setDisplayed(WORD.slice(0, i));
-      if (i < WORD.length) setTimeout(tick, 180);
+      if (i < WORD.length) setTimeout(tick, 110);
     };
-    setTimeout(tick, 80);
+    setTimeout(tick, 40);
   }, []);
   return (
     <span className="text-white/80 font-light tracking-[0.3em] text-sm hover:text-white/100 transition-colors">
       {displayed}
-      {displayed.length < WORD.length && <span style={{ opacity: 0.4 }}>▌</span>}
     </span>
   );
 }

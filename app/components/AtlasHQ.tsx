@@ -90,8 +90,8 @@ const LIVE_FEED: FeedItem[] = [
     description: "The PLA Navy carrier strike group led by the Shandong has approached within 40 nautical miles of the Taiwan Strait median line. Taiwan's MND has scrambled F-16 and Mirage 2000 fighters. The GDELT conflict index for the Taiwan Strait has risen to its highest level since August 2022." },
 ];
 
-// Typing animation for alert text
-function TypingAlert({ text, color }: { text: string; color: string }) {
+// Typing animation for alert text (no blinking cursor — just smooth reveal)
+function TypingAlert({ text }: { text: string; color?: string }) {
   const [displayed, setDisplayed] = useState("");
   const cancelRef = useRef(false);
 
@@ -100,7 +100,7 @@ function TypingAlert({ text, color }: { text: string; color: string }) {
     setDisplayed("");
     let i = 0;
     const total = text.length;
-    const perChar = Math.max(8, Math.round(900 / total));
+    const perChar = Math.max(6, Math.round(500 / total));
     const tick = () => {
       if (cancelRef.current) return;
       if (i <= total) {
@@ -109,18 +109,11 @@ function TypingAlert({ text, color }: { text: string; color: string }) {
         setTimeout(tick, perChar);
       }
     };
-    const t = setTimeout(tick, 120);
+    const t = setTimeout(tick, 60);
     return () => { cancelRef.current = true; clearTimeout(t); };
   }, [text]);
 
-  return (
-    <span>
-      {displayed}
-      {displayed.length < text.length && (
-        <span style={{ opacity: 0.35, color }}>▌</span>
-      )}
-    </span>
-  );
+  return <span>{displayed}</span>;
 }
 
 interface Props {
@@ -134,19 +127,19 @@ interface Props {
 // Edit STAGE_DELAYS to tune timing, or add new stages here.
 // Items with minStage > current loadStage are invisible (opacity 0).
 const STAGE_DELAYS = [
-  0,    // stage 0 – video (instant)
-  320,  // stage 1 – geopolitics label
-  520,  // stage 2 – Israel-Lebanon card
-  720,  // stage 3 – US-Iran card
-  980,  // stage 4 – live alerts label + rows
-  1260, // stage 5 – news label + photo cards
-  1500, // stage 6 – disasters label + cards
+  0,   // stage 0 – video (instant)
+  120, // stage 1 – geopolitics label
+  240, // stage 2 – Israel-Lebanon card
+  360, // stage 3 – US-Iran card
+  500, // stage 4 – live alerts label + rows
+  640, // stage 5 – news label + photo cards
+  780, // stage 6 – disasters label + cards
 ];
 
 function Reveal({ minStage, stage, children }: { minStage: number; stage: number; children: React.ReactNode }) {
   const visible = stage >= minStage;
   return (
-    <div style={{ opacity: visible ? 1 : 0, transition: "opacity 0.38s ease", pointerEvents: visible ? "auto" : "none" }}>
+    <div style={{ opacity: visible ? 1 : 0, transform: visible ? "translateY(0)" : "translateY(4px)", transition: "opacity 0.55s cubic-bezier(0.22,1,0.36,1), transform 0.55s cubic-bezier(0.22,1,0.36,1)", pointerEvents: visible ? "auto" : "none", willChange: "opacity, transform" }}>
       {children}
     </div>
   );

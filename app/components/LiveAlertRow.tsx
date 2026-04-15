@@ -111,8 +111,8 @@ export default function LiveAlertRow({
             {item.text}
           </span>
 
-          {/* Expanded body — only while this row is actively hovered (disappears on leave) */}
-          {hovered && expandOnHover && (
+          {/* Expanded body — stays while row OR confidence panel hovered */}
+          {expanded && expandOnHover && (
             <div>
               <p style={{
                 margin: "8px 0 10px",
