@@ -357,12 +357,12 @@ export default function Map({ onCountryClick, flyToCode, flyToPosition, selected
           try {
             const sz = m.getLayoutProperty(l.id, "text-size");
             if (typeof sz === "number") {
-              m.setLayoutProperty(l.id, "text-size", Math.max(6, sz - 1));
+              m.setLayoutProperty(l.id, "text-size", Math.max(6, sz - 2));
             } else if (Array.isArray(sz) && sz[0] === "interpolate") {
               // eslint-disable-next-line @typescript-eslint/no-explicit-any
               const mod: any[] = [...sz];
               for (let i = 4; i < mod.length; i += 2) {
-                if (typeof mod[i] === "number") mod[i] = Math.max(6, mod[i] - 1);
+                if (typeof mod[i] === "number") mod[i] = Math.max(6, mod[i] - 2);
               }
               // eslint-disable-next-line @typescript-eslint/no-explicit-any
               m.setLayoutProperty(l.id, "text-size", mod as any);
