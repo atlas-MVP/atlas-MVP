@@ -314,7 +314,8 @@ export default function Map({ onCountryClick, flyToCode, flyToPosition, selected
     mapContainer.current!.addEventListener("wheel", _wheelHandler, { capture: true, passive: false });
 
     // Reveal canvas only after every tile has finished rendering at least once
-    map.current.once("idle", () => { setMapReady(true); onReady?.(); });
+    // Small extra delay ensures no blink between tile-ready and overlay removal
+    map.current.once("idle", () => { setTimeout(() => { setMapReady(true); onReady?.(); }, 250); });
 
     map.current.on("load", () => {
       const m = map.current!;

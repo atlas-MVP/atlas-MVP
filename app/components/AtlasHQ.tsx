@@ -120,13 +120,12 @@ interface Props {
 // Items with minStage > current loadStage are invisible (opacity 0).
 // Stages spaced ~600ms apart — each settles meaningfully before the next begins, but flow stays continuous
 const STAGE_DELAYS = [
-  0,    // stage 0 – video (instant)
-  100,  // stage 1 – geopolitics label
-  360,  // stage 2 – Israel-Lebanon card
-  620,  // stage 3 – US-Iran card
-  980,  // stage 4 – live alerts label + rows
-  1290, // stage 5 – news label + photo cards
-  1600, // stage 6 – disasters label + cards
+  0,    // stage 0 – instant (video + all labels)
+  360,  // stage 1 – conflict card 1
+  620,  // stage 2 – conflict card 2
+  980,  // stage 3 – live alert rows
+  1290, // stage 4 – news cards
+  1600, // stage 5 – disaster cards
 ];
 
 function Reveal({ minStage, stage, children }: { minStage: number; stage: number; children: React.ReactNode }) {
@@ -196,13 +195,11 @@ export default function AtlasHQ({ onClose, onNavigate, onHeadlinesToggle, onSour
       {/* Scrollable body */}
       <div style={{ flex: 1, overflowY: "auto", overflowX: "hidden" }}>
 
-        {/* GEOPOLITICS — stage 1: label, stage 2: card 1, stage 3: card 2 */}
-        <Reveal minStage={1} stage={loadStage}>
-          <SectionLabel label="geopolitics" onClick={() => setShowMore(v => !v)} expanded={showMore} />
-        </Reveal>
+        {/* GEOPOLITICS — label instant, cards staggered */}
+        <SectionLabel label="geopolitics" onClick={() => setShowMore(v => !v)} expanded={showMore} />
         <div style={{ padding: "0 14px", display: "flex", flexDirection: "column", gap: 6 }}>
           {TOP_CONFLICTS.map((c, idx) => (
-            <Reveal key={c.label} minStage={2 + idx} stage={loadStage}>
+            <Reveal key={c.label} minStage={1 + idx} stage={loadStage}>
               <div
                 onClick={() => onNavigate?.(c.code, c.flyTo.center, c.flyTo.zoom)}
                 style={{
@@ -267,9 +264,9 @@ export default function AtlasHQ({ onClose, onNavigate, onHeadlinesToggle, onSour
           )}
         </div>
 
-        {/* LIVE ALERTS — stage 4: label + top 2 rows, no expand */}
-        <Reveal minStage={4} stage={loadStage}>
-          <SectionLabel label="live alerts" />
+        {/* LIVE ALERTS — label instant, rows fade in */}
+        <SectionLabel label="live alerts" />
+        <Reveal minStage={3} stage={loadStage}>
           <div style={{ padding: "0 6px" }}>
             {LIVE_FEED.slice(0, 2).map((item, i) => (
               <LiveAlertRow
@@ -285,9 +282,9 @@ export default function AtlasHQ({ onClose, onNavigate, onHeadlinesToggle, onSour
           </div>
         </Reveal>
 
-        {/* NEWS — stage 5: two square photo cards side by side */}
-        <Reveal minStage={5} stage={loadStage}>
-          <SectionLabel label="news" />
+        {/* NEWS — label instant, cards fade in */}
+        <SectionLabel label="news" />
+        <Reveal minStage={4} stage={loadStage}>
           <div style={{ padding: "0 14px 6px", display: "flex", gap: 8 }}>
             {NEWS_ITEMS.map((item) => (
               <a
@@ -332,9 +329,9 @@ export default function AtlasHQ({ onClose, onNavigate, onHeadlinesToggle, onSour
           </div>
         </Reveal>
 
-        {/* DISASTERS — stage 6: label + cards together */}
-        <Reveal minStage={6} stage={loadStage}>
-          <SectionLabel label="disasters" onClick={() => setShowAllDisasters(v => !v)} expanded={showAllDisasters} />
+        {/* DISASTERS — label instant, cards fade in */}
+        <SectionLabel label="disasters" onClick={() => setShowAllDisasters(v => !v)} expanded={showAllDisasters} />
+        <Reveal minStage={5} stage={loadStage}>
           <div style={{ padding: "0 14px 20px", display: "flex", flexDirection: "column", gap: 4 }}>
             {(showAllDisasters ? DISASTERS : DISASTERS.slice(0, 2)).map((d) => (
               <div

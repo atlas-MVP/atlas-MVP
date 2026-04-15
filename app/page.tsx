@@ -288,12 +288,7 @@ export default function Home() {
         </div>
         <div
           className="pointer-events-auto"
-          style={{
-            opacity: mapReady ? 1 : 0,
-            filter: mapReady ? "blur(0)" : "blur(5px)",
-            transform: mapReady ? "translateY(0)" : "translateY(5px)",
-            transition: "opacity 0.75s cubic-bezier(0.22,1,0.36,1), filter 0.75s cubic-bezier(0.22,1,0.36,1), transform 0.75s cubic-bezier(0.22,1,0.36,1)",
-          }}
+          style={{ opacity: mapReady ? 1 : 0 }}
         >
           <SearchBar onSelect={handleSearch} />
         </div>
@@ -317,7 +312,6 @@ export default function Home() {
               ? "rgba(255,255,255,0.35)"
               : (mapReady ? "#22c55e" : "rgba(255,255,255,0.35)"),
             marginBottom: 7,
-            transition: "background 0.9s cubic-bezier(0.22,1,0.36,1), border-color 0.9s cubic-bezier(0.22,1,0.36,1), color 0.9s cubic-bezier(0.22,1,0.36,1)",
           }}
         >live</button>
         <Clock
