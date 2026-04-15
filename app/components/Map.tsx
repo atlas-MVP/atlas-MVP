@@ -10,6 +10,17 @@ mapboxgl.accessToken =
 // Top-4 conflict countries — always blue base + red idle pulse
 const HIGHLIGHTED = ["LBN", "IRN", "UKR", "RUS", "PSE", "SDN"];
 
+// Per-country zoom fade ranges [fadeStart, fadeEnd] — proportional to country area
+// Smaller countries keep their highlight visible until much higher zoom levels
+const COUNTRY_FADE_RANGES: Record<string, [number, number]> = {
+  PSE: [7.5, 9.5],  // Gaza ~365 km²   — tiny
+  LBN: [7.0, 9.0],  // Lebanon ~10k km² — small
+  UKR: [4.5, 6.5],  // Ukraine ~600k km²
+  IRN: [3.8, 5.8],  // Iran ~1.65M km²
+  SDN: [3.5, 5.5],  // Sudan ~1.86M km²
+  RUS: [3.0, 5.0],  // Russia ~17M km²  — huge
+};
+
 const GLOBAL_CONFLICTS = [
   "UKR", "RUS", "SDN", "MMR", "ETH",
   "MLI", "NER", "BFA", "SOM", "COD",
@@ -147,18 +158,16 @@ export default function Map({ onCountryClick, flyToCode, flyToPosition, selected
     const panelOpen = !!selectedCountry;
     panelOpenRef.current = panelOpen;
 
-    // Highlighted countries (ISR/LBN/IRN) fill — zoom fade handles this when panel is closed
-    if (m.getLayer("highlighted-fill")) {
+    // Per-country highlighted fills — restore correct per-country fade on panel close
+    for (const iso of HIGHLIGHTED) {
+      if (!m.getLayer(`highlighted-fill-${iso}`)) continue;
       if (panelOpen) {
-        m.setPaintProperty("highlighted-fill", "fill-opacity", 0);
-      }
-      // when closing, zoom handler will restore correct faded value on next zoom event
-      // trigger it immediately by dispatching current zoom
-      else {
+        m.setPaintProperty(`highlighted-fill-${iso}`, "fill-opacity", 0);
+      } else {
         const z = m.getZoom();
-        const fadeStart = FADE_START, fadeEnd = FADE_END;
-        const zf = Math.max(0, Math.min(1, 1 - (z - fadeStart) / (fadeEnd - fadeStart)));
-        m.setPaintProperty("highlighted-fill", "fill-opacity", 0.72 * zf);
+        const [fs, fe] = COUNTRY_FADE_RANGES[iso] ?? [FADE_START, FADE_END];
+        const factor = Math.max(0, Math.min(1, 1 - (z - fs) / (fe - fs)));
+        m.setPaintProperty(`highlighted-fill-${iso}`, "fill-opacity", 0.72 * factor);
       }
     }
     // Hover fill (all countries)
@@ -407,15 +416,17 @@ export default function Map({ onCountryClick, flyToCode, flyToPosition, selected
         ["==", ["get", "worldview"], "US"],
       ];
 
-      // ISR + LBN + IRN — always blue
-      m.addLayer({
-        id: "highlighted-fill",
-        type: "fill",
-        source: "country-boundaries",
-        "source-layer": "country_boundaries",
-        filter: ["all", worldviewFilter, ["in", ["get", "iso_3166_1_alpha_3"], ["literal", HIGHLIGHTED]]],
-        paint: { "fill-color": "#0d2a52", "fill-opacity": 0.72 },
-      });
+      // Per-country highlighted fills — each fades at a zoom proportional to its size
+      for (const iso of HIGHLIGHTED) {
+        m.addLayer({
+          id: `highlighted-fill-${iso}`,
+          type: "fill",
+          source: "country-boundaries",
+          "source-layer": "country_boundaries",
+          filter: ["all", worldviewFilter, ["==", ["get", "iso_3166_1_alpha_3"], iso]],
+          paint: { "fill-color": "#0d2a52", "fill-opacity": 0.72 },
+        });
+      }
 
 
       // Idle red pulse — always on for HIGHLIGHTED (no hover needed)
@@ -539,10 +550,16 @@ export default function Map({ onCountryClick, flyToCode, flyToPosition, selected
 
       const applyZoomFade = () => {
         const z = m.getZoom();
+        // Global factor — used for hover/secondary layers (based on large-country range)
         zoomFactor = Math.max(0, Math.min(1, 1 - (z - FADE_START) / (FADE_END - FADE_START)));
         if (!panelOpenRef.current) {
-          if (m.getLayer("highlighted-fill"))
-            m.setPaintProperty("highlighted-fill", "fill-opacity", 0.72 * zoomFactor);
+          // Per-country fade for highlighted fills
+          for (const iso of HIGHLIGHTED) {
+            const [fs, fe] = COUNTRY_FADE_RANGES[iso] ?? [FADE_START, FADE_END];
+            const factor = Math.max(0, Math.min(1, 1 - (z - fs) / (fe - fs)));
+            if (m.getLayer(`highlighted-fill-${iso}`))
+              m.setPaintProperty(`highlighted-fill-${iso}`, "fill-opacity", 0.72 * factor);
+          }
           if (m.getLayer("hover-fill"))
             m.setPaintProperty("hover-fill", "fill-opacity",
               ["case", ["boolean", ["feature-state", "hover"], false], 0.5 * zoomFactor, 0]
