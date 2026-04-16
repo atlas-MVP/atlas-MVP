@@ -691,7 +691,6 @@ function extractSourceName(label: string): string {
 export default function CountryPanel({ countryCode, onClose, onViewFeed, onConflictSelect, onFocusCountry, onFocusPosition, onCountryHome, onAuthorClick, onTimelineStrike, onSourceTap, initialAlertText }: Props) {
   const [selectedConflictId, setSelectedConflictId] = useState<string | null>(null);
   const [civTooltip, setCivTooltip]       = useState<string | null>(null);
-  const [scrolled, setScrolled]           = useState(false);
   const [showAllCasualties, setShowAllCasualties] = useState(false);
   const [timelineExpanded, setTimelineExpanded] = useState(false);
   const [hoveredAlert,  setHoveredAlert]  = useState<number | null>(null);
@@ -728,7 +727,6 @@ export default function CountryPanel({ countryCode, onClose, onViewFeed, onConfl
   // ── Scroll handler ─────────────────────────────────────────────────────────
   const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
     const container = e.currentTarget;
-    setScrolled(container.scrollTop > 40);
 
     // Detect which strike event is in the reading zone (top 40% of container)
     const cRect = container.getBoundingClientRect();

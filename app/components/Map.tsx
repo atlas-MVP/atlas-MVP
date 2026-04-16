@@ -127,11 +127,7 @@ interface Props {
   onReady?: () => void; // fires once when first idle event lands (all tiles rendered)
 }
 
-// Home view: centered on continental US, zoomed out until city labels disappear
-const BOSTON: [number, number] = [-98.5, 39.5];
-const BOSTON_ZOOM = 2.0;
-
-// Zoom fade range — blue fills/borders disappear when zoomed in past these levels
+// Zoom fade range — used for global layers (hover, secondary); per-country uses COUNTRY_FADE_RANGES
 const FADE_START = 3.5;
 const FADE_END = 5.5;
 
@@ -158,30 +154,29 @@ export default function Map({ onCountryClick, flyToCode, flyToPosition, selected
     const panelOpen = !!selectedCountry;
     panelOpenRef.current = panelOpen;
 
-    // Per-country highlighted fills — restore correct per-country fade on panel close
+    // Per-country highlighted fills — toggle between zoom expression and hidden
     for (const iso of HIGHLIGHTED) {
       if (!m.getLayer(`highlighted-fill-${iso}`)) continue;
-      if (panelOpen) {
-        m.setPaintProperty(`highlighted-fill-${iso}`, "fill-opacity", 0);
-      } else {
-        const z = m.getZoom();
-        const [fs, fe] = COUNTRY_FADE_RANGES[iso] ?? [FADE_START, FADE_END];
-        const factor = Math.max(0, Math.min(1, 1 - (z - fs) / (fe - fs)));
-        m.setPaintProperty(`highlighted-fill-${iso}`, "fill-opacity", 0.48 * factor);
-      }
+      const [fs, fe] = COUNTRY_FADE_RANGES[iso] ?? [FADE_START, FADE_END];
+      m.setPaintProperty(`highlighted-fill-${iso}`, "fill-opacity",
+        panelOpen ? 0 : ["interpolate", ["linear"], ["zoom"], fs, 0.48, fe, 0] as never
+      );
     }
-    // Hover fill (all countries)
+    // Hover fill — toggle between zoom expression and hidden
     m.setPaintProperty("hover-fill", "fill-opacity",
-      panelOpen ? 0 : ["case", ["boolean", ["feature-state", "hover"], false], 0.5, 0]
+      panelOpen ? 0 : ["case", ["boolean", ["feature-state", "hover"], false],
+        ["interpolate", ["linear"], ["zoom"], FADE_START, 0.5, FADE_END, 0], 0
+      ] as never
     );
     // Border: only the selected country gets it
     const borderFilter = panelOpen && selectedCountry
       ? ["all", ["any", ["==", ["get", "worldview"], "all"], ["==", ["get", "worldview"], "US"]], ["==", ["get", "iso_3166_1_alpha_3"], selectedCountry]]
       : ["all", ["any", ["==", ["get", "worldview"], "all"], ["==", ["get", "worldview"], "US"]], ["in", ["get", "iso_3166_1_alpha_3"], ["literal", ALL_HOVERABLE]]];
-    // Tapped-country border
     if (m.getLayer("hover-border")) {
       m.setFilter("hover-border", borderFilter);
-      m.setPaintProperty("hover-border", "line-opacity", panelOpen ? 0.55 : 0);
+      m.setPaintProperty("hover-border", "line-opacity",
+        panelOpen ? ["interpolate", ["linear"], ["zoom"], FADE_START, 0.55, FADE_END, 0] as never : 0
+      );
     }
   }, [selectedCountry]);
 
@@ -210,7 +205,9 @@ export default function Map({ onCountryClick, flyToCode, flyToPosition, selected
         "all", worldviewFilter,
         ["in", ["get", "iso_3166_1_alpha_3"], ["literal", secondaryCountries]],
       ]);
-      m.setPaintProperty("secondary-border", "line-opacity", 0.75);
+      m.setPaintProperty("secondary-border", "line-opacity",
+        ["interpolate", ["linear"], ["zoom"], FADE_START, 0.6, FADE_END, 0] as never
+      );
     } else {
       m.setFilter("secondary-border", ["all", worldviewFilter, ["in", ["get", "iso_3166_1_alpha_3"], ["literal", [""]]]]);
       m.setPaintProperty("secondary-border", "line-opacity", 0);
@@ -281,6 +278,7 @@ export default function Map({ onCountryClick, flyToCode, flyToPosition, selected
       center: [-98.5, 39.5],
       zoom: 1.8,
       antialias: true,
+      fadeDuration: 0,
       pitchWithRotate: false,
       dragRotate: false,
       touchPitch: false,
@@ -417,15 +415,16 @@ export default function Map({ onCountryClick, flyToCode, flyToPosition, selected
         ["==", ["get", "worldview"], "US"],
       ];
 
-      // Per-country highlighted fills — each fades at a zoom proportional to its size
+      // Per-country highlighted fills — zoom expression handles fade (no JS needed per frame)
       for (const iso of HIGHLIGHTED) {
+        const [fs, fe] = COUNTRY_FADE_RANGES[iso] ?? [FADE_START, FADE_END];
         m.addLayer({
           id: `highlighted-fill-${iso}`,
           type: "fill",
           source: "country-boundaries",
           "source-layer": "country_boundaries",
           filter: ["all", worldviewFilter, ["==", ["get", "iso_3166_1_alpha_3"], iso]],
-          paint: { "fill-color": "#0d2a52", "fill-opacity": 0.48 },
+          paint: { "fill-color": "#0d2a52", "fill-opacity": ["interpolate", ["linear"], ["zoom"], fs, 0.48, fe, 0] as never },
         });
       }
 
@@ -465,7 +464,10 @@ export default function Map({ onCountryClick, flyToCode, flyToPosition, selected
         filter: conflictFilter,
         paint: {
           "fill-color": "#1e3a5f",
-          "fill-opacity": ["case", ["boolean", ["feature-state", "hover"], false], 0.5, 0],
+          "fill-opacity": ["case", ["boolean", ["feature-state", "hover"], false],
+            ["interpolate", ["linear"], ["zoom"], FADE_START, 0.5, FADE_END, 0],
+            0
+          ] as never,
         },
       });
 
@@ -546,46 +548,17 @@ export default function Map({ onCountryClick, flyToCode, flyToPosition, selected
         paint: { "circle-radius": 2.8, "circle-color": ["get", "color"], "circle-opacity": 0.90, "circle-blur": 0, "circle-stroke-width": 0 },
       });
 
-      // --- Zoom-based fade: only fires on zoom change, not every pan frame ---
-      let zoomFactor = 1;
-
-      const applyZoomFade = () => {
-        const z = m.getZoom();
-        // Global factor — used for hover/secondary layers (based on large-country range)
-        zoomFactor = Math.max(0, Math.min(1, 1 - (z - FADE_START) / (FADE_END - FADE_START)));
-        if (!panelOpenRef.current) {
-          // Per-country fade for highlighted fills
-          for (const iso of HIGHLIGHTED) {
-            const [fs, fe] = COUNTRY_FADE_RANGES[iso] ?? [FADE_START, FADE_END];
-            const factor = Math.max(0, Math.min(1, 1 - (z - fs) / (fe - fs)));
-            if (m.getLayer(`highlighted-fill-${iso}`))
-              m.setPaintProperty(`highlighted-fill-${iso}`, "fill-opacity", 0.48 * factor);
-          }
-          if (m.getLayer("hover-fill"))
-            m.setPaintProperty("hover-fill", "fill-opacity",
-              ["case", ["boolean", ["feature-state", "hover"], false], 0.5 * zoomFactor, 0]
-            );
-        }
-        const hoverOp = panelOpenRef.current ? zoomFactor : 0;
-        if (m.getLayer("hover-border"))
-          m.setPaintProperty("hover-border", "line-opacity", 0.35 * hoverOp);
-        if (m.getLayer("secondary-border"))
-          m.setPaintProperty("secondary-border", "line-opacity", 0.6 * zoomFactor);
-      };
-
-      // Only recalculate on actual zoom change, not every pan frame
-      m.on("zoom", applyZoomFade);
-      applyZoomFade();
-
-      // --- Idle pulse: throttled to ~20fps (setPaintProperty is expensive at 60fps) ---
+      // --- Idle pulse: 10fps, computes zoom factor inline (all other fades use GPU expressions) ---
       let lastPulseTs = 0;
       const animateIdle = (ts: number) => {
         if (!pulseStart.current) pulseStart.current = ts;
-        if (ts - lastPulseTs >= 50) {
+        if (ts - lastPulseTs >= 100) {
           lastPulseTs = ts;
           const t = (ts - pulseStart.current) / 2800;
           const base = 0.06 + 0.12 * Math.abs(Math.sin(t * Math.PI));
-          m.setPaintProperty("idle-pulse-fill", "fill-opacity", base * zoomFactor);
+          const z = m.getZoom();
+          const zf = Math.max(0, Math.min(1, 1 - (z - FADE_START) / (FADE_END - FADE_START)));
+          m.setPaintProperty("idle-pulse-fill", "fill-opacity", base * zf);
         }
         idlePulseFrame.current = requestAnimationFrame(animateIdle);
       };

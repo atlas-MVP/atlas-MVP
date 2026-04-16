@@ -1,15 +1,7 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import LiveAlertRow from "./LiveAlertRow";
-
-// Maps danger level 1–4 to deep blue → deep purple (danger 5 uses animated heat pulse class)
-function dangerColor(d: number): string {
-  if (d >= 4) return "#6d28d9";
-  if (d >= 3) return "#4338ca";
-  if (d >= 2) return "#1d4ed8";
-  return "#1e3a8a";
-}
 
 interface Conflict {
   label: string;
@@ -90,24 +82,6 @@ const LIVE_FEED: FeedItem[] = [
     description: "The PLA Navy carrier strike group led by the Shandong has approached within 40 nautical miles of the Taiwan Strait median line. Taiwan's MND has scrambled F-16 and Mirage 2000 fighters. The GDELT conflict index for the Taiwan Strait has risen to its highest level since August 2022." },
 ];
 
-// Smooth fade-in for alert text (no typewriter — "lights opening up")
-function TypingAlert({ text }: { text: string; color?: string }) {
-  const [lit, setLit] = useState(false);
-  useEffect(() => {
-    setLit(false);
-    const t = setTimeout(() => setLit(true), 40);
-    return () => clearTimeout(t);
-  }, [text]);
-  return (
-    <span style={{
-      opacity: lit ? 1 : 0,
-      filter: lit ? "blur(0)" : "blur(3px)",
-      transition: "opacity 0.7s cubic-bezier(0.22,1,0.36,1), filter 0.7s cubic-bezier(0.22,1,0.36,1)",
-      display: "inline-block",
-    }}>{text}</span>
-  );
-}
-
 interface Props {
   onClose: () => void;
   onNavigate?: (code: string | null, center: [number, number], zoom: number, feedItem?: FeedItem) => void;
@@ -146,7 +120,6 @@ function Reveal({ minStage, stage, children }: { minStage: number; stage: number
 
 export default function AtlasHQ({ onClose, onNavigate, onHeadlinesToggle, onSourceClick }: Props) {
   const [showMore, setShowMore] = useState(false);
-  const [showAllAlerts, setShowAllAlerts] = useState(false);
   const [showAllDisasters, setShowAllDisasters] = useState(false);
   const [loadStage, setLoadStage] = useState(0);
 
@@ -196,7 +169,7 @@ export default function AtlasHQ({ onClose, onNavigate, onHeadlinesToggle, onSour
       <div style={{ flex: 1, overflowY: "auto", overflowX: "hidden" }}>
 
         {/* GEOPOLITICS — label instant, cards staggered */}
-        <SectionLabel label="geopolitics" onClick={() => setShowMore(v => !v)} expanded={showMore} />
+        <SectionLabel label="geopolitics" onClick={() => setShowMore(v => !v)} />
         <div style={{ padding: "0 14px", display: "flex", flexDirection: "column", gap: 6 }}>
           {TOP_CONFLICTS.map((c, idx) => (
             <Reveal key={c.label} minStage={1 + idx} stage={loadStage}>
@@ -330,7 +303,7 @@ export default function AtlasHQ({ onClose, onNavigate, onHeadlinesToggle, onSour
         </Reveal>
 
         {/* DISASTERS — label instant, cards fade in */}
-        <SectionLabel label="disasters" onClick={() => setShowAllDisasters(v => !v)} expanded={showAllDisasters} />
+        <SectionLabel label="disasters" onClick={() => setShowAllDisasters(v => !v)} />
         <Reveal minStage={5} stage={loadStage}>
           <div style={{ padding: "0 14px 20px", display: "flex", flexDirection: "column", gap: 4 }}>
             {(showAllDisasters ? DISASTERS : DISASTERS.slice(0, 2)).map((d) => (
@@ -376,7 +349,7 @@ export default function AtlasHQ({ onClose, onNavigate, onHeadlinesToggle, onSour
   );
 }
 
-function SectionLabel({ label, onClick }: { label: string; onClick?: () => void; expanded?: boolean; small?: boolean }) {
+function SectionLabel({ label, onClick }: { label: string; onClick?: () => void }) {
   return (
     <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "20px 18px 6px" }}>
       <span
