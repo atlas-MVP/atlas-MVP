@@ -3,6 +3,7 @@
 import { useState, useRef } from "react";
 import LiveAlertRow from "./LiveAlertRow";
 import { SIDE_COLORS, getCountrySide } from "../lib/sides";
+import { getEventsForTimeline, type MapEvent } from "../lib/mapEvents";
 
 interface LiveAlert {
   time: string;
@@ -679,6 +680,7 @@ interface Props {
   onTimelineStrike?: (data: StrikeEvent | null) => void;
   onSourceTap?: (source: string) => void;
   onCasualtyHighlight?: (isoCodes: string[]) => void;
+  onPlayEvent?: (event: MapEvent) => void;
   initialAlertText?: string;
 }
 
@@ -690,7 +692,7 @@ function extractSourceName(label: string): string {
   return label.split(" — ")[0].split(" —")[0].trim();
 }
 
-export default function CountryPanel({ countryCode, onClose, onViewFeed, onConflictSelect, onFocusCountry, onFocusPosition, onCountryHome, onAuthorClick, onTimelineStrike, onSourceTap, onCasualtyHighlight, initialAlertText }: Props) {
+export default function CountryPanel({ countryCode, onClose, onViewFeed, onConflictSelect, onFocusCountry, onFocusPosition, onCountryHome, onAuthorClick, onTimelineStrike, onSourceTap, onCasualtyHighlight, onPlayEvent, initialAlertText }: Props) {
   const [selectedConflictId, setSelectedConflictId] = useState<string | null>(null);
   const [civTooltip, setCivTooltip]       = useState<string | null>(null);
   const [showAllCasualties, setShowAllCasualties] = useState(false);
@@ -1054,6 +1056,26 @@ export default function CountryPanel({ countryCode, onClose, onViewFeed, onConfl
                                 {(() => { const d = event.date; if (/^(19|20)\d\d/.test(d)) return d; return d.replace(/,?\s*(19|20)\d\d/, ""); })()}
                               </p>
                               <p style={{ margin: 0, fontSize: 14, color: palette.text, lineHeight: 1.65 }}>{event.text}</p>
+                              {(() => {
+                                const events = getEventsForTimeline(conflict.id, event.date);
+                                if (events.length === 0 || !onPlayEvent) return null;
+                                return (
+                                  <button
+                                    onClick={(e) => { e.stopPropagation(); onPlayEvent(events[0]); }}
+                                    style={{
+                                      marginTop: 8, fontSize: 10, fontFamily: "monospace", letterSpacing: "0.1em",
+                                      color: "rgba(239,68,68,0.5)", background: "rgba(239,68,68,0.06)",
+                                      border: "1px solid rgba(239,68,68,0.15)", borderRadius: 6,
+                                      cursor: "pointer", padding: "5px 12px", display: "inline-flex", alignItems: "center", gap: 6,
+                                      textTransform: "uppercase",
+                                    }}
+                                    onMouseEnter={e => { e.currentTarget.style.background = "rgba(239,68,68,0.12)"; e.currentTarget.style.color = "rgba(239,68,68,0.8)"; }}
+                                    onMouseLeave={e => { e.currentTarget.style.background = "rgba(239,68,68,0.06)"; e.currentTarget.style.color = "rgba(239,68,68,0.5)"; }}
+                                  >
+                                    <span style={{ fontSize: 8 }}>▶</span> watch event
+                                  </button>
+                                );
+                              })()}
                             </div>
                           </div>
                           {showYearAfter && (

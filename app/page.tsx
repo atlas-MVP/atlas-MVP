@@ -13,6 +13,8 @@ import HeadlinesPanel from "./components/HeadlinesPanel";
 import SourceInfoPanel from "./components/SourceInfoPanel";
 import AuthorBioPanel from "./components/AuthorBioPanel";
 import SettingsPanel from "./components/SettingsPanel";
+import MapEventPlayer from "./components/MapEventPlayer";
+import type { MapEvent } from "./lib/mapEvents";
 
 // ATLAS appears instantly; clock fades in shortly after as one unit
 function AtlasWordmark() {
@@ -82,6 +84,7 @@ export default function Home() {
   const [showSettings, setShowSettings]       = useState(false);
   const [activeSource, setActiveSource]       = useState<string | null>(null);
   const [radarAlertText, setRadarAlertText]   = useState<string | null>(null);
+  const [activeMapEvent, setActiveMapEvent]   = useState<MapEvent | null>(null);
   const [liveReset, setLiveReset]             = useState(0);
 
   const handleCountryHome = (iso: string) => {
@@ -174,6 +177,23 @@ export default function Home() {
         onReady={() => setMapReady(true)}
       />
 
+      {/* Map event playback — scripted flyTo + popup + narration sequences */}
+      <MapEventPlayer
+        event={activeMapEvent}
+        onFlyTo={(center, zoom, duration) => {
+          setFlyToPosition({ center, zoom, key: `evt-${Date.now()}` });
+        }}
+        onHighlight={setCasualtyCountries}
+        onStrikes={(strikes, center, zoom) => {
+          if (strikes.length > 0) {
+            setActiveStrikes({ strikes, center, zoom });
+          } else {
+            setActiveStrikes(null);
+          }
+        }}
+        onDone={() => setActiveMapEvent(null)}
+      />
+
       {/* Country homepage — loads when pill is tapped from conflict panel */}
       {!historicalYear && homeCountry && (
         <CountryHome
@@ -204,6 +224,7 @@ export default function Home() {
           onTimelineStrike={setActiveStrikes}
           onSourceTap={(s) => setActiveSource(s)}
           onCasualtyHighlight={setCasualtyCountries}
+          onPlayEvent={(evt) => { setActiveMapEvent(evt); }}
           initialAlertText={radarAlertText ?? undefined}
         />
       )}
