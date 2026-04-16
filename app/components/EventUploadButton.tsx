@@ -106,6 +106,7 @@ function Popup({ eventId, onDone }: { eventId: string; onDone: () => void }) {
   const [pct, setPct]           = useState(0);
   const [error, setError]       = useState<string | null>(null);
   const [done, setDone]         = useState(false);
+  const [dragOver, setDragOver] = useState(false);
 
   const submit = useCallback(() => {
     setError(null); setDone(false);
@@ -149,8 +150,55 @@ function Popup({ eventId, onDone }: { eventId: string; onDone: () => void }) {
       .catch(e => { setUp(false); setError((e as Error).message); });
   }, [mode, file, url, handle, caption, eventId, onDone]);
 
+  // Make the whole popup a drop target — drop a video anywhere inside
+  // the bubble and it's picked up automatically (then the user hits attach).
+  const onDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragOver(true);
+  };
+  const onDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragOver(false);
+  };
+  const onDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragOver(false);
+    const dropped = e.dataTransfer.files?.[0];
+    if (dropped && dropped.type.startsWith("video/")) {
+      setMode("file");
+      setFile(dropped);
+    } else if (dropped) {
+      setError("Only video files are supported");
+    }
+  };
+
   return (
-    <div>
+    <div
+      onDragOver={onDragOver}
+      onDragEnter={onDragOver}
+      onDragLeave={onDragLeave}
+      onDrop={onDrop}
+      style={{
+        position: "relative",
+        margin: -4, padding: 4, borderRadius: 10,
+        outline: dragOver ? "2px dashed rgba(239,68,68,0.6)" : "2px dashed transparent",
+        outlineOffset: -2,
+        transition: "outline-color 0.15s",
+      }}
+    >
+      {dragOver && (
+        <div style={{
+          position: "absolute", inset: 0, zIndex: 2, borderRadius: 10,
+          background: "rgba(239,68,68,0.08)",
+          display: "flex", alignItems: "center", justifyContent: "center",
+          pointerEvents: "none",
+          fontSize: 11, fontFamily: "monospace", letterSpacing: "0.14em",
+          color: "rgba(239,68,68,0.9)", textTransform: "uppercase",
+        }}>drop to upload</div>
+      )}
       <p style={{ margin: "0 0 10px", fontSize: 9, fontFamily: "monospace", letterSpacing: "0.14em", color: "rgba(255,255,255,0.35)", textTransform: "uppercase" }}>
         upload → event / {eventId}
       </p>
