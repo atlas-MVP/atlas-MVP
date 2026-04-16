@@ -4,6 +4,12 @@ import { useState, useRef, useEffect } from "react";
 import LiveAlertRow from "./LiveAlertRow";
 import { SIDE_COLORS, getCountrySide } from "../lib/sides";
 import { getEventsForTimeline, type MapEvent } from "../lib/mapEvents";
+import VideoPlayer from "./VideoPlayer";
+
+/** Returns true for YouTube embed URLs; false = self-hosted video → use VideoPlayer */
+function isYouTube(url: string) {
+  return url.includes("youtube.com") || url.includes("youtu.be");
+}
 
 interface LiveAlert {
   time: string;
@@ -1713,14 +1719,18 @@ export default function CountryPanel({ countryCode, onClose, onViewFeed, onConfl
                   minHeight: "100%",
                   display: "flex", flexDirection: "column",
                 }}>
-                  {/* Video */}
+                  {/* Video — YouTube → iframe, self-hosted → VideoPlayer */}
                   <div style={{ width: "100%", aspectRatio: "16/9", background: "#000", flexShrink: 0 }}>
-                    <iframe
-                      src={slide.videoUrl}
-                      style={{ width: "100%", height: "100%", border: "none" }}
-                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                      allowFullScreen
-                    />
+                    {isYouTube(slide.videoUrl) ? (
+                      <iframe
+                        src={slide.videoUrl}
+                        style={{ width: "100%", height: "100%", border: "none" }}
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        allowFullScreen
+                      />
+                    ) : (
+                      <VideoPlayer src={slide.videoUrl} isActive={si === activeSlide} />
+                    )}
                   </div>
                   {/* Title + subtitle + date */}
                   <div style={{ padding: "12px 18px 10px", flexShrink: 0 }}>
