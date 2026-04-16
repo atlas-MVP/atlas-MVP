@@ -276,21 +276,6 @@ function ReelCard({ entry, isActive }: { entry: VideoEntry; isActive: boolean })
         </>
       )}
 
-      {/* ── Type badge — tiny corner pill on bare embeds only (hidden when Atlas header is present to avoid overlap) ── */}
-      {!isVideo && !(entry.title || entry.date || entry.location) && (
-        <div style={{
-          position: "absolute", top: 10, left: 10,
-          padding: "3px 8px", borderRadius: 10,
-          background: isYoutube ? "rgba(239,68,68,0.85)" : "rgba(29,155,240,0.85)",
-          border: `1px solid ${isYoutube ? "rgba(239,68,68,0.95)" : "rgba(29,155,240,0.95)"}`,
-          zIndex: 4,
-        }}>
-          <span style={{ fontSize: 8, fontFamily: "monospace", letterSpacing: "0.12em", color: "#fff", textTransform: "uppercase", fontWeight: 600 }}>
-            {isYoutube ? "▶ youtube" : "𝕏 post"}
-          </span>
-        </div>
-      )}
-
       {/* ── Action rail — universal, floats over all three reel types ────────── */}
       <div style={{
         position: "absolute", right: 10, bottom: 14,
@@ -356,10 +341,6 @@ export function ReelsThumbnail({ videos, onOpen }: { videos: VideoEntry[]; onOpe
         <p style={{ margin: "2px 0 0", fontSize: 9, fontFamily: "monospace", color: "rgba(255,255,255,0.45)" }}>
           {videos.length} video{videos.length !== 1 ? "s" : ""} · tap to watch
         </p>
-      </div>
-      {/* Reel pill */}
-      <div style={{ position: "absolute", top: 10, right: 10, padding: "3px 8px", borderRadius: 10, background: "rgba(239,68,68,0.8)", border: "1px solid rgba(239,68,68,0.9)" }}>
-        <span style={{ fontSize: 8, fontFamily: "monospace", letterSpacing: "0.12em", color: "#fff", textTransform: "uppercase" }}>● reels</span>
       </div>
     </div>
   );

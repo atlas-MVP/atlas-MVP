@@ -1290,10 +1290,20 @@ export default function CountryPanel({ countryCode, onClose, onViewFeed, onConfl
               <span style={{ fontSize: 9, fontFamily: "monospace", letterSpacing: "0.18em", color: "rgba(255,255,255,0.22)", textTransform: "uppercase" }}>
                 active conflict
               </span>
-              <button onClick={() => { onClose(); setSelectedConflictId(null); stopTts(); }}
-                style={{ color: "rgba(255,255,255,0.12)", fontSize: 18, background: "none", border: "none", cursor: "pointer", lineHeight: 1, padding: 0 }}
-                onMouseEnter={e => (e.currentTarget.style.color = "rgba(255,255,255,0.7)")}
-                onMouseLeave={e => (e.currentTarget.style.color = "rgba(255,255,255,0.12)")}>×</button>
+              {/* × closes the panel, ← returns to the original conflict the user first tapped.
+                  A non-null selectedConflictId means they navigated via a linked-conflict pill. */}
+              {selectedConflictId && selectedConflictId !== conflictIds[0] ? (
+                <button onClick={() => { setSelectedConflictId(null); stopTts(); }}
+                  title="back to original conflict"
+                  style={{ color: "rgba(255,255,255,0.35)", fontSize: 11, fontFamily: "monospace", letterSpacing: "0.08em", textTransform: "uppercase", background: "none", border: "none", cursor: "pointer", lineHeight: 1, padding: "2px 4px" }}
+                  onMouseEnter={e => (e.currentTarget.style.color = "rgba(255,255,255,0.85)")}
+                  onMouseLeave={e => (e.currentTarget.style.color = "rgba(255,255,255,0.35)")}>← back</button>
+              ) : (
+                <button onClick={() => { onClose(); setSelectedConflictId(null); stopTts(); }}
+                  style={{ color: "rgba(255,255,255,0.12)", fontSize: 18, background: "none", border: "none", cursor: "pointer", lineHeight: 1, padding: 0 }}
+                  onMouseEnter={e => (e.currentTarget.style.color = "rgba(255,255,255,0.7)")}
+                  onMouseLeave={e => (e.currentTarget.style.color = "rgba(255,255,255,0.12)")}>×</button>
+              )}
             </div>
           </div>
 
