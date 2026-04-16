@@ -1509,13 +1509,14 @@ export default function CountryPanel({ countryCode, onClose, onViewFeed, onConfl
                     <span style={{ fontSize: 9, fontFamily: "monospace", color: "rgba(255,255,255,0.18)" }}>
                       {activeTile >= 0 ? `${activeTile + 1}/${chronological.length}` : ""}
                     </span>
-                    {/* Reset */}
+                    {/* Back → leaves history mode, returns to active-conflict view */}
                     <button
                       onClick={(e) => { e.stopPropagation(); exitHistory(); }}
-                      style={{ fontSize: 9, fontFamily: "monospace", color: "rgba(255,255,255,0.25)", background: "none", border: "none", cursor: "pointer", padding: "2px 4px" }}
-                      onMouseEnter={e => (e.currentTarget.style.color = "rgba(255,255,255,0.6)")}
-                      onMouseLeave={e => (e.currentTarget.style.color = "rgba(255,255,255,0.25)")}
-                    >✕ exit</button>
+                      title="back to active conflict"
+                      style={{ fontSize: 10, fontFamily: "monospace", color: "rgba(255,255,255,0.35)", background: "none", border: "none", cursor: "pointer", padding: "2px 4px", display: "inline-flex", alignItems: "center", gap: 4, letterSpacing: "0.08em", textTransform: "uppercase" }}
+                      onMouseEnter={e => (e.currentTarget.style.color = "rgba(255,255,255,0.75)")}
+                      onMouseLeave={e => (e.currentTarget.style.color = "rgba(255,255,255,0.35)")}
+                    >← back</button>
                   </div>
                 </div>
 
