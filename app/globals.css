@@ -48,6 +48,18 @@ body, html {
 .tooltip-pulse-border { animation: tooltip-border-pulse 2.8s ease-in-out infinite; }
 .tooltip-pulse-dot    { animation: tooltip-dot-pulse    2.8s ease-in-out infinite; }
 
+/* Blue pulse — cross-timeline linked conflict pills */
+@keyframes link-border-pulse {
+  0%, 100% { border-color: rgba(96,165,250,0.18); box-shadow: 0 0 8px rgba(96,165,250,0.06); }
+  50%       { border-color: rgba(96,165,250,0.55); box-shadow: 0 0 14px rgba(96,165,250,0.2); }
+}
+@keyframes link-dot-pulse {
+  0%, 100% { background: rgba(96,165,250,0.4); box-shadow: 0 0 3px rgba(96,165,250,0.2); }
+  50%       { background: rgba(96,165,250,1);   box-shadow: 0 0 7px rgba(96,165,250,0.7); }
+}
+.link-pulse-border { animation: link-border-pulse 2.8s ease-in-out infinite; }
+.link-pulse-dot    { animation: link-dot-pulse    2.8s ease-in-out infinite; }
+
 /* Modern minimal scrollbar — floating silver on transparent */
 ::-webkit-scrollbar { width: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }

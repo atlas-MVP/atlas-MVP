@@ -118,6 +118,10 @@ interface TimelineEvent {
   videoUrl?: string;
   videoTitle?: string;
   videoInfo?: string; // rich text below the video embed
+  /** Small pulsing pill linking to another conflict (cross-timeline) */
+  linkedConflict?: { id: string; label: string };
+  /** Category tag shown above text — e.g. "terrorist attack", "genocide" */
+  tag?: string;
 }
 
 interface Conflict {
@@ -421,6 +425,7 @@ const CONFLICTS: Record<string, Conflict> = {
             { lng: 34.44, lat: 31.50, side: "amber",   label: "Gaza City (IDF response)" },
           ],
         },
+        linkedConflict: { id: "israel-gaza", label: "Israel–Palestine conflict" },
       },
       {
         date: "May 2018",
@@ -435,7 +440,7 @@ const CONFLICTS: Record<string, Conflict> = {
         mapView: { center: [45, 35], zoom: 3.2 },
         videoUrl: "https://www.youtube.com/embed/KqCswpINDTA",
         videoTitle: "Obama announces the Iran Nuclear Deal",
-        videoInfo: "Key requirements of the JCPOA:\n• Iran limited to 3.67% uranium enrichment for 15 years\n• Stockpile capped at 300 kg of low-enriched uranium\n• Two-thirds of centrifuges dismantled (from 19,000 to 6,104)\n• Fordow facility converted to research-only — no enrichment\n• Arak heavy-water reactor redesigned to prevent plutonium production\n• IAEA granted unprecedented 24/7 monitoring and inspection access\n• In exchange: US, EU, and UN sanctions on Iran lifted\n• Arms embargo maintained for 5 years, missile restrictions for 8\n\nSignatories: United States, United Kingdom, France, Germany, Russia, China, Iran",
+        videoInfo: "Key requirements of the JCPOA:\n• Iran limited to 3.67% uranium enrichment for 15 years\n• Stockpile capped at 300 kg of low-enriched uranium\n• Two-thirds of centrifuges dismantled (from 19,000 to 6,104)\n• Fordow facility converted to research-only — no enrichment\n• Arak heavy-water reactor redesigned to prevent plutonium production\n• IAEA granted unprecedented 24/7 monitoring and inspection access\n• In exchange: US, EU, and UN sanctions on Iran lifted\n• Arms embargo maintained for 5 years, missile restrictions for 8\n\nSignatories:\n@blue United States\n@blue United Kingdom\n@blue France\n@blue Germany\n@red Russia\n@red China\n@red Iran",
       },
     ],
   },
@@ -468,8 +473,59 @@ const CONFLICTS: Record<string, Conflict> = {
       xUrl: "https://x.com/search?q=%23Gaza",
     },
     timeline: [
-      { date: "2024 – Present", text: "Gaza death toll surpasses 34,000. Northern Gaza declared in full famine by UN WFP. ICJ opened genocide proceedings against Israel in January 2024. Hostage negotiations continue." },
-      { date: "October 7, 2023 — Hamas Attack", text: "Hamas kills ~1,200 Israelis and takes 253 hostages in a surprise attack from Gaza. Israel launches a full-scale military campaign in response.", highlight: true },
+      {
+        date: "March 2025 – Present",
+        text: "Gaza death toll surpasses 46,000. Northern Gaza declared in full famine by UN WFP. Over 1.9 million displaced — 85% of the population. Entire neighborhoods flattened. Aid deliveries blocked or bombed.",
+        tag: "genocide",
+        mapView: { center: [34.44, 31.42], zoom: 10 },
+      },
+      {
+        date: "January 26, 2024",
+        text: "The International Court of Justice rules that Israel must prevent genocidal acts in Gaza and orders immediate provisional measures. South Africa's case alleging genocide proceeds.",
+        tag: "genocide",
+        mapView: { center: [4.35, 52.07], zoom: 5 },
+      },
+      {
+        date: "December 2023",
+        text: "Israel expands ground operations to southern Gaza. Khan Younis besieged. Hospitals across Gaza overwhelmed or destroyed. 70% of housing stock damaged or destroyed.",
+        tag: "genocide",
+        strikeEvent: {
+          center: [34.30, 31.35], zoom: 10.5,
+          strikes: [
+            { lng: 34.30, lat: 31.35, side: "amber", label: "Khan Younis — ground assault" },
+            { lng: 34.44, lat: 31.50, side: "amber", label: "Gaza City — leveled" },
+            { lng: 34.25, lat: 31.22, side: "amber", label: "Rafah border" },
+          ],
+        },
+      },
+      {
+        date: "October 27, 2023",
+        text: "Israel launches a full-scale ground invasion of northern Gaza. Communications blackout imposed. Al-Shifa Hospital surrounded and raided. Mass displacement south begins.",
+        tag: "genocide",
+        strikeEvent: {
+          center: [34.44, 31.50], zoom: 11,
+          strikes: [
+            { lng: 34.44, lat: 31.52, side: "amber", label: "Gaza City — ground invasion" },
+            { lng: 34.45, lat: 31.52, side: "amber", label: "Al-Shifa Hospital" },
+          ],
+        },
+      },
+      {
+        date: "October 7, 2023",
+        text: "Hamas fighters breach the Gaza border fence at dawn, killing approximately 1,200 Israelis and taking 253 hostages. The deadliest day in Israeli history. The Nova music festival near Re'im is the deadliest single site — 364 killed.",
+        tag: "terrorist attack",
+        highlight: true,
+        strikeEvent: {
+          center: [34.55, 31.45], zoom: 10,
+          strikes: [
+            { lng: 34.60, lat: 31.52, side: "crimson", label: "Sderot" },
+            { lng: 34.52, lat: 31.40, side: "crimson", label: "Kibbutz Be'eri" },
+            { lng: 34.57, lat: 31.37, side: "crimson", label: "Nova Festival" },
+            { lng: 34.48, lat: 31.30, side: "crimson", label: "Kibbutz Nir Oz" },
+          ],
+        },
+        linkedConflict: { id: "israel-iran", label: "Israel–Iran conflict" },
+      },
     ],
   },
   "russia-ukraine": {
@@ -1281,12 +1337,52 @@ export default function CountryPanel({ countryCode, onClose, onViewFeed, onConfl
                             }} />
                           </div>
                           <div>
+                            {/* Category tag — e.g. "terrorist attack" or "genocide" */}
+                            {event.tag && (
+                              <span style={{
+                                display: "inline-block", marginBottom: 6,
+                                fontSize: 8, fontFamily: "monospace", letterSpacing: "0.14em", textTransform: "uppercase",
+                                padding: "2px 7px", borderRadius: 3,
+                                background: event.tag === "terrorist attack" ? "rgba(239,68,68,0.12)" : event.tag === "genocide" ? "rgba(239,68,68,0.08)" : "rgba(255,255,255,0.05)",
+                                color: event.tag === "terrorist attack" ? "rgba(239,68,68,0.7)" : event.tag === "genocide" ? "rgba(239,68,68,0.5)" : "rgba(255,255,255,0.3)",
+                                border: `1px solid ${event.tag === "terrorist attack" ? "rgba(239,68,68,0.2)" : event.tag === "genocide" ? "rgba(239,68,68,0.1)" : "rgba(255,255,255,0.08)"}`,
+                              }}>
+                                {event.tag}
+                              </span>
+                            )}
                             <p style={{ margin: "0 0 5px", fontSize: 11, fontFamily: "monospace", fontWeight: 600, color: palette.date, letterSpacing: "0.03em" }}>
                               {(() => { const d = event.date; if (/^(19|20)\d\d/.test(d)) return d; return d.replace(/,?\s*(19|20)\d\d/, ""); })()}
                             </p>
                             <p style={{ margin: 0, fontSize: 14, color: isActive ? "rgba(255,255,255,0.85)" : palette.text, lineHeight: 1.65, transition: "color 0.3s ease" }}>
                               {event.text}
                             </p>
+                            {/* Linked conflict pill — pulsing cross-timeline bridge */}
+                            {event.linkedConflict && (
+                              <button
+                                className="link-pulse-border"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setSelectedConflictId(event.linkedConflict!.id);
+                                  onConflictSelect?.(event.linkedConflict!.id);
+                                  // Reset history mode for the new conflict
+                                  setTimelineExpanded(false);
+                                  setActiveTile(-1);
+                                  activeTileRef.current = -1;
+                                }}
+                                style={{
+                                  marginTop: 10, fontSize: 9, fontFamily: "monospace", letterSpacing: "0.1em",
+                                  color: "rgba(96,165,250,0.7)", background: "rgba(96,165,250,0.06)",
+                                  border: "1px solid rgba(96,165,250,0.2)", borderRadius: 10,
+                                  cursor: "pointer", padding: "4px 10px", display: "inline-flex", alignItems: "center", gap: 6,
+                                }}
+                                onMouseEnter={e => { e.currentTarget.style.background = "rgba(96,165,250,0.12)"; e.currentTarget.style.color = "rgba(147,197,253,0.9)"; }}
+                                onMouseLeave={e => { e.currentTarget.style.background = "rgba(96,165,250,0.06)"; e.currentTarget.style.color = "rgba(96,165,250,0.7)"; }}
+                              >
+                                <span style={{ width: 5, height: 5, borderRadius: "50%", background: "rgba(96,165,250,0.6)" }} className="link-pulse-dot" />
+                                {event.linkedConflict.label} →
+                              </button>
+                            )}
+                            {/* Watch event button */}
                             {(() => {
                               const events = getEventsForTimeline(conflict.id, event.date);
                               if (events.length === 0 || !onPlayEvent) return null;
@@ -1374,6 +1470,23 @@ export default function CountryPanel({ countryCode, onClose, onViewFeed, onConfl
               <div style={{ flex: 1, overflowY: "auto", minHeight: 0, padding: "0 18px 18px", borderTop: "1px solid rgba(255,255,255,0.06)" }}>
                 <div style={{ paddingTop: 14 }}>
                   {ev.videoInfo.split("\n").map((line, li) => {
+                    // Side-colored country entry — @blue or @red prefix
+                    if (line.startsWith("@blue ") || line.startsWith("@red ")) {
+                      const side = line.startsWith("@blue") ? "blue" : "red";
+                      const name = line.slice(side.length + 2).trim();
+                      return (
+                        <div key={li} style={{ display: "flex", alignItems: "center", gap: 8, padding: "3px 4px" }}>
+                          <span style={{
+                            width: 5, height: 5, borderRadius: "50%", flexShrink: 0,
+                            background: side === "blue" ? SIDE_COLORS.blue.dot : SIDE_COLORS.red.dot,
+                          }} />
+                          <span style={{ fontSize: 12, fontFamily: "monospace", color: "rgba(255,255,255,0.78)", letterSpacing: "0.02em" }}>
+                            {name}
+                          </span>
+                        </div>
+                      );
+                    }
+                    // Bullet point
                     if (line.startsWith("•")) {
                       return (
                         <p key={li} style={{ margin: "0 0 6px", fontSize: 12, color: "rgba(255,255,255,0.6)", lineHeight: 1.6, paddingLeft: 4 }}>
@@ -1383,8 +1496,10 @@ export default function CountryPanel({ countryCode, onClose, onViewFeed, onConfl
                       );
                     }
                     if (line.trim() === "") return <div key={li} style={{ height: 10 }} />;
+                    // Header or plain text
+                    const isHeader = /^(Key|Signatories)/.test(line);
                     return (
-                      <p key={li} style={{ margin: "0 0 8px", fontSize: 12, fontWeight: line.startsWith("Key") || line.startsWith("Signatories") ? 600 : 400, color: line.startsWith("Key") || line.startsWith("Signatories") ? "rgba(255,255,255,0.75)" : "rgba(255,255,255,0.55)", lineHeight: 1.6 }}>
+                      <p key={li} style={{ margin: "0 0 8px", fontSize: 12, fontWeight: isHeader ? 600 : 400, color: isHeader ? "rgba(255,255,255,0.75)" : "rgba(255,255,255,0.55)", lineHeight: 1.6 }}>
                         {line}
                       </p>
                     );
