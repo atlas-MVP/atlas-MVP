@@ -73,6 +73,7 @@ export default function Home() {
   const [flyToPosition, setFlyToPosition]     = useState<{ center: [number, number]; zoom: number; key?: string } | null>(null);
   const [secondaryCountries, setSecondaryCountries] = useState<string[]>([]);
   const [casualtyCountries, setCasualtyCountries] = useState<string[]>([]);
+  const [focusCountries, setFocusCountries] = useState<string[]>([]);
   const [showAuthorBio, setShowAuthorBio] = useState(false);
   const [activeStrikes, setActiveStrikes] = useState<{ strikes: { lng: number; lat: number; side: "amber"|"crimson"; label?: string }[]; center: [number,number]; zoom: number } | null>(null);
   const [historicalYear, setHistoricalYear]   = useState<number | null>(null);
@@ -104,6 +105,7 @@ export default function Home() {
       setFeedCountry(null);
       setHomeCountry(null);
       setSecondaryCountries([]);
+      setFocusCountries([]);
       return;
     }
     setFeedCountry(null);
@@ -153,9 +155,10 @@ export default function Home() {
     if (pos) {
       setFlyToPosition({ ...pos, key: conflictId + forCountry + Date.now() });
     }
-    // secondary borders
+    // secondary borders + focus mode — only involved countries active
     const all = CONFLICT_ALL_COUNTRIES[conflictId] ?? [];
     setSecondaryCountries(all.filter(c => c !== forCountry));
+    setFocusCountries(all);
   };
 
   const handleConflictSelect = (conflictId: string) => {
@@ -172,6 +175,7 @@ export default function Home() {
         selectedCountry={selectedCountry ?? homeCountry}
         secondaryCountries={secondaryCountries}
         casualtyCountries={casualtyCountries}
+        focusCountries={focusCountries}
         activeStrikes={activeStrikes}
         homeView={showRadar && !selectedCountry && !homeCountry && !feedCountry}
         onReady={() => setMapReady(true)}
@@ -209,7 +213,7 @@ export default function Home() {
         <CountryPanel
           key={selectedCountry}
           countryCode={selectedCountry}
-          onClose={() => { setSelectedCountry(null); setSecondaryCountries([]); setCasualtyCountries([]); setActiveStrikes(null); setRadarAlertText(null); setFeedCountry(null); }}
+          onClose={() => { setSelectedCountry(null); setSecondaryCountries([]); setCasualtyCountries([]); setFocusCountries([]); setActiveStrikes(null); setRadarAlertText(null); setFeedCountry(null); }}
           onViewFeed={(code) => { setFeedCountry(code); }}
           onConflictSelect={handleConflictSelect}
           onFocusCountry={(iso) => {

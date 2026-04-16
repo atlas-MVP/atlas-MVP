@@ -125,6 +125,7 @@ interface Props {
   secondaryCountries?: string[];
   activeStrikes?: ActiveStrikesData | null;
   casualtyCountries?: string[]; // ISOs to pulse blue+red when "+more" casualties is tapped
+  focusCountries?: string[]; // when set, ONLY these countries are active — everything else dims
   homeView?: boolean; // radar is open, no country selected — suppress auto-highlight
   onReady?: () => void; // fires once when first idle event lands (all tiles rendered)
 }
@@ -133,7 +134,7 @@ interface Props {
 const FADE_START = 3.5;
 const FADE_END = 5.5;
 
-export default function Map({ onCountryClick, flyToCode, flyToPosition, selectedCountry, secondaryCountries = [], activeStrikes, casualtyCountries = [], homeView = false, onReady }: Props) {
+export default function Map({ onCountryClick, flyToCode, flyToPosition, selectedCountry, secondaryCountries = [], activeStrikes, casualtyCountries = [], focusCountries, homeView = false, onReady }: Props) {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
   const [mapReady, setMapReady] = useState(false);
@@ -147,40 +148,75 @@ export default function Map({ onCountryClick, flyToCode, flyToPosition, selected
   const panelOpenRef = useRef(false);
   const [tooltip, setTooltip] = useState<{ x: number; y: number; name: string; isHighlighted: boolean } | null>(null);
 
-  // When panel opens: hide fills, show border on selected country only
-  // When panel closes: restore fills, hide border
+  // Focus mode: when a conflict is active, only involved countries are visible.
+  // When no conflict, all highlighted countries show normally.
   useEffect(() => {
     if (!map.current) return;
     const m = map.current;
     if (!m.getLayer("hover-fill")) return;
     const panelOpen = !!selectedCountry;
     panelOpenRef.current = panelOpen;
+    const wf = ["any", ["==", ["get", "worldview"], "all"], ["==", ["get", "worldview"], "US"]];
+    const focus = focusCountries && focusCountries.length > 0 ? focusCountries : null;
 
-    // Per-country highlighted fills — toggle between zoom expression and hidden
+    // Per-country highlighted fills
     for (const iso of HIGHLIGHTED) {
       if (!m.getLayer(`highlighted-fill-${iso}`)) continue;
       const [fs, fe] = COUNTRY_FADE_RANGES[iso] ?? [FADE_START, FADE_END];
+      const inFocus = !focus || focus.includes(iso);
       m.setPaintProperty(`highlighted-fill-${iso}`, "fill-opacity",
-        panelOpen ? 0 : ["interpolate", ["linear"], ["zoom"], fs, 0.48, fe, 0] as never
+        inFocus ? ["interpolate", ["linear"], ["zoom"], fs, 0.48, fe, 0] as never : 0
       );
     }
-    // Hover fill — toggle between zoom expression and hidden
+
+    // Pulse layers — only pulse focused countries
+    if (focus) {
+      const focusBlue = focus.filter(c => COUNTRY_SIDE[c] === "blue");
+      const focusRed  = focus.filter(c => COUNTRY_SIDE[c] === "red");
+      const focusNeut = focus.filter(c => !COUNTRY_SIDE[c]);
+      m.setFilter("idle-pulse-blue", ["all", wf, ["in", ["get", "iso_3166_1_alpha_3"], ["literal", [...focusBlue, ...focusNeut]]]]);
+      m.setFilter("idle-pulse-red",  ["all", wf, ["in", ["get", "iso_3166_1_alpha_3"], ["literal", focusRed.length ? focusRed : [""]]]] );
+    } else {
+      const blueH = HIGHLIGHTED.filter(c => COUNTRY_SIDE[c] === "blue");
+      const redH  = HIGHLIGHTED.filter(c => COUNTRY_SIDE[c] === "red");
+      const neutH = HIGHLIGHTED.filter(c => !COUNTRY_SIDE[c]);
+      m.setFilter("idle-pulse-blue", ["all", wf, ["in", ["get", "iso_3166_1_alpha_3"], ["literal", [...blueH, ...neutH]]]]);
+      m.setFilter("idle-pulse-red",  ["all", wf, ["in", ["get", "iso_3166_1_alpha_3"], ["literal", redH.length ? redH : [""]]]] );
+    }
+
+    // Event dots — hide all when focused, or show all when no focus
+    const dotLayers = ["events-halo", "events-glow", "events-dot"];
+    dotLayers.forEach(id => {
+      if (!m.getLayer(id)) return;
+      m.setPaintProperty(id, `circle-opacity`, focus ? 0 : (m.getPaintProperty(id, "circle-opacity") || 0));
+    });
+    // Restore dot opacities when unfocused
+    if (!focus) {
+      if (m.getLayer("events-halo")) m.setPaintProperty("events-halo", "circle-opacity", 0.07);
+      if (m.getLayer("events-glow")) m.setPaintProperty("events-glow", "circle-opacity", 0.20);
+      if (m.getLayer("events-dot"))  m.setPaintProperty("events-dot",  "circle-opacity", 0.50);
+    }
+
+    // Hover fill — only on focused countries, or normal behavior
     m.setPaintProperty("hover-fill", "fill-opacity",
-      panelOpen ? 0 : ["case", ["boolean", ["feature-state", "hover"], false],
+      focus ? 0 : ["case", ["boolean", ["feature-state", "hover"], false],
         ["interpolate", ["linear"], ["zoom"], FADE_START, 0.5, FADE_END, 0], 0
       ] as never
     );
-    // Border: only the selected country gets it
-    const borderFilter = panelOpen && selectedCountry
-      ? ["all", ["any", ["==", ["get", "worldview"], "all"], ["==", ["get", "worldview"], "US"]], ["==", ["get", "iso_3166_1_alpha_3"], selectedCountry]]
-      : ["all", ["any", ["==", ["get", "worldview"], "all"], ["==", ["get", "worldview"], "US"]], ["in", ["get", "iso_3166_1_alpha_3"], ["literal", ALL_HOVERABLE]]];
+
+    // Border: selected country border when panel open, or all hoverable when no panel
     if (m.getLayer("hover-border")) {
-      m.setFilter("hover-border", borderFilter);
-      m.setPaintProperty("hover-border", "line-opacity",
-        panelOpen ? ["interpolate", ["linear"], ["zoom"], FADE_START, 0.55, FADE_END, 0] as never : 0
-      );
+      if (panelOpen && selectedCountry) {
+        m.setFilter("hover-border", ["all", wf, ["==", ["get", "iso_3166_1_alpha_3"], selectedCountry]]);
+        m.setPaintProperty("hover-border", "line-opacity",
+          ["interpolate", ["linear"], ["zoom"], FADE_START, 0.55, FADE_END, 0] as never
+        );
+      } else {
+        m.setFilter("hover-border", ["all", wf, ["in", ["get", "iso_3166_1_alpha_3"], ["literal", ALL_HOVERABLE]]]);
+        m.setPaintProperty("hover-border", "line-opacity", 0);
+      }
     }
-  }, [selectedCountry]);
+  }, [selectedCountry, focusCountries]);
 
   // FlyTo when flyToCode changes from outside (search)
   useEffect(() => {
