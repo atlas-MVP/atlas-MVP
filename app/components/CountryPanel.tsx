@@ -459,7 +459,7 @@ const CONFLICTS: Record<string, Conflict> = {
           },
         ],
         linkedConflicts: [
-          { id: "israel-gaza", label: "Israel–Palestine conflict", type: "conflict" },
+          { id: "israel-gaza", label: "occupation", type: "conflict" },
           { id: "israel-gaza", label: "Gaza genocide", type: "conflict" },
           { id: "israel-gaza", label: "attacks", type: "attack" },
         ],
@@ -500,8 +500,8 @@ const CONFLICTS: Record<string, Conflict> = {
   },
   "israel-gaza": {
     id: "israel-gaza",
-    title: "Gaza genocide",
-    date: "October 7, 2023 – Present",
+    title: "Israel occupation & Gaza genocide",
+    date: "1948 – Present",
     feedKey: "ISR",
     sides: {
       blue: ["Israel"],
@@ -527,6 +527,7 @@ const CONFLICTS: Record<string, Conflict> = {
       xUrl: "https://x.com/search?q=%23Gaza",
     },
     timeline: [
+      // ── Genocide (2023–Present) ──
       {
         date: "March 2025 – Present",
         text: "Gaza death toll surpasses 46,000. Northern Gaza declared in full famine by UN WFP. Over 1.9 million displaced — 85% of the population. Entire neighborhoods flattened. Aid deliveries blocked or bombed.",
@@ -564,6 +565,7 @@ const CONFLICTS: Record<string, Conflict> = {
           ],
         },
       },
+      // ── Terrorist attack ──
       {
         date: "October 7, 2023",
         text: "Hamas fighters breach the Gaza border fence at dawn, killing approximately 1,200 Israelis and taking 253 hostages. The deadliest day in Israeli history. The Nova music festival near Re'im is the deadliest single site — 364 killed.",
@@ -585,6 +587,62 @@ const CONFLICTS: Record<string, Conflict> = {
           { id: "israel-gaza", label: "Gaza genocide", type: "conflict" },
           { id: "israel-gaza", label: "attacks", type: "attack" },
         ],
+      },
+      // ── Terrorist attacks (pre-Oct 7) ──
+      {
+        date: "May 2021",
+        text: "Hamas fires over 4,000 rockets at Israel in 11 days. Israel responds with airstrikes on Gaza, killing 256 Palestinians including 66 children. 13 killed in Israel. Ceasefire brokered by Egypt.",
+        tag: "terrorist attack",
+        mapView: { center: [34.44, 31.50], zoom: 9 },
+      },
+      {
+        date: "2014 — Operation Protective Edge",
+        text: "50-day war after Hamas kidnaps and kills three Israeli teenagers. Israel launches ground invasion of Gaza. Over 2,200 Palestinians killed (70% civilians per UN), 73 Israelis killed. Massive destruction across Gaza.",
+        tag: "terrorist attack",
+        mapView: { center: [34.40, 31.40], zoom: 9.5 },
+      },
+      {
+        date: "2008 — Operation Cast Lead",
+        text: "Israel launches a 22-day military offensive on Gaza after Hamas rocket fire. Over 1,400 Palestinians killed, 13 Israelis killed. The UN Goldstone Report accuses both sides of war crimes.",
+        tag: "terrorist attack",
+        mapView: { center: [34.44, 31.50], zoom: 9 },
+      },
+      {
+        date: "2005",
+        text: "Israel withdraws all settlers and military forces from Gaza. Hamas wins Palestinian legislative elections the following year. Israel and Egypt impose a blockade on Gaza that continues to this day.",
+        tag: "occupation",
+        mapView: { center: [34.44, 31.42], zoom: 9.5 },
+      },
+      {
+        date: "2000 — Second Intifada",
+        text: "Five years of Palestinian uprising after the collapse of peace talks. Suicide bombings kill over 1,000 Israelis. Israeli military operations kill over 3,000 Palestinians. Israel begins construction of the West Bank separation barrier.",
+        tag: "terrorist attack",
+        mapView: { center: [35.2, 31.8], zoom: 8 },
+      },
+      {
+        date: "1993 — Oslo Accords",
+        text: "Israel and the PLO sign the Oslo Accords, establishing the Palestinian Authority and a framework for Palestinian self-governance. Rabin and Arafat shake hands on the White House lawn. The two-state solution appears possible.",
+        mapView: { center: [-77.04, 38.90], zoom: 10 },
+      },
+      {
+        date: "1987 — First Intifada",
+        text: "Palestinian uprising erupts across the occupied territories. Six years of mass protests, strikes, and stone-throwing against Israeli military occupation. Over 1,000 Palestinians and 160 Israelis killed. Hamas is founded during this period.",
+        tag: "occupation",
+        mapView: { center: [35.2, 31.8], zoom: 8 },
+      },
+      {
+        date: "1967 — Six-Day War",
+        text: "Israel captures the West Bank, Gaza Strip, Sinai Peninsula, and Golan Heights in six days. Military occupation of Palestinian territories begins. UN Resolution 242 calls for Israeli withdrawal — Israel does not comply.",
+        tag: "occupation",
+        highlight: true,
+        mapView: { center: [35.0, 31.5], zoom: 7 },
+      },
+      {
+        date: "1948 — Nakba",
+        text: "Israel declares independence. In the war that follows, over 700,000 Palestinians are expelled or flee their homes — an event Palestinians call the Nakba (\"catastrophe\"). Palestinian villages are destroyed. The refugee crisis that defines the conflict begins.",
+        tag: "occupation",
+        highlight: true,
+        mapView: { center: [35.0, 31.5], zoom: 7.5 },
       },
     ],
   },
