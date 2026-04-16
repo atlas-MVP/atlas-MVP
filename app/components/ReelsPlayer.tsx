@@ -67,22 +67,24 @@ function ActionBtn({ glyph, count, active, onClick }: {
   const stroke = active ? "rgba(255,255,255,0.98)" : "rgba(255,255,255,0.82)";
   return (
     <button onClick={onClick} style={{
-      display: "flex", flexDirection: "column", alignItems: "center", gap: 3,
-      background: "none", border: "none", cursor: "pointer", padding: 0,
-      width: 44,
+      display: "flex", flexDirection: "column", alignItems: "center", gap: 2,
+      background: "none", border: "none", outline: "none", boxShadow: "none",
+      cursor: "pointer", padding: 0,
+      width: 32,
+      WebkitAppearance: "none", appearance: "none",
     }}>
       <span style={{
-        width: 44, height: 44,
+        width: 32, height: 32,
         display: "flex", alignItems: "center", justifyContent: "center",
         background: "transparent", border: "none",
         filter: "drop-shadow(0 1px 2px rgba(0,0,0,0.6))",
       }}>
-        <svg width="28" height="28" viewBox="0 0 24 24" stroke={stroke} strokeWidth={1.6}>
+        <svg width="20" height="20" viewBox="0 0 24 24" stroke={stroke} strokeWidth={1.6}>
           {Glyph[glyph]}
         </svg>
       </span>
       {count !== undefined && (
-        <span style={{ fontSize: 10, fontFamily: "monospace", color: "rgba(255,255,255,0.62)", letterSpacing: "0.04em", textShadow: "0 1px 2px rgba(0,0,0,0.6)" }}>
+        <span style={{ fontSize: 9, fontFamily: "monospace", color: "rgba(255,255,255,0.6)", letterSpacing: "0.04em", textShadow: "0 1px 2px rgba(0,0,0,0.6)" }}>
           {count >= 1000 ? `${(count / 1000).toFixed(1)}k` : count}
         </span>
       )}
@@ -354,7 +356,7 @@ function ReelCard({ entry, isActive }: { entry: VideoEntry; isActive: boolean })
       {/* ── Action rail — universal, floats over all three reel types ────────── */}
       <div style={{
         position: "absolute", right: 10, bottom: 14,
-        display: "flex", flexDirection: "column", gap: 16, alignItems: "center",
+        display: "flex", flexDirection: "column", gap: 12, alignItems: "center",
         zIndex: 5,
         // No scrim, no border — icons float with their own drop-shadow
       }}>
