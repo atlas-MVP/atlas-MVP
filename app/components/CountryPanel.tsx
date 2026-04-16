@@ -1302,10 +1302,54 @@ export default function CountryPanel({ countryCode, onClose, onViewFeed, onConfl
                               <div style={{ width: 7, height: 7, borderRadius: "50%", background: HIGHLIGHT.solid, border: `1px solid ${HIGHLIGHT.border}`, boxShadow: HIGHLIGHT.glow }} />
                             </div>
                             <div>
-                              <p style={{ margin: "0 0 5px", fontSize: 11, fontFamily: "monospace", fontWeight: 600, color: HIGHLIGHT.date, letterSpacing: "0.03em" }}>
-                                {(() => { const d = latest.date; if (/^(19|20)\d\d/.test(d)) return d; return d.replace(/,?\s*(19|20)\d\d/, ""); })()}
-                              </p>
+                              <div style={{ display: "flex", alignItems: "center", gap: 8, margin: "0 0 5px" }}>
+                                <span style={{ fontSize: 11, fontFamily: "monospace", fontWeight: 600, color: HIGHLIGHT.date, letterSpacing: "0.03em" }}>
+                                  {(() => { const d = latest.date; if (/^(19|20)\d\d/.test(d)) return d; return d.replace(/,?\s*(19|20)\d\d/, ""); })()}
+                                </span>
+                                {latest.tag && (
+                                  <span style={{
+                                    fontSize: 8, fontFamily: "monospace", letterSpacing: "0.14em", textTransform: "uppercase",
+                                    padding: "2px 7px", borderRadius: 3,
+                                    background: latest.tag === "terrorist attack" ? "rgba(239,68,68,0.12)" : "rgba(255,255,255,0.05)",
+                                    color: latest.tag === "terrorist attack" ? "rgba(239,68,68,0.7)" : "rgba(255,255,255,0.3)",
+                                    border: `1px solid ${latest.tag === "terrorist attack" ? "rgba(239,68,68,0.2)" : "rgba(255,255,255,0.08)"}`,
+                                  }}>
+                                    {latest.tag}
+                                  </span>
+                                )}
+                              </div>
                               <p style={{ margin: 0, fontSize: 14, color: HIGHLIGHT.text, lineHeight: 1.65 }}>{latest.text}</p>
+                              {/* Linked pills in normal view too */}
+                              {latest.linkedConflicts && latest.linkedConflicts.length > 0 && (
+                                <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginTop: 10 }}>
+                                  {latest.linkedConflicts.map((lc, lci) => {
+                                    const isAttack = lc.type === "attack";
+                                    const baseColor = isAttack ? "239,68,68" : "96,165,250";
+                                    return (
+                                      <button
+                                        key={lci}
+                                        className={isAttack ? "tooltip-pulse-border" : "link-pulse-border"}
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          setSelectedConflictId(lc.id);
+                                          onConflictSelect?.(lc.id);
+                                        }}
+                                        style={{
+                                          fontSize: 9, fontFamily: "monospace", letterSpacing: "0.1em",
+                                          color: `rgba(${baseColor},0.7)`, background: `rgba(${baseColor},0.06)`,
+                                          border: `1px solid rgba(${baseColor},0.2)`, borderRadius: 10,
+                                          cursor: "pointer", padding: "4px 10px", display: "inline-flex", alignItems: "center", gap: 6,
+                                        }}
+                                        onMouseEnter={e => { e.currentTarget.style.background = `rgba(${baseColor},0.12)`; e.currentTarget.style.color = `rgba(${baseColor},0.9)`; }}
+                                        onMouseLeave={e => { e.currentTarget.style.background = `rgba(${baseColor},0.06)`; e.currentTarget.style.color = `rgba(${baseColor},0.7)`; }}
+                                      >
+                                        <span style={{ width: 5, height: 5, borderRadius: "50%", background: `rgba(${baseColor},0.6)` }} className={isAttack ? "tooltip-pulse-dot" : "link-pulse-dot"} />
+                                        {lc.label} →
+                                      </button>
+                                    );
+                                  })}
+                                </div>
+                              )}
                             </div>
                           </div>
                         </div>
@@ -1409,22 +1453,23 @@ export default function CountryPanel({ countryCode, onClose, onViewFeed, onConfl
                             }} />
                           </div>
                           <div>
-                            {/* Category tag — e.g. "terrorist attack" or "genocide" */}
-                            {event.tag && (
-                              <span style={{
-                                display: "inline-block", marginBottom: 6,
-                                fontSize: 8, fontFamily: "monospace", letterSpacing: "0.14em", textTransform: "uppercase",
-                                padding: "2px 7px", borderRadius: 3,
-                                background: event.tag === "terrorist attack" ? "rgba(239,68,68,0.12)" : event.tag === "genocide" ? "rgba(239,68,68,0.08)" : "rgba(255,255,255,0.05)",
-                                color: event.tag === "terrorist attack" ? "rgba(239,68,68,0.7)" : event.tag === "genocide" ? "rgba(239,68,68,0.5)" : "rgba(255,255,255,0.3)",
-                                border: `1px solid ${event.tag === "terrorist attack" ? "rgba(239,68,68,0.2)" : event.tag === "genocide" ? "rgba(239,68,68,0.1)" : "rgba(255,255,255,0.08)"}`,
-                              }}>
-                                {event.tag}
+                            <div style={{ display: "flex", alignItems: "center", gap: 8, margin: "0 0 5px" }}>
+                              <span style={{ fontSize: 11, fontFamily: "monospace", fontWeight: 600, color: palette.date, letterSpacing: "0.03em" }}>
+                                {(() => { const d = event.date; if (/^(19|20)\d\d/.test(d)) return d; return d.replace(/,?\s*(19|20)\d\d/, ""); })()}
                               </span>
-                            )}
-                            <p style={{ margin: "0 0 5px", fontSize: 11, fontFamily: "monospace", fontWeight: 600, color: palette.date, letterSpacing: "0.03em" }}>
-                              {(() => { const d = event.date; if (/^(19|20)\d\d/.test(d)) return d; return d.replace(/,?\s*(19|20)\d\d/, ""); })()}
-                            </p>
+                              {/* Category tag — inline beside date */}
+                              {event.tag && (
+                                <span style={{
+                                  fontSize: 8, fontFamily: "monospace", letterSpacing: "0.14em", textTransform: "uppercase",
+                                  padding: "2px 7px", borderRadius: 3, flexShrink: 0,
+                                  background: event.tag === "terrorist attack" ? "rgba(239,68,68,0.12)" : event.tag === "genocide" ? "rgba(239,68,68,0.08)" : "rgba(255,255,255,0.05)",
+                                  color: event.tag === "terrorist attack" ? "rgba(239,68,68,0.7)" : event.tag === "genocide" ? "rgba(239,68,68,0.5)" : "rgba(255,255,255,0.3)",
+                                  border: `1px solid ${event.tag === "terrorist attack" ? "rgba(239,68,68,0.2)" : event.tag === "genocide" ? "rgba(239,68,68,0.1)" : "rgba(255,255,255,0.08)"}`,
+                                }}>
+                                  {event.tag}
+                                </span>
+                              )}
+                            </div>
                             <p style={{ margin: 0, fontSize: 14, color: isActive ? "rgba(255,255,255,0.85)" : palette.text, lineHeight: 1.65, transition: "color 0.3s ease" }}>
                               {event.text}
                             </p>
