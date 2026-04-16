@@ -753,6 +753,7 @@ interface Props {
   onSourceTap?: (source: string) => void;
   onCasualtyHighlight?: (isoCodes: string[]) => void;
   onPlayEvent?: (event: MapEvent) => void;
+  onHistoryDate?: (date: string | null) => void;
   initialAlertText?: string;
 }
 
@@ -764,7 +765,7 @@ function extractSourceName(label: string): string {
   return label.split(" — ")[0].split(" —")[0].trim();
 }
 
-export default function CountryPanel({ countryCode, onClose, onViewFeed, onConflictSelect, onFocusCountry, onFocusPosition, onCountryHome, onAuthorClick, onTimelineStrike, onSourceTap, onCasualtyHighlight, onPlayEvent, initialAlertText }: Props) {
+export default function CountryPanel({ countryCode, onClose, onViewFeed, onConflictSelect, onFocusCountry, onFocusPosition, onCountryHome, onAuthorClick, onTimelineStrike, onSourceTap, onCasualtyHighlight, onPlayEvent, onHistoryDate, initialAlertText }: Props) {
   const [selectedConflictId, setSelectedConflictId] = useState<string | null>(null);
   const [civTooltip, setCivTooltip]       = useState<string | null>(null);
   const [showAllCasualties, setShowAllCasualties] = useState(false);
@@ -884,6 +885,8 @@ export default function CountryPanel({ countryCode, onClose, onViewFeed, onConfl
         onFocusPosition?.(ev.mapView.center, ev.mapView.zoom);
       }
     }
+    // Push the tile's date to the Clock
+    onHistoryDate?.(ev?.date ?? null);
   };
 
   // ── Enter history mode — zoom out to wide conflict view ────────────────────
@@ -904,6 +907,7 @@ export default function CountryPanel({ countryCode, onClose, onViewFeed, onConfl
     setActiveTile(-1);
     activeTileRef.current = -1;
     onTimelineStrike?.(null);
+    onHistoryDate?.(null);
     scrollRef.current?.scrollTo({ top: 0, behavior: "smooth" });
   };
 

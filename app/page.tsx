@@ -86,6 +86,7 @@ export default function Home() {
   const [activeSource, setActiveSource]       = useState<string | null>(null);
   const [radarAlertText, setRadarAlertText]   = useState<string | null>(null);
   const [activeMapEvent, setActiveMapEvent]   = useState<MapEvent | null>(null);
+  const [historyDate, setHistoryDate]         = useState<string | null>(null);
   const [liveReset, setLiveReset]             = useState(0);
 
   const handleCountryHome = (iso: string) => {
@@ -213,7 +214,7 @@ export default function Home() {
         <CountryPanel
           key={selectedCountry}
           countryCode={selectedCountry}
-          onClose={() => { setSelectedCountry(null); setSecondaryCountries([]); setCasualtyCountries([]); setFocusCountries([]); setActiveStrikes(null); setRadarAlertText(null); setFeedCountry(null); }}
+          onClose={() => { setSelectedCountry(null); setSecondaryCountries([]); setCasualtyCountries([]); setFocusCountries([]); setActiveStrikes(null); setRadarAlertText(null); setFeedCountry(null); setHistoryDate(null); }}
           onViewFeed={(code) => { setFeedCountry(code); }}
           onConflictSelect={handleConflictSelect}
           onFocusCountry={(iso) => {
@@ -229,6 +230,7 @@ export default function Home() {
           onSourceTap={(s) => setActiveSource(s)}
           onCasualtyHighlight={setCasualtyCountries}
           onPlayEvent={(evt) => { setActiveMapEvent(evt); }}
+          onHistoryDate={setHistoryDate}
           initialAlertText={radarAlertText ?? undefined}
         />
       )}
@@ -304,6 +306,7 @@ export default function Home() {
               setHistoricalYear(null);
               setPreviewYear(null);
               setTimelineOpen(false);
+              setHistoryDate(null);
               setLiveReset(v => v + 1);
               setShowRadar(true);
               setFlyToPosition({ center: [-98.5, 39.5], zoom: 1.8, key: "atlas-globe-" + Date.now() });
@@ -345,6 +348,7 @@ export default function Home() {
         <Clock
           onYearClick={() => setTimelineOpen(v => !v)}
           displayYear={previewYear ?? historicalYear ?? undefined}
+          historyDate={historyDate}
         />
       </div>
 
