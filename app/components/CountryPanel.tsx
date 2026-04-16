@@ -1481,9 +1481,6 @@ export default function CountryPanel({ countryCode, onClose, onViewFeed, onConfl
                                   })}
                                 </div>
                               )}
-                              <div style={{ marginTop: 10 }} onClick={(e) => e.stopPropagation()}>
-                                <EventUploadButton eventId={eventFolderId(conflict.id, latest.date)} />
-                              </div>
                             </div>
                           </div>
                         </div>
@@ -1642,9 +1639,6 @@ export default function CountryPanel({ countryCode, onClose, onViewFeed, onConfl
                                 })}
                               </div>
                             )}
-                            <div style={{ marginTop: 10 }} onClick={(e) => e.stopPropagation()}>
-                              <EventUploadButton eventId={eventFolderId(conflict.id, event.date)} />
-                            </div>
                           </div>
                         </div>
                       </div>
@@ -1668,154 +1662,113 @@ export default function CountryPanel({ countryCode, onClose, onViewFeed, onConfl
       </div>
     </div>
 
-    {/* Floating video panel — snap-scroll slides, one per leader/moment */}
+    {/* Focused event → a compact video bubble centered over the map in the
+        space between the CountryPanel (right edge ≈ 484px) and the viewport
+        edge. Minimal chrome: just a thin transparent border. Video is
+        press-to-play (no autoplay). Title + bullets sit right below it. */}
     {timelineExpanded && activeTile >= 0 && (() => {
       const ev = chronological[activeTile];
-      if (!ev?.slides?.length) return null;
+      const slide = ev?.slides?.[0];
+      if (!slide) return null;
 
-      const handleSlideScroll = (e: React.UIEvent<HTMLDivElement>) => {
-        const container = e.currentTarget;
-        const slideH = container.clientHeight;
-        if (slideH === 0) return;
-        const idx = Math.round(container.scrollTop / slideH);
-        if (idx !== activeSlide) setActiveSlide(idx);
-      };
-
-      const scrollBack = () => {
-        if (activeSlide > 0) {
-          const container = slideContainerRef.current;
-          if (!container) return;
-          const target = activeSlide - 1;
-          container.scrollTo({ top: target * container.clientHeight, behavior: "smooth" });
-          setActiveSlide(target);
-        }
-      };
+      // Strip autoplay params from YouTube embed URLs so the native play
+      // button shows — user asked for "played with a push".
+      const videoSrc = isYouTube(slide.videoUrl)
+        ? slide.videoUrl.replace(/[?&](autoplay|mute)=\d/g, "").replace(/\?&/, "?").replace(/[?&]$/, "")
+        : slide.videoUrl;
 
       return (
         <div
           className="absolute z-20"
           style={{
-            right: 24, top: 72, width: 460, bottom: 24,
-            display: "flex", flexDirection: "column",
+            left: 504, right: 24, top: 0, bottom: 0,
+            display: "flex", alignItems: "center", justifyContent: "center",
+            pointerEvents: "none",
           }}
         >
           <div style={{
-            background: "rgba(4,6,18,0.62)", backdropFilter: "blur(40px)", WebkitBackdropFilter: "blur(40px)",
-            border: "1px solid rgba(255,255,255,0.06)", borderRadius: 16,
-            boxShadow: "0 24px 80px rgba(0,0,0,0.38), 0 1px 3px rgba(0,0,0,0.18)",
-            overflow: "hidden", display: "flex", flexDirection: "column",
-            height: "100%", position: "relative",
+            width: "min(420px, 100%)",
+            maxHeight: "calc(100vh - 96px)",
+            display: "flex", flexDirection: "column",
+            gap: 10,
+            pointerEvents: "auto",
           }}>
-            {/* Back arrow — small gray triangle, only visible past first slide */}
-            {activeSlide > 0 && (
-              <button
-                onClick={scrollBack}
-                style={{
-                  position: "absolute", top: 10, left: 14, zIndex: 5,
-                  background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)",
-                  borderRadius: 6, cursor: "pointer", padding: "4px 8px",
-                  display: "flex", alignItems: "center", justifyContent: "center",
-                  transition: "background 0.2s",
-                }}
-                onMouseEnter={e => (e.currentTarget.style.background = "rgba(255,255,255,0.12)")}
-                onMouseLeave={e => (e.currentTarget.style.background = "rgba(255,255,255,0.06)")}
-              >
-                <span style={{ fontSize: 8, color: "rgba(255,255,255,0.4)", lineHeight: 1 }}>▲</span>
-              </button>
-            )}
-            {/* Snap-scroll slide container */}
-            <div
-              ref={slideContainerRef}
-              onScroll={handleSlideScroll}
-              style={{
-                flex: 1, overflowY: "auto", minHeight: 0,
-                scrollSnapType: "y mandatory",
-              }}
-            >
-              {ev.slides.map((slide, si) => (
-                <div key={si} data-slide={si} style={{
-                  scrollSnapAlign: "start",
-                  minHeight: "100%",
-                  display: "flex", flexDirection: "column",
-                }}>
-                  {/* Video — YouTube → iframe, self-hosted → VideoPlayer */}
-                  <div style={{ width: "100%", aspectRatio: "16/9", background: "#000", flexShrink: 0 }}>
-                    {isYouTube(slide.videoUrl) ? (
-                      <iframe
-                        src={slide.videoUrl}
-                        style={{ width: "100%", height: "100%", border: "none" }}
-                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                        allowFullScreen
-                      />
-                    ) : (
-                      <VideoPlayer src={slide.videoUrl} isActive={si === activeSlide} />
-                    )}
-                  </div>
-                  {/* Title + subtitle + date */}
-                  <div style={{ padding: "12px 18px 10px", flexShrink: 0 }}>
-                    <p style={{ margin: 0, fontSize: 14, fontWeight: 600, color: "rgba(255,255,255,0.88)", lineHeight: 1.4 }}>
-                      {slide.title}
-                    </p>
-                    {slide.subtitle && (
-                      <p style={{ margin: "4px 0 0", fontSize: 10, fontFamily: "monospace", letterSpacing: "0.08em", color: "rgba(255,255,255,0.35)" }}>
-                        {slide.subtitle}
-                      </p>
-                    )}
-                    <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 6 }}>
-                      <p style={{ margin: 0, fontSize: 10, fontFamily: "monospace", letterSpacing: "0.08em", color: "rgba(255,255,255,0.2)" }}>
-                        {ev.date}
-                      </p>
-                      {/* Slide indicator dots */}
-                      {ev.slides!.length > 1 && (
-                        <div style={{ display: "flex", gap: 4, marginLeft: "auto" }}>
-                          {ev.slides!.map((_, di) => (
-                            <div key={di} style={{
-                              width: 4, height: 4, borderRadius: "50%",
-                              background: di === activeSlide ? "rgba(255,255,255,0.6)" : "rgba(255,255,255,0.12)",
-                              transition: "background 0.3s",
-                            }} />
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                  {/* Info — bullet points, country lists, etc. */}
-                  {slide.info && (
-                    <div style={{ flex: 1, overflowY: "auto", minHeight: 0, padding: "0 18px 18px", borderTop: "1px solid rgba(255,255,255,0.06)" }}>
-                      <div style={{ paddingTop: 14 }}>
-                        {slide.info.split("\n").map((line, li) => {
-                          if (line.startsWith("@blue ") || line.startsWith("@red ")) {
-                            const side = line.startsWith("@blue") ? "blue" : "red";
-                            const name = line.slice(side.length + 2).trim();
-                            return (
-                              <div key={li} style={{ display: "flex", alignItems: "center", gap: 8, padding: "3px 4px" }}>
-                                <span style={{ width: 5, height: 5, borderRadius: "50%", flexShrink: 0, background: side === "blue" ? SIDE_COLORS.blue.dot : SIDE_COLORS.red.dot }} />
-                                <span style={{ fontSize: 12, fontFamily: "monospace", color: "rgba(255,255,255,0.78)", letterSpacing: "0.02em" }}>{name}</span>
-                              </div>
-                            );
-                          }
-                          if (line.startsWith("•")) {
-                            return (
-                              <p key={li} style={{ margin: "0 0 6px", fontSize: 12, color: "rgba(255,255,255,0.6)", lineHeight: 1.6, paddingLeft: 4 }}>
-                                <span style={{ color: "rgba(239,68,68,0.5)", marginRight: 6 }}>•</span>
-                                {line.slice(1).trim()}
-                              </p>
-                            );
-                          }
-                          if (line.trim() === "") return <div key={li} style={{ height: 10 }} />;
-                          const isHeader = /^(Key|Signatories)/.test(line);
-                          return (
-                            <p key={li} style={{ margin: "0 0 8px", fontSize: 12, fontWeight: isHeader ? 600 : 400, color: isHeader ? "rgba(255,255,255,0.75)" : "rgba(255,255,255,0.55)", lineHeight: 1.6 }}>
-                              {line}
-                            </p>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              ))}
+          <div style={{
+            display: "flex", flexDirection: "column",
+            border: "1px solid rgba(255,255,255,0.10)",
+            borderRadius: 14,
+            background: "rgba(4,6,18,0.32)",
+            backdropFilter: "blur(6px)",
+            WebkitBackdropFilter: "blur(6px)",
+            overflow: "hidden",
+            minHeight: 0,
+          }}>
+            {/* Video — press-to-play */}
+            <div style={{ width: "100%", aspectRatio: "16/9", background: "#000", flexShrink: 0 }}>
+              {isYouTube(slide.videoUrl) ? (
+                <iframe
+                  src={videoSrc}
+                  style={{ width: "100%", height: "100%", border: "none" }}
+                  allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                />
+              ) : (
+                <VideoPlayer src={slide.videoUrl} isActive={false} />
+              )}
             </div>
+
+            {/* Compact caption + info */}
+            <div style={{ padding: "10px 14px 12px", overflowY: "auto", minHeight: 0 }}>
+              <p style={{ margin: 0, fontSize: 13, fontWeight: 600, color: "rgba(255,255,255,0.9)", lineHeight: 1.35 }}>
+                {slide.title}
+              </p>
+              {slide.subtitle && (
+                <p style={{ margin: "3px 0 0", fontSize: 10, fontFamily: "monospace", letterSpacing: "0.06em", color: "rgba(255,255,255,0.4)" }}>
+                  {slide.subtitle}
+                </p>
+              )}
+              <p style={{ margin: "3px 0 0", fontSize: 9, fontFamily: "monospace", letterSpacing: "0.08em", color: "rgba(255,255,255,0.25)" }}>
+                {ev.date}
+              </p>
+
+              {slide.info && (
+                <div style={{ marginTop: 10, paddingTop: 10, borderTop: "1px solid rgba(255,255,255,0.06)" }}>
+                  {slide.info.split("\n").map((line, li) => {
+                    if (line.startsWith("@blue ") || line.startsWith("@red ")) {
+                      const side = line.startsWith("@blue") ? "blue" : "red";
+                      const name = line.slice(side.length + 2).trim();
+                      return (
+                        <div key={li} style={{ display: "flex", alignItems: "center", gap: 6, padding: "2px 2px" }}>
+                          <span style={{ width: 4, height: 4, borderRadius: "50%", flexShrink: 0, background: side === "blue" ? SIDE_COLORS.blue.dot : SIDE_COLORS.red.dot }} />
+                          <span style={{ fontSize: 11, fontFamily: "monospace", color: "rgba(255,255,255,0.75)" }}>{name}</span>
+                        </div>
+                      );
+                    }
+                    if (line.startsWith("•")) {
+                      return (
+                        <p key={li} style={{ margin: "0 0 4px", fontSize: 11, color: "rgba(255,255,255,0.62)", lineHeight: 1.55, paddingLeft: 2 }}>
+                          <span style={{ color: "rgba(239,68,68,0.5)", marginRight: 5 }}>•</span>
+                          {line.slice(1).trim()}
+                        </p>
+                      );
+                    }
+                    if (line.trim() === "") return <div key={li} style={{ height: 6 }} />;
+                    const isHeader = /^(Key|Signatories)/.test(line);
+                    return (
+                      <p key={li} style={{ margin: "0 0 5px", fontSize: 11, fontWeight: isHeader ? 600 : 400, color: isHeader ? "rgba(255,255,255,0.78)" : "rgba(255,255,255,0.58)", lineHeight: 1.55 }}>
+                        {line}
+                      </p>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Floating upload chip — targets whichever event is currently focused */}
+          <div style={{ display: "flex", justifyContent: "center" }} onClick={(e) => e.stopPropagation()}>
+            <EventUploadButton eventId={eventFolderId(conflict.id, ev.date)} />
+          </div>
           </div>
         </div>
       );

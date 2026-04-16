@@ -2,16 +2,22 @@
 import { S3Client, GetObjectCommand, PutObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 
+// Defensive .trim() — pasting a Cloudflare token into the Vercel dashboard
+// often leaves a trailing newline or stray whitespace, which makes Node's
+// http module throw "Invalid character in header content ['authorization']"
+// when the AWS SDK tries to sign the request.
+const clean = (v: string | undefined): string => (v ?? "").trim();
+
 export const r2 = new S3Client({
   region: "auto",
-  endpoint: process.env.R2_ENDPOINT!,
+  endpoint: clean(process.env.R2_ENDPOINT),
   credentials: {
-    accessKeyId:     process.env.R2_ACCESS_KEY_ID!,
-    secretAccessKey: process.env.R2_SECRET_ACCESS_KEY!,
+    accessKeyId:     clean(process.env.R2_ACCESS_KEY_ID),
+    secretAccessKey: clean(process.env.R2_SECRET_ACCESS_KEY),
   },
 });
 
-export const BUCKET = process.env.R2_BUCKET ?? "atlas-media";
+export const BUCKET = clean(process.env.R2_BUCKET) || "atlas-media";
 export const MANIFEST_KEY = "manifest.json";
 
 export type ReelType = "video" | "youtube" | "tweet";
