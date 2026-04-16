@@ -1677,6 +1677,18 @@ export default function CountryPanel({ countryCode, onClose, onViewFeed, onConfl
         ? slide.videoUrl.replace(/[?&](autoplay|mute)=\d/g, "").replace(/\?&/, "?").replace(/[?&]$/, "")
         : slide.videoUrl;
 
+      // Flatten + truncate info to a short blurb (~350 chars). Drop the
+      // @blue/@red signatory lists entirely — they bloat the bubble.
+      const rawInfo = (slide.info ?? "")
+        .split("\n")
+        .filter(l => !l.startsWith("@blue ") && !l.startsWith("@red "))
+        .join("\n")
+        .trim();
+      const INFO_MAX = 350;
+      const infoTrimmed = rawInfo.length > INFO_MAX
+        ? rawInfo.slice(0, INFO_MAX).replace(/\s+\S*$/, "") + "…"
+        : rawInfo;
+
       return (
         <div
           className="absolute z-20"
@@ -1687,8 +1699,7 @@ export default function CountryPanel({ countryCode, onClose, onViewFeed, onConfl
           }}
         >
           <div style={{
-            width: "min(420px, 100%)",
-            maxHeight: "calc(100vh - 96px)",
+            width: "min(860px, 100%)",
             display: "flex", flexDirection: "column",
             gap: 10,
             pointerEvents: "auto",
@@ -1701,9 +1712,8 @@ export default function CountryPanel({ countryCode, onClose, onViewFeed, onConfl
             backdropFilter: "blur(6px)",
             WebkitBackdropFilter: "blur(6px)",
             overflow: "hidden",
-            minHeight: 0,
           }}>
-            {/* Video — press-to-play */}
+            {/* Video — press-to-play, fills the entire bubble width */}
             <div style={{ width: "100%", aspectRatio: "16/9", background: "#000", flexShrink: 0 }}>
               {isYouTube(slide.videoUrl) ? (
                 <iframe
@@ -1717,50 +1727,26 @@ export default function CountryPanel({ countryCode, onClose, onViewFeed, onConfl
               )}
             </div>
 
-            {/* Compact caption + info */}
-            <div style={{ padding: "10px 14px 12px", overflowY: "auto", minHeight: 0 }}>
-              <p style={{ margin: 0, fontSize: 13, fontWeight: 600, color: "rgba(255,255,255,0.9)", lineHeight: 1.35 }}>
-                {slide.title}
-              </p>
-              {slide.subtitle && (
-                <p style={{ margin: "3px 0 0", fontSize: 10, fontFamily: "monospace", letterSpacing: "0.06em", color: "rgba(255,255,255,0.4)" }}>
-                  {slide.subtitle}
+            {/* Caption strip — ~1/4 of video height, fixed short blurb */}
+            <div style={{
+              padding: "10px 16px 12px",
+              height: "calc((min(860px, 100%) * 9 / 16) / 4)",
+              minHeight: 96, maxHeight: 140,
+              overflow: "hidden",
+              display: "flex", flexDirection: "column", gap: 4,
+            }}>
+              <div style={{ display: "flex", alignItems: "baseline", gap: 10, flexShrink: 0 }}>
+                <p style={{ margin: 0, fontSize: 14, fontWeight: 600, color: "rgba(255,255,255,0.92)", lineHeight: 1.3, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", flex: 1, minWidth: 0 }}>
+                  {slide.title}
                 </p>
-              )}
-              <p style={{ margin: "3px 0 0", fontSize: 9, fontFamily: "monospace", letterSpacing: "0.08em", color: "rgba(255,255,255,0.25)" }}>
-                {ev.date}
-              </p>
-
-              {slide.info && (
-                <div style={{ marginTop: 10, paddingTop: 10, borderTop: "1px solid rgba(255,255,255,0.06)" }}>
-                  {slide.info.split("\n").map((line, li) => {
-                    if (line.startsWith("@blue ") || line.startsWith("@red ")) {
-                      const side = line.startsWith("@blue") ? "blue" : "red";
-                      const name = line.slice(side.length + 2).trim();
-                      return (
-                        <div key={li} style={{ display: "flex", alignItems: "center", gap: 6, padding: "2px 2px" }}>
-                          <span style={{ width: 4, height: 4, borderRadius: "50%", flexShrink: 0, background: side === "blue" ? SIDE_COLORS.blue.dot : SIDE_COLORS.red.dot }} />
-                          <span style={{ fontSize: 11, fontFamily: "monospace", color: "rgba(255,255,255,0.75)" }}>{name}</span>
-                        </div>
-                      );
-                    }
-                    if (line.startsWith("•")) {
-                      return (
-                        <p key={li} style={{ margin: "0 0 4px", fontSize: 11, color: "rgba(255,255,255,0.62)", lineHeight: 1.55, paddingLeft: 2 }}>
-                          <span style={{ color: "rgba(239,68,68,0.5)", marginRight: 5 }}>•</span>
-                          {line.slice(1).trim()}
-                        </p>
-                      );
-                    }
-                    if (line.trim() === "") return <div key={li} style={{ height: 6 }} />;
-                    const isHeader = /^(Key|Signatories)/.test(line);
-                    return (
-                      <p key={li} style={{ margin: "0 0 5px", fontSize: 11, fontWeight: isHeader ? 600 : 400, color: isHeader ? "rgba(255,255,255,0.78)" : "rgba(255,255,255,0.58)", lineHeight: 1.55 }}>
-                        {line}
-                      </p>
-                    );
-                  })}
-                </div>
+                <span style={{ fontSize: 9, fontFamily: "monospace", letterSpacing: "0.08em", color: "rgba(255,255,255,0.3)", flexShrink: 0 }}>
+                  {ev.date}
+                </span>
+              </div>
+              {infoTrimmed && (
+                <p style={{ margin: 0, fontSize: 11, color: "rgba(255,255,255,0.6)", lineHeight: 1.5, overflow: "hidden" }}>
+                  {infoTrimmed}
+                </p>
               )}
             </div>
           </div>
