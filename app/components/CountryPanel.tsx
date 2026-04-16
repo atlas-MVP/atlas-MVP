@@ -677,6 +677,7 @@ interface Props {
   onAuthorClick?: () => void;
   onTimelineStrike?: (data: StrikeEvent | null) => void;
   onSourceTap?: (source: string) => void;
+  onCasualtyHighlight?: (isoCodes: string[]) => void;
   initialAlertText?: string;
 }
 
@@ -688,7 +689,7 @@ function extractSourceName(label: string): string {
   return label.split(" — ")[0].split(" —")[0].trim();
 }
 
-export default function CountryPanel({ countryCode, onClose, onViewFeed, onConflictSelect, onFocusCountry, onFocusPosition, onCountryHome, onAuthorClick, onTimelineStrike, onSourceTap, initialAlertText }: Props) {
+export default function CountryPanel({ countryCode, onClose, onViewFeed, onConflictSelect, onFocusCountry, onFocusPosition, onCountryHome, onAuthorClick, onTimelineStrike, onSourceTap, onCasualtyHighlight, initialAlertText }: Props) {
   const [selectedConflictId, setSelectedConflictId] = useState<string | null>(null);
   const [civTooltip, setCivTooltip]       = useState<string | null>(null);
   const [showAllCasualties, setShowAllCasualties] = useState(false);
@@ -951,7 +952,17 @@ export default function CountryPanel({ countryCode, onClose, onViewFeed, onConfl
                 </table>
                 {sorted.length > 2 && (
                   <button
-                    onClick={(e) => { e.stopPropagation(); setShowAllCasualties(v => !v); }}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      const next = !showAllCasualties;
+                      setShowAllCasualties(next);
+                      if (next) {
+                        const codes = sorted.map(c => CASUALTY_ISO[c.country]).filter(Boolean);
+                        onCasualtyHighlight?.(codes);
+                      } else {
+                        onCasualtyHighlight?.([]);
+                      }
+                    }}
                     style={{ marginTop: 4, fontSize: 9, fontFamily: "monospace", letterSpacing: "0.08em", color: "rgba(255,255,255,0.2)", background: "none", border: "none", cursor: "pointer", padding: "2px 0", display: "block" }}
                     onMouseEnter={e => (e.currentTarget.style.color = "rgba(255,255,255,0.45)")}
                     onMouseLeave={e => (e.currentTarget.style.color = "rgba(255,255,255,0.2)")}>

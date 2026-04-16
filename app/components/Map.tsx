@@ -123,6 +123,7 @@ interface Props {
   selectedCountry?: string | null;
   secondaryCountries?: string[];
   activeStrikes?: ActiveStrikesData | null;
+  casualtyCountries?: string[]; // ISOs to pulse blue+red when "+more" casualties is tapped
   homeView?: boolean; // radar is open, no country selected — suppress auto-highlight
   onReady?: () => void; // fires once when first idle event lands (all tiles rendered)
 }
@@ -131,7 +132,7 @@ interface Props {
 const FADE_START = 3.5;
 const FADE_END = 5.5;
 
-export default function Map({ onCountryClick, flyToCode, flyToPosition, selectedCountry, secondaryCountries = [], activeStrikes, homeView = false, onReady }: Props) {
+export default function Map({ onCountryClick, flyToCode, flyToPosition, selectedCountry, secondaryCountries = [], activeStrikes, casualtyCountries = [], homeView = false, onReady }: Props) {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
   const [mapReady, setMapReady] = useState(false);
@@ -213,6 +214,22 @@ export default function Map({ onCountryClick, flyToCode, flyToPosition, selected
       m.setPaintProperty("secondary-border", "line-opacity", 0);
     }
   }, [secondaryCountries]);
+
+  // Casualty country highlight — blue fill + red pulse when "+more" is tapped
+  useEffect(() => {
+    const m = map.current;
+    if (!m || !m.getLayer("casualty-fill")) return;
+    const worldviewFilter = ["any", ["==", ["get", "worldview"], "all"], ["==", ["get", "worldview"], "US"]];
+    // Filter out countries already in HIGHLIGHTED (they have their own fill layers)
+    const extra = casualtyCountries.filter(c => !HIGHLIGHTED.includes(c));
+    if (extra.length > 0) {
+      m.setFilter("casualty-fill", ["all", worldviewFilter, ["in", ["get", "iso_3166_1_alpha_3"], ["literal", extra]]]);
+      m.setFilter("idle-pulse-fill", ["all", worldviewFilter, ["in", ["get", "iso_3166_1_alpha_3"], ["literal", [...HIGHLIGHTED, ...extra]]]]);
+    } else {
+      m.setFilter("casualty-fill", ["all", worldviewFilter, ["in", ["get", "iso_3166_1_alpha_3"], ["literal", [""]]]]);
+      m.setFilter("idle-pulse-fill", ["all", worldviewFilter, ["in", ["get", "iso_3166_1_alpha_3"], ["literal", HIGHLIGHTED]]]);
+    }
+  }, [casualtyCountries]);
 
   // Strike marker animation — fast scroll: instant, pause: sequential reveal
   useEffect(() => {
@@ -429,7 +446,17 @@ export default function Map({ onCountryClick, flyToCode, flyToPosition, selected
       }
 
 
-      // Idle red pulse — always on for HIGHLIGHTED (no hover needed)
+      // Casualty highlight fill — blue base for countries shown when "+more" is tapped
+      m.addLayer({
+        id: "casualty-fill",
+        type: "fill",
+        source: "country-boundaries",
+        "source-layer": "country_boundaries",
+        filter: ["all", worldviewFilter, ["in", ["get", "iso_3166_1_alpha_3"], ["literal", [""]]]],
+        paint: { "fill-color": "#0d2a52", "fill-opacity": ["interpolate", ["linear"], ["zoom"], FADE_START, 0.48, FADE_END, 0] as never },
+      });
+
+      // Idle red pulse — always on for HIGHLIGHTED (no hover needed), expanded for casualty countries
       m.addLayer({
         id: "idle-pulse-fill",
         type: "fill",
