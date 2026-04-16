@@ -48,7 +48,7 @@ export const MAP_EVENTS: Record<string, MapEvent> = {
     id: "jcpoa-withdrawal",
     title: "Trump Withdraws from Iran Nuclear Deal",
     conflictId: "israel-iran",
-    timelineDate: "May 2018",
+    timelineDate: undefined, // video embedded directly on the tile
     steps: [
       {
         flyTo: { center: [-77.04, 38.90], zoom: 14, duration: 2000 },

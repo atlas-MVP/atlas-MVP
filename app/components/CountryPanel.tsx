@@ -418,6 +418,8 @@ const CONFLICTS: Record<string, Conflict> = {
       {
         date: "May 2018",
         text: "Trump unilaterally withdraws the US from the JCPOA and reinstates maximum pressure sanctions. Iran begins stockpiling enriched uranium and restricting IAEA monitoring.",
+        videoUrl: "https://www.youtube.com/embed/05ZwuFZJEOo?start=229",
+        videoTitle: "Trump announces withdrawal from Iran Nuclear Deal",
       },
       {
         date: "2015 — JCPOA",
