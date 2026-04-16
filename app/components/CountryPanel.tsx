@@ -5,6 +5,18 @@ import LiveAlertRow from "./LiveAlertRow";
 import { SIDE_COLORS, getCountrySide } from "../lib/sides";
 import { getEventsForTimeline, type MapEvent } from "../lib/mapEvents";
 import VideoPlayer from "./VideoPlayer";
+import EventUploadButton from "./EventUploadButton";
+
+// Stable per-event R2 folder id: "<conflictId>-<slug-of-date>"
+// e.g. ("israel-gaza", "October 7, 2023") → "israel-gaza-october-7-2023"
+function eventFolderId(conflictId: string, date: string): string {
+  const slug = date
+    .toLowerCase()
+    .replace(/[—–]/g, "-")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+  return `${conflictId}-${slug}`;
+}
 
 /** Returns true for YouTube embed URLs; false = self-hosted video → use VideoPlayer */
 function isYouTube(url: string) {
@@ -1469,6 +1481,9 @@ export default function CountryPanel({ countryCode, onClose, onViewFeed, onConfl
                                   })}
                                 </div>
                               )}
+                              <div style={{ marginTop: 10 }} onClick={(e) => e.stopPropagation()}>
+                                <EventUploadButton eventId={eventFolderId(conflict.id, latest.date)} />
+                              </div>
                             </div>
                           </div>
                         </div>
@@ -1627,6 +1642,9 @@ export default function CountryPanel({ countryCode, onClose, onViewFeed, onConfl
                                 })}
                               </div>
                             )}
+                            <div style={{ marginTop: 10 }} onClick={(e) => e.stopPropagation()}>
+                              <EventUploadButton eventId={eventFolderId(conflict.id, event.date)} />
+                            </div>
                           </div>
                         </div>
                       </div>
