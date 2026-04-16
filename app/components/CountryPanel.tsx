@@ -450,6 +450,14 @@ const CONFLICTS: Record<string, Conflict> = {
             { lng: 34.3460, lat: 31.4180, side: "amber",   label: "Gaza City (IDF response)", confidence: 95, sources: [SRC.idf, SRC.reuters] },
           ],
         },
+        slides: [
+          {
+            videoUrl: "https://www.youtube.com/embed/tBcKMGI8VzA",
+            title: "October 7th — filmed by Hamas terrorists",
+            subtitle: "i24NEWS",
+            info: "Raw footage captured by Hamas body cameras and GoPros during the October 7 attack on southern Israel. Warning: graphic content.",
+          },
+        ],
         linkedConflicts: [
           { id: "israel-gaza", label: "Israel–Palestine conflict", type: "conflict" },
           { id: "israel-gaza", label: "Gaza genocide", type: "conflict" },
@@ -823,7 +831,9 @@ export default function CountryPanel({ countryCode, onClose, onViewFeed, onConfl
   const [showAllCasualties, setShowAllCasualties] = useState(false);
   const [timelineExpanded, setTimelineExpanded] = useState(false);
   const [activeTile, setActiveTile]     = useState(-1);
+  const [activeSlide, setActiveSlide]   = useState(0);
   const [autoPlaying, setAutoPlaying]   = useState(false);
+  const slideContainerRef = useRef<HTMLDivElement>(null);
   const [hoveredAlert,  setHoveredAlert]  = useState<number | null>(null);
   const [hoverMidY,     setHoverMidY]     = useState(0);
   const [sourcesOpen,   setSourcesOpen]   = useState(false);
@@ -939,6 +949,9 @@ export default function CountryPanel({ countryCode, onClose, onViewFeed, onConfl
     }
     // Push the tile's date to the Clock
     onHistoryDate?.(ev?.date ?? null);
+    // Reset slide position when tile changes
+    setActiveSlide(0);
+    slideContainerRef.current?.scrollTo({ top: 0 });
   };
 
   // ── Enter history mode — zoom out to wide conflict view ────────────────────
@@ -1494,6 +1507,25 @@ export default function CountryPanel({ countryCode, onClose, onViewFeed, onConfl
     {timelineExpanded && activeTile >= 0 && (() => {
       const ev = chronological[activeTile];
       if (!ev?.slides?.length) return null;
+
+      const handleSlideScroll = (e: React.UIEvent<HTMLDivElement>) => {
+        const container = e.currentTarget;
+        const slideH = container.clientHeight;
+        if (slideH === 0) return;
+        const idx = Math.round(container.scrollTop / slideH);
+        if (idx !== activeSlide) setActiveSlide(idx);
+      };
+
+      const scrollBack = () => {
+        if (activeSlide > 0) {
+          const container = slideContainerRef.current;
+          if (!container) return;
+          const target = activeSlide - 1;
+          container.scrollTo({ top: target * container.clientHeight, behavior: "smooth" });
+          setActiveSlide(target);
+        }
+      };
+
       return (
         <div
           className="absolute z-20"
@@ -1507,15 +1539,36 @@ export default function CountryPanel({ countryCode, onClose, onViewFeed, onConfl
             border: "1px solid rgba(255,255,255,0.06)", borderRadius: 16,
             boxShadow: "0 24px 80px rgba(0,0,0,0.38), 0 1px 3px rgba(0,0,0,0.18)",
             overflow: "hidden", display: "flex", flexDirection: "column",
-            height: "100%",
+            height: "100%", position: "relative",
           }}>
+            {/* Back arrow — small gray triangle, only visible past first slide */}
+            {activeSlide > 0 && (
+              <button
+                onClick={scrollBack}
+                style={{
+                  position: "absolute", top: 10, left: 14, zIndex: 5,
+                  background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)",
+                  borderRadius: 6, cursor: "pointer", padding: "4px 8px",
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  transition: "background 0.2s",
+                }}
+                onMouseEnter={e => (e.currentTarget.style.background = "rgba(255,255,255,0.12)")}
+                onMouseLeave={e => (e.currentTarget.style.background = "rgba(255,255,255,0.06)")}
+              >
+                <span style={{ fontSize: 8, color: "rgba(255,255,255,0.4)", lineHeight: 1 }}>▲</span>
+              </button>
+            )}
             {/* Snap-scroll slide container */}
-            <div style={{
-              flex: 1, overflowY: "auto", minHeight: 0,
-              scrollSnapType: "y mandatory",
-            }}>
+            <div
+              ref={slideContainerRef}
+              onScroll={handleSlideScroll}
+              style={{
+                flex: 1, overflowY: "auto", minHeight: 0,
+                scrollSnapType: "y mandatory",
+              }}
+            >
               {ev.slides.map((slide, si) => (
-                <div key={si} style={{
+                <div key={si} data-slide={si} style={{
                   scrollSnapAlign: "start",
                   minHeight: "100%",
                   display: "flex", flexDirection: "column",
@@ -1549,7 +1602,7 @@ export default function CountryPanel({ countryCode, onClose, onViewFeed, onConfl
                           {ev.slides!.map((_, di) => (
                             <div key={di} style={{
                               width: 4, height: 4, borderRadius: "50%",
-                              background: di === si ? "rgba(255,255,255,0.6)" : "rgba(255,255,255,0.12)",
+                              background: di === activeSlide ? "rgba(255,255,255,0.6)" : "rgba(255,255,255,0.12)",
                               transition: "background 0.3s",
                             }} />
                           ))}
