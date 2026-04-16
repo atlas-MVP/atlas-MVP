@@ -3,6 +3,63 @@
 import React, { useState, useEffect } from "react";
 import LiveAlertRow from "./LiveAlertRow";
 
+// ── Reels preview thumbnail ───────────────────────────────────────────────────
+function ReelsPreview({ onTap }: { onTap?: () => void }) {
+  const [latest, setLatest] = useState<{ title: string; type: string; embedUrl?: string } | null>(null);
+
+  useEffect(() => {
+    fetch("/api/videos")
+      .then(r => r.json())
+      .then((data: { title: string; type: string; embedUrl?: string }[]) => {
+        if (data?.length) setLatest(data[0]);
+      })
+      .catch(() => {});
+  }, []);
+
+  const thumb = latest?.type === "youtube" && latest.embedUrl
+    ? `https://img.youtube.com/vi/${latest.embedUrl.match(/(?:v=|youtu\.be\/)([a-zA-Z0-9_-]{11})/)?.[1] ?? ""}/hqdefault.jpg`
+    : null;
+
+  return (
+    <div
+      onClick={onTap}
+      style={{
+        height: 140, flexShrink: 0, position: "relative",
+        background: "#000", cursor: "pointer", overflow: "hidden",
+        borderBottom: "1px solid rgba(255,255,255,0.06)",
+      }}
+    >
+      {thumb ? (
+        <img src={thumb} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", opacity: 0.7 }} />
+      ) : (
+        <div style={{ width: "100%", height: "100%", background: "linear-gradient(135deg, rgba(239,68,68,0.12) 0%, rgba(0,0,0,0.9) 100%)" }} />
+      )}
+      <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(0,0,0,0.75) 0%, transparent 60%)" }} />
+      {/* Play button */}
+      <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <div style={{ width: 42, height: 42, borderRadius: "50%", background: "rgba(255,255,255,0.1)", border: "1px solid rgba(255,255,255,0.22)", display: "flex", alignItems: "center", justifyContent: "center", backdropFilter: "blur(8px)" }}>
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+            <polygon points="3,2 3,12 12,7" fill="rgba(255,255,255,0.75)" />
+          </svg>
+        </div>
+      </div>
+      {/* Label */}
+      <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, padding: "8px 12px" }}>
+        <p style={{ margin: 0, fontSize: 11, fontWeight: 600, color: "#fff", lineHeight: 1.2 }}>
+          {latest ? latest.title : "atlas reels"}
+        </p>
+        <p style={{ margin: "2px 0 0", fontSize: 9, fontFamily: "monospace", color: "rgba(255,255,255,0.4)", letterSpacing: "0.06em" }}>
+          tap to watch
+        </p>
+      </div>
+      {/* Pill */}
+      <div style={{ position: "absolute", top: 10, right: 10, padding: "3px 8px", borderRadius: 10, background: "rgba(239,68,68,0.75)" }}>
+        <span style={{ fontSize: 8, fontFamily: "monospace", letterSpacing: "0.1em", color: "#fff", textTransform: "uppercase" }}>● reels</span>
+      </div>
+    </div>
+  );
+}
+
 interface Conflict {
   label: string;
   sub: string;
@@ -87,6 +144,7 @@ interface Props {
   onNavigate?: (code: string | null, center: [number, number], zoom: number, feedItem?: FeedItem) => void;
   onHeadlinesToggle?: () => void;
   onSourceClick?: (source: string) => void;
+  onReelsTap?: () => void;
 }
 
 // ─── Sequential load stages ──────────────────────────────────────────────────
@@ -118,7 +176,7 @@ function Reveal({ minStage, stage, children }: { minStage: number; stage: number
   );
 }
 
-export default function AtlasHQ({ onClose, onNavigate, onHeadlinesToggle, onSourceClick }: Props) {
+export default function AtlasHQ({ onClose, onNavigate, onHeadlinesToggle, onSourceClick, onReelsTap }: Props) {
   const [showMore, setShowMore] = useState(false);
   const [showAllDisasters, setShowAllDisasters] = useState(false);
   const [loadStage, setLoadStage] = useState(0);
@@ -150,20 +208,8 @@ export default function AtlasHQ({ onClose, onNavigate, onHeadlinesToggle, onSour
       pointerEvents: "auto",
     }}>
 
-      {/* War photo — pinned at top */}
-      <div style={{ height: 140, flexShrink: 0, position: "relative", background: "#000", cursor: "pointer" }}>
-        <img
-          src="https://upload.wikimedia.org/wikipedia/commons/thumb/a/a0/GazaCity-Drone_airstrike.jpg/640px-GazaCity-Drone_airstrike.jpg"
-          alt="Conflict"
-          style={{ width: "100%", height: "100%", objectFit: "cover", opacity: 0.75 }}
-          onError={e => { (e.currentTarget as HTMLImageElement).style.display = "none"; }}
-        />
-        <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
-          <svg width="44" height="44" viewBox="0 0 44 44" fill="none">
-            <polygon points="17,12 17,32 34,22" fill="none" stroke="rgba(255,255,255,0.32)" strokeWidth="1.4" strokeLinejoin="round" />
-          </svg>
-        </div>
-      </div>
+      {/* Reels preview — tap to open full player */}
+      <ReelsPreview onTap={onReelsTap} />
 
       {/* Scrollable body */}
       <div style={{ flex: 1, overflowY: "auto", overflowX: "hidden" }}>

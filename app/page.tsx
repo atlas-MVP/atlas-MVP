@@ -14,6 +14,7 @@ import SourceInfoPanel from "./components/SourceInfoPanel";
 import AuthorBioPanel from "./components/AuthorBioPanel";
 import SettingsPanel from "./components/SettingsPanel";
 import MapEventPlayer from "./components/MapEventPlayer";
+import ReelsPlayer from "./components/ReelsPlayer";
 import type { MapEvent } from "./lib/mapEvents";
 
 // ATLAS appears instantly; clock fades in shortly after as one unit
@@ -86,6 +87,7 @@ export default function Home() {
   const [activeSource, setActiveSource]       = useState<string | null>(null);
   const [radarAlertText, setRadarAlertText]   = useState<string | null>(null);
   const [activeMapEvent, setActiveMapEvent]   = useState<MapEvent | null>(null);
+  const [showReels, setShowReels]             = useState(false);
   const [historyDate, setHistoryDate]         = useState<string | null>(null);
   const [liveReset, setLiveReset]             = useState(0);
 
@@ -240,8 +242,13 @@ export default function Home() {
         <SettingsPanel onClose={() => setShowSettings(false)} />
       )}
 
+      {/* Reels player — replaces AtlasHQ in the same slot */}
+      {mapReady && !historicalYear && showReels && !selectedCountry && !homeCountry && !feedCountry && (
+        <ReelsPlayer onClose={() => setShowReels(false)} />
+      )}
+
       {/* Radar — only visible when explicitly opened via ATLAS button */}
-      {mapReady && !historicalYear && showRadar && !selectedCountry && !homeCountry && !feedCountry && (
+      {mapReady && !historicalYear && showRadar && !showReels && !selectedCountry && !homeCountry && !feedCountry && (
         <AtlasHQ
           onClose={() => { setShowRadar(false); setShowHeadlines(false); }}
           onNavigate={(code, center, zoom, feedItem) => {
@@ -255,6 +262,7 @@ export default function Home() {
           }}
           onHeadlinesToggle={() => setShowHeadlines(v => !v)}
           onSourceClick={(s) => setActiveSource(s)}
+          onReelsTap={() => setShowReels(true)}
         />
       )}
       {/* Headlines panel — independent of radar, can show alongside country panels */}
@@ -307,6 +315,7 @@ export default function Home() {
               setPreviewYear(null);
               setTimelineOpen(false);
               setHistoryDate(null);
+              setShowReels(false);
               setLiveReset(v => v + 1);
               setShowRadar(true);
               setFlyToPosition({ center: [-98.5, 39.5], zoom: 1.8, key: "atlas-globe-" + Date.now() });
