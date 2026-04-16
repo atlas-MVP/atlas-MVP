@@ -432,7 +432,9 @@ export default function ReelsPlayer({ onClose, initialReelId }: ReelsPlayerProps
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    fetch("/api/videos?scope=reels")
+    // cache: no-store so reloading after an upload always shows the newest
+    // reel at the top (browser-side caching was masking fresh uploads).
+    fetch("/api/videos?scope=reels", { cache: "no-store" })
       .then(r => r.json())
       .then((data: VideoEntry[]) => { setVideos(data); setLoading(false); })
       .catch(() => setLoading(false));

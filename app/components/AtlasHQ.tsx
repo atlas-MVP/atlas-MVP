@@ -16,7 +16,7 @@ function ReelsPreview({ onTap }: { onTap?: () => void }) {
   const videoRef            = useRef<HTMLVideoElement>(null);
 
   useEffect(() => {
-    fetch("/api/videos?scope=reels")
+    fetch("/api/videos?scope=reels", { cache: "no-store" })
       .then(r => r.json())
       .then((data: PreviewReel[]) => {
         if (data?.length) setLatest(data[0]);

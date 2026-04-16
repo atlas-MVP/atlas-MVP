@@ -32,7 +32,11 @@ export async function GET(request: Request): Promise<NextResponse> {
         signedUrl: e.key ? await signedGetUrl(e.key) : undefined,
       }))
     );
-    return NextResponse.json(videos);
+    // Prevent any intermediate caching; the manifest changes with every
+    // upload/delete and stale lists confuse users (newest reel missing).
+    return NextResponse.json(videos, {
+      headers: { "Cache-Control": "no-store, no-cache, must-revalidate, max-age=0" },
+    });
   } catch (err) {
     console.error("[videos]", err);
     return NextResponse.json({ error: (err as Error).message }, { status: 500 });
