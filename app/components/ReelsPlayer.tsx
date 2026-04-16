@@ -35,19 +35,55 @@ function AvatarCircle({ handle }: { handle: string }) {
   );
 }
 
-function ActionBtn({ icon, count, active, color, onClick }: {
-  icon: string; count?: number; active?: boolean; color?: string; onClick?: () => void;
+// Stroke-based SVG glyphs. All drawn on a square 24×24 canvas so the rail
+// lines up no matter which shape is shown. Active state just toggles the
+// stroke opacity — we don't fill, the icons stay line-art.
+const Glyph = {
+  heart: (
+    <path d="M12 20s-6.5-4.2-6.5-9A3.8 3.8 0 0 1 12 8.4 3.8 3.8 0 0 1 18.5 11c0 4.8-6.5 9-6.5 9Z"
+      fill="none" strokeLinejoin="round" strokeLinecap="round" />
+  ),
+  comment: (
+    <path d="M5 6h14v9H9l-4 3.5V6Z"
+      fill="none" strokeLinejoin="round" strokeLinecap="round" />
+  ),
+  share: (
+    <g fill="none" strokeLinejoin="round" strokeLinecap="round">
+      <path d="M4 12 20 5l-4 15-4-6-8-2Z" />
+    </g>
+  ),
+  save: (
+    <path d="M7 4h10v16l-5-3.2L7 20Z"
+      fill="none" strokeLinejoin="round" strokeLinecap="round" />
+  ),
+};
+
+function ActionBtn({ glyph, count, active, onClick }: {
+  glyph: keyof typeof Glyph;
+  count?: number;
+  active?: boolean;
+  onClick?: () => void;
 }) {
+  const stroke = active ? "rgba(255,255,255,0.98)" : "rgba(255,255,255,0.72)";
   return (
     <button onClick={onClick} style={{
-      display: "flex", flexDirection: "column", alignItems: "center", gap: 3,
+      display: "flex", flexDirection: "column", alignItems: "center", gap: 2,
       background: "none", border: "none", cursor: "pointer", padding: 0,
+      width: 32,
     }}>
-      <span style={{ fontSize: 22, color: active ? (color ?? "#ef4444") : "rgba(255,255,255,0.85)", lineHeight: 1, transition: "color 0.2s, transform 0.15s", transform: active ? "scale(1.15)" : "scale(1)" }}>
-        {icon}
+      <span style={{
+        width: 32, height: 32, borderRadius: 8,
+        display: "flex", alignItems: "center", justifyContent: "center",
+        background: "transparent",
+        border: `1px solid ${active ? "rgba(255,255,255,0.32)" : "rgba(255,255,255,0.14)"}`,
+        transition: "border-color 0.2s",
+      }}>
+        <svg width="18" height="18" viewBox="0 0 24 24" stroke={stroke} strokeWidth={1.5}>
+          {Glyph[glyph]}
+        </svg>
       </span>
       {count !== undefined && (
-        <span style={{ fontSize: 9, fontFamily: "monospace", color: "rgba(255,255,255,0.5)", letterSpacing: "0.04em" }}>
+        <span style={{ fontSize: 9, fontFamily: "monospace", color: "rgba(255,255,255,0.42)", letterSpacing: "0.04em" }}>
           {count >= 1000 ? `${(count / 1000).toFixed(1)}k` : count}
         </span>
       )}
@@ -119,6 +155,7 @@ function ReelCard({ entry, isActive }: { entry: VideoEntry; isActive: boolean })
   const [likes,   setLikes]  = useState(() => Math.floor(Math.random() * 2000) + 100);
   const [shares]             = useState(() => Math.floor(Math.random() * 500)  + 20);
   const [comments]           = useState(MOCK_COMMENTS.length);
+  const [saved,   setSaved]  = useState(false);
   const [showComments, setShowComments] = useState(false);
 
   const isVideo   = entry.type === "video";
@@ -170,7 +207,7 @@ function ReelCard({ entry, isActive }: { entry: VideoEntry; isActive: boolean })
         <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", background: "#000" }}>
           <div style={{ width: "100%", aspectRatio: "16 / 9", maxHeight: "100%" }}>
             <iframe
-              src={`https://www.youtube.com/embed/${id}?autoplay=${isActive ? 1 : 0}&mute=0&controls=1&rel=0&modestbranding=1&playsinline=1`}
+              src={`https://www.youtube.com/embed/${id}?autoplay=${isActive ? 1 : 0}&mute=${isActive ? 1 : 0}&controls=1&rel=0&modestbranding=1&playsinline=1`}
               allow="autoplay; fullscreen; encrypted-media; picture-in-picture"
               style={{ width: "100%", height: "100%", border: "none", display: "block" }}
             />
@@ -289,10 +326,10 @@ function ReelCard({ entry, isActive }: { entry: VideoEntry; isActive: boolean })
           backdropFilter: "blur(6px)",
         } : {}),
       }}>
-        <ActionBtn icon={liked ? "♥" : "♡"} count={likes}    active={liked} onClick={handleLike} />
-        <ActionBtn icon="💬"                count={comments}                onClick={() => setShowComments(true)} />
-        <ActionBtn icon="➤"                 count={shares}                  onClick={handleShare} />
-        <ActionBtn icon="🔖" />
+        <ActionBtn glyph="heart"   count={likes}    active={liked} onClick={handleLike} />
+        <ActionBtn glyph="comment" count={comments}                onClick={() => setShowComments(true)} />
+        <ActionBtn glyph="share"   count={shares}                  onClick={handleShare} />
+        <ActionBtn glyph="save"                                    active={saved} onClick={() => setSaved(s => !s)} />
       </div>
 
       {/* Comments overlay */}
@@ -349,9 +386,12 @@ export function ReelsThumbnail({ videos, onOpen }: { videos: VideoEntry[]; onOpe
 // ── Full ReelsPlayer ──────────────────────────────────────────────────────────
 interface ReelsPlayerProps {
   onClose: () => void;
+  /** If set, scroll directly to this reel on mount and start playing. Used
+   *  by the /?reel=<id> deep link from the share action. */
+  initialReelId?: string | null;
 }
 
-export default function ReelsPlayer({ onClose }: ReelsPlayerProps) {
+export default function ReelsPlayer({ onClose, initialReelId }: ReelsPlayerProps) {
   const [videos,      setVideos]      = useState<VideoEntry[]>([]);
   const [loading,     setLoading]     = useState(true);
   const [activeIndex, setActiveIndex] = useState(0);
@@ -363,6 +403,21 @@ export default function ReelsPlayer({ onClose }: ReelsPlayerProps) {
       .then((data: VideoEntry[]) => { setVideos(data); setLoading(false); })
       .catch(() => setLoading(false));
   }, []);
+
+  // Jump to the shared reel once videos are loaded.
+  useEffect(() => {
+    if (!initialReelId || videos.length === 0) return;
+    const idx = videos.findIndex(v => v.id === initialReelId);
+    if (idx < 0) return;
+    const el = scrollRef.current;
+    if (!el) return;
+    // setTimeout 0 so layout settles before scrolling.
+    const t = setTimeout(() => {
+      el.scrollTo({ top: idx * el.clientHeight, behavior: "auto" });
+      setActiveIndex(idx);
+    }, 0);
+    return () => clearTimeout(t);
+  }, [initialReelId, videos]);
 
   const handleScroll = useCallback(() => {
     const el = scrollRef.current;

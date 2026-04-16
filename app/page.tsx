@@ -88,8 +88,21 @@ export default function Home() {
   const [radarAlertText, setRadarAlertText]   = useState<string | null>(null);
   const [activeMapEvent, setActiveMapEvent]   = useState<MapEvent | null>(null);
   const [showReels, setShowReels]             = useState(false);
+  const [initialReelId, setInitialReelId]     = useState<string | null>(null);
   const [historyDate, setHistoryDate]         = useState<string | null>(null);
   const [liveReset, setLiveReset]             = useState(0);
+
+  // Deep link: /?reel=<id> → open the full Atlas You scroll page and jump
+  // directly to that video so shared links land on the video, not the HQ.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    const reelId = params.get("reel");
+    if (reelId) {
+      setInitialReelId(reelId);
+      setShowReels(true);
+    }
+  }, []);
 
   const handleCountryHome = (iso: string) => {
     setHomeCountry(iso);
@@ -244,7 +257,7 @@ export default function Home() {
 
       {/* Reels player — replaces AtlasHQ in the same slot */}
       {mapReady && !historicalYear && showReels && !selectedCountry && !homeCountry && !feedCountry && (
-        <ReelsPlayer onClose={() => setShowReels(false)} />
+        <ReelsPlayer onClose={() => setShowReels(false)} initialReelId={initialReelId} />
       )}
 
       {/* Radar — only visible when explicitly opened via ATLAS button */}
