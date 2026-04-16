@@ -1,38 +1,42 @@
 "use client";
 import { useState, useEffect } from "react";
+import Link from "next/link";
 
-const LINES = [
-  { text: "ATLAS  —  intelligence map", dim: false },
-  { text: "", dim: false },
-  { text: "version  0.1.0", dim: true },
-  { text: "data     Reuters · AP · ACLED · UN OCHA", dim: true },
-  { text: "feed     real-time aggregation", dim: true },
-  { text: "tracked  14 active conflicts", dim: true },
-  { text: "coverage global", dim: true },
-  { text: "", dim: false },
-  { text: "© 2026  Atlas  all rights reserved", dim: true },
+// Menu items surfaced when the user taps the Atlas logo. First item is the
+// primary call-to-action — everything else is a quick link into the app.
+const ITEMS: { text: string; href: string }[] = [
+  { text: "upload videos", href: "/admin/upload" },
 ];
 
-function TypeLine({ text, delay, dim }: { text: string; delay: number; dim: boolean }) {
+function TypeLine({ text, delay, href, onNavigate }: {
+  text: string; delay: number; href: string; onNavigate: () => void;
+}) {
   const [lit, setLit] = useState(false);
   useEffect(() => {
     const t = setTimeout(() => setLit(true), delay);
     return () => clearTimeout(t);
   }, [delay]);
 
-  if (!text) return <div style={{ height: 10 }} />;
-  const baseColor = dim ? "rgba(255,255,255,0.28)" : "rgba(255,255,255,0.72)";
   return (
-    <div style={{
-      fontSize: 10, fontFamily: "monospace", letterSpacing: "0.12em",
-      color: lit ? baseColor : "rgba(255,255,255,0)",
-      filter: lit ? "blur(0)" : "blur(4px)",
-      transform: lit ? "translateY(0)" : "translateY(3px)",
-      transition: "color 0.7s cubic-bezier(0.22,1,0.36,1), filter 0.7s cubic-bezier(0.22,1,0.36,1), transform 0.7s cubic-bezier(0.22,1,0.36,1)",
-      lineHeight: 2, whiteSpace: "pre",
-    }}>
-      {text}
-    </div>
+    <Link
+      href={href}
+      onClick={onNavigate}
+      style={{
+        display: "block",
+        fontSize: 14, fontFamily: "monospace", letterSpacing: "0.08em",
+        color: lit ? "rgba(255,255,255,0.82)" : "rgba(255,255,255,0)",
+        filter: lit ? "blur(0)" : "blur(4px)",
+        transform: lit ? "translateY(0)" : "translateY(3px)",
+        transition: "color 0.5s cubic-bezier(0.22,1,0.36,1), filter 0.7s cubic-bezier(0.22,1,0.36,1), transform 0.7s cubic-bezier(0.22,1,0.36,1)",
+        lineHeight: 2, whiteSpace: "pre",
+        textDecoration: "none", cursor: "pointer",
+        padding: "4px 0",
+      }}
+      onMouseEnter={e => (e.currentTarget.style.color = "rgba(255,255,255,1)")}
+      onMouseLeave={e => (e.currentTarget.style.color = "rgba(255,255,255,0.82)")}
+    >
+      {text} →
+    </Link>
   );
 }
 
@@ -42,23 +46,23 @@ export default function SettingsPanel({ onClose }: { onClose: () => void }) {
       position: "absolute",
       top: 72, left: 20,
       zIndex: 20,
-      width: 340,
+      width: 300,
       background: "rgba(4,6,18,0.62)",
       border: "1px solid rgba(255,255,255,0.06)",
       borderRadius: 16,
       backdropFilter: "blur(40px)",
       WebkitBackdropFilter: "blur(40px)",
       boxShadow: "0 24px 80px rgba(0,0,0,0.38), 0 1px 3px rgba(0,0,0,0.18)",
-      padding: "22px 24px 20px",
+      padding: "18px 22px 16px",
       pointerEvents: "auto",
     }}>
-      {LINES.map((line, i) => (
-        <TypeLine key={i} text={line.text} delay={i * 90} dim={line.dim} />
+      {ITEMS.map((item, i) => (
+        <TypeLine key={i} text={item.text} delay={i * 90} href={item.href} onNavigate={onClose} />
       ))}
       <button
         onClick={onClose}
         style={{
-          marginTop: 18,
+          marginTop: 14,
           fontSize: 9, fontFamily: "monospace", letterSpacing: "0.2em",
           textTransform: "uppercase",
           color: "rgba(255,255,255,0.28)",
@@ -66,7 +70,7 @@ export default function SettingsPanel({ onClose }: { onClose: () => void }) {
         }}
         onMouseEnter={e => (e.currentTarget.style.color = "rgba(255,255,255,0.7)")}
         onMouseLeave={e => (e.currentTarget.style.color = "rgba(255,255,255,0.28)")}
-      >ok</button>
+      >close</button>
     </div>
   );
 }

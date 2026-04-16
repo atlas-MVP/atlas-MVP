@@ -24,13 +24,10 @@ type Destination =
   | { scope: "reels"; label: string }
   | { scope: "event"; eventId: string; label: string };
 
+// Master feed only — event uploads happen in-context from the timeline
+// tiles on atlas.boston (see EventUploadButton).
 const DESTINATIONS: Destination[] = [
-  { scope: "reels",                             label: "Atlas You (master feed)" },
-  { scope: "event", eventId: "october-7",       label: "Event · October 7" },
-  { scope: "event", eventId: "israel-iran-war", label: "Event · Israel–Iran War" },
-  { scope: "event", eventId: "gaza-genocide",   label: "Event · Gaza" },
-  { scope: "event", eventId: "ukraine-war",     label: "Event · Ukraine" },
-  { scope: "event", eventId: "sudan-war",       label: "Event · Sudan" },
+  { scope: "reels", label: "Atlas You (master feed)" },
 ];
 
 function destKey(d: Destination): string {
