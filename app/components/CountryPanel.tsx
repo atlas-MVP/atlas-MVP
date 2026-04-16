@@ -1030,14 +1030,23 @@ export default function CountryPanel({ countryCode, onClose, onViewFeed, onConfl
   };
 
   // ── Enter history mode — zoom out to wide conflict view ────────────────────
+  // Tapping "read full story" should drop the user onto the first tile already
+  // highlighted, rather than a bare list with nothing selected.
   const enterHistory = () => {
     setTimelineExpanded(true);
-    setActiveTile(-1);
-    activeTileRef.current = -1;
+    setActiveTile(0);
+    activeTileRef.current = 0;
+    const first = chronological[0];
+    onTimelineStrike?.(first?.strikeEvent ?? null);
+    onHistoryDate?.(first?.date ?? null);
     // Zoom out to show all involved countries (wide Middle East + Iran)
     onFocusPosition?.([47, 30], 2.8);
-    // Scroll container to top
-    setTimeout(() => scrollRef.current?.scrollTo({ top: 0 }), 50);
+    // After render, snap the first tile to the top of the history scroller.
+    setTimeout(() => {
+      const el = scrollRef.current?.querySelector<HTMLElement>("[data-tile='0']");
+      if (el) el.scrollIntoView({ block: "start", behavior: "smooth" });
+      else scrollRef.current?.scrollTo({ top: 0 });
+    }, 60);
   };
 
   const exitHistory = () => {
@@ -1101,10 +1110,15 @@ export default function CountryPanel({ countryCode, onClose, onViewFeed, onConfl
     const next = !autoPlaying;
     setAutoPlaying(next);
     autoPlayRef.current = next;
-    if (next && activeTileRef.current < 0) {
-      // Start from first tile
-      const first = scrollRef.current?.querySelector<HTMLElement>("[data-tile='0']");
-      first?.scrollIntoView({ behavior: "smooth" });
+    if (next) {
+      if (activeTileRef.current < 0) {
+        const first = scrollRef.current?.querySelector<HTMLElement>("[data-tile='0']");
+        first?.scrollIntoView({ block: "start", behavior: "smooth" });
+      }
+      // Play kicks off the AI narration as well as the auto-advance.
+      startTts();
+    } else {
+      stopTts();
     }
   };
 
@@ -1276,35 +1290,30 @@ export default function CountryPanel({ countryCode, onClose, onViewFeed, onConfl
               </p>
             </div>
             <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
-              <button
-                onClick={(e) => { e.stopPropagation(); toggleTts(); }}
-                title={ttsPlaying ? "Stop narration" : "Listen"}
-                style={{
-                  fontSize: 13, background: ttsPlaying ? "rgba(255,255,255,0.08)" : "none",
-                  border: "none", cursor: "pointer", padding: "2px 4px", borderRadius: 4,
-                  color: ttsPlaying ? "rgba(255,255,255,0.7)" : "rgba(255,255,255,0.2)",
-                  transition: "color 0.2s, background 0.2s",
-                }}
-                onMouseEnter={e => (e.currentTarget.style.color = "rgba(255,255,255,0.6)")}
-                onMouseLeave={e => (e.currentTarget.style.color = ttsPlaying ? "rgba(255,255,255,0.7)" : "rgba(255,255,255,0.2)")}
-              >{ttsPlaying ? "◼" : "🔊"}</button>
+              {/* audio button removed from here — it now lives next to the
+                  "play" button inside the history header and only appears
+                  once play is active. */}
               <span style={{ fontSize: 9, fontFamily: "monospace", letterSpacing: "0.18em", color: "rgba(255,255,255,0.22)", textTransform: "uppercase" }}>
                 active conflict
               </span>
-              {/* × closes the panel, ← returns to the original conflict the user first tapped.
-                  A non-null selectedConflictId means they navigated via a linked-conflict pill. */}
-              {selectedConflictId && selectedConflictId !== conflictIds[0] ? (
-                <button onClick={() => { setSelectedConflictId(null); stopTts(); }}
-                  title="back to original conflict"
-                  style={{ color: "rgba(255,255,255,0.35)", fontSize: 11, fontFamily: "monospace", letterSpacing: "0.08em", textTransform: "uppercase", background: "none", border: "none", cursor: "pointer", lineHeight: 1, padding: "2px 4px" }}
-                  onMouseEnter={e => (e.currentTarget.style.color = "rgba(255,255,255,0.85)")}
-                  onMouseLeave={e => (e.currentTarget.style.color = "rgba(255,255,255,0.35)")}>← back</button>
-              ) : (
-                <button onClick={() => { onClose(); setSelectedConflictId(null); stopTts(); }}
-                  style={{ color: "rgba(255,255,255,0.12)", fontSize: 18, background: "none", border: "none", cursor: "pointer", lineHeight: 1, padding: 0 }}
-                  onMouseEnter={e => (e.currentTarget.style.color = "rgba(255,255,255,0.7)")}
-                  onMouseLeave={e => (e.currentTarget.style.color = "rgba(255,255,255,0.12)")}>×</button>
-              )}
+              {/* Always a "← back" button. Previously showed × when on the
+                  original conflict; the user wants no × anywhere in the app. */}
+              <button
+                onClick={() => {
+                  if (selectedConflictId && selectedConflictId !== conflictIds[0]) {
+                    setSelectedConflictId(null);
+                    stopTts();
+                  } else {
+                    onClose();
+                    setSelectedConflictId(null);
+                    stopTts();
+                  }
+                }}
+                title="back"
+                style={{ color: "rgba(255,255,255,0.35)", fontSize: 11, fontFamily: "monospace", letterSpacing: "0.08em", textTransform: "uppercase", background: "none", border: "none", cursor: "pointer", lineHeight: 1, padding: "2px 4px" }}
+                onMouseEnter={e => (e.currentTarget.style.color = "rgba(255,255,255,0.85)")}
+                onMouseLeave={e => (e.currentTarget.style.color = "rgba(255,255,255,0.35)")}
+              >← back</button>
             </div>
           </div>
 
@@ -1517,7 +1526,8 @@ export default function CountryPanel({ countryCode, onClose, onViewFeed, onConfl
                 <div style={{ padding: "10px 16px", borderBottom: "1px solid rgba(255,255,255,0.06)", display: "flex", alignItems: "center", justifyContent: "space-between", flexShrink: 0 }}>
                   <p style={{ fontSize: 11, fontFamily: "monospace", letterSpacing: "0.18em", color: "rgba(255,255,255,0.28)", textTransform: "uppercase", margin: 0, fontWeight: 500 }}>history</p>
                   <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-                    {/* Auto-play toggle */}
+                    {/* Play (was "auto") — kicks off both the narration AND
+                        the tile auto-advance at reading pace. */}
                     <button
                       onClick={(e) => { e.stopPropagation(); toggleAutoPlay(); }}
                       style={{
@@ -1527,11 +1537,21 @@ export default function CountryPanel({ countryCode, onClose, onViewFeed, onConfl
                         border: `1px solid ${autoPlaying ? "rgba(239,68,68,0.2)" : "rgba(255,255,255,0.08)"}`,
                         borderRadius: 4, cursor: "pointer", padding: "3px 8px", textTransform: "uppercase",
                       }}
-                    >{autoPlaying ? "⏸ pause" : "▶ auto"}</button>
-                    {/* Progress */}
-                    <span style={{ fontSize: 9, fontFamily: "monospace", color: "rgba(255,255,255,0.18)" }}>
-                      {activeTile >= 0 ? `${activeTile + 1}/${chronological.length}` : ""}
-                    </span>
+                    >{autoPlaying ? "⏸ pause" : "▶ play"}</button>
+                    {/* Audio toggle — only visible while play is active, so
+                        the rail stays clean until the user opts into narration. */}
+                    {autoPlaying && (
+                      <button
+                        onClick={(e) => { e.stopPropagation(); toggleTts(); }}
+                        title={ttsPlaying ? "mute narration" : "unmute narration"}
+                        style={{
+                          fontSize: 12, background: ttsPlaying ? "rgba(255,255,255,0.08)" : "none",
+                          border: "none", cursor: "pointer", padding: "2px 4px", borderRadius: 4,
+                          color: ttsPlaying ? "rgba(255,255,255,0.75)" : "rgba(255,255,255,0.35)",
+                          lineHeight: 1,
+                        }}
+                      >{ttsPlaying ? "🔊" : "🔇"}</button>
+                    )}
                     {/* Back → leaves history mode, returns to active-conflict view */}
                     <button
                       onClick={(e) => { e.stopPropagation(); exitHistory(); }}
@@ -1543,12 +1563,15 @@ export default function CountryPanel({ countryCode, onClose, onViewFeed, onConfl
                   </div>
                 </div>
 
-                {/* Snap-scroll tile container */}
+                {/* Snap-scroll tile container. Extra bottom padding lets the
+                    last tile scroll up until it sits at the top of the viewport
+                    (instead of bumping against the end of the list). */}
                 <div
                   onScroll={handleHistoryScroll}
                   style={{
                     flex: 1, overflowY: "auto", minHeight: 0,
                     scrollSnapType: "y mandatory",
+                    paddingBottom: "calc(100vh - 260px)",
                   }}
                 >
                   {chronological.map((event, i) => {
@@ -1564,10 +1587,15 @@ export default function CountryPanel({ countryCode, onClose, onViewFeed, onConfl
                         key={i}
                         data-tile={i}
                         {...(event.strikeEvent ? { "data-strike": JSON.stringify(event.strikeEvent) } : {})}
-                        onClick={() => {
+                        onClick={(e) => {
                           activeTileRef.current = i;
                           setActiveTile(i);
                           navigateToTile(i);
+                          // Pin the clicked tile to the top of the history
+                          // scroller so the selected event is always the first
+                          // thing the user sees (map + bubble line up with it).
+                          const tile = e.currentTarget as HTMLElement;
+                          tile.scrollIntoView({ block: "start", behavior: "smooth" });
                         }}
                         style={{
                           scrollSnapAlign: "start",
