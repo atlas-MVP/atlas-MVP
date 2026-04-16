@@ -460,8 +460,6 @@ const CONFLICTS: Record<string, Conflict> = {
         ],
         linkedConflicts: [
           { id: "israel-gaza", label: "occupation", type: "conflict" },
-          { id: "israel-gaza", label: "Gaza genocide", type: "conflict" },
-          { id: "israel-gaza", label: "attacks", type: "attack" },
         ],
       },
       {
@@ -584,8 +582,6 @@ const CONFLICTS: Record<string, Conflict> = {
         },
         linkedConflicts: [
           { id: "israel-iran", label: "Israel–Iran conflict", type: "conflict" },
-          { id: "israel-gaza", label: "Gaza genocide", type: "conflict" },
-          { id: "israel-gaza", label: "attacks", type: "attack" },
         ],
       },
       // ── Terrorist attacks (pre-Oct 7) ──
@@ -1565,27 +1561,6 @@ export default function CountryPanel({ countryCode, onClose, onViewFeed, onConfl
                                 })}
                               </div>
                             )}
-                            {/* Watch event button */}
-                            {(() => {
-                              const events = getEventsForTimeline(conflict.id, event.date);
-                              if (events.length === 0 || !onPlayEvent) return null;
-                              return (
-                                <button
-                                  onClick={(e) => { e.stopPropagation(); onPlayEvent(events[0]); }}
-                                  style={{
-                                    marginTop: 8, fontSize: 10, fontFamily: "monospace", letterSpacing: "0.1em",
-                                    color: "rgba(239,68,68,0.5)", background: "rgba(239,68,68,0.06)",
-                                    border: "1px solid rgba(239,68,68,0.15)", borderRadius: 6,
-                                    cursor: "pointer", padding: "5px 12px", display: "inline-flex", alignItems: "center", gap: 6,
-                                    textTransform: "uppercase",
-                                  }}
-                                  onMouseEnter={e => { e.currentTarget.style.background = "rgba(239,68,68,0.12)"; e.currentTarget.style.color = "rgba(239,68,68,0.8)"; }}
-                                  onMouseLeave={e => { e.currentTarget.style.background = "rgba(239,68,68,0.06)"; e.currentTarget.style.color = "rgba(239,68,68,0.5)"; }}
-                                >
-                                  <span style={{ fontSize: 8 }}>▶</span> watch event
-                                </button>
-                              );
-                            })()}
                           </div>
                         </div>
                       </div>
