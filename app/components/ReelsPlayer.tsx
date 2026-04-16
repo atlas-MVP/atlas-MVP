@@ -64,26 +64,25 @@ function ActionBtn({ glyph, count, active, onClick }: {
   active?: boolean;
   onClick?: () => void;
 }) {
-  const stroke = active ? "rgba(255,255,255,0.98)" : "rgba(255,255,255,0.72)";
+  const stroke = active ? "rgba(255,255,255,0.98)" : "rgba(255,255,255,0.82)";
   return (
     <button onClick={onClick} style={{
-      display: "flex", flexDirection: "column", alignItems: "center", gap: 2,
+      display: "flex", flexDirection: "column", alignItems: "center", gap: 3,
       background: "none", border: "none", cursor: "pointer", padding: 0,
-      width: 32,
+      width: 44,
     }}>
       <span style={{
-        width: 32, height: 32, borderRadius: 8,
+        width: 44, height: 44,
         display: "flex", alignItems: "center", justifyContent: "center",
-        background: "transparent",
-        border: `1px solid ${active ? "rgba(255,255,255,0.32)" : "rgba(255,255,255,0.14)"}`,
-        transition: "border-color 0.2s",
+        background: "transparent", border: "none",
+        filter: "drop-shadow(0 1px 2px rgba(0,0,0,0.6))",
       }}>
-        <svg width="18" height="18" viewBox="0 0 24 24" stroke={stroke} strokeWidth={1.5}>
+        <svg width="28" height="28" viewBox="0 0 24 24" stroke={stroke} strokeWidth={1.6}>
           {Glyph[glyph]}
         </svg>
       </span>
       {count !== undefined && (
-        <span style={{ fontSize: 9, fontFamily: "monospace", color: "rgba(255,255,255,0.42)", letterSpacing: "0.04em" }}>
+        <span style={{ fontSize: 10, fontFamily: "monospace", color: "rgba(255,255,255,0.62)", letterSpacing: "0.04em", textShadow: "0 1px 2px rgba(0,0,0,0.6)" }}>
           {count >= 1000 ? `${(count / 1000).toFixed(1)}k` : count}
         </span>
       )}

@@ -6,6 +6,7 @@ import { SIDE_COLORS, getCountrySide } from "../lib/sides";
 import { getEventsForTimeline, type MapEvent } from "../lib/mapEvents";
 import VideoPlayer from "./VideoPlayer";
 import EventUploadButton from "./EventUploadButton";
+import EventVideoBubble from "./EventVideoBubble";
 
 // Stable per-event R2 folder id: "<conflictId>-<slug-of-date>"
 // e.g. ("israel-gaza", "October 7, 2023") → "israel-gaza-october-7-2023"
@@ -1672,24 +1673,16 @@ export default function CountryPanel({ countryCode, onClose, onViewFeed, onConfl
       </div>
     </div>
 
-    {/* Focused event → a compact video bubble centered over the map in the
-        space between the CountryPanel (right edge ≈ 484px) and the viewport
-        edge. Minimal chrome: just a thin transparent border. Video is
-        press-to-play (no autoplay). Title + bullets sit right below it. */}
+    {/* Focused event → compact video bubble over the map. Scroll-snap
+        container merges the hardcoded slide video with any user-uploaded
+        clips for this specific event, so recently-added uploads appear
+        just below the default video. */}
     {timelineExpanded && activeTile >= 0 && (() => {
       const ev = chronological[activeTile];
-      const slide = ev?.slides?.[0];
-      if (!slide) return null;
+      if (!ev) return null;
+      const slide = ev.slides?.[0] ?? null;
 
-      // Strip autoplay params from YouTube embed URLs so the native play
-      // button shows — user asked for "played with a push".
-      const videoSrc = isYouTube(slide.videoUrl)
-        ? slide.videoUrl.replace(/[?&](autoplay|mute)=\d/g, "").replace(/\?&/, "?").replace(/[?&]$/, "")
-        : slide.videoUrl;
-
-      // Flatten + truncate info to a short blurb (~350 chars). Drop the
-      // @blue/@red signatory lists entirely — they bloat the bubble.
-      const rawInfo = (slide.info ?? "")
+      const rawInfo = (slide?.info ?? "")
         .split("\n")
         .filter(l => !l.startsWith("@blue ") && !l.startsWith("@red "))
         .join("\n")
@@ -1700,73 +1693,12 @@ export default function CountryPanel({ countryCode, onClose, onViewFeed, onConfl
         : rawInfo;
 
       return (
-        <div
-          className="absolute z-20"
-          style={{
-            left: 504, right: 24, top: 0, bottom: 0,
-            display: "flex", alignItems: "center", justifyContent: "center",
-            pointerEvents: "none",
-          }}
-        >
-          <div style={{
-            width: "min(860px, 100%)",
-            display: "flex", flexDirection: "column",
-            gap: 10,
-            pointerEvents: "auto",
-          }}>
-          <div style={{
-            display: "flex", flexDirection: "column",
-            border: "1px solid rgba(255,255,255,0.10)",
-            borderRadius: 14,
-            background: "rgba(4,6,18,0.32)",
-            backdropFilter: "blur(6px)",
-            WebkitBackdropFilter: "blur(6px)",
-            overflow: "hidden",
-          }}>
-            {/* Video — press-to-play, fills the entire bubble width */}
-            <div style={{ width: "100%", aspectRatio: "16/9", background: "#000", flexShrink: 0 }}>
-              {isYouTube(slide.videoUrl) ? (
-                <iframe
-                  src={videoSrc}
-                  style={{ width: "100%", height: "100%", border: "none" }}
-                  allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                  allowFullScreen
-                />
-              ) : (
-                <VideoPlayer src={slide.videoUrl} isActive={false} />
-              )}
-            </div>
-
-            {/* Caption strip — ~1/4 of video height, fixed short blurb */}
-            <div style={{
-              padding: "10px 16px 12px",
-              height: "calc((min(860px, 100%) * 9 / 16) / 4)",
-              minHeight: 96, maxHeight: 140,
-              overflow: "hidden",
-              display: "flex", flexDirection: "column", gap: 4,
-            }}>
-              <div style={{ display: "flex", alignItems: "baseline", gap: 10, flexShrink: 0 }}>
-                <p style={{ margin: 0, fontSize: 14, fontWeight: 600, color: "rgba(255,255,255,0.92)", lineHeight: 1.3, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", flex: 1, minWidth: 0 }}>
-                  {slide.title}
-                </p>
-                <span style={{ fontSize: 9, fontFamily: "monospace", letterSpacing: "0.08em", color: "rgba(255,255,255,0.3)", flexShrink: 0 }}>
-                  {ev.date}
-                </span>
-              </div>
-              {infoTrimmed && (
-                <p style={{ margin: 0, fontSize: 11, color: "rgba(255,255,255,0.6)", lineHeight: 1.5, overflow: "hidden" }}>
-                  {infoTrimmed}
-                </p>
-              )}
-            </div>
-          </div>
-
-          {/* Floating upload chip — targets whichever event is currently focused */}
-          <div style={{ display: "flex", justifyContent: "center" }} onClick={(e) => e.stopPropagation()}>
-            <EventUploadButton eventId={eventFolderId(conflict.id, ev.date)} />
-          </div>
-          </div>
-        </div>
+        <EventVideoBubble
+          eventDate={ev.date}
+          eventId={eventFolderId(conflict.id, ev.date)}
+          baseSlide={slide}
+          infoTrimmed={infoTrimmed}
+        />
       );
     })()}
 

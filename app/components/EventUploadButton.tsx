@@ -21,9 +21,11 @@ interface Props {
   eventId: string;
   /** Optional label override (defaults to "+ upload") */
   label?: string;
+  /** Fires after a successful upload so parents can refetch the event's videos. */
+  onUploaded?: () => void;
 }
 
-export default function EventUploadButton({ eventId, label = "+ upload" }: Props) {
+export default function EventUploadButton({ eventId, label = "+ upload", onUploaded }: Props) {
   const [open, setOpen]   = useState(false);
   const popupRef          = useRef<HTMLDivElement>(null);
 
@@ -87,7 +89,7 @@ export default function EventUploadButton({ eventId, label = "+ upload" }: Props
               onMouseEnter={e => (e.currentTarget.style.color = "rgba(255,255,255,0.85)")}
               onMouseLeave={e => (e.currentTarget.style.color = "rgba(255,255,255,0.35)")}
             >×</button>
-            <Popup eventId={eventId} onDone={() => setOpen(false)} />
+            <Popup eventId={eventId} onDone={() => setOpen(false)} onUploaded={onUploaded} />
           </div>
         </div>
       )}
@@ -96,7 +98,7 @@ export default function EventUploadButton({ eventId, label = "+ upload" }: Props
 }
 
 // ── Inner popup UI ───────────────────────────────────────────────────────────
-function Popup({ eventId, onDone }: { eventId: string; onDone: () => void }) {
+function Popup({ eventId, onDone, onUploaded }: { eventId: string; onDone: () => void; onUploaded?: () => void }) {
   const [mode, setMode]         = useState<"file" | "url">("file");
   const [file, setFile]         = useState<File | null>(null);
   const [url, setUrl]           = useState("");
@@ -127,7 +129,7 @@ function Popup({ eventId, onDone }: { eventId: string; onDone: () => void }) {
       xhr.upload.onprogress = e => { if (e.lengthComputable) setPct(Math.round(e.loaded / e.total * 100)); };
       xhr.onload = () => {
         setUp(false);
-        if (xhr.status === 200) { setDone(true); setTimeout(onDone, 1200); }
+        if (xhr.status === 200) { setDone(true); onUploaded?.(); setTimeout(onDone, 1200); }
         else { try { setError(JSON.parse(xhr.responseText).error); } catch { setError("Upload failed"); } }
       };
       xhr.onerror = () => { setUp(false); setError("Network error"); };
@@ -145,7 +147,7 @@ function Popup({ eventId, onDone }: { eventId: string; onDone: () => void }) {
         const data = await r.json();
         setUp(false);
         if (!r.ok) setError(data.error);
-        else { setDone(true); setTimeout(onDone, 1200); }
+        else { setDone(true); onUploaded?.(); setTimeout(onDone, 1200); }
       })
       .catch(e => { setUp(false); setError((e as Error).message); });
   }, [mode, file, url, handle, caption, eventId, onDone]);
