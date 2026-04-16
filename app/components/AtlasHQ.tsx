@@ -1,61 +1,87 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import LiveAlertRow from "./LiveAlertRow";
+import { setReelResume } from "../lib/reelResume";
 
-// ── Reels preview thumbnail ───────────────────────────────────────────────────
+// ── Reels preview ─────────────────────────────────────────────────────────────
+// Autoplays the most recent "Atlas You" reel (muted, since browsers block
+// autoplay with audio). When the user taps the card, we hand the current
+// playback timestamp off to the full-screen player via reelResume, so the
+// video continues from exactly the same frame with sound enabled.
+type PreviewReel = { id: string; title: string; type: string; embedUrl?: string; signedUrl?: string };
+
 function ReelsPreview({ onTap }: { onTap?: () => void }) {
-  const [latest, setLatest] = useState<{ title: string; type: string; embedUrl?: string } | null>(null);
+  const [latest, setLatest] = useState<PreviewReel | null>(null);
+  const videoRef            = useRef<HTMLVideoElement>(null);
 
   useEffect(() => {
-    fetch("/api/videos")
+    fetch("/api/videos?scope=reels")
       .then(r => r.json())
-      .then((data: { title: string; type: string; embedUrl?: string }[]) => {
+      .then((data: PreviewReel[]) => {
         if (data?.length) setLatest(data[0]);
       })
       .catch(() => {});
   }, []);
 
-  const thumb = latest?.type === "youtube" && latest.embedUrl
-    ? `https://img.youtube.com/vi/${latest.embedUrl.match(/(?:v=|youtu\.be\/)([a-zA-Z0-9_-]{11})/)?.[1] ?? ""}/hqdefault.jpg`
-    : null;
+  // Kick autoplay for self-hosted video as soon as it mounts/updates.
+  useEffect(() => {
+    const v = videoRef.current;
+    if (!v || latest?.type !== "video") return;
+    v.play().catch(() => { /* browsers that block even muted autoplay — ignore */ });
+  }, [latest]);
+
+  const handleTap = () => {
+    // Stash current playback time so the full player can resume seamlessly.
+    if (latest && videoRef.current) {
+      setReelResume(latest.id, videoRef.current.currentTime);
+    }
+    onTap?.();
+  };
+
+  // ── Media layer: autoplaying video / muted YouTube iframe / tweet thumb ──
+  const renderMedia = () => {
+    if (!latest) {
+      return <div style={{ width: "100%", height: "100%", background: "linear-gradient(135deg, rgba(239,68,68,0.12) 0%, rgba(0,0,0,0.9) 100%)" }} />;
+    }
+    if (latest.type === "video" && latest.signedUrl) {
+      return (
+        <video
+          ref={videoRef}
+          src={latest.signedUrl}
+          autoPlay muted loop playsInline
+          // `muted` attribute is required for autoplay; the full player unmutes on open.
+          style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
+        />
+      );
+    }
+    if (latest.type === "youtube" && latest.embedUrl) {
+      const id = latest.embedUrl.match(/(?:v=|youtu\.be\/|embed\/)([a-zA-Z0-9_-]{11})/)?.[1] ?? "";
+      // YouTube autoplay requires mute=1; playlist=<id> makes loop work.
+      return (
+        <iframe
+          src={`https://www.youtube.com/embed/${id}?autoplay=1&mute=1&controls=0&rel=0&modestbranding=1&playsinline=1&loop=1&playlist=${id}`}
+          allow="autoplay; encrypted-media; picture-in-picture"
+          style={{ width: "100%", height: "100%", border: "none", display: "block", pointerEvents: "none" }}
+        />
+      );
+    }
+    // Tweet preview — no video, soft gradient backdrop
+    return <div style={{ width: "100%", height: "100%", background: "radial-gradient(ellipse at top, #0e1524 0%, #000 80%)" }} />;
+  };
 
   return (
     <div
-      onClick={onTap}
+      onClick={handleTap}
       style={{
         height: 140, flexShrink: 0, position: "relative",
         background: "#000", cursor: "pointer", overflow: "hidden",
         borderBottom: "1px solid rgba(255,255,255,0.06)",
       }}
     >
-      {thumb ? (
-        <img src={thumb} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", opacity: 0.7 }} />
-      ) : (
-        <div style={{ width: "100%", height: "100%", background: "linear-gradient(135deg, rgba(239,68,68,0.12) 0%, rgba(0,0,0,0.9) 100%)" }} />
-      )}
-      <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(0,0,0,0.75) 0%, transparent 60%)" }} />
-      {/* Play button */}
-      <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
-        <div style={{ width: 42, height: 42, borderRadius: "50%", background: "rgba(255,255,255,0.1)", border: "1px solid rgba(255,255,255,0.22)", display: "flex", alignItems: "center", justifyContent: "center", backdropFilter: "blur(8px)" }}>
-          <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-            <polygon points="3,2 3,12 12,7" fill="rgba(255,255,255,0.75)" />
-          </svg>
-        </div>
-      </div>
-      {/* Label */}
-      <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, padding: "8px 12px" }}>
-        <p style={{ margin: 0, fontSize: 11, fontWeight: 600, color: "#fff", lineHeight: 1.2 }}>
-          {latest ? latest.title : "atlas reels"}
-        </p>
-        <p style={{ margin: "2px 0 0", fontSize: 9, fontFamily: "monospace", color: "rgba(255,255,255,0.4)", letterSpacing: "0.06em" }}>
-          tap to watch
-        </p>
-      </div>
-      {/* Pill */}
-      <div style={{ position: "absolute", top: 10, right: 10, padding: "3px 8px", borderRadius: 10, background: "rgba(239,68,68,0.75)" }}>
-        <span style={{ fontSize: 8, fontFamily: "monospace", letterSpacing: "0.1em", color: "#fff", textTransform: "uppercase" }}>● reels</span>
-      </div>
+      {renderMedia()}
+      {/* Soft bottom fade so any future metadata remains readable; no text shown. */}
+      <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(0,0,0,0.35) 0%, transparent 40%)", pointerEvents: "none" }} />
     </div>
   );
 }

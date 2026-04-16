@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import type { VideoEntry } from "../lib/r2";
+import { readReelResume } from "../lib/reelResume";
 
 // ── Mock comments (replace with Neon later) ───────────────────────────────────
 const MOCK_COMMENTS = [
@@ -105,6 +106,13 @@ function ThoughtsOverlay({ onClose }: { onClose: () => void }) {
 }
 
 // ── Single reel card ──────────────────────────────────────────────────────────
+// Three render modes, all living in the same 428-wide reel container:
+//   • type "video"   → full-bleed video + Atlas chrome (header/handle/caption/actions overlay)
+//   • type "youtube" → YouTube player fitted 16:9 on black, NO Atlas chrome on the media
+//                      (YouTube already shows its own title + channel + date). Action rail only.
+//   • type "tweet"   → Twitter embed centered on dark bg, scrolls internally if tall.
+//                      (Tweet already shows its own handle + avatar + text + date.) Action rail only.
+// The action rail (like/comment/share/save) is Atlas-native so it sits on every reel type.
 function ReelCard({ entry, isActive }: { entry: VideoEntry; isActive: boolean }) {
   const videoRef             = useRef<HTMLVideoElement>(null);
   const [liked,   setLiked]  = useState(false);
@@ -113,54 +121,96 @@ function ReelCard({ entry, isActive }: { entry: VideoEntry; isActive: boolean })
   const [comments]           = useState(MOCK_COMMENTS.length);
   const [showComments, setShowComments] = useState(false);
 
-  // Auto-play/pause based on visibility
+  const isVideo   = entry.type === "video";
+  const isYoutube = entry.type === "youtube" && !!entry.embedUrl;
+  const isTweet   = entry.type === "tweet"   && !!entry.embedUrl;
+
+  // Atlas chrome rules:
+  //   • self-hosted videos always get Atlas chrome (they have no built-in caption/handle)
+  //   • embeds (YouTube / tweet / direct URL) get Atlas chrome ONLY if the admin
+  //     filled in at least one metadata field — otherwise let the embed breathe
+  //     with its own native chrome.
+  const hasAtlasMeta  = !!(entry.title || entry.caption || entry.handle || entry.location || entry.date);
+  const showAtlasChrome = isVideo || hasAtlasMeta;
+
+  // Auto-play/pause the self-hosted video element based on visibility.
+  // On first play, seek to the handoff timestamp from the AtlasHQ preview
+  // (set via setReelResume) so the video continues from the exact same frame.
   useEffect(() => {
     const v = videoRef.current;
     if (!v) return;
-    if (isActive) { v.play().catch(() => {}); }
-    else { v.pause(); }
-  }, [isActive]);
+    if (isActive) {
+      const resumeAt = readReelResume(entry.id);
+      if (resumeAt !== null) {
+        const seek = () => { try { v.currentTime = resumeAt; } catch {} };
+        if (v.readyState >= 1) seek();
+        else v.addEventListener("loadedmetadata", seek, { once: true });
+      }
+      // The preview played muted; tapping is a user gesture so we can now unmute.
+      v.muted = false;
+      v.play().catch(() => {});
+    } else {
+      v.pause();
+    }
+  }, [isActive, entry.id]);
 
-  const handleLike = () => { setLiked(l => !l); setLikes(n => liked ? n - 1 : n + 1); };
-
+  const handleLike  = () => { setLiked(l => !l); setLikes(n => liked ? n - 1 : n + 1); };
   const handleShare = () => {
     const url = `${window.location.origin}/?reel=${entry.id}`;
-    if (navigator.share) {
-      navigator.share({ title: entry.title, text: entry.caption, url }).catch(() => {});
-    } else {
-      navigator.clipboard.writeText(url);
-    }
+    if (navigator.share) navigator.share({ title: entry.title, text: entry.caption, url }).catch(() => {});
+    else navigator.clipboard.writeText(url);
   };
 
-  // Build video/embed src
+  // ── Media: each type fits the container differently, visuals are their own ──
   const renderMedia = () => {
-    if (entry.type === "youtube" && entry.embedUrl) {
-      const id = youtubeId(entry.embedUrl);
+    if (isYoutube) {
+      // 16:9 fitted center, black letterbox. Let YouTube show its native title/channel/controls.
+      const id = youtubeId(entry.embedUrl!);
       return (
-        <iframe
-          src={`https://www.youtube.com/embed/${id}?autoplay=${isActive ? 1 : 0}&mute=0&controls=1&rel=0&modestbranding=1`}
-          allow="autoplay; fullscreen"
-          style={{ width: "100%", height: "100%", border: "none", display: "block" }}
-        />
+        <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", background: "#000" }}>
+          <div style={{ width: "100%", aspectRatio: "16 / 9", maxHeight: "100%" }}>
+            <iframe
+              src={`https://www.youtube.com/embed/${id}?autoplay=${isActive ? 1 : 0}&mute=0&controls=1&rel=0&modestbranding=1&playsinline=1`}
+              allow="autoplay; fullscreen; encrypted-media; picture-in-picture"
+              style={{ width: "100%", height: "100%", border: "none", display: "block" }}
+            />
+          </div>
+        </div>
       );
     }
-    if (entry.type === "tweet" && entry.embedUrl) {
-      const id = tweetId(entry.embedUrl);
+    if (isTweet) {
+      // Twitter's embed carries its own avatar/handle/text/date. We just host it on a dark
+      // backdrop, centered, with internal scroll if the tweet is tall.
+      const id = tweetId(entry.embedUrl!);
       return (
-        <iframe
-          src={`https://platform.twitter.com/embed/Tweet.html?id=${id}&theme=dark&chrome=nofooter`}
-          style={{ width: "100%", height: "100%", border: "none", display: "block" }}
-          scrolling="no"
-        />
+        <div style={{
+          position: "absolute", inset: 0,
+          background: "radial-gradient(ellipse at top, #0e1524 0%, #000 70%)",
+          overflowY: "auto",
+          display: "flex", alignItems: "flex-start", justifyContent: "center",
+          padding: "32px 14px 90px",
+        }}>
+          <iframe
+            src={`https://platform.twitter.com/embed/Tweet.html?id=${id}&theme=dark&dnt=true&hideCard=false&hideThread=true&chrome=nofooter`}
+            style={{
+              width: "100%", maxWidth: 380, minHeight: 560,
+              border: "none", display: "block",
+              background: "transparent",
+              borderRadius: 14,
+            }}
+            scrolling="no"
+            allow="clipboard-write"
+          />
+        </div>
       );
     }
-    // Uploaded video
+    // Self-hosted video
     return (
       <video
         ref={videoRef}
         src={entry.signedUrl}
         loop playsInline muted={false}
-        style={{ width: "100%", height: "100%", objectFit: "contain", display: "block" }}
+        style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "contain", background: "#000", display: "block" }}
       />
     );
   };
@@ -174,57 +224,90 @@ function ReelCard({ entry, isActive }: { entry: VideoEntry; isActive: boolean })
       scrollSnapAlign: "start",
       overflow: "hidden",
     }}>
-      {/* Media */}
-      <div style={{ position: "absolute", inset: 0 }}>
-        {renderMedia()}
-      </div>
+      {/* Media layer */}
+      {renderMedia()}
 
-      {/* Header overlay */}
-      <div style={{
-        position: "absolute", top: 0, left: 0, right: 0,
-        padding: "10px 12px 12px",
-        background: "linear-gradient(to bottom, rgba(0,0,0,0.65) 0%, transparent 100%)",
-        display: "flex", alignItems: "flex-start", justifyContent: "space-between",
-      }}>
-        <div>
-          <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: "#fff", lineHeight: 1.2 }}>{entry.title}</p>
-          <p style={{ margin: "2px 0 0", fontSize: 10, fontFamily: "monospace", color: "rgba(255,255,255,0.65)", letterSpacing: "0.04em" }}>{entry.date}</p>
-        </div>
-        {entry.location && (
-          <div style={{ display: "flex", alignItems: "center", gap: 3 }}>
-            <span style={{ fontSize: 10 }}>📍</span>
-            <span style={{ fontSize: 10, fontFamily: "monospace", color: "rgba(255,255,255,0.65)", letterSpacing: "0.04em" }}>{entry.location}</span>
-          </div>
-        )}
-      </div>
-
-      {/* Bottom overlay */}
-      <div style={{
-        position: "absolute", bottom: 0, left: 0, right: 0,
-        padding: "48px 12px 14px",
-        background: "linear-gradient(to top, rgba(0,0,0,0.75) 0%, transparent 100%)",
-        display: "flex", alignItems: "flex-end", justifyContent: "space-between",
-      }}>
-        {/* Handle + caption */}
-        <div style={{ flex: 1, minWidth: 0, marginRight: 12 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 4 }}>
-            <AvatarCircle handle={entry.handle} />
-            <span style={{ fontSize: 11, fontFamily: "monospace", fontWeight: 600, color: "rgba(255,255,255,0.9)" }}>{entry.handle}</span>
-          </div>
-          {entry.caption && (
-            <p style={{ margin: 0, fontSize: 11, color: "rgba(255,255,255,0.72)", lineHeight: 1.4, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
-              {entry.caption}
-            </p>
+      {/* ── Atlas chrome — self-hosted videos always; embeds only if metadata was supplied ── */}
+      {showAtlasChrome && (
+        <>
+          {/* Header overlay — only renders if title/date/location present */}
+          {(entry.title || entry.date || entry.location) && (
+            <div style={{
+              position: "absolute", top: 0, left: 0, right: 0,
+              padding: "10px 12px 12px",
+              background: "linear-gradient(to bottom, rgba(0,0,0,0.65) 0%, transparent 100%)",
+              display: "flex", alignItems: "flex-start", justifyContent: "space-between",
+              pointerEvents: "none",
+            }}>
+              <div>
+                {entry.title && <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: "#fff", lineHeight: 1.2 }}>{entry.title}</p>}
+                {entry.date  && <p style={{ margin: "2px 0 0", fontSize: 10, fontFamily: "monospace", color: "rgba(255,255,255,0.65)", letterSpacing: "0.04em" }}>{entry.date}</p>}
+              </div>
+              {entry.location && (
+                <div style={{ display: "flex", alignItems: "center", gap: 3 }}>
+                  <span style={{ fontSize: 10 }}>📍</span>
+                  <span style={{ fontSize: 10, fontFamily: "monospace", color: "rgba(255,255,255,0.65)", letterSpacing: "0.04em" }}>{entry.location}</span>
+                </div>
+              )}
+            </div>
           )}
-        </div>
 
-        {/* Action buttons */}
-        <div style={{ display: "flex", flexDirection: "column", gap: 16, alignItems: "center", flexShrink: 0 }}>
-          <ActionBtn icon={liked ? "♥" : "♡"} count={likes}    active={liked}  onClick={handleLike} />
-          <ActionBtn icon="💬"                  count={comments}               onClick={() => setShowComments(true)} />
-          <ActionBtn icon="➤"                  count={shares}                 onClick={handleShare} />
-          <ActionBtn icon="🔖"                                                  />
+          {/* Bottom handle + caption — only renders if handle or caption present */}
+          {(entry.handle || entry.caption) && (
+            <div style={{
+              position: "absolute", bottom: 0, left: 0, right: 0,
+              padding: "48px 72px 14px 12px", // right padding leaves room for the action rail
+              background: "linear-gradient(to top, rgba(0,0,0,0.75) 0%, transparent 100%)",
+              pointerEvents: "none",
+            }}>
+              {entry.handle && (
+                <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 4 }}>
+                  <AvatarCircle handle={entry.handle} />
+                  <span style={{ fontSize: 11, fontFamily: "monospace", fontWeight: 600, color: "rgba(255,255,255,0.9)" }}>{entry.handle}</span>
+                </div>
+              )}
+              {entry.caption && (
+                <p style={{ margin: 0, fontSize: 11, color: "rgba(255,255,255,0.72)", lineHeight: 1.4, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
+                  {entry.caption}
+                </p>
+              )}
+            </div>
+          )}
+        </>
+      )}
+
+      {/* ── Type badge — tiny corner pill on bare embeds only (hidden when Atlas header is present to avoid overlap) ── */}
+      {!isVideo && !(entry.title || entry.date || entry.location) && (
+        <div style={{
+          position: "absolute", top: 10, left: 10,
+          padding: "3px 8px", borderRadius: 10,
+          background: isYoutube ? "rgba(239,68,68,0.85)" : "rgba(29,155,240,0.85)",
+          border: `1px solid ${isYoutube ? "rgba(239,68,68,0.95)" : "rgba(29,155,240,0.95)"}`,
+          zIndex: 4,
+        }}>
+          <span style={{ fontSize: 8, fontFamily: "monospace", letterSpacing: "0.12em", color: "#fff", textTransform: "uppercase", fontWeight: 600 }}>
+            {isYoutube ? "▶ youtube" : "𝕏 post"}
+          </span>
         </div>
+      )}
+
+      {/* ── Action rail — universal, floats over all three reel types ────────── */}
+      <div style={{
+        position: "absolute", right: 10, bottom: 14,
+        display: "flex", flexDirection: "column", gap: 16, alignItems: "center",
+        zIndex: 5,
+        // Subtle scrim behind icons on embed types so they stay readable
+        ...((!isVideo) ? {
+          padding: "10px 6px",
+          borderRadius: 24,
+          background: "rgba(0,0,0,0.28)",
+          backdropFilter: "blur(6px)",
+        } : {}),
+      }}>
+        <ActionBtn icon={liked ? "♥" : "♡"} count={likes}    active={liked} onClick={handleLike} />
+        <ActionBtn icon="💬"                count={comments}                onClick={() => setShowComments(true)} />
+        <ActionBtn icon="➤"                 count={shares}                  onClick={handleShare} />
+        <ActionBtn icon="🔖" />
       </div>
 
       {/* Comments overlay */}
@@ -294,7 +377,7 @@ export default function ReelsPlayer({ onClose }: ReelsPlayerProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    fetch("/api/videos")
+    fetch("/api/videos?scope=reels")
       .then(r => r.json())
       .then((data: VideoEntry[]) => { setVideos(data); setLoading(false); })
       .catch(() => setLoading(false));
@@ -321,27 +404,22 @@ export default function ReelsPlayer({ onClose }: ReelsPlayerProps) {
       border: "1px solid rgba(255,255,255,0.08)",
       boxShadow: "0 8px 40px rgba(0,0,0,0.7)",
     }}>
-      {/* Header bar */}
-      <div style={{
-        display: "flex", alignItems: "center", justifyContent: "space-between",
-        padding: "10px 14px", flexShrink: 0,
-        background: "rgba(4,6,18,0.92)", backdropFilter: "blur(20px)",
-        borderBottom: "1px solid rgba(255,255,255,0.06)",
-        zIndex: 5,
-      }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <span style={{ width: 6, height: 6, borderRadius: "50%", background: "rgba(239,68,68,0.8)", display: "inline-block" }} className="dot-pulse" />
-          <span style={{ fontSize: 10, fontFamily: "monospace", letterSpacing: "0.18em", color: "rgba(255,255,255,0.55)", textTransform: "uppercase" }}>atlas reels</span>
-          {videos.length > 0 && (
-            <span style={{ fontSize: 9, fontFamily: "monospace", color: "rgba(255,255,255,0.22)" }}>
-              {activeIndex + 1} / {videos.length}
-            </span>
-          )}
-        </div>
-        <button onClick={onClose} style={{ background: "none", border: "none", cursor: "pointer", color: "rgba(255,255,255,0.3)", fontSize: 18, padding: 0, lineHeight: 1 }}
-          onMouseEnter={e => (e.currentTarget.style.color = "rgba(255,255,255,0.7)")}
-          onMouseLeave={e => (e.currentTarget.style.color = "rgba(255,255,255,0.3)")}>×</button>
-      </div>
+      {/* Minimal close affordance — no branding text. Sits as a floating
+          button so the reel media can go edge-to-edge behind it. */}
+      <button
+        onClick={onClose}
+        style={{
+          position: "absolute", top: 10, right: 10, zIndex: 12,
+          width: 28, height: 28, borderRadius: "50%",
+          background: "rgba(0,0,0,0.4)", backdropFilter: "blur(8px)",
+          border: "1px solid rgba(255,255,255,0.12)",
+          color: "rgba(255,255,255,0.7)", fontSize: 16, lineHeight: 1,
+          cursor: "pointer", padding: 0,
+          display: "flex", alignItems: "center", justifyContent: "center",
+        }}
+        onMouseEnter={e => { e.currentTarget.style.color = "#fff"; e.currentTarget.style.background = "rgba(0,0,0,0.55)"; }}
+        onMouseLeave={e => { e.currentTarget.style.color = "rgba(255,255,255,0.7)"; e.currentTarget.style.background = "rgba(0,0,0,0.4)"; }}
+      >×</button>
 
       {/* Snap-scroll reel feed */}
       <div

@@ -2,7 +2,7 @@
 // Supports: multipart file upload OR embed URL (YouTube / Twitter / direct)
 
 import { NextResponse } from "next/server";
-import { PutObjectCommand } from "@aws-sdk/client-s3";
+import { PutObjectCommand, DeleteObjectCommand } from "@aws-sdk/client-s3";
 import {
   r2, BUCKET, getManifest, saveManifest, signedGetUrl,
   detectEmbedType, type VideoEntry,
@@ -20,21 +20,33 @@ export async function POST(request: Request): Promise<NextResponse> {
       const body = await request.json() as {
         embedUrl: string; title?: string; date?: string;
         location?: string; handle?: string; caption?: string;
+        scope?: "reels" | "event"; eventId?: string;
       };
       if (!body.embedUrl) return NextResponse.json({ error: "embedUrl required" }, { status: 400 });
 
+      const scope   = body.scope === "event" ? "event" : "reels";
+      const eventId = scope === "event" ? (body.eventId || "") : undefined;
+      if (scope === "event" && !eventId) {
+        return NextResponse.json({ error: "eventId required when scope='event'" }, { status: 400 });
+      }
+
       const type = detectEmbedType(body.embedUrl);
+      // Embed metadata is OPTIONAL — empty strings mean "render the embed bare
+      // with its own native chrome (YouTube title bar, tweet handle, etc.)".
+      // Only if the admin supplies a value do we overlay Atlas chrome on top.
       const entry: VideoEntry = {
         id:         randomUUID(),
         type,
         key:        "",
         embedUrl:   body.embedUrl,
-        title:      body.title    ?? "Untitled",
-        date:       body.date     ?? new Date().toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" }),
-        location:   body.location ?? "",
-        handle:     body.handle   ?? "atlas",
-        caption:    body.caption  ?? "",
+        title:      (body.title    ?? "").trim(),
+        date:       (body.date     ?? "").trim(),
+        location:   (body.location ?? "").trim(),
+        handle:     (body.handle   ?? "").trim(),
+        caption:    (body.caption  ?? "").trim(),
         uploadedAt: new Date().toISOString(),
+        scope,
+        ...(eventId ? { eventId } : {}),
       };
 
       const manifest = await getManifest();
@@ -51,15 +63,26 @@ export async function POST(request: Request): Promise<NextResponse> {
     const location = form.get("location") as string | null;
     const handle   = form.get("handle")   as string | null;
     const caption  = form.get("caption")  as string | null;
+    const rawScope = form.get("scope")    as string | null;
+    const rawEvent = form.get("eventId")  as string | null;
 
     if (!file) return NextResponse.json({ error: "No file provided" }, { status: 400 });
     if (!file.type.startsWith("video/")) {
       return NextResponse.json({ error: "Only video files supported" }, { status: 400 });
     }
 
+    const scope: "reels" | "event" = rawScope === "event" ? "event" : "reels";
+    const eventId = scope === "event" ? (rawEvent || "").trim() : "";
+    if (scope === "event" && !eventId) {
+      return NextResponse.json({ error: "eventId required when scope='event'" }, { status: 400 });
+    }
+
     const id     = randomUUID();
     const ext    = file.name.split(".").pop() ?? "mp4";
-    const key    = `videos/${id}.${ext}`;
+    // Folder layout:  reels/<uuid>.ext  OR  events/<eventId>/<uuid>.ext
+    const key    = scope === "event"
+      ? `events/${eventId}/${id}.${ext}`
+      : `reels/${id}.${ext}`;
     const buffer = Buffer.from(await file.arrayBuffer());
 
     await r2.send(new PutObjectCommand({
@@ -75,6 +98,8 @@ export async function POST(request: Request): Promise<NextResponse> {
       handle:     handle   ?? "atlas",
       caption:    caption  ?? "",
       uploadedAt: new Date().toISOString(),
+      scope,
+      ...(eventId ? { eventId } : {}),
     };
 
     const manifest = await getManifest();
@@ -86,6 +111,40 @@ export async function POST(request: Request): Promise<NextResponse> {
 
   } catch (err) {
     console.error("[upload]", err);
+    return NextResponse.json({ error: (err as Error).message }, { status: 500 });
+  }
+}
+
+// ── Undo / delete an upload ──────────────────────────────────────────────────
+// Called by the admin upload page × button. Removes the entry from manifest
+// and deletes the underlying R2 object if one exists (embeds have key: "").
+export async function DELETE(request: Request): Promise<NextResponse> {
+  try {
+    const { searchParams } = new URL(request.url);
+    const id = searchParams.get("id");
+    if (!id) return NextResponse.json({ error: "id required" }, { status: 400 });
+
+    const manifest = await getManifest();
+    const entry    = manifest.find(e => e.id === id);
+    if (!entry) return NextResponse.json({ error: "not found" }, { status: 404 });
+
+    // Delete the R2 object for self-hosted uploads (embeds have no key)
+    if (entry.key) {
+      try {
+        await r2.send(new DeleteObjectCommand({ Bucket: BUCKET, Key: entry.key }));
+      } catch (err) {
+        // Log but don't fail — still remove from manifest so admin isn't blocked
+        console.error("[upload:delete r2 object]", err);
+      }
+    }
+
+    // Remove from manifest
+    const filtered = manifest.filter(e => e.id !== id);
+    await saveManifest(filtered);
+
+    return NextResponse.json({ ok: true, id });
+  } catch (err) {
+    console.error("[upload:delete]", err);
     return NextResponse.json({ error: (err as Error).message }, { status: 500 });
   }
 }

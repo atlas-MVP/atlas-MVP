@@ -28,6 +28,11 @@ export interface VideoEntry {
   caption:    string;
   uploadedAt: string;
   signedUrl?: string;        // populated at read-time (not stored)
+  // ── Scope routing ────────────────────────────────────────────────────
+  // "reels"  → master Atlas Reels feed (opened via Atlas Radar slot)
+  // "event"  → attached to a specific timeline event; NOT shown in master feed
+  scope?:     "reels" | "event";
+  eventId?:   string;        // e.g. "october-7" — required when scope === "event"
 }
 
 export async function getManifest(): Promise<VideoEntry[]> {

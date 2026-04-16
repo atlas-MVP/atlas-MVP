@@ -1,17 +1,35 @@
-// Returns the video manifest with fresh presigned GET URLs
+// Returns the video manifest with fresh presigned GET URLs.
+//
+// Query params:
+//   ?scope=reels               → only master-feed reels (DEFAULT)
+//   ?scope=event&eventId=<id>  → only uploads tied to a specific timeline event
+//   ?scope=all                 → every entry (admin only)
+//
+// Legacy entries without a scope are treated as "reels" so existing uploads stay visible.
 import { NextResponse } from "next/server";
-import { getManifest, signedGetUrl } from "../../lib/r2";
+import { getManifest, signedGetUrl, type VideoEntry } from "../../lib/r2";
 
 export const revalidate = 0; // always fresh
 
-export async function GET(): Promise<NextResponse> {
+export async function GET(request: Request): Promise<NextResponse> {
   try {
-    const entries = await getManifest();
-    // Generate presigned URLs in parallel
+    const { searchParams } = new URL(request.url);
+    const scope   = (searchParams.get("scope") ?? "reels").toLowerCase();
+    const eventId = searchParams.get("eventId") ?? "";
+
+    const all = await getManifest();
+
+    const filtered: VideoEntry[] =
+      scope === "all"   ? all
+      : scope === "event"
+        ? all.filter(e => e.scope === "event" && e.eventId === eventId)
+        : all.filter(e => !e.scope || e.scope === "reels");
+
+    // Generate presigned URLs in parallel (only for entries with an R2 key)
     const videos = await Promise.all(
-      entries.map(async (e) => ({
+      filtered.map(async (e) => ({
         ...e,
-        signedUrl: await signedGetUrl(e.key),
+        signedUrl: e.key ? await signedGetUrl(e.key) : undefined,
       }))
     );
     return NextResponse.json(videos);
