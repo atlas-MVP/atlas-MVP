@@ -509,13 +509,13 @@ export default function Map({ onCountryClick, flyToCode, flyToPosition, selected
         id: "events-halo",
         type: "circle",
         source: "events",
-        paint: { "circle-radius": 10, "circle-color": ["get", "color"], "circle-opacity": 0.07, "circle-blur": 1, "circle-stroke-width": 0 },
+        paint: { "circle-radius": 10, "circle-color": ["get", "color"], "circle-opacity": 0.07, "circle-blur": 0.3, "circle-stroke-width": 0 },
       });
       m.addLayer({
         id: "events-glow",
         type: "circle",
         source: "events",
-        paint: { "circle-radius": 5, "circle-color": ["get", "color"], "circle-opacity": 0.20, "circle-blur": 0.9, "circle-stroke-width": 0 },
+        paint: { "circle-radius": 5, "circle-color": ["get", "color"], "circle-opacity": 0.20, "circle-blur": 0.3, "circle-stroke-width": 0 },
       });
       m.addLayer({
         id: "events-dot",
@@ -548,11 +548,12 @@ export default function Map({ onCountryClick, flyToCode, flyToPosition, selected
         paint: { "circle-radius": 2.8, "circle-color": ["get", "color"], "circle-opacity": 0.90, "circle-blur": 0, "circle-stroke-width": 0 },
       });
 
-      // --- Idle pulse: 10fps, computes zoom factor inline (all other fades use GPU expressions) ---
+      // --- Idle pulse: 5fps, paused during zoom (setPaintProperty competes with tile rendering) ---
+      let isZooming = false;
       let lastPulseTs = 0;
       const animateIdle = (ts: number) => {
         if (!pulseStart.current) pulseStart.current = ts;
-        if (ts - lastPulseTs >= 100) {
+        if (!isZooming && ts - lastPulseTs >= 200) {
           lastPulseTs = ts;
           const t = (ts - pulseStart.current) / 2800;
           const base = 0.06 + 0.12 * Math.abs(Math.sin(t * Math.PI));
@@ -604,9 +605,14 @@ export default function Map({ onCountryClick, flyToCode, flyToPosition, selected
         }
       };
 
+      // Pause JS during zoom — queryRenderedFeatures + setPaintProperty compete with tile rendering
+      m.on("zoomstart", () => { isZooming = true; });
+      m.on("zoomend",   () => { isZooming = false; highlightCenter(); });
+
       // Throttle center highlight — queryRenderedFeatures at 60fps is very expensive
       let lastHighlightTs = 0;
       m.on("move", () => {
+        if (isZooming) return;
         const now = performance.now();
         if (now - lastHighlightTs < 120) return;
         lastHighlightTs = now;
