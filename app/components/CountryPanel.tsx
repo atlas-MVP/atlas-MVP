@@ -109,15 +109,21 @@ export interface StrikeEvent {
   zoom: number;
 }
 
+interface VideoSlide {
+  videoUrl: string;
+  title: string;
+  subtitle?: string;      // e.g. "44th President of the United States"
+  info?: string;           // rich text below the video (same \n/•/@blue format)
+}
+
 interface TimelineEvent {
   date: string;
   text: string;
   highlight?: boolean;
   strikeEvent?: StrikeEvent;
   mapView?: { center: [number, number]; zoom: number };
-  videoUrl?: string;
-  videoTitle?: string;
-  videoInfo?: string; // rich text below the video embed
+  /** Scrollable video slides — each slide is a leader/moment with its own video */
+  slides?: VideoSlide[];
   /** Small pulsing pill linking to another conflict (cross-timeline) */
   linkedConflict?: { id: string; label: string };
   /** Category tag shown above text — e.g. "terrorist attack", "genocide" */
@@ -431,16 +437,33 @@ const CONFLICTS: Record<string, Conflict> = {
         date: "May 2018",
         text: "Trump unilaterally withdraws the US from the JCPOA and reinstates maximum pressure sanctions. Iran begins stockpiling enriched uranium and restricting IAEA monitoring.",
         mapView: { center: [-77.04, 38.90], zoom: 10 },
-        videoUrl: "https://www.youtube.com/embed/05ZwuFZJEOo?start=229",
-        videoTitle: "Trump announces withdrawal from Iran Nuclear Deal",
+        slides: [
+          {
+            videoUrl: "https://www.youtube.com/embed/05ZwuFZJEOo?start=229",
+            title: "Trump announces withdrawal from Iran Nuclear Deal",
+            subtitle: "45th President of the United States",
+            info: "Trump calls the JCPOA \"a horrible, one-sided deal that should have never, ever been made.\" He signs a presidential memorandum reinstating all US sanctions on Iran, effectively killing the agreement.",
+          },
+        ],
       },
       {
         date: "2015 — JCPOA",
         text: "Six world powers and Iran reach the JCPOA nuclear deal, limiting Iran's uranium enrichment in exchange for lifting sanctions.",
         mapView: { center: [45, 35], zoom: 3.2 },
-        videoUrl: "https://www.youtube.com/embed/KqCswpINDTA",
-        videoTitle: "Obama announces the Iran Nuclear Deal",
-        videoInfo: "Key requirements of the JCPOA:\n• Iran limited to 3.67% uranium enrichment for 15 years\n• Stockpile capped at 300 kg of low-enriched uranium\n• Two-thirds of centrifuges dismantled (from 19,000 to 6,104)\n• Fordow facility converted to research-only — no enrichment\n• Arak heavy-water reactor redesigned to prevent plutonium production\n• IAEA granted unprecedented 24/7 monitoring and inspection access\n• In exchange: US, EU, and UN sanctions on Iran lifted\n• Arms embargo maintained for 5 years, missile restrictions for 8\n\nSignatories:\n@blue United States\n@blue United Kingdom\n@blue France\n@blue Germany\n@red Russia\n@red China\n@red Iran",
+        slides: [
+          {
+            videoUrl: "https://www.youtube.com/embed/KqCswpINDTA",
+            title: "Obama announces the Iran Nuclear Deal",
+            subtitle: "44th President of the United States",
+            info: "Key requirements of the JCPOA:\n• Iran limited to 3.67% uranium enrichment for 15 years\n• Stockpile capped at 300 kg of low-enriched uranium\n• Two-thirds of centrifuges dismantled (from 19,000 to 6,104)\n• Fordow facility converted to research-only — no enrichment\n• Arak heavy-water reactor redesigned to prevent plutonium production\n• IAEA granted unprecedented 24/7 monitoring and inspection access\n• In exchange: US, EU, and UN sanctions on Iran lifted\n• Arms embargo maintained for 5 years, missile restrictions for 8\n\nSignatories:\n@blue United States\n@blue United Kingdom\n@blue France\n@blue Germany\n@red Russia\n@red China\n@red Iran",
+          },
+          {
+            videoUrl: "https://www.youtube.com/embed/KphsWS_ieBE",
+            title: "Khamenei's response to the JCPOA",
+            subtitle: "Supreme Leader of Iran",
+            info: "• Khamenei publicly endorsed the deal but set conditions limiting its scope\n• Insisted sanctions must be lifted immediately, not gradually\n• Banned IAEA inspections of military sites\n• Continued ballistic missile development — declared non-negotiable\n• Stated the US \"cannot be trusted\" and Iran must remain self-reliant",
+          },
+        ],
       },
     ],
   },
@@ -1430,10 +1453,10 @@ export default function CountryPanel({ countryCode, onClose, onViewFeed, onConfl
       </div>
     </div>
 
-    {/* Floating video panel — appears right of conflict panel when active tile has video */}
+    {/* Floating video panel — snap-scroll slides, one per leader/moment */}
     {timelineExpanded && activeTile >= 0 && (() => {
       const ev = chronological[activeTile];
-      if (!ev?.videoUrl) return null;
+      if (!ev?.slides?.length) return null;
       return (
         <div
           className="absolute z-20"
@@ -1449,68 +1472,91 @@ export default function CountryPanel({ countryCode, onClose, onViewFeed, onConfl
             overflow: "hidden", display: "flex", flexDirection: "column",
             height: "100%",
           }}>
-            {/* Video */}
-            <div style={{ width: "100%", aspectRatio: "16/9", background: "#000", flexShrink: 0 }}>
-              <iframe
-                src={ev.videoUrl}
-                style={{ width: "100%", height: "100%", border: "none" }}
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                allowFullScreen
-              />
-            </div>
-            {/* Title + date */}
-            {ev.videoTitle && (
-              <div style={{ padding: "12px 18px 10px", flexShrink: 0 }}>
-                <p style={{ margin: 0, fontSize: 14, fontWeight: 600, color: "rgba(255,255,255,0.88)", lineHeight: 1.4 }}>
-                  {ev.videoTitle}
-                </p>
-                <p style={{ margin: "6px 0 0", fontSize: 10, fontFamily: "monospace", letterSpacing: "0.08em", color: "rgba(255,255,255,0.25)" }}>
-                  {ev.date}
-                </p>
-              </div>
-            )}
-            {/* Video info — key requirements, context etc. */}
-            {ev.videoInfo && (
-              <div style={{ flex: 1, overflowY: "auto", minHeight: 0, padding: "0 18px 18px", borderTop: "1px solid rgba(255,255,255,0.06)" }}>
-                <div style={{ paddingTop: 14 }}>
-                  {ev.videoInfo.split("\n").map((line, li) => {
-                    // Side-colored country entry — @blue or @red prefix
-                    if (line.startsWith("@blue ") || line.startsWith("@red ")) {
-                      const side = line.startsWith("@blue") ? "blue" : "red";
-                      const name = line.slice(side.length + 2).trim();
-                      return (
-                        <div key={li} style={{ display: "flex", alignItems: "center", gap: 8, padding: "3px 4px" }}>
-                          <span style={{
-                            width: 5, height: 5, borderRadius: "50%", flexShrink: 0,
-                            background: side === "blue" ? SIDE_COLORS.blue.dot : SIDE_COLORS.red.dot,
-                          }} />
-                          <span style={{ fontSize: 12, fontFamily: "monospace", color: "rgba(255,255,255,0.78)", letterSpacing: "0.02em" }}>
-                            {name}
-                          </span>
-                        </div>
-                      );
-                    }
-                    // Bullet point
-                    if (line.startsWith("•")) {
-                      return (
-                        <p key={li} style={{ margin: "0 0 6px", fontSize: 12, color: "rgba(255,255,255,0.6)", lineHeight: 1.6, paddingLeft: 4 }}>
-                          <span style={{ color: "rgba(239,68,68,0.5)", marginRight: 6 }}>•</span>
-                          {line.slice(1).trim()}
-                        </p>
-                      );
-                    }
-                    if (line.trim() === "") return <div key={li} style={{ height: 10 }} />;
-                    // Header or plain text
-                    const isHeader = /^(Key|Signatories)/.test(line);
-                    return (
-                      <p key={li} style={{ margin: "0 0 8px", fontSize: 12, fontWeight: isHeader ? 600 : 400, color: isHeader ? "rgba(255,255,255,0.75)" : "rgba(255,255,255,0.55)", lineHeight: 1.6 }}>
-                        {line}
+            {/* Snap-scroll slide container */}
+            <div style={{
+              flex: 1, overflowY: "auto", minHeight: 0,
+              scrollSnapType: "y mandatory",
+            }}>
+              {ev.slides.map((slide, si) => (
+                <div key={si} style={{
+                  scrollSnapAlign: "start",
+                  minHeight: "100%",
+                  display: "flex", flexDirection: "column",
+                }}>
+                  {/* Video */}
+                  <div style={{ width: "100%", aspectRatio: "16/9", background: "#000", flexShrink: 0 }}>
+                    <iframe
+                      src={slide.videoUrl}
+                      style={{ width: "100%", height: "100%", border: "none" }}
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                      allowFullScreen
+                    />
+                  </div>
+                  {/* Title + subtitle + date */}
+                  <div style={{ padding: "12px 18px 10px", flexShrink: 0 }}>
+                    <p style={{ margin: 0, fontSize: 14, fontWeight: 600, color: "rgba(255,255,255,0.88)", lineHeight: 1.4 }}>
+                      {slide.title}
+                    </p>
+                    {slide.subtitle && (
+                      <p style={{ margin: "4px 0 0", fontSize: 10, fontFamily: "monospace", letterSpacing: "0.08em", color: "rgba(255,255,255,0.35)" }}>
+                        {slide.subtitle}
                       </p>
-                    );
-                  })}
+                    )}
+                    <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 6 }}>
+                      <p style={{ margin: 0, fontSize: 10, fontFamily: "monospace", letterSpacing: "0.08em", color: "rgba(255,255,255,0.2)" }}>
+                        {ev.date}
+                      </p>
+                      {/* Slide indicator dots */}
+                      {ev.slides!.length > 1 && (
+                        <div style={{ display: "flex", gap: 4, marginLeft: "auto" }}>
+                          {ev.slides!.map((_, di) => (
+                            <div key={di} style={{
+                              width: 4, height: 4, borderRadius: "50%",
+                              background: di === si ? "rgba(255,255,255,0.6)" : "rgba(255,255,255,0.12)",
+                              transition: "background 0.3s",
+                            }} />
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  {/* Info — bullet points, country lists, etc. */}
+                  {slide.info && (
+                    <div style={{ flex: 1, overflowY: "auto", minHeight: 0, padding: "0 18px 18px", borderTop: "1px solid rgba(255,255,255,0.06)" }}>
+                      <div style={{ paddingTop: 14 }}>
+                        {slide.info.split("\n").map((line, li) => {
+                          if (line.startsWith("@blue ") || line.startsWith("@red ")) {
+                            const side = line.startsWith("@blue") ? "blue" : "red";
+                            const name = line.slice(side.length + 2).trim();
+                            return (
+                              <div key={li} style={{ display: "flex", alignItems: "center", gap: 8, padding: "3px 4px" }}>
+                                <span style={{ width: 5, height: 5, borderRadius: "50%", flexShrink: 0, background: side === "blue" ? SIDE_COLORS.blue.dot : SIDE_COLORS.red.dot }} />
+                                <span style={{ fontSize: 12, fontFamily: "monospace", color: "rgba(255,255,255,0.78)", letterSpacing: "0.02em" }}>{name}</span>
+                              </div>
+                            );
+                          }
+                          if (line.startsWith("•")) {
+                            return (
+                              <p key={li} style={{ margin: "0 0 6px", fontSize: 12, color: "rgba(255,255,255,0.6)", lineHeight: 1.6, paddingLeft: 4 }}>
+                                <span style={{ color: "rgba(239,68,68,0.5)", marginRight: 6 }}>•</span>
+                                {line.slice(1).trim()}
+                              </p>
+                            );
+                          }
+                          if (line.trim() === "") return <div key={li} style={{ height: 10 }} />;
+                          const isHeader = /^(Key|Signatories)/.test(line);
+                          return (
+                            <p key={li} style={{ margin: "0 0 8px", fontSize: 12, fontWeight: isHeader ? 600 : 400, color: isHeader ? "rgba(255,255,255,0.75)" : "rgba(255,255,255,0.55)", lineHeight: 1.6 }}>
+                              {line}
+                            </p>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
                 </div>
-              </div>
-            )}
+              ))}
+            </div>
           </div>
         </div>
       );
