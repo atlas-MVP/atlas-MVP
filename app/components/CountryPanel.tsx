@@ -114,8 +114,10 @@ interface TimelineEvent {
   text: string;
   highlight?: boolean;
   strikeEvent?: StrikeEvent;
+  mapView?: { center: [number, number]; zoom: number };
   videoUrl?: string;
   videoTitle?: string;
+  videoInfo?: string; // rich text below the video embed
 }
 
 interface Conflict {
@@ -197,6 +199,7 @@ const CONFLICTS: Record<string, Conflict> = {
       {
         date: "March 2026 — Present",
         text: "The war becomes the largest Middle East military engagement since 2003. Iran, now led by Mojtaba Khamenei, continues to resist. Iran establishes a toll system on the Strait of Hormuz — $2–4M per tanker in Chinese yuan or stablecoin. Oil tops $110/barrel. Hezbollah re-enters the conflict. The 82nd Airborne is put on alert. Peace talks underway in Islamabad. No ceasefire reached.",
+        mapView: { center: [47.0, 30.5], zoom: 3.8 },
       },
       {
         date: "February 28, 2026 — Operation Epic Fury",
@@ -314,10 +317,12 @@ const CONFLICTS: Record<string, Conflict> = {
       {
         date: "February 4, 2025",
         text: "Trump signs a presidential memorandum restoring maximum pressure sanctions and directing efforts to drive Iranian oil exports to zero.",
+        mapView: { center: [-77.04, 38.90], zoom: 10 },
       },
       {
         date: "December 2024",
         text: "Syrian President Bashar al-Assad flees the country, collapsing a major pillar of Iran's Axis of Resistance. The IAEA reports Iran has enough highly enriched uranium for an estimated nine nuclear warheads.",
+        mapView: { center: [38.0, 34.8], zoom: 5.5 },
       },
       {
         date: "October 26, 2024 — Operation Days of Repentance",
@@ -373,6 +378,7 @@ const CONFLICTS: Record<string, Conflict> = {
       {
         date: "April 19, 2024",
         text: "Israel retaliates with a targeted strike on an air defense radar facility near Isfahan, near the Natanz nuclear site. The strike is deliberately limited — a signal of capability.",
+        mapView: { center: [51.67, 32.62], zoom: 6.5 },
       },
       {
         date: "April 13, 2024 — Operation True Promise",
@@ -401,6 +407,7 @@ const CONFLICTS: Record<string, Conflict> = {
       {
         date: "February 14, 2024",
         text: "An Israeli sabotage operation causes multiple explosions on an Iranian natural gas pipeline in western Iran.",
+        mapView: { center: [48.5, 33.5], zoom: 5.8 },
       },
       {
         date: "October 7, 2023",
@@ -418,14 +425,17 @@ const CONFLICTS: Record<string, Conflict> = {
       {
         date: "May 2018",
         text: "Trump unilaterally withdraws the US from the JCPOA and reinstates maximum pressure sanctions. Iran begins stockpiling enriched uranium and restricting IAEA monitoring.",
+        mapView: { center: [-77.04, 38.90], zoom: 10 },
         videoUrl: "https://www.youtube.com/embed/05ZwuFZJEOo?start=229",
         videoTitle: "Trump announces withdrawal from Iran Nuclear Deal",
       },
       {
         date: "2015 — JCPOA",
         text: "Six world powers and Iran reach the JCPOA nuclear deal, limiting Iran's uranium enrichment in exchange for lifting sanctions.",
+        mapView: { center: [45, 35], zoom: 3.2 },
         videoUrl: "https://www.youtube.com/embed/KqCswpINDTA",
         videoTitle: "Obama announces the Iran Nuclear Deal",
+        videoInfo: "Key requirements of the JCPOA:\n• Iran limited to 3.67% uranium enrichment for 15 years\n• Stockpile capped at 300 kg of low-enriched uranium\n• Two-thirds of centrifuges dismantled (from 19,000 to 6,104)\n• Fordow facility converted to research-only — no enrichment\n• Arak heavy-water reactor redesigned to prevent plutonium production\n• IAEA granted unprecedented 24/7 monitoring and inspection access\n• In exchange: US, EU, and UN sanctions on Iran lifted\n• Arms embargo maintained for 5 years, missile restrictions for 8\n\nSignatories: United States, United Kingdom, France, Germany, Russia, China, Iran",
       },
     ],
   },
@@ -803,11 +813,19 @@ export default function CountryPanel({ countryCode, onClose, onViewFeed, onConfl
       activeTileRef.current = closest;
       setActiveTile(closest);
       // Fire map camera for this tile
-      const ev = chronological[closest];
-      if (ev?.strikeEvent) {
-        onTimelineStrike?.(ev.strikeEvent);
-      } else {
-        onTimelineStrike?.(null);
+      navigateToTile(closest);
+    }
+  };
+
+  // Shared: navigate map to a given tile index (used by both scroll + tap)
+  const navigateToTile = (idx: number) => {
+    const ev = chronological[idx];
+    if (ev?.strikeEvent) {
+      onTimelineStrike?.(ev.strikeEvent);
+    } else {
+      onTimelineStrike?.(null);
+      if (ev?.mapView) {
+        onFocusPosition?.(ev.mapView.center, ev.mapView.zoom);
       }
     }
   };
@@ -1231,11 +1249,17 @@ export default function CountryPanel({ countryCode, onClose, onViewFeed, onConfl
                         key={i}
                         data-tile={i}
                         {...(event.strikeEvent ? { "data-strike": JSON.stringify(event.strikeEvent) } : {})}
+                        onClick={() => {
+                          activeTileRef.current = i;
+                          setActiveTile(i);
+                          navigateToTile(i);
+                        }}
                         style={{
                           scrollSnapAlign: "start",
                           padding: "16px 16px 20px",
                           borderBottom: "1px solid rgba(255,255,255,0.04)",
                           minHeight: 120,
+                          cursor: "pointer",
                           opacity: isActive || activeTile < 0 ? 1 : 0.35,
                           transition: "opacity 0.4s ease",
                         }}
@@ -1314,13 +1338,14 @@ export default function CountryPanel({ countryCode, onClose, onViewFeed, onConfl
         <div
           className="absolute z-20"
           style={{
-            left: 500, top: 72, width: 400, bottom: 24,
+            right: 24, top: 72, width: 460, bottom: 24,
             display: "flex", flexDirection: "column",
           }}
         >
           <div style={{
-            background: "rgba(4,6,18,0.92)", backdropFilter: "blur(20px)",
-            border: "1px solid rgba(255,255,255,0.06)", borderRadius: 14,
+            background: "rgba(4,6,18,0.62)", backdropFilter: "blur(40px)", WebkitBackdropFilter: "blur(40px)",
+            border: "1px solid rgba(255,255,255,0.06)", borderRadius: 16,
+            boxShadow: "0 24px 80px rgba(0,0,0,0.38), 0 1px 3px rgba(0,0,0,0.18)",
             overflow: "hidden", display: "flex", flexDirection: "column",
             height: "100%",
           }}>
@@ -1333,15 +1358,38 @@ export default function CountryPanel({ countryCode, onClose, onViewFeed, onConfl
                 allowFullScreen
               />
             </div>
-            {/* Title */}
+            {/* Title + date */}
             {ev.videoTitle && (
-              <div style={{ padding: "12px 16px" }}>
-                <p style={{ margin: 0, fontSize: 13, fontWeight: 600, color: "rgba(255,255,255,0.85)", lineHeight: 1.4 }}>
+              <div style={{ padding: "12px 18px 10px", flexShrink: 0 }}>
+                <p style={{ margin: 0, fontSize: 14, fontWeight: 600, color: "rgba(255,255,255,0.88)", lineHeight: 1.4 }}>
                   {ev.videoTitle}
                 </p>
                 <p style={{ margin: "6px 0 0", fontSize: 10, fontFamily: "monospace", letterSpacing: "0.08em", color: "rgba(255,255,255,0.25)" }}>
                   {ev.date}
                 </p>
+              </div>
+            )}
+            {/* Video info — key requirements, context etc. */}
+            {ev.videoInfo && (
+              <div style={{ flex: 1, overflowY: "auto", minHeight: 0, padding: "0 18px 18px", borderTop: "1px solid rgba(255,255,255,0.06)" }}>
+                <div style={{ paddingTop: 14 }}>
+                  {ev.videoInfo.split("\n").map((line, li) => {
+                    if (line.startsWith("•")) {
+                      return (
+                        <p key={li} style={{ margin: "0 0 6px", fontSize: 12, color: "rgba(255,255,255,0.6)", lineHeight: 1.6, paddingLeft: 4 }}>
+                          <span style={{ color: "rgba(239,68,68,0.5)", marginRight: 6 }}>•</span>
+                          {line.slice(1).trim()}
+                        </p>
+                      );
+                    }
+                    if (line.trim() === "") return <div key={li} style={{ height: 10 }} />;
+                    return (
+                      <p key={li} style={{ margin: "0 0 8px", fontSize: 12, fontWeight: line.startsWith("Key") || line.startsWith("Signatories") ? 600 : 400, color: line.startsWith("Key") || line.startsWith("Signatories") ? "rgba(255,255,255,0.75)" : "rgba(255,255,255,0.55)", lineHeight: 1.6 }}>
+                        {line}
+                      </p>
+                    );
+                  })}
+                </div>
               </div>
             )}
           </div>
