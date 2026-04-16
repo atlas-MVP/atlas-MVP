@@ -114,6 +114,8 @@ interface TimelineEvent {
   text: string;
   highlight?: boolean;
   strikeEvent?: StrikeEvent;
+  videoUrl?: string;
+  videoTitle?: string;
 }
 
 interface Conflict {
@@ -420,6 +422,8 @@ const CONFLICTS: Record<string, Conflict> = {
       {
         date: "2015 — JCPOA",
         text: "Six world powers and Iran reach the JCPOA nuclear deal, limiting Iran's uranium enrichment in exchange for lifting sanctions.",
+        videoUrl: "https://www.youtube.com/embed/KqCswpINDTA",
+        videoTitle: "Obama announces the Iran Nuclear Deal",
       },
     ],
   },
@@ -1138,7 +1142,7 @@ export default function CountryPanel({ countryCode, onClose, onViewFeed, onConfl
               return (
                 <div style={{ padding: "0 16px 16px" }}>
                   <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 14, marginBottom: 14 }}>
-                    <p style={{ fontSize: 11, fontFamily: "monospace", letterSpacing: "0.18em", color: "rgba(255,255,255,0.28)", textTransform: "uppercase", margin: 0, fontWeight: 500 }}>history</p>
+                    <p style={{ fontSize: 11, fontFamily: "monospace", letterSpacing: "0.18em", color: "rgba(255,255,255,0.28)", textTransform: "uppercase", margin: 0, fontWeight: 500 }}>timeline</p>
                   </div>
                   <div style={{ position: "relative" }}>
                     <div style={{ position: "absolute", left: 5, top: 6, bottom: 6, width: 1, background: "rgba(255,255,255,0.05)" }} />
@@ -1299,6 +1303,49 @@ export default function CountryPanel({ countryCode, onClose, onViewFeed, onConfl
         </div>
       </div>
     </div>
+
+    {/* Floating video panel — appears right of conflict panel when active tile has video */}
+    {timelineExpanded && activeTile >= 0 && (() => {
+      const ev = chronological[activeTile];
+      if (!ev?.videoUrl) return null;
+      return (
+        <div
+          className="absolute z-20"
+          style={{
+            left: 500, top: 72, width: 400, bottom: 24,
+            display: "flex", flexDirection: "column",
+          }}
+        >
+          <div style={{
+            background: "rgba(4,6,18,0.92)", backdropFilter: "blur(20px)",
+            border: "1px solid rgba(255,255,255,0.06)", borderRadius: 14,
+            overflow: "hidden", display: "flex", flexDirection: "column",
+            height: "100%",
+          }}>
+            {/* Video */}
+            <div style={{ width: "100%", aspectRatio: "16/9", background: "#000", flexShrink: 0 }}>
+              <iframe
+                src={ev.videoUrl}
+                style={{ width: "100%", height: "100%", border: "none" }}
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+              />
+            </div>
+            {/* Title */}
+            {ev.videoTitle && (
+              <div style={{ padding: "12px 16px" }}>
+                <p style={{ margin: 0, fontSize: 13, fontWeight: 600, color: "rgba(255,255,255,0.85)", lineHeight: 1.4 }}>
+                  {ev.videoTitle}
+                </p>
+                <p style={{ margin: "6px 0 0", fontSize: 10, fontFamily: "monospace", letterSpacing: "0.08em", color: "rgba(255,255,255,0.25)" }}>
+                  {ev.date}
+                </p>
+              </div>
+            )}
+          </div>
+        </div>
+      );
+    })()}
 
     {/* Floating confidence + sources — sibling outside backdropFilter stacking context */}
     {activeAlert && (() => {
