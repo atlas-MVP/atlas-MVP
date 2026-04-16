@@ -887,6 +887,8 @@ export default function CountryPanel({ countryCode, onClose, onViewFeed, onConfl
   const [activeTile, setActiveTile]     = useState(-1);
   const [activeSlide, setActiveSlide]   = useState(0);
   const [autoPlaying, setAutoPlaying]   = useState(false);
+  const [ttsPlaying, setTtsPlaying]     = useState(false);
+  const ttsRef = useRef<{ cancel: () => void } | null>(null);
   const slideContainerRef = useRef<HTMLDivElement>(null);
   const [hoveredAlert,  setHoveredAlert]  = useState<number | null>(null);
   const [hoverMidY,     setHoverMidY]     = useState(0);
@@ -1031,6 +1033,51 @@ export default function CountryPanel({ countryCode, onClose, onViewFeed, onConfl
   };
 
   // ── Auto-play: advance tiles at reading pace ──────────────────────────────
+  // ── TTS narration ──
+  const stopTts = () => {
+    if (typeof window !== "undefined" && window.speechSynthesis) {
+      window.speechSynthesis.cancel();
+    }
+    ttsRef.current = null;
+    setTtsPlaying(false);
+  };
+
+  const startTts = () => {
+    if (typeof window === "undefined" || !window.speechSynthesis) return;
+    stopTts();
+
+    // Build full narration: conflict title + each tile's date + text
+    const parts: string[] = [`${conflict.title}.`];
+    const tiles = timelineExpanded ? chronological : [conflict.timeline[0]];
+    for (const ev of tiles) {
+      if (!ev) continue;
+      parts.push(`${ev.date}. ${ev.text}`);
+    }
+    const fullText = parts.join(" ... ");
+
+    const utt = new SpeechSynthesisUtterance(fullText);
+    utt.rate = 0.95;
+    utt.pitch = 0.95;
+    // Prefer a neutral English voice
+    const voices = window.speechSynthesis.getVoices();
+    const preferred = voices.find(v => v.name.includes("Samantha")) ??
+                      voices.find(v => v.lang.startsWith("en") && v.name.includes("Google")) ??
+                      voices.find(v => v.lang.startsWith("en"));
+    if (preferred) utt.voice = preferred;
+
+    utt.onend = () => { setTtsPlaying(false); ttsRef.current = null; };
+    utt.onerror = () => { setTtsPlaying(false); ttsRef.current = null; };
+
+    window.speechSynthesis.speak(utt);
+    setTtsPlaying(true);
+    ttsRef.current = { cancel: () => window.speechSynthesis.cancel() };
+  };
+
+  const toggleTts = () => { ttsPlaying ? stopTts() : startTts(); };
+
+  // Cleanup TTS on unmount
+  useEffect(() => () => { if (typeof window !== "undefined" && window.speechSynthesis) window.speechSynthesis.cancel(); }, []);
+
   const toggleAutoPlay = () => {
     const next = !autoPlaying;
     setAutoPlaying(next);
@@ -1210,10 +1257,22 @@ export default function CountryPanel({ countryCode, onClose, onViewFeed, onConfl
               </p>
             </div>
             <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
+              <button
+                onClick={(e) => { e.stopPropagation(); toggleTts(); }}
+                title={ttsPlaying ? "Stop narration" : "Listen"}
+                style={{
+                  fontSize: 13, background: ttsPlaying ? "rgba(255,255,255,0.08)" : "none",
+                  border: "none", cursor: "pointer", padding: "2px 4px", borderRadius: 4,
+                  color: ttsPlaying ? "rgba(255,255,255,0.7)" : "rgba(255,255,255,0.2)",
+                  transition: "color 0.2s, background 0.2s",
+                }}
+                onMouseEnter={e => (e.currentTarget.style.color = "rgba(255,255,255,0.6)")}
+                onMouseLeave={e => (e.currentTarget.style.color = ttsPlaying ? "rgba(255,255,255,0.7)" : "rgba(255,255,255,0.2)")}
+              >{ttsPlaying ? "◼" : "🔊"}</button>
               <span style={{ fontSize: 9, fontFamily: "monospace", letterSpacing: "0.18em", color: "rgba(255,255,255,0.22)", textTransform: "uppercase" }}>
                 active conflict
               </span>
-              <button onClick={() => { onClose(); setSelectedConflictId(null); }}
+              <button onClick={() => { onClose(); setSelectedConflictId(null); stopTts(); }}
                 style={{ color: "rgba(255,255,255,0.12)", fontSize: 18, background: "none", border: "none", cursor: "pointer", lineHeight: 1, padding: 0 }}
                 onMouseEnter={e => (e.currentTarget.style.color = "rgba(255,255,255,0.7)")}
                 onMouseLeave={e => (e.currentTarget.style.color = "rgba(255,255,255,0.12)")}>×</button>
