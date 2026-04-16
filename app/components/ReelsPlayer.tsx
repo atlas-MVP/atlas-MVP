@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import type { VideoEntry } from "../lib/r2";
 import { readReelResume } from "../lib/reelResume";
 
@@ -150,6 +150,11 @@ function ThoughtsOverlay({ onClose }: { onClose: () => void }) {
 // The action rail (like/comment/share/save) is Atlas-native so it sits on every reel type.
 function ReelCard({ entry, isActive }: { entry: VideoEntry; isActive: boolean }) {
   const videoRef             = useRef<HTMLVideoElement>(null);
+  const ytIframeRef          = useRef<HTMLIFrameElement>(null);
+  // Remembers the last playback position for THIS card so re-activation resumes
+  // instead of restarting. Consume-on-read readReelResume() only works once per
+  // session — after that we rely on our own ref.
+  const localResumeRef       = useRef<number | null>(null);
   const [liked,   setLiked]  = useState(false);
   const [likes,   setLikes]  = useState(() => Math.floor(Math.random() * 2000) + 100);
   const [shares]             = useState(() => Math.floor(Math.random() * 500)  + 20);
@@ -170,14 +175,15 @@ function ReelCard({ entry, isActive }: { entry: VideoEntry; isActive: boolean })
   const showAtlasChrome = isVideo || hasAtlasMeta;
 
   // Auto-play/pause the self-hosted video element based on visibility.
-  // On first play, seek to the handoff timestamp from the AtlasHQ preview
-  // (set via setReelResume) so the video continues from the exact same frame.
+  // Resume priority: (1) local position from a previous activation of this card,
+  // (2) handoff timestamp from the AtlasHQ preview (one-shot). Either way we
+  // seek before play so the video continues from the exact same frame.
   useEffect(() => {
     const v = videoRef.current;
     if (!v) return;
     if (isActive) {
-      const resumeAt = readReelResume(entry.id);
-      if (resumeAt !== null) {
+      const resumeAt = localResumeRef.current ?? readReelResume(entry.id);
+      if (resumeAt !== null && resumeAt > 0.1) {
         const seek = () => { try { v.currentTime = resumeAt; } catch {} };
         if (v.readyState >= 1) seek();
         else v.addEventListener("loadedmetadata", seek, { once: true });
@@ -186,9 +192,40 @@ function ReelCard({ entry, isActive }: { entry: VideoEntry; isActive: boolean })
       v.muted = false;
       v.play().catch(() => {});
     } else {
+      // Stash the current spot so the next activation resumes from here.
+      if (v.currentTime > 0) localResumeRef.current = v.currentTime;
       v.pause();
     }
   }, [isActive, entry.id]);
+
+  // ── YouTube resume: bake &start=<handoff> into the iframe src ONCE per card
+  // so activation doesn't remount/reset. Play/pause is driven via the YouTube
+  // IFrame API postMessage instead of changing the src. ────────────────────────
+  const ytStart = useMemo(
+    () => (entry.type === "youtube" ? (readReelResume(entry.id) ?? 0) : 0),
+    [entry.id, entry.type]
+  );
+  const ytSrc = useMemo(() => {
+    if (entry.type !== "youtube" || !entry.embedUrl) return "";
+    const id = youtubeId(entry.embedUrl);
+    // autoplay+mute so browser autoplay policy allows the first play; user can
+    // unmute via the YT controls. enablejsapi lets us postMessage play/pause.
+    return `https://www.youtube.com/embed/${id}?autoplay=1&mute=1&controls=1&rel=0&modestbranding=1&playsinline=1&enablejsapi=1&start=${Math.floor(ytStart)}`;
+  }, [entry.id, entry.type, entry.embedUrl, ytStart]);
+
+  // Drive play/pause on the persistent YouTube iframe when focus toggles.
+  useEffect(() => {
+    if (entry.type !== "youtube") return;
+    const iframe = ytIframeRef.current;
+    if (!iframe?.contentWindow) return;
+    const cmd = isActive ? "playVideo" : "pauseVideo";
+    try {
+      iframe.contentWindow.postMessage(
+        JSON.stringify({ event: "command", func: cmd, args: [] }),
+        "*"
+      );
+    } catch {}
+  }, [isActive, entry.type]);
 
   const handleLike  = () => { setLiked(l => !l); setLikes(n => liked ? n - 1 : n + 1); };
   const handleShare = () => {
@@ -201,12 +238,14 @@ function ReelCard({ entry, isActive }: { entry: VideoEntry; isActive: boolean })
   const renderMedia = () => {
     if (isYoutube) {
       // 16:9 fitted center, black letterbox. Let YouTube show its native title/channel/controls.
-      const id = youtubeId(entry.embedUrl!);
+      // src is stable (baked with &start=<handoff>) so activation toggles don't remount
+      // the player — play/pause is sent via postMessage in the effect above.
       return (
         <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", background: "#000" }}>
           <div style={{ width: "100%", aspectRatio: "16 / 9", maxHeight: "100%" }}>
             <iframe
-              src={`https://www.youtube.com/embed/${id}?autoplay=${isActive ? 1 : 0}&mute=${isActive ? 1 : 0}&controls=1&rel=0&modestbranding=1&playsinline=1`}
+              ref={ytIframeRef}
+              src={ytSrc}
               allow="autoplay; fullscreen; encrypted-media; picture-in-picture"
               style={{ width: "100%", height: "100%", border: "none", display: "block" }}
             />
@@ -317,13 +356,7 @@ function ReelCard({ entry, isActive }: { entry: VideoEntry; isActive: boolean })
         position: "absolute", right: 10, bottom: 14,
         display: "flex", flexDirection: "column", gap: 16, alignItems: "center",
         zIndex: 5,
-        // Subtle scrim behind icons on embed types so they stay readable
-        ...((!isVideo) ? {
-          padding: "10px 6px",
-          borderRadius: 24,
-          background: "rgba(0,0,0,0.28)",
-          backdropFilter: "blur(6px)",
-        } : {}),
+        // No scrim, no border — icons float with their own drop-shadow
       }}>
         <ActionBtn glyph="heart"   count={likes}    active={liked} onClick={handleLike} />
         <ActionBtn glyph="comment" count={comments}                onClick={() => setShowComments(true)} />
@@ -441,20 +474,29 @@ export default function ReelsPlayer({ onClose, initialReelId }: ReelsPlayerProps
     }}>
       {/* Minimal close affordance — no branding text. Sits as a floating
           button so the reel media can go edge-to-edge behind it. */}
+      {/* Back → Atlas Radar home. Keep the floating glass pill shape, but
+          the glyph is a back arrow so users know they're returning to the map. */}
       <button
         onClick={onClose}
+        title="back to Atlas Radar"
         style={{
-          position: "absolute", top: 10, right: 10, zIndex: 12,
-          width: 28, height: 28, borderRadius: "50%",
+          position: "absolute", top: 10, left: 10, zIndex: 12,
+          height: 28, paddingLeft: 10, paddingRight: 12, borderRadius: 14,
           background: "rgba(0,0,0,0.4)", backdropFilter: "blur(8px)",
           border: "1px solid rgba(255,255,255,0.12)",
-          color: "rgba(255,255,255,0.7)", fontSize: 16, lineHeight: 1,
-          cursor: "pointer", padding: 0,
-          display: "flex", alignItems: "center", justifyContent: "center",
+          color: "rgba(255,255,255,0.8)", fontSize: 11,
+          fontFamily: "monospace", letterSpacing: "0.08em", textTransform: "uppercase",
+          cursor: "pointer",
+          display: "flex", alignItems: "center", gap: 6,
         }}
         onMouseEnter={e => { e.currentTarget.style.color = "#fff"; e.currentTarget.style.background = "rgba(0,0,0,0.55)"; }}
-        onMouseLeave={e => { e.currentTarget.style.color = "rgba(255,255,255,0.7)"; e.currentTarget.style.background = "rgba(0,0,0,0.4)"; }}
-      >×</button>
+        onMouseLeave={e => { e.currentTarget.style.color = "rgba(255,255,255,0.8)"; e.currentTarget.style.background = "rgba(0,0,0,0.4)"; }}
+      >
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+          <path d="M15 18l-6-6 6-6" />
+        </svg>
+        back
+      </button>
 
       {/* Snap-scroll reel feed */}
       <div
