@@ -124,8 +124,8 @@ interface TimelineEvent {
   mapView?: { center: [number, number]; zoom: number };
   /** Scrollable video slides — each slide is a leader/moment with its own video */
   slides?: VideoSlide[];
-  /** Small pulsing pill linking to another conflict (cross-timeline) */
-  linkedConflict?: { id: string; label: string };
+  /** Pulsing pills linking to other conflicts/categories (cross-timeline) */
+  linkedConflicts?: { id: string; label: string; type?: "conflict" | "attack" }[];
   /** Category tag shown above text — e.g. "terrorist attack", "genocide" */
   tag?: string;
 }
@@ -422,16 +422,23 @@ const CONFLICTS: Record<string, Conflict> = {
       {
         date: "October 7, 2023",
         text: "Hamas attacks southern Israel, killing approximately 1,200 people and taking over 250 hostages. Israel launches a full-scale military campaign in Gaza. The next day, Iran-backed Hezbollah opens a second front from Lebanon, striking northern Israel.",
+        tag: "terrorist attack",
         strikeEvent: {
-          center: [34.8, 31.6], zoom: 7.0,
+          center: [34.42, 31.40], zoom: 10.5,
           strikes: [
-            { lng: 34.60, lat: 31.52, side: "crimson", label: "Sderot" },
-            { lng: 34.52, lat: 31.40, side: "crimson", label: "Kibbutz Be'eri" },
-            { lng: 34.57, lat: 31.37, side: "crimson", label: "Nova Festival (Re'im)" },
-            { lng: 34.44, lat: 31.50, side: "amber",   label: "Gaza City (IDF response)" },
+            { lng: 34.5915, lat: 31.5245, side: "crimson", label: "Sderot" },
+            { lng: 34.4890, lat: 31.3768, side: "crimson", label: "Kibbutz Be'eri" },
+            { lng: 34.5420, lat: 31.3480, side: "crimson", label: "Nova Festival (Re'im)" },
+            { lng: 34.4640, lat: 31.3218, side: "crimson", label: "Kibbutz Nir Oz" },
+            { lng: 34.5730, lat: 31.4850, side: "crimson", label: "Kibbutz Kfar Aza" },
+            { lng: 34.3460, lat: 31.4180, side: "amber",   label: "Gaza City (IDF response)" },
           ],
         },
-        linkedConflict: { id: "israel-gaza", label: "Israel–Palestine conflict" },
+        linkedConflicts: [
+          { id: "israel-gaza", label: "Israel–Palestine conflict", type: "conflict" },
+          { id: "israel-gaza", label: "Gaza genocide", type: "conflict" },
+          { id: "israel-gaza", label: "attacks", type: "attack" },
+        ],
       },
       {
         date: "May 2018",
@@ -539,15 +546,21 @@ const CONFLICTS: Record<string, Conflict> = {
         tag: "terrorist attack",
         highlight: true,
         strikeEvent: {
-          center: [34.55, 31.45], zoom: 10,
+          center: [34.42, 31.40], zoom: 10.5,
           strikes: [
-            { lng: 34.60, lat: 31.52, side: "crimson", label: "Sderot" },
-            { lng: 34.52, lat: 31.40, side: "crimson", label: "Kibbutz Be'eri" },
-            { lng: 34.57, lat: 31.37, side: "crimson", label: "Nova Festival" },
-            { lng: 34.48, lat: 31.30, side: "crimson", label: "Kibbutz Nir Oz" },
+            { lng: 34.5915, lat: 31.5245, side: "crimson", label: "Sderot" },
+            { lng: 34.4890, lat: 31.3768, side: "crimson", label: "Kibbutz Be'eri" },
+            { lng: 34.5420, lat: 31.3480, side: "crimson", label: "Nova Festival (Re'im)" },
+            { lng: 34.4640, lat: 31.3218, side: "crimson", label: "Kibbutz Nir Oz" },
+            { lng: 34.5730, lat: 31.4850, side: "crimson", label: "Kibbutz Kfar Aza" },
+            { lng: 34.3460, lat: 31.4180, side: "amber",   label: "Gaza City (IDF response)" },
           ],
         },
-        linkedConflict: { id: "israel-iran", label: "Israel–Iran conflict" },
+        linkedConflicts: [
+          { id: "israel-iran", label: "Israel–Iran conflict", type: "conflict" },
+          { id: "israel-gaza", label: "Gaza genocide", type: "conflict" },
+          { id: "israel-gaza", label: "attacks", type: "attack" },
+        ],
       },
     ],
   },
@@ -1383,31 +1396,39 @@ export default function CountryPanel({ countryCode, onClose, onViewFeed, onConfl
                             <p style={{ margin: 0, fontSize: 14, color: isActive ? "rgba(255,255,255,0.85)" : palette.text, lineHeight: 1.65, transition: "color 0.3s ease" }}>
                               {event.text}
                             </p>
-                            {/* Linked conflict pill — pulsing cross-timeline bridge */}
-                            {event.linkedConflict && (
-                              <button
-                                className="link-pulse-border"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setSelectedConflictId(event.linkedConflict!.id);
-                                  onConflictSelect?.(event.linkedConflict!.id);
-                                  // Reset history mode for the new conflict
-                                  setTimelineExpanded(false);
-                                  setActiveTile(-1);
-                                  activeTileRef.current = -1;
-                                }}
-                                style={{
-                                  marginTop: 10, fontSize: 9, fontFamily: "monospace", letterSpacing: "0.1em",
-                                  color: "rgba(96,165,250,0.7)", background: "rgba(96,165,250,0.06)",
-                                  border: "1px solid rgba(96,165,250,0.2)", borderRadius: 10,
-                                  cursor: "pointer", padding: "4px 10px", display: "inline-flex", alignItems: "center", gap: 6,
-                                }}
-                                onMouseEnter={e => { e.currentTarget.style.background = "rgba(96,165,250,0.12)"; e.currentTarget.style.color = "rgba(147,197,253,0.9)"; }}
-                                onMouseLeave={e => { e.currentTarget.style.background = "rgba(96,165,250,0.06)"; e.currentTarget.style.color = "rgba(96,165,250,0.7)"; }}
-                              >
-                                <span style={{ width: 5, height: 5, borderRadius: "50%", background: "rgba(96,165,250,0.6)" }} className="link-pulse-dot" />
-                                {event.linkedConflict.label} →
-                              </button>
+                            {/* Linked conflict/attack pills — pulsing cross-timeline bridges */}
+                            {event.linkedConflicts && event.linkedConflicts.length > 0 && (
+                              <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginTop: 10 }}>
+                                {event.linkedConflicts.map((lc, lci) => {
+                                  const isAttack = lc.type === "attack";
+                                  const baseColor = isAttack ? "239,68,68" : "96,165,250";
+                                  return (
+                                    <button
+                                      key={lci}
+                                      className={isAttack ? "tooltip-pulse-border" : "link-pulse-border"}
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        setSelectedConflictId(lc.id);
+                                        onConflictSelect?.(lc.id);
+                                        setTimelineExpanded(false);
+                                        setActiveTile(-1);
+                                        activeTileRef.current = -1;
+                                      }}
+                                      style={{
+                                        fontSize: 9, fontFamily: "monospace", letterSpacing: "0.1em",
+                                        color: `rgba(${baseColor},0.7)`, background: `rgba(${baseColor},0.06)`,
+                                        border: `1px solid rgba(${baseColor},0.2)`, borderRadius: 10,
+                                        cursor: "pointer", padding: "4px 10px", display: "inline-flex", alignItems: "center", gap: 6,
+                                      }}
+                                      onMouseEnter={e => { e.currentTarget.style.background = `rgba(${baseColor},0.12)`; e.currentTarget.style.color = `rgba(${baseColor},0.9)`; }}
+                                      onMouseLeave={e => { e.currentTarget.style.background = `rgba(${baseColor},0.06)`; e.currentTarget.style.color = `rgba(${baseColor},0.7)`; }}
+                                    >
+                                      <span style={{ width: 5, height: 5, borderRadius: "50%", background: `rgba(${baseColor},0.6)` }} className={isAttack ? "tooltip-pulse-dot" : "link-pulse-dot"} />
+                                      {lc.label} →
+                                    </button>
+                                  );
+                                })}
+                              </div>
                             )}
                             {/* Watch event button */}
                             {(() => {
