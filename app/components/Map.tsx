@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
+import { SIDE_COLORS, COUNTRY_SIDE } from "../lib/sides";
 
 mapboxgl.accessToken =
   "pk.eyJ1IjoiYXRsYXNib3N0b24iLCJhIjoiY21qejY1c211Nmt2azNlcHMwcnljOGR1dCJ9.Pnq-qa_giDk0LN95OpFvMg";
@@ -215,20 +216,30 @@ export default function Map({ onCountryClick, flyToCode, flyToPosition, selected
     }
   }, [secondaryCountries]);
 
-  // Casualty country highlight — blue fill + red pulse when "+more" is tapped
+  // Casualty country highlight — side-colored fills + pulse when "+more" is tapped
   useEffect(() => {
     const m = map.current;
-    if (!m || !m.getLayer("casualty-fill")) return;
-    const worldviewFilter = ["any", ["==", ["get", "worldview"], "all"], ["==", ["get", "worldview"], "US"]];
-    // Filter out countries already in HIGHLIGHTED (they have their own fill layers)
+    if (!m || !m.getLayer("casualty-fill-blue")) return;
+    const wf = ["any", ["==", ["get", "worldview"], "all"], ["==", ["get", "worldview"], "US"]];
     const extra = casualtyCountries.filter(c => !HIGHLIGHTED.includes(c));
-    if (extra.length > 0) {
-      m.setFilter("casualty-fill", ["all", worldviewFilter, ["in", ["get", "iso_3166_1_alpha_3"], ["literal", extra]]]);
-      m.setFilter("idle-pulse-fill", ["all", worldviewFilter, ["in", ["get", "iso_3166_1_alpha_3"], ["literal", [...HIGHLIGHTED, ...extra]]]]);
-    } else {
-      m.setFilter("casualty-fill", ["all", worldviewFilter, ["in", ["get", "iso_3166_1_alpha_3"], ["literal", [""]]]]);
-      m.setFilter("idle-pulse-fill", ["all", worldviewFilter, ["in", ["get", "iso_3166_1_alpha_3"], ["literal", HIGHLIGHTED]]]);
-    }
+    const extraBlue = extra.filter(c => COUNTRY_SIDE[c] === "blue");
+    const extraRed  = extra.filter(c => COUNTRY_SIDE[c] === "red");
+    const extraNeutral = extra.filter(c => !COUNTRY_SIDE[c]);
+
+    const blueH = HIGHLIGHTED.filter(c => COUNTRY_SIDE[c] === "blue");
+    const redH  = HIGHLIGHTED.filter(c => COUNTRY_SIDE[c] === "red");
+    const neutH = HIGHLIGHTED.filter(c => !COUNTRY_SIDE[c]);
+
+    const empty = ["all", wf, ["in", ["get", "iso_3166_1_alpha_3"], ["literal", [""]]]];
+
+    m.setFilter("casualty-fill-blue", extraBlue.length || extraNeutral.length
+      ? ["all", wf, ["in", ["get", "iso_3166_1_alpha_3"], ["literal", [...extraBlue, ...extraNeutral]]]]
+      : empty);
+    m.setFilter("casualty-fill-red", extraRed.length
+      ? ["all", wf, ["in", ["get", "iso_3166_1_alpha_3"], ["literal", extraRed]]]
+      : empty);
+    m.setFilter("idle-pulse-blue", ["all", wf, ["in", ["get", "iso_3166_1_alpha_3"], ["literal", [...blueH, ...neutH, ...extraBlue, ...extraNeutral]]]]);
+    m.setFilter("idle-pulse-red",  ["all", wf, ["in", ["get", "iso_3166_1_alpha_3"], ["literal", [...redH, ...extraRed]]]]);
   }, [casualtyCountries]);
 
   // Strike marker animation — fast scroll: instant, pause: sequential reveal
@@ -432,38 +443,60 @@ export default function Map({ onCountryClick, flyToCode, flyToPosition, selected
         ["==", ["get", "worldview"], "US"],
       ];
 
-      // Per-country highlighted fills — zoom expression handles fade (no JS needed per frame)
+      // Per-country highlighted fills — color based on side (blue/red), zoom expression handles fade
       for (const iso of HIGHLIGHTED) {
         const [fs, fe] = COUNTRY_FADE_RANGES[iso] ?? [FADE_START, FADE_END];
+        const side = COUNTRY_SIDE[iso] as "blue" | "red" | undefined;
+        const fillColor = SIDE_COLORS[side ?? "blue"].fill;
         m.addLayer({
           id: `highlighted-fill-${iso}`,
           type: "fill",
           source: "country-boundaries",
           "source-layer": "country_boundaries",
           filter: ["all", worldviewFilter, ["==", ["get", "iso_3166_1_alpha_3"], iso]],
-          paint: { "fill-color": "#0d2a52", "fill-opacity": ["interpolate", ["linear"], ["zoom"], fs, 0.48, fe, 0] as never },
+          paint: { "fill-color": fillColor, "fill-opacity": ["interpolate", ["linear"], ["zoom"], fs, 0.48, fe, 0] as never },
         });
       }
 
 
-      // Casualty highlight fill — blue base for countries shown when "+more" is tapped
+      // Casualty highlight fills — side-colored, shown when "+more" is tapped
+      const blueHighlighted = HIGHLIGHTED.filter(c => COUNTRY_SIDE[c] === "blue");
+      const redHighlighted  = HIGHLIGHTED.filter(c => COUNTRY_SIDE[c] === "red");
+      const neutralHighlighted = HIGHLIGHTED.filter(c => !COUNTRY_SIDE[c]);
+
       m.addLayer({
-        id: "casualty-fill",
+        id: "casualty-fill-blue",
         type: "fill",
         source: "country-boundaries",
         "source-layer": "country_boundaries",
         filter: ["all", worldviewFilter, ["in", ["get", "iso_3166_1_alpha_3"], ["literal", [""]]]],
-        paint: { "fill-color": "#0d2a52", "fill-opacity": ["interpolate", ["linear"], ["zoom"], FADE_START, 0.48, FADE_END, 0] as never },
+        paint: { "fill-color": SIDE_COLORS.blue.fill, "fill-opacity": ["interpolate", ["linear"], ["zoom"], FADE_START, 0.48, FADE_END, 0] as never },
       });
-
-      // Idle red pulse — always on for HIGHLIGHTED (no hover needed), expanded for casualty countries
       m.addLayer({
-        id: "idle-pulse-fill",
+        id: "casualty-fill-red",
         type: "fill",
         source: "country-boundaries",
         "source-layer": "country_boundaries",
-        filter: ["all", worldviewFilter, ["in", ["get", "iso_3166_1_alpha_3"], ["literal", HIGHLIGHTED]]],
-        paint: { "fill-color": "#ef4444", "fill-opacity": 0 },
+        filter: ["all", worldviewFilter, ["in", ["get", "iso_3166_1_alpha_3"], ["literal", [""]]]],
+        paint: { "fill-color": SIDE_COLORS.red.fill, "fill-opacity": ["interpolate", ["linear"], ["zoom"], FADE_START, 0.48, FADE_END, 0] as never },
+      });
+
+      // Idle pulse — split by side (blue glow on allied, maroon glow on adversary)
+      m.addLayer({
+        id: "idle-pulse-blue",
+        type: "fill",
+        source: "country-boundaries",
+        "source-layer": "country_boundaries",
+        filter: ["all", worldviewFilter, ["in", ["get", "iso_3166_1_alpha_3"], ["literal", [...blueHighlighted, ...neutralHighlighted]]]],
+        paint: { "fill-color": SIDE_COLORS.blue.pulse, "fill-opacity": 0 },
+      });
+      m.addLayer({
+        id: "idle-pulse-red",
+        type: "fill",
+        source: "country-boundaries",
+        "source-layer": "country_boundaries",
+        filter: ["all", worldviewFilter, ["in", ["get", "iso_3166_1_alpha_3"], ["literal", redHighlighted]]],
+        paint: { "fill-color": SIDE_COLORS.red.pulse, "fill-opacity": 0 },
       });
 
       const conflictFilter = [
@@ -586,7 +619,8 @@ export default function Map({ onCountryClick, flyToCode, flyToPosition, selected
           const base = 0.06 + 0.12 * Math.abs(Math.sin(t * Math.PI));
           const z = m.getZoom();
           const zf = Math.max(0, Math.min(1, 1 - (z - FADE_START) / (FADE_END - FADE_START)));
-          m.setPaintProperty("idle-pulse-fill", "fill-opacity", base * zf);
+          m.setPaintProperty("idle-pulse-blue", "fill-opacity", base * zf);
+          m.setPaintProperty("idle-pulse-red", "fill-opacity", base * zf);
         }
         idlePulseFrame.current = requestAnimationFrame(animateIdle);
       };

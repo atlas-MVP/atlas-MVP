@@ -2,6 +2,7 @@
 
 import { useState, useRef } from "react";
 import LiveAlertRow from "./LiveAlertRow";
+import { SIDE_COLORS, getCountrySide } from "../lib/sides";
 
 interface LiveAlert {
   time: string;
@@ -752,9 +753,9 @@ export default function CountryPanel({ countryCode, onClose, onViewFeed, onConfl
 
   // ── Row renderer ──────────────────────────────────────────────────────────
   const renderRow = (c: typeof conflict.casualties[0]) => {
-    // Neutral aesthetic — no blue/red side coloring
+    const side = getCountrySide(c.country, conflict.sides);
     const nameColor = "rgba(255,255,255,0.78)";
-    const dot = "rgba(255,255,255,0.22)";
+    const dot = SIDE_COLORS[side].dot;
     const hasInjured = c.injured && c.injured !== "" && c.injured !== "—";
     return (
       <tr key={c.country}>
