@@ -48,6 +48,13 @@ body, html {
 .tooltip-pulse-border { animation: tooltip-border-pulse 2.8s ease-in-out infinite; }
 .tooltip-pulse-dot    { animation: tooltip-dot-pulse    2.8s ease-in-out infinite; }
 
+/* Modern minimal scrollbar — floating silver on transparent */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.3); }
+* { scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.15) transparent; }
+
 /* Push Mapbox branding just below the visible frame */
 .mapboxgl-ctrl-bottom-left,
 .mapboxgl-ctrl-bottom-right {

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import LiveAlertRow from "./LiveAlertRow";
 import { SIDE_COLORS, getCountrySide } from "../lib/sides";
 import { getEventsForTimeline, type MapEvent } from "../lib/mapEvents";
@@ -697,14 +697,37 @@ export default function CountryPanel({ countryCode, onClose, onViewFeed, onConfl
   const [civTooltip, setCivTooltip]       = useState<string | null>(null);
   const [showAllCasualties, setShowAllCasualties] = useState(false);
   const [timelineExpanded, setTimelineExpanded] = useState(false);
+  const [activeTile, setActiveTile]     = useState(-1);
+  const [autoPlaying, setAutoPlaying]   = useState(false);
   const [hoveredAlert,  setHoveredAlert]  = useState<number | null>(null);
   const [hoverMidY,     setHoverMidY]     = useState(0);
   const [sourcesOpen,   setSourcesOpen]   = useState(false);
   const leaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const autoPlayRef = useRef(false);
+  const activeTileRef = useRef(-1);
 
   const cancelLeave = () => { if (leaveTimer.current) clearTimeout(leaveTimer.current); };
   const scheduleLeave = () => { cancelLeave(); leaveTimer.current = setTimeout(() => { setHoveredAlert(null); setSourcesOpen(false); }, 220); };
+
+  // Auto-play effect — must be before early returns (React hook rules)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    if (!autoPlayRef.current || !timelineExpanded) return;
+    const holdMs = 5000; // base hold; autoAdvance() overrides with word-count timing
+    const timer = setTimeout(() => {
+      if (!autoPlayRef.current) return;
+      const nextIdx = activeTileRef.current + 1;
+      const el = scrollRef.current?.querySelector<HTMLElement>(`[data-tile='${nextIdx}']`);
+      if (el) {
+        el.scrollIntoView({ behavior: "smooth" });
+      } else {
+        setAutoPlaying(false);
+        autoPlayRef.current = false;
+      }
+    }, holdMs);
+    return () => clearTimeout(timer);
+  }, [activeTile, autoPlaying, timelineExpanded]);
 
   if (!countryCode) return null;
   const conflictIds = COUNTRY_CONFLICTS[countryCode];
@@ -724,6 +747,9 @@ export default function CountryPanel({ countryCode, onClose, onViewFeed, onConfl
 
   const displayed = showAllCasualties ? sorted : sorted.slice(0, 2);
   const hiddenCount = sorted.length - 2;
+
+  // ── Timeline data — computed once for both normal + history mode ────────────
+  const chronological = [...conflict.timeline.slice(1)].reverse();
 
   // ── Civ tooltip dismiss on outside click ───────────────────────────────────
   const closeCiv = () => setCivTooltip(null);
@@ -751,6 +777,87 @@ export default function CountryPanel({ countryCode, onClose, onViewFeed, onConfl
       }
     });
     if (!found) onTimelineStrike?.(null);
+  };
+
+  // ── History-mode scroll handler — detect snapped tile + drive map ─────────
+  const handleHistoryScroll = (e: React.UIEvent<HTMLDivElement>) => {
+    const container = e.currentTarget;
+    const tiles = container.querySelectorAll<HTMLElement>("[data-tile]");
+    const containerTop = container.getBoundingClientRect().top;
+
+    let closest = -1;
+    let closestDist = Infinity;
+    tiles.forEach(el => {
+      const idx = Number(el.dataset.tile);
+      const dist = Math.abs(el.getBoundingClientRect().top - containerTop);
+      if (dist < closestDist) { closestDist = dist; closest = idx; }
+    });
+
+    if (closest !== activeTileRef.current && closest >= 0) {
+      activeTileRef.current = closest;
+      setActiveTile(closest);
+      // Fire map camera for this tile
+      const ev = chronological[closest];
+      if (ev?.strikeEvent) {
+        onTimelineStrike?.(ev.strikeEvent);
+      } else {
+        onTimelineStrike?.(null);
+      }
+    }
+  };
+
+  // ── Enter history mode — zoom out to wide conflict view ────────────────────
+  const enterHistory = () => {
+    setTimelineExpanded(true);
+    setActiveTile(-1);
+    activeTileRef.current = -1;
+    // Zoom out to show all involved countries (wide Middle East + Iran)
+    onFocusPosition?.([47, 30], 2.8);
+    // Scroll container to top
+    setTimeout(() => scrollRef.current?.scrollTo({ top: 0 }), 50);
+  };
+
+  const exitHistory = () => {
+    setTimelineExpanded(false);
+    setAutoPlaying(false);
+    autoPlayRef.current = false;
+    setActiveTile(-1);
+    activeTileRef.current = -1;
+    onTimelineStrike?.(null);
+    scrollRef.current?.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  // ── Auto-play: advance tiles at reading pace ──────────────────────────────
+  const toggleAutoPlay = () => {
+    const next = !autoPlaying;
+    setAutoPlaying(next);
+    autoPlayRef.current = next;
+    if (next && activeTileRef.current < 0) {
+      // Start from first tile
+      const first = scrollRef.current?.querySelector<HTMLElement>("[data-tile='0']");
+      first?.scrollIntoView({ behavior: "smooth" });
+    }
+  };
+
+  // Effect: auto-advance when autoPlaying + activeTile changes
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const autoAdvance = () => {
+    if (!autoPlayRef.current || !timelineExpanded) return;
+    const ev = chronological[activeTileRef.current];
+    const wordCount = ev ? ev.text.split(/\s+/).length : 20;
+    const holdMs = Math.max(3500, (wordCount / 3.0) * 1000); // ~3 words/sec reading pace
+    const timer = setTimeout(() => {
+      if (!autoPlayRef.current) return;
+      const nextIdx = activeTileRef.current + 1;
+      if (nextIdx < chronological.length) {
+        const el = scrollRef.current?.querySelector<HTMLElement>(`[data-tile='${nextIdx}']`);
+        el?.scrollIntoView({ behavior: "smooth" });
+      } else {
+        setAutoPlaying(false);
+        autoPlayRef.current = false;
+      }
+    }, holdMs);
+    return () => clearTimeout(timer);
   };
 
   // ── Row renderer ──────────────────────────────────────────────────────────
@@ -930,10 +1037,12 @@ export default function CountryPanel({ countryCode, onClose, onViewFeed, onConfl
 
         {/* ── SCROLLABLE BODY ── */}
         <div
-          ref={scrollRef}
-          onScroll={handleScroll}
-          style={{ flex: 1, overflowY: "auto", minHeight: 0 }}
+          ref={!timelineExpanded ? scrollRef : undefined}
+          onScroll={!timelineExpanded ? handleScroll : undefined}
+          style={{ flex: 1, overflowY: timelineExpanded ? "hidden" : "auto", minHeight: 0, display: "flex", flexDirection: "column" }}
         >
+          {/* Casualties, alerts, feed — hidden in history mode */}
+          {!timelineExpanded && (<>
           {/* Casualties */}
           <div style={{ padding: "8px 14px 6px", borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
             {(
@@ -1014,118 +1123,175 @@ export default function CountryPanel({ countryCode, onClose, onViewFeed, onConfl
               View Live Feed →
             </button>
           </div>
+          </>)}
 
-          {/* Timeline */}
+          {/* Timeline / History */}
           {(() => {
-            // Neutral radar aesthetic — no blue/red sides, uniform white/dim
             const NEUTRAL = { solid: "rgba(255,255,255,0.55)", border: "rgba(255,255,255,0.20)", glow: "none", date: "rgba(255,255,255,0.72)", text: "rgba(255,255,255,0.56)" };
             const HIGHLIGHT = { solid: "rgba(255,255,255,0.85)", border: "rgba(255,255,255,0.3)", glow: "0 0 6px rgba(255,255,255,0.25)", date: "rgba(255,255,255,0.92)", text: "rgba(255,255,255,0.72)" };
+            const extractYear = (d: string) => { const m = d.match(/\b(20\d\d|19\d\d)\b/); return m ? parseInt(m[1]) : null; };
 
-            const extractYear = (d: string) => {
-              const m = d.match(/\b(20\d\d|19\d\d)\b/);
-              return m ? parseInt(m[1]) : null;
-            };
+            const latest = conflict.timeline[0];
 
-            return (
-              <div style={{ padding: "0 16px 16px" }}>
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 14, marginBottom: 14 }}>
-                  <p style={{ fontSize: 11, fontFamily: "monospace", letterSpacing: "0.18em", color: "rgba(255,255,255,0.28)", textTransform: "uppercase", margin: 0, fontWeight: 500 }}>timeline</p>
-                </div>
-
-                <div style={{ position: "relative" }}>
-                  <div style={{ position: "absolute", left: 5, top: 6, bottom: 6, width: 1, background: "rgba(255,255,255,0.05)" }} />
-                  {(() => {
-                    const latest = conflict.timeline[0];
-                    // Everything after index 0, reversed so oldest appears first
-                    const chronological = [...conflict.timeline.slice(1)].reverse();
-
-                    const renderEvent = (event: typeof latest, i: number, arr: typeof chronological) => {
-                      const palette = event.highlight ? HIGHLIGHT : NEUTRAL;
-                      const currentYear = extractYear(event.date);
-                      const nextEvent = arr[i + 1];
-                      const nextYear = nextEvent ? extractYear(nextEvent.date) : null;
-                      const showYearAfter = nextYear !== null && nextYear !== currentYear;
-                      return (
-                        <div key={i} {...(event.strikeEvent ? { "data-strike": JSON.stringify(event.strikeEvent) } : {})}>
+            if (!timelineExpanded) {
+              // ── Normal mode: present + "read full story" button ──
+              return (
+                <div style={{ padding: "0 16px 16px" }}>
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 14, marginBottom: 14 }}>
+                    <p style={{ fontSize: 11, fontFamily: "monospace", letterSpacing: "0.18em", color: "rgba(255,255,255,0.28)", textTransform: "uppercase", margin: 0, fontWeight: 500 }}>history</p>
+                  </div>
+                  <div style={{ position: "relative" }}>
+                    <div style={{ position: "absolute", left: 5, top: 6, bottom: 6, width: 1, background: "rgba(255,255,255,0.05)" }} />
+                    <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
+                      {latest && (
+                        <div {...(latest.strikeEvent ? { "data-strike": JSON.stringify(latest.strikeEvent) } : {})}>
                           <div style={{ display: "flex", gap: 12, paddingLeft: 4 }}>
                             <div style={{ flexShrink: 0, marginTop: 4 }}>
-                              <div style={{ width: 7, height: 7, borderRadius: "50%", background: palette.solid, border: `1px solid ${palette.border}`, boxShadow: palette.glow }} />
+                              <div style={{ width: 7, height: 7, borderRadius: "50%", background: HIGHLIGHT.solid, border: `1px solid ${HIGHLIGHT.border}`, boxShadow: HIGHLIGHT.glow }} />
                             </div>
                             <div>
-                              <p style={{ margin: "0 0 5px", fontSize: 11, fontFamily: "monospace", fontWeight: 600, color: palette.date, letterSpacing: "0.03em" }}>
-                                {(() => { const d = event.date; if (/^(19|20)\d\d/.test(d)) return d; return d.replace(/,?\s*(19|20)\d\d/, ""); })()}
+                              <p style={{ margin: "0 0 5px", fontSize: 11, fontFamily: "monospace", fontWeight: 600, color: HIGHLIGHT.date, letterSpacing: "0.03em" }}>
+                                {(() => { const d = latest.date; if (/^(19|20)\d\d/.test(d)) return d; return d.replace(/,?\s*(19|20)\d\d/, ""); })()}
                               </p>
-                              <p style={{ margin: 0, fontSize: 14, color: palette.text, lineHeight: 1.65 }}>{event.text}</p>
-                              {(() => {
-                                const events = getEventsForTimeline(conflict.id, event.date);
-                                if (events.length === 0 || !onPlayEvent) return null;
-                                return (
-                                  <button
-                                    onClick={(e) => { e.stopPropagation(); onPlayEvent(events[0]); }}
-                                    style={{
-                                      marginTop: 8, fontSize: 10, fontFamily: "monospace", letterSpacing: "0.1em",
-                                      color: "rgba(239,68,68,0.5)", background: "rgba(239,68,68,0.06)",
-                                      border: "1px solid rgba(239,68,68,0.15)", borderRadius: 6,
-                                      cursor: "pointer", padding: "5px 12px", display: "inline-flex", alignItems: "center", gap: 6,
-                                      textTransform: "uppercase",
-                                    }}
-                                    onMouseEnter={e => { e.currentTarget.style.background = "rgba(239,68,68,0.12)"; e.currentTarget.style.color = "rgba(239,68,68,0.8)"; }}
-                                    onMouseLeave={e => { e.currentTarget.style.background = "rgba(239,68,68,0.06)"; e.currentTarget.style.color = "rgba(239,68,68,0.5)"; }}
-                                  >
-                                    <span style={{ fontSize: 8 }}>▶</span> watch event
-                                  </button>
-                                );
-                              })()}
+                              <p style={{ margin: 0, fontSize: 14, color: HIGHLIGHT.text, lineHeight: 1.65 }}>{latest.text}</p>
                             </div>
                           </div>
-                          {showYearAfter && (
-                            <div style={{ display: "flex", alignItems: "center", gap: 8, margin: "20px 0 2px", paddingLeft: 4 }}>
-                              <span style={{ fontSize: 11, fontWeight: 700, fontFamily: "monospace", color: "rgba(255,255,255,0.22)", letterSpacing: "0.14em" }}>{nextYear}</span>
-                              <div style={{ flex: 1, height: 1, background: "rgba(255,255,255,0.06)" }} />
-                            </div>
-                          )}
                         </div>
-                      );
-                    };
+                      )}
+                      {chronological.length > 0 && (
+                        <button
+                          onClick={(e) => { e.stopPropagation(); enterHistory(); }}
+                          style={{ fontSize: 13, fontFamily: "monospace", color: "rgba(255,255,255,0.35)", background: "none", border: "none", cursor: "pointer", padding: "0", textAlign: "left" }}
+                          onMouseEnter={e => (e.currentTarget.style.color = "rgba(255,255,255,0.7)")}
+                          onMouseLeave={e => (e.currentTarget.style.color = "rgba(255,255,255,0.35)")}
+                        >read full story →</button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              );
+            }
+
+            // ── History mode: snap-scroll tiles ──
+            return (
+              <div style={{ display: "flex", flexDirection: "column", flex: 1, minHeight: 0 }}>
+                {/* Fixed history header */}
+                <div style={{ padding: "10px 16px", borderBottom: "1px solid rgba(255,255,255,0.06)", display: "flex", alignItems: "center", justifyContent: "space-between", flexShrink: 0 }}>
+                  <p style={{ fontSize: 11, fontFamily: "monospace", letterSpacing: "0.18em", color: "rgba(255,255,255,0.28)", textTransform: "uppercase", margin: 0, fontWeight: 500 }}>history</p>
+                  <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                    {/* Auto-play toggle */}
+                    <button
+                      onClick={(e) => { e.stopPropagation(); toggleAutoPlay(); }}
+                      style={{
+                        fontSize: 9, fontFamily: "monospace", letterSpacing: "0.1em",
+                        color: autoPlaying ? "rgba(239,68,68,0.7)" : "rgba(255,255,255,0.3)",
+                        background: autoPlaying ? "rgba(239,68,68,0.08)" : "none",
+                        border: `1px solid ${autoPlaying ? "rgba(239,68,68,0.2)" : "rgba(255,255,255,0.08)"}`,
+                        borderRadius: 4, cursor: "pointer", padding: "3px 8px", textTransform: "uppercase",
+                      }}
+                    >{autoPlaying ? "⏸ pause" : "▶ auto"}</button>
+                    {/* Progress */}
+                    <span style={{ fontSize: 9, fontFamily: "monospace", color: "rgba(255,255,255,0.18)" }}>
+                      {activeTile >= 0 ? `${activeTile + 1}/${chronological.length}` : ""}
+                    </span>
+                    {/* Reset */}
+                    <button
+                      onClick={(e) => { e.stopPropagation(); exitHistory(); }}
+                      style={{ fontSize: 9, fontFamily: "monospace", color: "rgba(255,255,255,0.25)", background: "none", border: "none", cursor: "pointer", padding: "2px 4px" }}
+                      onMouseEnter={e => (e.currentTarget.style.color = "rgba(255,255,255,0.6)")}
+                      onMouseLeave={e => (e.currentTarget.style.color = "rgba(255,255,255,0.25)")}
+                    >✕ exit</button>
+                  </div>
+                </div>
+
+                {/* Snap-scroll tile container */}
+                <div
+                  onScroll={handleHistoryScroll}
+                  style={{
+                    flex: 1, overflowY: "auto", minHeight: 0,
+                    scrollSnapType: "y mandatory",
+                  }}
+                >
+                  {chronological.map((event, i) => {
+                    const palette = event.highlight ? HIGHLIGHT : NEUTRAL;
+                    const isActive = activeTile === i;
+                    const currentYear = extractYear(event.date);
+                    const prevEvent = chronological[i - 1];
+                    const prevYear = prevEvent ? extractYear(prevEvent.date) : null;
+                    const showYearBefore = i === 0 || (prevYear !== null && prevYear !== currentYear);
 
                     return (
-                      <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
-                        {/* Latest update — always on top */}
-                        {latest && renderEvent(latest, 0, [latest])}
-
-                        {/* Divider between present and past */}
-                        {chronological.length > 0 && (
-                          <div style={{ display: "flex", alignItems: "center", gap: 10, margin: "4px 0" }}>
-                            <div style={{ flex: 1, height: 1, background: "rgba(255,255,255,0.08)" }} />
-                            <span style={{ fontSize: 10, fontFamily: "monospace", letterSpacing: "0.22em", color: "rgba(255,255,255,0.26)", textTransform: "uppercase", fontWeight: 500 }}>history</span>
-                            <div style={{ flex: 1, height: 1, background: "rgba(255,255,255,0.08)" }} />
+                      <div
+                        key={i}
+                        data-tile={i}
+                        {...(event.strikeEvent ? { "data-strike": JSON.stringify(event.strikeEvent) } : {})}
+                        style={{
+                          scrollSnapAlign: "start",
+                          padding: "16px 16px 20px",
+                          borderBottom: "1px solid rgba(255,255,255,0.04)",
+                          minHeight: 120,
+                          opacity: isActive || activeTile < 0 ? 1 : 0.35,
+                          transition: "opacity 0.4s ease",
+                        }}
+                      >
+                        {showYearBefore && currentYear && (
+                          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
+                            <span style={{ fontSize: 11, fontWeight: 700, fontFamily: "monospace", color: "rgba(255,255,255,0.22)", letterSpacing: "0.14em" }}>{currentYear}</span>
+                            <div style={{ flex: 1, height: 1, background: "rgba(255,255,255,0.06)" }} />
                           </div>
                         )}
-
-                        {/* Read full story → expands chronological history below */}
-                        {!timelineExpanded && chronological.length > 0 && (
-                          <button
-                            onClick={(e) => { e.stopPropagation(); setTimelineExpanded(true); }}
-                            style={{ fontSize: 13, fontFamily: "monospace", color: "rgba(255,255,255,0.35)", background: "none", border: "none", cursor: "pointer", padding: "0", textAlign: "left" }}
-                            onMouseEnter={e => (e.currentTarget.style.color = "rgba(255,255,255,0.7)")}
-                            onMouseLeave={e => (e.currentTarget.style.color = "rgba(255,255,255,0.35)")}
-                          >read full story →</button>
-                        )}
-
-                        {/* Chronological history: oldest first, newest last */}
-                        {timelineExpanded && chronological.map((event, i, arr) => renderEvent(event, i, arr))}
-
-                        {timelineExpanded && (
-                          <button
-                            onClick={(e) => { e.stopPropagation(); scrollRef.current?.scrollTo({ top: 0, behavior: "smooth" }); }}
-                            style={{ fontSize: 11, fontFamily: "monospace", color: "rgba(255,255,255,0.28)", background: "none", border: "none", cursor: "pointer", padding: "4px 0 0", display: "block" }}
-                            onMouseEnter={e => (e.currentTarget.style.color = "rgba(255,255,255,0.6)")}
-                            onMouseLeave={e => (e.currentTarget.style.color = "rgba(255,255,255,0.28)")}
-                          >↑ back to top</button>
-                        )}
+                        <div style={{ display: "flex", gap: 12, paddingLeft: 4 }}>
+                          <div style={{ flexShrink: 0, marginTop: 4 }}>
+                            <div style={{
+                              width: 7, height: 7, borderRadius: "50%",
+                              background: isActive ? "rgba(239,68,68,0.8)" : palette.solid,
+                              border: `1px solid ${isActive ? "rgba(239,68,68,0.4)" : palette.border}`,
+                              boxShadow: isActive ? "0 0 8px rgba(239,68,68,0.4)" : palette.glow,
+                              transition: "all 0.3s ease",
+                            }} />
+                          </div>
+                          <div>
+                            <p style={{ margin: "0 0 5px", fontSize: 11, fontFamily: "monospace", fontWeight: 600, color: palette.date, letterSpacing: "0.03em" }}>
+                              {(() => { const d = event.date; if (/^(19|20)\d\d/.test(d)) return d; return d.replace(/,?\s*(19|20)\d\d/, ""); })()}
+                            </p>
+                            <p style={{ margin: 0, fontSize: 14, color: isActive ? "rgba(255,255,255,0.85)" : palette.text, lineHeight: 1.65, transition: "color 0.3s ease" }}>
+                              {event.text}
+                            </p>
+                            {(() => {
+                              const events = getEventsForTimeline(conflict.id, event.date);
+                              if (events.length === 0 || !onPlayEvent) return null;
+                              return (
+                                <button
+                                  onClick={(e) => { e.stopPropagation(); onPlayEvent(events[0]); }}
+                                  style={{
+                                    marginTop: 8, fontSize: 10, fontFamily: "monospace", letterSpacing: "0.1em",
+                                    color: "rgba(239,68,68,0.5)", background: "rgba(239,68,68,0.06)",
+                                    border: "1px solid rgba(239,68,68,0.15)", borderRadius: 6,
+                                    cursor: "pointer", padding: "5px 12px", display: "inline-flex", alignItems: "center", gap: 6,
+                                    textTransform: "uppercase",
+                                  }}
+                                  onMouseEnter={e => { e.currentTarget.style.background = "rgba(239,68,68,0.12)"; e.currentTarget.style.color = "rgba(239,68,68,0.8)"; }}
+                                  onMouseLeave={e => { e.currentTarget.style.background = "rgba(239,68,68,0.06)"; e.currentTarget.style.color = "rgba(239,68,68,0.5)"; }}
+                                >
+                                  <span style={{ fontSize: 8 }}>▶</span> watch event
+                                </button>
+                              );
+                            })()}
+                          </div>
+                        </div>
                       </div>
                     );
-                  })()}
+                  })}
+
+                  {/* Back to top — exits history mode */}
+                  <div style={{ padding: "16px", scrollSnapAlign: "start", textAlign: "center" }}>
+                    <button
+                      onClick={(e) => { e.stopPropagation(); exitHistory(); }}
+                      style={{ fontSize: 11, fontFamily: "monospace", color: "rgba(255,255,255,0.28)", background: "none", border: "none", cursor: "pointer", padding: "8px 16px" }}
+                      onMouseEnter={e => (e.currentTarget.style.color = "rgba(255,255,255,0.6)")}
+                      onMouseLeave={e => (e.currentTarget.style.color = "rgba(255,255,255,0.28)")}
+                    >↑ back to top</button>
+                  </div>
                 </div>
               </div>
             );
