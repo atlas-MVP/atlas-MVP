@@ -348,6 +348,13 @@ export default function Home() {
       </div>
 
       {/* Date / time + live button */}
+      {/* "live" is green only when the map is truly showing today — not when
+          the scrubber is in a past year and not when the timeline is pinned
+          to a non-2026 history date. */}
+      {(() => {
+        const isHistoryDate = !!historyDate && !/2026/.test(historyDate);
+        const isLive = mapReady && !historicalYear && !isHistoryDate;
+        return (
       <div style={{ position: "absolute", bottom: 16, right: 28, zIndex: 10, display: "flex", alignItems: "flex-end", gap: 20, pointerEvents: "none" }}>
         <button
           onClick={() => { setHistoricalYear(null); setPreviewYear(null); setLiveReset(v => v + 1); if (!timelineOpen) setTimelineOpen(false); }}
@@ -355,15 +362,9 @@ export default function Home() {
             pointerEvents: "auto",
             fontSize: 8, letterSpacing: "0.18em", textTransform: "uppercase",
             padding: "2px 8px", borderRadius: 10, cursor: "pointer",
-            background: historicalYear
-              ? "rgba(255,255,255,0.06)"
-              : (mapReady ? "rgba(34,197,94,0.18)" : "rgba(255,255,255,0.06)"),
-            border: `1px solid ${historicalYear
-              ? "rgba(255,255,255,0.12)"
-              : (mapReady ? "rgba(34,197,94,0.35)" : "rgba(255,255,255,0.14)")}`,
-            color: historicalYear
-              ? "rgba(255,255,255,0.35)"
-              : (mapReady ? "#22c55e" : "rgba(255,255,255,0.35)"),
+            background: isLive ? "rgba(34,197,94,0.18)" : "rgba(255,255,255,0.06)",
+            border: `1px solid ${isLive ? "rgba(34,197,94,0.35)" : "rgba(255,255,255,0.14)"}`,
+            color:      isLive ? "#22c55e" : "rgba(255,255,255,0.35)",
             marginBottom: 7,
           }}
         >live</button>
@@ -373,6 +374,8 @@ export default function Home() {
           historyDate={historyDate}
         />
       </div>
+        );
+      })()}
 
       {/* Historical time scrubber */}
       <TimeScrubber

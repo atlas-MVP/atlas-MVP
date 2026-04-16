@@ -52,18 +52,43 @@ export default function EventUploadButton({ eventId, label = "+ upload" }: Props
       >{label}</button>
 
       {open && (
+        // Full-viewport modal — dimmed backdrop, card centered, takes over
+        // the site so the popup is never clipped by its parent container.
         <div
-          ref={popupRef}
-          onClick={e => e.stopPropagation()}
+          onClick={() => setOpen(false)}
           style={{
-            position: "absolute", top: "calc(100% + 6px)", right: 0, zIndex: 100,
-            width: 320, padding: 14,
-            background: "rgba(10,13,26,0.98)", backdropFilter: "blur(30px)",
-            border: "1px solid rgba(255,255,255,0.1)", borderRadius: 12,
-            boxShadow: "0 12px 40px rgba(0,0,0,0.5)",
+            position: "fixed", inset: 0, zIndex: 100,
+            background: "rgba(0,0,0,0.55)",
+            backdropFilter: "blur(4px)",
+            WebkitBackdropFilter: "blur(4px)",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            padding: 16,
           }}
         >
-          <Popup eventId={eventId} onDone={() => setOpen(false)} />
+          <div
+            ref={popupRef}
+            onClick={e => e.stopPropagation()}
+            style={{
+              position: "relative",
+              width: "min(420px, 100%)",
+              padding: 20,
+              background: "rgba(10,13,26,0.98)",
+              border: "1px solid rgba(255,255,255,0.1)", borderRadius: 14,
+              boxShadow: "0 24px 80px rgba(0,0,0,0.6)",
+            }}
+          >
+            <button
+              onClick={() => setOpen(false)}
+              style={{
+                position: "absolute", top: 10, right: 12,
+                background: "none", border: "none", cursor: "pointer",
+                color: "rgba(255,255,255,0.35)", fontSize: 16, lineHeight: 1, padding: 0,
+              }}
+              onMouseEnter={e => (e.currentTarget.style.color = "rgba(255,255,255,0.85)")}
+              onMouseLeave={e => (e.currentTarget.style.color = "rgba(255,255,255,0.35)")}
+            >×</button>
+            <Popup eventId={eventId} onDone={() => setOpen(false)} />
+          </div>
         </div>
       )}
     </div>
