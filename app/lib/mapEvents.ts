@@ -20,7 +20,7 @@ export interface MapEventStep {
   /** Highlight countries (ISO codes) — fills them on the map */
   highlight?: string[];
   /** Show strike markers */
-  strikes?: { lng: number; lat: number; side: "amber" | "crimson"; label?: string }[];
+  strikes?: { lng: number; lat: number; side: "amber" | "crimson"; label?: string; confidence?: number; sources?: { label: string; url?: string }[] }[];
   /** Narration text shown as overlay subtitle */
   narration?: string;
   /** Milliseconds to wait BEFORE this step executes (default 0) */

@@ -2,15 +2,26 @@
 
 /* Mapbox popup overrides */
 .atlas-popup .mapboxgl-popup-content {
-  background: rgba(0, 0, 0, 0.85);
-  backdrop-filter: blur(12px);
-  border: 1px solid rgba(239, 68, 68, 0.4);
-  border-radius: 6px;
-  padding: 10px 14px;
-  box-shadow: 0 0 20px rgba(239, 68, 68, 0.2);
+  background: rgba(4, 6, 18, 0.92);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  padding: 12px 14px;
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.7), 0 0 12px rgba(0, 0, 0, 0.4);
 }
 .atlas-popup .mapboxgl-popup-tip {
-  border-top-color: rgba(0, 0, 0, 0.85);
+  border-top-color: rgba(4, 6, 18, 0.92);
+}
+.atlas-popup .mapboxgl-popup-close-button {
+  color: rgba(255, 255, 255, 0.3);
+  font-size: 16px;
+  padding: 4px 8px;
+  right: 2px;
+  top: 2px;
+}
+.atlas-popup .mapboxgl-popup-close-button:hover {
+  color: rgba(255, 255, 255, 0.7);
+  background: transparent;
 }
 
 body, html {

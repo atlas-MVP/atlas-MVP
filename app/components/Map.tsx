@@ -110,6 +110,8 @@ interface StrikeMarker {
   lat: number;
   side: "amber" | "crimson";
   label?: string;
+  confidence?: number;
+  sources?: { label: string; url?: string }[];
 }
 interface ActiveStrikesData {
   strikes: StrikeMarker[];
@@ -286,10 +288,16 @@ export default function Map({ onCountryClick, flyToCode, flyToPosition, selected
     const setData = (strikes: StrikeMarker[]) => {
       (m.getSource("strikes") as mapboxgl.GeoJSONSource).setData({
         type: "FeatureCollection",
-        features: strikes.map(s => ({
+        features: strikes.map((s, idx) => ({
           type: "Feature" as const,
           geometry: { type: "Point" as const, coordinates: [s.lng, s.lat] },
-          properties: { color: s.side === "amber" ? "#3b82f6" : "#e11d48", label: s.label ?? "" },
+          properties: {
+            color: s.side === "amber" ? "#3b82f6" : "#e11d48",
+            label: s.label ?? "",
+            idx,
+            confidence: s.confidence ?? 0,
+            sources: JSON.stringify(s.sources ?? []),
+          },
         })),
       });
     };
@@ -625,23 +633,36 @@ export default function Map({ onCountryClick, flyToCode, flyToPosition, selected
         type: "geojson",
         data: { type: "FeatureCollection", features: [] },
       });
+      // Strike markers — layered for holographic depth effect
+      m.addLayer({
+        id: "strike-outer-halo",
+        type: "circle",
+        source: "strikes",
+        paint: { "circle-radius": 22, "circle-color": ["get", "color"], "circle-opacity": 0.04, "circle-blur": 1.2, "circle-stroke-width": 0 },
+      });
       m.addLayer({
         id: "strike-halo",
         type: "circle",
         source: "strikes",
-        paint: { "circle-radius": 12, "circle-color": ["get", "color"], "circle-opacity": 0.10, "circle-blur": 1, "circle-stroke-width": 0 },
+        paint: { "circle-radius": 14, "circle-color": ["get", "color"], "circle-opacity": 0.10, "circle-blur": 0.8, "circle-stroke-width": 0 },
       });
       m.addLayer({
         id: "strike-glow",
         type: "circle",
         source: "strikes",
-        paint: { "circle-radius": 6, "circle-color": ["get", "color"], "circle-opacity": 0.38, "circle-blur": 0.9, "circle-stroke-width": 0 },
+        paint: { "circle-radius": 7, "circle-color": ["get", "color"], "circle-opacity": 0.35, "circle-blur": 0.6, "circle-stroke-width": 0 },
+      });
+      m.addLayer({
+        id: "strike-core",
+        type: "circle",
+        source: "strikes",
+        paint: { "circle-radius": 4.2, "circle-color": ["get", "color"], "circle-opacity": 0.85, "circle-blur": 0.1, "circle-stroke-width": 0 },
       });
       m.addLayer({
         id: "strike-dot",
         type: "circle",
         source: "strikes",
-        paint: { "circle-radius": 2.8, "circle-color": ["get", "color"], "circle-opacity": 0.90, "circle-blur": 0, "circle-stroke-width": 0 },
+        paint: { "circle-radius": 2, "circle-color": "#ffffff", "circle-opacity": 0.70, "circle-blur": 0, "circle-stroke-width": 0 },
       });
 
       // --- Idle pulse: 5fps, paused during zoom (setPaintProperty competes with tile rendering) ---
@@ -753,14 +774,66 @@ export default function Map({ onCountryClick, flyToCode, flyToPosition, selected
         if (code) onCountryClick?.(code);
       });
 
-      // Click empty map → deselect
-      m.on("click", (e) => {
-        const features = m.queryRenderedFeatures(e.point, { layers: ["world-hit"] });
-        if (!features.length) onCountryClick?.("");
-      });
+      // Click empty map — panels stay locked; only explicit ✕ or ATLAS button closes them
 
       m.on("mouseenter", "events-dot", () => { m.getCanvas().style.cursor = "pointer"; });
       m.on("mouseleave", "events-dot", () => { m.getCanvas().style.cursor = ""; });
+
+      // Strike dot click → show confidence + sources popup
+      m.on("mouseenter", "strike-dot", () => { m.getCanvas().style.cursor = "pointer"; });
+      m.on("mouseleave", "strike-dot", () => { m.getCanvas().style.cursor = ""; });
+      let strikePopup: mapboxgl.Popup | null = null;
+      m.on("click", "strike-dot", (e) => {
+        const f = e.features?.[0];
+        if (!f) return;
+        e.originalEvent.stopPropagation();
+        const props = f.properties!;
+        const label = props.label || "Strike";
+        const confidence = props.confidence ?? 0;
+        const sources: { label: string; url?: string }[] = (() => {
+          try { return JSON.parse(props.sources || "[]"); } catch { return []; }
+        })();
+        const coords = (f.geometry as GeoJSON.Point).coordinates as [number, number];
+
+        // Confidence color
+        const cc = confidence >= 90 ? "#22c55e" : confidence >= 80 ? "#86efac" : confidence >= 70 ? "#fbbf24" : "#f87171";
+        const dotColor = props.color || "#e11d48";
+
+        // Build popup HTML matching the atlas-popup + confidence style
+        const html = `
+          <div style="min-width:200px;max-width:280px">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+              <span style="width:8px;height:8px;border-radius:50%;background:${dotColor};box-shadow:0 0 8px ${dotColor}88;flex-shrink:0"></span>
+              <span style="font-size:12px;font-weight:600;color:rgba(255,255,255,0.92);letter-spacing:0.02em">${label}</span>
+            </div>
+            ${confidence > 0 ? `
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+              <span style="font-size:8px;font-family:monospace;letter-spacing:0.12em;color:rgba(255,255,255,0.35);min-width:52px;text-transform:uppercase">confidence</span>
+              <div style="width:80px;height:5px;border-radius:99px;background:rgba(255,255,255,0.10);overflow:hidden;flex-shrink:0">
+                <div style="width:${confidence}%;height:100%;border-radius:99px;background:${cc}"></div>
+              </div>
+              <span style="font-size:9px;font-family:monospace;font-weight:700;color:${cc}">${confidence}%</span>
+            </div>` : ""}
+            ${sources.length > 0 ? `
+            <div style="border-top:1px solid rgba(255,255,255,0.08);padding-top:7px;margin-top:4px">
+              <span style="font-size:8px;font-family:monospace;letter-spacing:0.14em;color:rgba(255,255,255,0.22);text-transform:uppercase">sources</span>
+              <div style="display:flex;flex-direction:column;gap:4px;margin-top:5px">
+                ${sources.map(s => s.url
+                  ? `<a href="${s.url}" target="_blank" rel="noopener" style="font-size:10px;font-family:monospace;color:rgba(96,165,250,0.7);text-decoration:none;letter-spacing:0.04em"
+                      onmouseenter="this.style.color='rgba(147,197,253,1)'" onmouseleave="this.style.color='rgba(96,165,250,0.7)'">${s.label} ↗</a>`
+                  : `<span style="font-size:10px;font-family:monospace;color:rgba(255,255,255,0.5);letter-spacing:0.04em">${s.label}</span>`
+                ).join("")}
+              </div>
+            </div>` : ""}
+          </div>
+        `;
+
+        if (strikePopup) strikePopup.remove();
+        strikePopup = new mapboxgl.Popup({ className: "atlas-popup", closeButton: true, closeOnClick: false, maxWidth: "320px", offset: 14 })
+          .setLngLat(coords)
+          .setHTML(html)
+          .addTo(m);
+      });
 
       // No intro auto-scroll — user navigates manually
     });

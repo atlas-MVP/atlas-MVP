@@ -101,6 +101,8 @@ export interface StrikeMarker {
   lat: number;
   side: "amber" | "crimson"; // amber = Israel/US, crimson = Iran/proxy
   label?: string;
+  confidence?: number;
+  sources?: { label: string; url?: string }[];
 }
 
 export interface StrikeEvent {
@@ -141,6 +143,20 @@ interface Conflict {
   timeline: TimelineEvent[];
   feedKey: string;
 }
+
+// ── Common source sets for strike markers ──────────────────────────────────
+const SRC = {
+  reuters:   { label: "Reuters", url: "https://www.reuters.com/world/middle-east/" },
+  bbc:       { label: "BBC News", url: "https://www.bbc.com/news/world-middle-east" },
+  nyt:       { label: "New York Times", url: "https://www.nytimes.com/section/world/middleeast" },
+  aljazeera: { label: "Al Jazeera", url: "https://www.aljazeera.com/where/middle-east/" },
+  idf:       { label: "IDF Spokesperson", url: "https://www.idf.il/en/" },
+  ocha:      { label: "UN OCHA", url: "https://www.ochaopt.org" },
+  iaea:      { label: "IAEA", url: "https://www.iaea.org" },
+  atlas:     { label: "Atlas Intelligence" },
+  ap:        { label: "AP News", url: "https://apnews.com/hub/middle-east" },
+  cnn:       { label: "CNN", url: "https://www.cnn.com/world" },
+};
 
 const CONFLICTS: Record<string, Conflict> = {
   "israel-iran": {
@@ -219,17 +235,17 @@ const CONFLICTS: Record<string, Conflict> = {
           center: [47.0, 30.5], zoom: 3.8,
           strikes: [
             // US/Israel → Iran nuclear & military sites
-            { lng: 51.73, lat: 33.72, side: "amber", label: "Natanz Nuclear" },
-            { lng: 51.12, lat: 34.88, side: "amber", label: "Fordow (FFEP)" },
-            { lng: 49.23, lat: 34.47, side: "amber", label: "Arak (IR-40)" },
-            { lng: 51.78, lat: 35.49, side: "amber", label: "Parchin Military" },
-            { lng: 51.40, lat: 35.69, side: "amber", label: "IRGC Tehran HQ" },
-            { lng: 50.33, lat: 29.25, side: "amber", label: "Kharg Island" },
+            { lng: 51.73, lat: 33.72, side: "amber", label: "Natanz Nuclear", confidence: 78, sources: [SRC.atlas, SRC.bbc, SRC.nyt] },
+            { lng: 51.12, lat: 34.88, side: "amber", label: "Fordow (FFEP)", confidence: 78, sources: [SRC.atlas, SRC.iaea] },
+            { lng: 49.23, lat: 34.47, side: "amber", label: "Arak (IR-40)", confidence: 75, sources: [SRC.atlas, SRC.reuters] },
+            { lng: 51.78, lat: 35.49, side: "amber", label: "Parchin Military", confidence: 72, sources: [SRC.atlas, SRC.nyt] },
+            { lng: 51.40, lat: 35.69, side: "amber", label: "IRGC Tehran HQ", confidence: 80, sources: [SRC.atlas, SRC.bbc, SRC.reuters] },
+            { lng: 50.33, lat: 29.25, side: "amber", label: "Kharg Island", confidence: 74, sources: [SRC.atlas, SRC.reuters] },
             // Iran → US Gulf bases + Israel
-            { lng: 51.31, lat: 25.12, side: "crimson", label: "Al Udeid AB (Qatar)" },
-            { lng: 54.55, lat: 24.25, side: "crimson", label: "Al Dhafra AB (UAE)" },
-            { lng: 47.52, lat: 29.45, side: "crimson", label: "Ali Al Salem AB (Kuwait)" },
-            { lng: 34.78, lat: 32.09, side: "crimson", label: "Tel Aviv" },
+            { lng: 51.31, lat: 25.12, side: "crimson", label: "Al Udeid AB (Qatar)", confidence: 70, sources: [SRC.atlas] },
+            { lng: 54.55, lat: 24.25, side: "crimson", label: "Al Dhafra AB (UAE)", confidence: 70, sources: [SRC.atlas] },
+            { lng: 47.52, lat: 29.45, side: "crimson", label: "Ali Al Salem AB (Kuwait)", confidence: 68, sources: [SRC.atlas] },
+            { lng: 34.78, lat: 32.09, side: "crimson", label: "Tel Aviv", confidence: 82, sources: [SRC.atlas, SRC.bbc] },
           ],
         },
       },
@@ -312,15 +328,15 @@ const CONFLICTS: Record<string, Conflict> = {
         strikeEvent: {
           center: [43.0, 33.0], zoom: 3.8,
           strikes: [
-            { lng: 51.73, lat: 33.72, side: "amber", label: "Natanz" },
-            { lng: 51.12, lat: 34.88, side: "amber", label: "Fordow" },
-            { lng: 51.67, lat: 32.62, side: "amber", label: "Isfahan IRGC" },
-            { lng: 51.40, lat: 35.69, side: "amber", label: "Tehran IRGC HQ" },
+            { lng: 51.73, lat: 33.72, side: "amber", label: "Natanz", confidence: 82, sources: [SRC.atlas, SRC.bbc, SRC.nyt] },
+            { lng: 51.12, lat: 34.88, side: "amber", label: "Fordow", confidence: 80, sources: [SRC.atlas, SRC.iaea] },
+            { lng: 51.67, lat: 32.62, side: "amber", label: "Isfahan IRGC", confidence: 78, sources: [SRC.atlas, SRC.reuters] },
+            { lng: 51.40, lat: 35.69, side: "amber", label: "Tehran IRGC HQ", confidence: 80, sources: [SRC.atlas, SRC.bbc] },
             // Iran retaliates → Israel
-            { lng: 34.78, lat: 32.09, side: "crimson", label: "Tel Aviv" },
-            { lng: 34.99, lat: 32.82, side: "crimson", label: "Haifa" },
-            { lng: 34.79, lat: 31.25, side: "crimson", label: "Beer Sheva" },
-            { lng: 35.21, lat: 31.77, side: "crimson", label: "Jerusalem" },
+            { lng: 34.78, lat: 32.09, side: "crimson", label: "Tel Aviv", confidence: 85, sources: [SRC.atlas, SRC.reuters, SRC.bbc] },
+            { lng: 34.99, lat: 32.82, side: "crimson", label: "Haifa", confidence: 82, sources: [SRC.atlas, SRC.reuters] },
+            { lng: 34.79, lat: 31.25, side: "crimson", label: "Beer Sheva", confidence: 78, sources: [SRC.atlas] },
+            { lng: 35.21, lat: 31.77, side: "crimson", label: "Jerusalem", confidence: 85, sources: [SRC.atlas, SRC.bbc] },
           ],
         },
       },
@@ -341,11 +357,11 @@ const CONFLICTS: Record<string, Conflict> = {
         strikeEvent: {
           center: [49.5, 34.5], zoom: 4.2,
           strikes: [
-            { lng: 51.67, lat: 32.62, side: "amber", label: "Isfahan S-300 Site" },
-            { lng: 46.29, lat: 38.08, side: "amber", label: "Tabriz Radar" },
-            { lng: 48.73, lat: 31.32, side: "amber", label: "Khuzestan Air Defense" },
-            { lng: 51.30, lat: 35.71, side: "amber", label: "Tehran Air Defense" },
-            { lng: 51.73, lat: 33.72, side: "amber", label: "Natanz Perimeter" },
+            { lng: 51.67, lat: 32.62, side: "amber", label: "Isfahan S-300 Site", confidence: 94, sources: [SRC.nyt, SRC.reuters, SRC.idf] },
+            { lng: 46.29, lat: 38.08, side: "amber", label: "Tabriz Radar", confidence: 91, sources: [SRC.bbc, SRC.reuters] },
+            { lng: 48.73, lat: 31.32, side: "amber", label: "Khuzestan Air Defense", confidence: 88, sources: [SRC.nyt, SRC.ap] },
+            { lng: 51.30, lat: 35.71, side: "amber", label: "Tehran Air Defense", confidence: 92, sources: [SRC.reuters, SRC.bbc] },
+            { lng: 51.73, lat: 33.72, side: "amber", label: "Natanz Perimeter", confidence: 90, sources: [SRC.iaea, SRC.nyt] },
           ],
         },
       },
@@ -355,9 +371,9 @@ const CONFLICTS: Record<string, Conflict> = {
         strikeEvent: {
           center: [36.5, 31.5], zoom: 5.0,
           strikes: [
-            { lng: 35.01, lat: 30.94, side: "crimson", label: "Nevatim Air Base" },
-            { lng: 34.82, lat: 31.84, side: "crimson", label: "Tel Nof Air Base" },
-            { lng: 34.66, lat: 30.78, side: "crimson", label: "Ramon Air Base" },
+            { lng: 35.01, lat: 30.94, side: "crimson", label: "Nevatim Air Base", confidence: 96, sources: [SRC.idf, SRC.reuters, SRC.bbc] },
+            { lng: 34.82, lat: 31.84, side: "crimson", label: "Tel Nof Air Base", confidence: 93, sources: [SRC.nyt, SRC.reuters] },
+            { lng: 34.66, lat: 30.78, side: "crimson", label: "Ramon Air Base", confidence: 91, sources: [SRC.reuters, SRC.ap] },
           ],
         },
       },
@@ -367,10 +383,10 @@ const CONFLICTS: Record<string, Conflict> = {
         strikeEvent: {
           center: [35.4, 33.6], zoom: 6.5,
           strikes: [
-            { lng: 35.50, lat: 33.84, side: "amber", label: "Beirut Dahieh — Nasrallah" },
-            { lng: 35.20, lat: 33.27, side: "amber", label: "Tyre" },
-            { lng: 35.37, lat: 33.56, side: "amber", label: "Sidon" },
-            { lng: 35.57, lat: 33.21, side: "amber", label: "Kiryat Shmona (Hezbollah rockets)" },
+            { lng: 35.50, lat: 33.84, side: "amber", label: "Beirut Dahieh — Nasrallah", confidence: 98, sources: [SRC.reuters, SRC.aljazeera, SRC.nyt] },
+            { lng: 35.20, lat: 33.27, side: "amber", label: "Tyre", confidence: 92, sources: [SRC.aljazeera, SRC.reuters] },
+            { lng: 35.37, lat: 33.56, side: "amber", label: "Sidon", confidence: 90, sources: [SRC.aljazeera, SRC.bbc] },
+            { lng: 35.57, lat: 33.21, side: "amber", label: "Kiryat Shmona (Hezbollah rockets)", confidence: 94, sources: [SRC.idf, SRC.reuters] },
           ],
         },
       },
@@ -380,8 +396,8 @@ const CONFLICTS: Record<string, Conflict> = {
         strikeEvent: {
           center: [44.5, 34.5], zoom: 4.5,
           strikes: [
-            { lng: 51.41, lat: 35.72, side: "amber", label: "Tehran — Haniyeh" },
-            { lng: 35.50, lat: 33.84, side: "amber", label: "Beirut — Fuad Shukr" },
+            { lng: 51.41, lat: 35.72, side: "amber", label: "Tehran — Haniyeh", confidence: 97, sources: [SRC.reuters, SRC.nyt, SRC.aljazeera] },
+            { lng: 35.50, lat: 33.84, side: "amber", label: "Beirut — Fuad Shukr", confidence: 96, sources: [SRC.reuters, SRC.bbc, SRC.idf] },
           ],
         },
       },
@@ -397,10 +413,10 @@ const CONFLICTS: Record<string, Conflict> = {
         strikeEvent: {
           center: [36.0, 31.8], zoom: 5.2,
           strikes: [
-            { lng: 34.78, lat: 32.09, side: "crimson", label: "Tel Aviv" },
-            { lng: 35.21, lat: 31.77, side: "crimson", label: "Jerusalem" },
-            { lng: 35.15, lat: 30.98, side: "crimson", label: "Dimona (intercepted)" },
-            { lng: 34.66, lat: 30.78, side: "crimson", label: "Ramon AFB" },
+            { lng: 34.78, lat: 32.09, side: "crimson", label: "Tel Aviv", confidence: 97, sources: [SRC.idf, SRC.reuters, SRC.bbc] },
+            { lng: 35.21, lat: 31.77, side: "crimson", label: "Jerusalem", confidence: 95, sources: [SRC.reuters, SRC.nyt] },
+            { lng: 35.15, lat: 30.98, side: "crimson", label: "Dimona (intercepted)", confidence: 88, sources: [SRC.nyt, SRC.bbc] },
+            { lng: 34.66, lat: 30.78, side: "crimson", label: "Ramon AFB", confidence: 90, sources: [SRC.idf, SRC.reuters] },
           ],
         },
       },
@@ -410,7 +426,7 @@ const CONFLICTS: Record<string, Conflict> = {
         strikeEvent: {
           center: [35.8, 32.8], zoom: 5.8,
           strikes: [
-            { lng: 36.28, lat: 33.50, side: "amber", label: "Damascus — Iranian Consulate" },
+            { lng: 36.28, lat: 33.50, side: "amber", label: "Damascus — Iranian Consulate", confidence: 96, sources: [SRC.reuters, SRC.aljazeera, SRC.nyt] },
           ],
         },
       },
@@ -426,12 +442,12 @@ const CONFLICTS: Record<string, Conflict> = {
         strikeEvent: {
           center: [34.42, 31.40], zoom: 10.5,
           strikes: [
-            { lng: 34.5915, lat: 31.5245, side: "crimson", label: "Sderot" },
-            { lng: 34.4890, lat: 31.3768, side: "crimson", label: "Kibbutz Be'eri" },
-            { lng: 34.5420, lat: 31.3480, side: "crimson", label: "Nova Festival (Re'im)" },
-            { lng: 34.4640, lat: 31.3218, side: "crimson", label: "Kibbutz Nir Oz" },
-            { lng: 34.5730, lat: 31.4850, side: "crimson", label: "Kibbutz Kfar Aza" },
-            { lng: 34.3460, lat: 31.4180, side: "amber",   label: "Gaza City (IDF response)" },
+            { lng: 34.5915, lat: 31.5245, side: "crimson", label: "Sderot", confidence: 98, sources: [SRC.reuters, SRC.bbc, SRC.aljazeera] },
+            { lng: 34.4890, lat: 31.3768, side: "crimson", label: "Kibbutz Be'eri", confidence: 98, sources: [SRC.nyt, SRC.reuters] },
+            { lng: 34.5420, lat: 31.3480, side: "crimson", label: "Nova Festival (Re'im)", confidence: 99, sources: [SRC.reuters, SRC.bbc, SRC.nyt] },
+            { lng: 34.4640, lat: 31.3218, side: "crimson", label: "Kibbutz Nir Oz", confidence: 97, sources: [SRC.reuters, SRC.ap] },
+            { lng: 34.5730, lat: 31.4850, side: "crimson", label: "Kibbutz Kfar Aza", confidence: 97, sources: [SRC.nyt, SRC.bbc] },
+            { lng: 34.3460, lat: 31.4180, side: "amber",   label: "Gaza City (IDF response)", confidence: 95, sources: [SRC.idf, SRC.reuters] },
           ],
         },
         linkedConflicts: [
@@ -522,9 +538,9 @@ const CONFLICTS: Record<string, Conflict> = {
         strikeEvent: {
           center: [34.30, 31.35], zoom: 10.5,
           strikes: [
-            { lng: 34.30, lat: 31.35, side: "amber", label: "Khan Younis — ground assault" },
-            { lng: 34.44, lat: 31.50, side: "amber", label: "Gaza City — leveled" },
-            { lng: 34.25, lat: 31.22, side: "amber", label: "Rafah border" },
+            { lng: 34.30, lat: 31.35, side: "amber", label: "Khan Younis — ground assault", confidence: 95, sources: [SRC.aljazeera, SRC.ocha, SRC.reuters] },
+            { lng: 34.44, lat: 31.50, side: "amber", label: "Gaza City — leveled", confidence: 97, sources: [SRC.aljazeera, SRC.bbc, SRC.ocha] },
+            { lng: 34.25, lat: 31.22, side: "amber", label: "Rafah border", confidence: 93, sources: [SRC.reuters, SRC.aljazeera] },
           ],
         },
       },
@@ -535,8 +551,8 @@ const CONFLICTS: Record<string, Conflict> = {
         strikeEvent: {
           center: [34.44, 31.50], zoom: 11,
           strikes: [
-            { lng: 34.44, lat: 31.52, side: "amber", label: "Gaza City — ground invasion" },
-            { lng: 34.45, lat: 31.52, side: "amber", label: "Al-Shifa Hospital" },
+            { lng: 34.44, lat: 31.52, side: "amber", label: "Gaza City — ground invasion", confidence: 97, sources: [SRC.aljazeera, SRC.reuters, SRC.bbc] },
+            { lng: 34.45, lat: 31.52, side: "amber", label: "Al-Shifa Hospital", confidence: 96, sources: [SRC.aljazeera, SRC.ocha, SRC.nyt] },
           ],
         },
       },
@@ -548,12 +564,12 @@ const CONFLICTS: Record<string, Conflict> = {
         strikeEvent: {
           center: [34.42, 31.40], zoom: 10.5,
           strikes: [
-            { lng: 34.5915, lat: 31.5245, side: "crimson", label: "Sderot" },
-            { lng: 34.4890, lat: 31.3768, side: "crimson", label: "Kibbutz Be'eri" },
-            { lng: 34.5420, lat: 31.3480, side: "crimson", label: "Nova Festival (Re'im)" },
-            { lng: 34.4640, lat: 31.3218, side: "crimson", label: "Kibbutz Nir Oz" },
-            { lng: 34.5730, lat: 31.4850, side: "crimson", label: "Kibbutz Kfar Aza" },
-            { lng: 34.3460, lat: 31.4180, side: "amber",   label: "Gaza City (IDF response)" },
+            { lng: 34.5915, lat: 31.5245, side: "crimson", label: "Sderot", confidence: 98, sources: [SRC.reuters, SRC.bbc, SRC.aljazeera] },
+            { lng: 34.4890, lat: 31.3768, side: "crimson", label: "Kibbutz Be'eri", confidence: 98, sources: [SRC.nyt, SRC.reuters] },
+            { lng: 34.5420, lat: 31.3480, side: "crimson", label: "Nova Festival (Re'im)", confidence: 99, sources: [SRC.reuters, SRC.bbc, SRC.nyt] },
+            { lng: 34.4640, lat: 31.3218, side: "crimson", label: "Kibbutz Nir Oz", confidence: 97, sources: [SRC.reuters, SRC.ap] },
+            { lng: 34.5730, lat: 31.4850, side: "crimson", label: "Kibbutz Kfar Aza", confidence: 97, sources: [SRC.nyt, SRC.bbc] },
+            { lng: 34.3460, lat: 31.4180, side: "amber",   label: "Gaza City (IDF response)", confidence: 95, sources: [SRC.idf, SRC.reuters] },
           ],
         },
         linkedConflicts: [
