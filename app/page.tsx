@@ -45,7 +45,7 @@ const Map = dynamic(() => import("./components/Map"), {
 
 // Map view per conflict (overrides per-country default)
 const CONFLICT_CENTERS: Record<string, { center: [number, number]; zoom: number }> = {
-  "israel-iran":     { center: [43.0, 32.0], zoom: 3.7 },   // wide: Israel ↔ Iran
+  "israel-iran":     { center: [43.0, 32.0], zoom: 4.8 },   // wide: Israel ↔ Iran
   "israel-gaza":     { center: [34.5, 31.6], zoom: 7.8 },   // tight: Gaza strip + Israel south
   "israel-lebanon":  { center: [35.2, 33.0], zoom: 7.2 },
   "russia-ukraine":  { center: [33.0, 49.0], zoom: 4.0 },
