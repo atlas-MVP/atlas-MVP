@@ -315,19 +315,38 @@ export default function EventVideoBubble({ eventDate: _eventDate, eventId, slide
 
   // ── Render ────────────────────────────────────────────────────────────────
   return (
-    // Outer: left:580 → right:0 as a flex row so the video column + the 96px
-    // controls column give equal 96px breathing room on both sides.
+    // Outer: left:PANEL_W (484) → right:0 as a flex row.
+    //   [ 96px upload zone ][ frosted glass + video (flex:1) ]
+    //   upload zone sits in the gap between CountryPanel and the video —
+    //   the same 96px that was previously a dead-air breathing room.
+    //   No right margin: video fills all the way to the screen edge.
     <div
       className="absolute z-20"
       style={{
-        left: 580, right: 0, top: T.VIDEO_CONTAINER_TOP,
+        left: T.PANEL_W, right: 0, top: T.VIDEO_CONTAINER_TOP,
         display: "flex", flexDirection: "row", alignItems: "flex-start",
         pointerEvents: "none",
       }}
     >
+      {/* ── Upload zone — in the gap between widget and video ── */}
+      <div
+        style={{
+          width:          T.VIDEO_COL_GAP,
+          flexShrink:     0,
+          display:        "flex",
+          flexDirection:  "column",
+          alignItems:     "center",
+          paddingTop:     12,
+          pointerEvents:  "auto",
+        }}
+        onClick={e => e.stopPropagation()}
+      >
+        <EventUploadButton eventId={eventId} onUploaded={handleUploaded} />
+      </div>
+
       {/* ── Frosted glass backdrop — Apple-style: barely-there blur + tint ── */}
       <div style={{
-        width:               "calc(100% - 96px)",
+        flex:                1,
         padding:             4,
         boxSizing:           "border-box",
         background:          "rgba(200,200,200,0.025)",
@@ -350,23 +369,6 @@ export default function EventVideoBubble({ eventDate: _eventDate, eventId, slide
         >
           {pages.map((page, i) => renderPage(page, i))}
         </div>
-      </div>
-
-      {/* ── Controls column — 96px, sits in the right-side breathing room ── */}
-      <div
-        style={{
-          width:          96,
-          flexShrink:     0,
-          display:        "flex",
-          flexDirection:  "column",
-          alignItems:     "center",
-          gap:            10,
-          paddingTop:     12,
-          pointerEvents:  "auto",
-        }}
-        onClick={e => e.stopPropagation()}
-      >
-        <EventUploadButton eventId={eventId} onUploaded={handleUploaded} />
       </div>
     </div>
   );

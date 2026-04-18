@@ -85,9 +85,16 @@ export const T = {
   //
   VIDEO_INSET:         254,                              // legacy vertical formula
   VIDEO_SIDE_MARGIN:     0,                              // no inner padding
-  VIDEO_COL_GAP:        96,                              // 1 inch panel→video gap
+  VIDEO_COL_GAP:        96,                              // 1 inch breathing room on each side of video
   VIDEO_CONTAINER_TOP: 196,                              // px — aligns with first history tile
-  VIDEO_CONTAINER_H:   "calc((100vw - 676px) * 9 / 16)" as string, // one 16:9 frame tall
+  //
+  // Layout geometry:
+  //   PANEL_W (484) ── upload zone (96) ── VIDEO ── right edge (0)
+  //   upload zone = same 96px gap, now on the LEFT of the video
+  //   VIDEO width = 100vw - PANEL_W - VIDEO_COL_GAP = 100vw - 580
+  //   VIDEO height = VIDEO width × 9/16 (one 16:9 frame)
+  PANEL_W:             484,                              // px — CountryPanel right edge / upload zone start
+  VIDEO_CONTAINER_H:   "calc((100vw - 580px) * 9 / 16)" as string, // one 16:9 frame tall
 
   // ── Upload size slots ─────────────────────────────────────────────────────
   // Controls how uploaded media fills the video container.
