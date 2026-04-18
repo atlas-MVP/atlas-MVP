@@ -479,7 +479,7 @@ export default function Map({ onCountryClick, flyToCode, flyToPosition, selected
         "high-color": "rgb(0,0,0)",
         "space-color": "rgb(0,0,0)",
         "horizon-blend": 0.02,
-        "star-intensity": 0.12,
+        "star-intensity": 0.08,
       } as never);
 
       m.addSource("country-boundaries", {
