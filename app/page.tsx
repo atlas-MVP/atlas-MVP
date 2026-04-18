@@ -158,7 +158,12 @@ export default function Home() {
       setShowRadar(false);
       setSelectedCountry(country);
       if (historyMode) setOpenWithHistory(true);
-      setTimeout(() => applyConflict(conflictId, country), 0);
+      // Wait for map to be ready before applying conflict position
+      if (mapReady) {
+        applyConflict(conflictId, country);
+      } else {
+        setTimeout(() => applyConflict(conflictId, country), 100);
+      }
       return;
     }
     // Disaster slug → fly to location only, no country panel
@@ -168,7 +173,7 @@ export default function Home() {
       setFlyToPosition({ ...disasterPos, key: "disaster-" + slug });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [mapReady]);
 
   const handleCountryHome = (iso: string) => {
     setHomeCountry(iso);
