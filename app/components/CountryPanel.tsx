@@ -1954,6 +1954,7 @@ export default function CountryPanel({ countryCode, onClose, onViewFeed, onConfl
           {editorOpen && (
             <EventMediaEditor
               eventId={evId}
+              slides={ev.slides ?? []}
               onClose={() => setEditorOpen(false)}
               onChanged={() => setUploadTick(t => t + 1)}
             />

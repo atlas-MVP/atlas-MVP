@@ -328,21 +328,8 @@ export default function EventVideoBubble({ eventDate: _eventDate, eventId, slide
         pointerEvents: "none",
       }}
     >
-      {/* ── Gap zone — upload button only (edit button lives in CountryPanel gap zone) ── */}
-      <div
-        style={{
-          width:         T.VIDEO_COL_GAP,
-          flexShrink:    0,
-          display:       "flex",
-          flexDirection: "column",
-          alignItems:    "center",
-          paddingTop:    12,
-          pointerEvents: "auto",
-        }}
-        onClick={e => e.stopPropagation()}
-      >
-        <EventUploadButton eventId={eventId} onUploaded={handleUploaded} />
-      </div>
+      {/* ── Gap zone — empty spacer (upload + edit live in CountryPanel) ── */}
+      <div style={{ width: T.VIDEO_COL_GAP, flexShrink: 0 }} />
 
       {/* ── Frosted glass backdrop — Apple-style: barely-there blur + tint ── */}
       <div style={{
