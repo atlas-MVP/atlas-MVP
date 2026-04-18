@@ -2,6 +2,10 @@
 
 # Atlas rules — ALWAYS follow
 
+## Code changes
+
+- **After EVERY code change, immediately `git add`, `git commit`, and `git push`.** Never leave changes unstaged or uncommitted. atlas.boston must always reflect the latest work.
+
 ## Deploy target
 
 - **The ONLY production URL is `atlas.boston`.**
