@@ -3,14 +3,12 @@
 /**
  * EventMediaEditor — modal for managing uploaded media on a timeline event.
  *
- * Features:
- *   • Resize — click a size pill (1/1 · 1/2 · 1/4) to update the display slot
- *   • Reorder — ▲ / ▼ arrows move an item up or down in the manifest
- *   • Delete — removes the entry from the manifest AND Cloudflare R2
- *
- * All changes persist immediately via PATCH / DELETE to /api/upload.
- * onChanged() is called after every mutation so the parent (EventVideoBubble)
- * can refresh its content.
+ * Each row shows:
+ *   • Thumbnail preview (video first-frame, YouTube thumb, article/tweet icon)
+ *   • Display name (filename for uploads, domain for articles, title if set)
+ *   • Size pills  1/1 · 1/2 · 1/4
+ *   • ▲ ▼ reorder
+ *   • × delete (manifest + Cloudflare R2)
  */
 
 import { useEffect, useState } from "react";
@@ -18,12 +16,13 @@ import { T, clr } from "../lib/tokens";
 import type { VideoSize } from "../lib/tokens";
 
 interface MediaItem {
-  id:        string;
-  type:      "video" | "youtube" | "tweet" | "article";
-  title:     string;
-  embedUrl?: string;
-  size?:     VideoSize;
-  eventId?:  string;
+  id:         string;
+  type:       "video" | "youtube" | "tweet" | "article";
+  title:      string;
+  embedUrl?:  string;
+  signedUrl?: string;
+  size?:      VideoSize;
+  eventId?:   string;
 }
 
 interface Props {
@@ -34,16 +33,122 @@ interface Props {
 
 const SIZE_OPTIONS: VideoSize[] = ["1/1", "1/2", "1/4"];
 
-const SIZE_LABELS: Record<VideoSize, string> = {
-  "1/1": "Full",
-  "1/2": "Half",
-  "1/4": "Grid",
-};
+// ── Helpers ───────────────────────────────────────────────────────────────────
+function ytId(url: string): string | null {
+  return url.match(/(?:v=|youtu\.be\/|embed\/)([a-zA-Z0-9_-]{11})/)?.[1] ?? null;
+}
 
+function domain(url: string): string {
+  try { return new URL(url).hostname.replace(/^www\./, ""); } catch { return url; }
+}
+
+/** Human-readable name: prefer explicit title, then derive from URL/type. */
+function displayName(item: MediaItem): string {
+  if (item.title && item.title.trim()) return item.title.trim();
+  if (item.type === "youtube" && item.embedUrl) {
+    const id = ytId(item.embedUrl);
+    return id ? `youtube · ${id}` : domain(item.embedUrl);
+  }
+  if (item.embedUrl) return domain(item.embedUrl);
+  return "untitled";
+}
+
+// ── Thumbnail ─────────────────────────────────────────────────────────────────
+function Thumbnail({ item }: { item: MediaItem }) {
+  const box: React.CSSProperties = {
+    width: 88, height: 54, flexShrink: 0,
+    borderRadius: 6, overflow: "hidden",
+    background: "rgba(255,255,255,0.04)",
+    border: "1px solid rgba(255,255,255,0.08)",
+    display: "flex", alignItems: "center", justifyContent: "center",
+    position: "relative",
+  };
+
+  // YouTube — use YouTube's own thumbnail CDN
+  if (item.type === "youtube" && item.embedUrl) {
+    const id = ytId(item.embedUrl);
+    if (id) return (
+      <div style={box}>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={`https://img.youtube.com/vi/${id}/mqdefault.jpg`}
+          alt=""
+          style={{ width: "100%", height: "100%", objectFit: "cover" }}
+        />
+        {/* Play badge */}
+        <div style={{
+          position: "absolute", inset: 0,
+          display: "flex", alignItems: "center", justifyContent: "center",
+        }}>
+          <div style={{
+            width: 22, height: 22, borderRadius: "50%",
+            background: "rgba(0,0,0,0.65)",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            fontSize: 9, color: "#fff", paddingLeft: 2,
+          }}>▶</div>
+        </div>
+      </div>
+    );
+  }
+
+  // Self-hosted video — first frame via video element
+  if (item.type === "video" && item.signedUrl) {
+    return (
+      <div style={box}>
+        <video
+          src={item.signedUrl}
+          preload="metadata"
+          muted
+          style={{ width: "100%", height: "100%", objectFit: "cover" }}
+        />
+      </div>
+    );
+  }
+
+  // Article — globe icon + domain
+  if (item.type === "article") {
+    return (
+      <div style={box}>
+        <div style={{ textAlign: "center", padding: "0 6px" }}>
+          <div style={{ fontSize: 18, marginBottom: 2 }}>🌐</div>
+          <div style={{
+            fontSize: 7, fontFamily: T.MONO, color: "rgba(255,255,255,0.35)",
+            overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
+            maxWidth: 76,
+          }}>
+            {item.embedUrl ? domain(item.embedUrl) : "article"}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Tweet
+  if (item.type === "tweet") {
+    return (
+      <div style={box}>
+        <div style={{ fontSize: 22, opacity: 0.4 }}>𝕏</div>
+      </div>
+    );
+  }
+
+  // Fallback
+  return (
+    <div style={box}>
+      <span style={{ fontSize: 10, color: "rgba(255,255,255,0.2)", fontFamily: T.MONO }}>
+        {item.type}
+      </span>
+    </div>
+  );
+}
+
+// ── Component ─────────────────────────────────────────────────────────────────
 export default function EventMediaEditor({ eventId, onClose, onChanged }: Props) {
-  const [items,  setItems]  = useState<MediaItem[]>([]);
-  const [busy,   setBusy]   = useState<string | null>(null);
-  const [loaded, setLoaded] = useState(false);
+  const [items,    setItems]    = useState<MediaItem[]>([]);
+  const [busy,     setBusy]     = useState<string | null>(null);
+  const [loaded,   setLoaded]   = useState(false);
+  const [dragIdx,  setDragIdx]  = useState<number | null>(null);
+  const [overIdx,  setOverIdx]  = useState<number | null>(null);
 
   useEffect(() => {
     setLoaded(false);
@@ -53,7 +158,7 @@ export default function EventMediaEditor({ eventId, onClose, onChanged }: Props)
       .catch(() => setLoaded(true));
   }, [eventId]);
 
-  // ── Size update ─────────────────────────────────────────────────────────────
+  // ── Size update ──────────────────────────────────────────────────────────────
   const updateSize = async (id: string, size: VideoSize) => {
     setItems(prev => prev.map(it => it.id === id ? { ...it, size } : it));
     setBusy(id);
@@ -66,12 +171,8 @@ export default function EventMediaEditor({ eventId, onClose, onChanged }: Props)
     onChanged();
   };
 
-  // ── Reorder ──────────────────────────────────────────────────────────────────
-  const move = async (idx: number, dir: -1 | 1) => {
-    const next = idx + dir;
-    if (next < 0 || next >= items.length) return;
-    const reordered = [...items];
-    [reordered[idx], reordered[next]] = [reordered[next], reordered[idx]];
+  // ── Reorder (shared) ─────────────────────────────────────────────────────────
+  const reorder = async (reordered: MediaItem[]) => {
     setItems(reordered);
     await fetch("/api/upload", {
       method:  "PATCH",
@@ -80,6 +181,31 @@ export default function EventMediaEditor({ eventId, onClose, onChanged }: Props)
     }).catch(console.error);
     onChanged();
   };
+
+  const move = (idx: number, dir: -1 | 1) => {
+    const next = idx + dir;
+    if (next < 0 || next >= items.length) return;
+    const r = [...items];
+    [r[idx], r[next]] = [r[next], r[idx]];
+    reorder(r);
+  };
+
+  // ── Drag-to-reorder handlers ──────────────────────────────────────────────
+  const onDragStart = (idx: number) => setDragIdx(idx);
+  const onDragOver  = (e: React.DragEvent, idx: number) => {
+    e.preventDefault();
+    setOverIdx(idx);
+  };
+  const onDrop = (e: React.DragEvent, idx: number) => {
+    e.preventDefault();
+    if (dragIdx === null || dragIdx === idx) { setDragIdx(null); setOverIdx(null); return; }
+    const r = [...items];
+    const [moved] = r.splice(dragIdx, 1);
+    r.splice(idx, 0, moved);
+    setDragIdx(null); setOverIdx(null);
+    reorder(r);
+  };
+  const onDragEnd = () => { setDragIdx(null); setOverIdx(null); };
 
   // ── Delete ───────────────────────────────────────────────────────────────────
   const deleteItem = async (id: string) => {
@@ -93,22 +219,14 @@ export default function EventMediaEditor({ eventId, onClose, onChanged }: Props)
     onChanged();
   };
 
-  // ── Styles ───────────────────────────────────────────────────────────────────
-  const arrowBtn = (disabled: boolean): React.CSSProperties => ({
-    background: "none", border: "none",
-    color:   disabled ? clr.white(0.12) : clr.white(0.4),
-    cursor:  disabled ? "default" : "pointer",
-    fontSize: 9, padding: "2px 4px", lineHeight: 1,
-    fontFamily: T.MONO,
-  });
-
+  // ── Style helpers ────────────────────────────────────────────────────────────
   const sizeBtn = (active: boolean): React.CSSProperties => ({
     fontSize: 9, fontFamily: T.MONO, letterSpacing: T.TRACK_MED,
     padding: "3px 8px", borderRadius: T.PILL_RADIUS, cursor: "pointer",
-    background: active ? clr.blue(0.2)    : clr.white(0.06),
-    border:     active ? `1px solid ${clr.blue(0.5)}`  : `1px solid ${clr.white(0.12)}`,
-    color:      active ? clr.blue(1)      : clr.white(0.45),
-    transition: "all 0.12s",
+    background: active ? clr.blue(0.2)  : clr.white(0.06),
+    border:     active ? `1px solid ${clr.blue(0.5)}` : `1px solid ${clr.white(0.12)}`,
+    color:      active ? clr.blue(1)    : clr.white(0.4),
+    transition: "all 0.1s",
   });
 
   return (
@@ -118,130 +236,111 @@ export default function EventMediaEditor({ eventId, onClose, onChanged }: Props)
         onClick={onClose}
         style={{
           position: "fixed", inset: 0, zIndex: 50,
-          background: "rgba(0,0,0,0.55)",
-          backdropFilter: "blur(3px)",
-          WebkitBackdropFilter: "blur(3px)",
+          background: "rgba(0,0,0,0.6)",
+          backdropFilter: "blur(4px)",
+          WebkitBackdropFilter: "blur(4px)",
         }}
       />
 
-      {/* Panel */}
+      {/* Modal */}
       <div style={{
-        position:   "fixed",
-        top:        "50%",
-        left:       "50%",
-        transform:  "translate(-50%, -50%)",
-        zIndex:     51,
-        width:      500,
-        maxHeight:  "78vh",
-        overflowY:  "auto",
+        position:     "fixed",
+        top:          "50%",
+        left:         "50%",
+        transform:    "translate(-50%, -50%)",
+        zIndex:       51,
+        width:        540,
+        maxHeight:    "80vh",
+        overflowY:    "auto",
         scrollbarWidth: "none",
-        background: T.MODAL_BG,
-        border:     T.MODAL_BORDER,
+        background:   T.MODAL_BG,
+        border:       T.MODAL_BORDER,
         borderRadius: T.MODAL_RADIUS + 2,
-        boxShadow:  T.MODAL_SHADOW,
-        padding:    "18px 20px 24px",
-        boxSizing:  "border-box",
+        boxShadow:    T.MODAL_SHADOW,
+        padding:      "20px 22px 26px",
+        boxSizing:    "border-box",
       }}>
         {/* Header */}
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 18 }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20 }}>
           <span style={{
             fontSize: 10, fontFamily: T.MONO, letterSpacing: T.TRACK_XWIDE,
             textTransform: "uppercase", color: clr.white(0.4),
-          }}>
-            Edit media
-          </span>
+          }}>Edit media</span>
           <button
             onClick={onClose}
-            style={{
-              background: "none", border: "none",
-              color: clr.white(0.35), cursor: "pointer",
-              fontSize: 18, lineHeight: 1, padding: "0 2px",
-            }}
+            style={{ background: "none", border: "none", color: clr.white(0.3), cursor: "pointer", fontSize: 20, lineHeight: 1 }}
             onMouseEnter={e => (e.currentTarget.style.color = clr.white(0.8))}
-            onMouseLeave={e => (e.currentTarget.style.color = clr.white(0.35))}
+            onMouseLeave={e => (e.currentTarget.style.color = clr.white(0.3))}
           >×</button>
         </div>
 
-        {/* Legend */}
-        {loaded && items.length > 0 && (
-          <div style={{
-            display: "flex", justifyContent: "flex-end", gap: 6,
-            marginBottom: 10, paddingRight: 2,
-          }}>
-            {SIZE_OPTIONS.map(sz => (
-              <span key={sz} style={{
-                fontSize: 8, fontFamily: T.MONO, color: clr.white(0.25),
-                letterSpacing: T.TRACK_MED,
-              }}>
-                {sz} = {SIZE_LABELS[sz]}
-              </span>
-            ))}
-          </div>
-        )}
-
         {/* Loading */}
         {!loaded && (
-          <p style={{ color: clr.white(0.3), fontSize: 11, fontFamily: T.MONO, textAlign: "center", padding: "28px 0" }}>
+          <p style={{ color: clr.white(0.3), fontSize: 11, fontFamily: T.MONO, textAlign: "center", padding: "32px 0" }}>
             Loading…
           </p>
         )}
 
         {/* Empty */}
         {loaded && items.length === 0 && (
-          <p style={{ color: clr.white(0.25), fontSize: 11, fontFamily: T.MONO, textAlign: "center", padding: "28px 0" }}>
+          <p style={{ color: clr.white(0.22), fontSize: 11, fontFamily: T.MONO, textAlign: "center", padding: "32px 0" }}>
             No uploaded media for this event.
           </p>
         )}
 
-        {/* Item list */}
+        {/* Items */}
         <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
           {items.map((item, i) => (
             <div
               key={item.id}
+              draggable
+              onDragStart={() => onDragStart(i)}
+              onDragOver={e => onDragOver(e, i)}
+              onDrop={e => onDrop(e, i)}
+              onDragEnd={onDragEnd}
               style={{
                 display:    "flex",
                 alignItems: "center",
-                gap:        10,
+                gap:        12,
                 padding:    "10px 12px",
                 borderRadius: T.TILE_RADIUS,
-                background: clr.white(0.04),
-                border:     T.TILE_BORDER,
-                opacity:    busy === item.id ? 0.45 : 1,
-                transition: "opacity 0.15s",
+                background: overIdx === i && dragIdx !== i
+                  ? clr.blue(0.08)
+                  : clr.white(0.03),
+                border: overIdx === i && dragIdx !== i
+                  ? `1px solid ${clr.blue(0.35)}`
+                  : T.TILE_BORDER,
+                opacity:    dragIdx === i ? 0.35 : busy === item.id ? 0.4 : 1,
+                cursor:     "grab",
+                transition: "opacity 0.15s, background 0.1s, border-color 0.1s",
               }}
             >
-              {/* Order arrows */}
-              <div style={{ display: "flex", flexDirection: "column", flexShrink: 0 }}>
-                <button
-                  onClick={() => move(i, -1)}
-                  disabled={i === 0}
-                  style={arrowBtn(i === 0)}
-                >▲</button>
-                <button
-                  onClick={() => move(i, 1)}
-                  disabled={i === items.length - 1}
-                  style={arrowBtn(i === items.length - 1)}
-                >▼</button>
-              </div>
+              {/* Drag handle */}
+              <div style={{
+                flexShrink: 0, color: clr.white(0.2),
+                fontSize: 12, lineHeight: 1, userSelect: "none",
+                letterSpacing: "0.05em",
+              }}>⠿</div>
 
-              {/* Type + title */}
+              {/* Thumbnail */}
+              <Thumbnail item={item} />
+
+              {/* Name + type */}
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 5, marginBottom: 3 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 4 }}>
                   <span style={{
-                    fontSize: 8, fontFamily: T.MONO, letterSpacing: T.TRACK_MED,
-                    textTransform: "uppercase", padding: "2px 6px", borderRadius: 3,
-                    background: clr.white(0.07), color: clr.white(0.35),
+                    fontSize: 7, fontFamily: T.MONO, letterSpacing: T.TRACK_WIDE,
+                    textTransform: "uppercase", padding: "2px 5px", borderRadius: 3,
+                    background: clr.white(0.07), color: clr.white(0.3),
                   }}>{item.type}</span>
-                  <span style={{ fontSize: 8, fontFamily: T.MONO, color: clr.white(0.2) }}>
-                    #{i + 1}
-                  </span>
+                  <span style={{ fontSize: 8, fontFamily: T.MONO, color: clr.white(0.18) }}>#{i + 1}</span>
                 </div>
                 <p style={{
-                  margin: 0, fontSize: 11, fontFamily: T.MONO,
-                  color: clr.white(0.65),
+                  margin: 0, fontSize: 12,
+                  color: clr.white(0.7),
                   overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
                 }}>
-                  {item.title || item.embedUrl || "untitled"}
+                  {displayName(item)}
                 </p>
               </div>
 
@@ -261,7 +360,7 @@ export default function EventMediaEditor({ eventId, onClose, onChanged }: Props)
                     onMouseLeave={e => {
                       if ((item.size ?? "1/1") !== sz) {
                         e.currentTarget.style.background = clr.white(0.06);
-                        e.currentTarget.style.color = clr.white(0.45);
+                        e.currentTarget.style.color = clr.white(0.4);
                       }
                     }}
                   >{sz}</button>
@@ -274,36 +373,30 @@ export default function EventMediaEditor({ eventId, onClose, onChanged }: Props)
                 disabled={!!busy}
                 title="delete from Atlas + Cloudflare"
                 style={{
-                  flexShrink: 0, width: 22, height: 22,
-                  borderRadius: 11,
-                  background:  clr.black(0.5),
-                  border:      `1px solid ${clr.red(0.3)}`,
-                  color:       clr.red(0.7),
-                  fontSize:    12, lineHeight: 1, cursor: "pointer",
+                  flexShrink: 0, width: 24, height: 24, borderRadius: 12,
+                  background: clr.black(0.5), border: `1px solid ${clr.red(0.3)}`,
+                  color: clr.red(0.7), fontSize: 13, lineHeight: 1, cursor: "pointer",
                   display: "flex", alignItems: "center", justifyContent: "center",
                   fontFamily: T.MONO,
                 }}
                 onMouseEnter={e => { e.currentTarget.style.background = clr.red(0.2); e.currentTarget.style.color = "#fff"; }}
                 onMouseLeave={e => { e.currentTarget.style.background = clr.black(0.5); e.currentTarget.style.color = clr.red(0.7); }}
-              >
-                {busy === item.id ? "…" : "×"}
-              </button>
+              >{busy === item.id ? "…" : "×"}</button>
             </div>
           ))}
         </div>
 
-        {/* Footer */}
+        {/* Done footer */}
         {loaded && items.length > 0 && (
-          <div style={{ marginTop: 18, textAlign: "center" }}>
+          <div style={{ marginTop: 20, textAlign: "center" }}>
             <button
               onClick={onClose}
               style={{
                 fontSize: 10, fontFamily: T.MONO, letterSpacing: T.TRACK_WIDE,
-                color: clr.white(0.35), background: "none", border: "none",
-                cursor: "pointer", padding: "6px 16px",
+                color: clr.white(0.3), background: "none", border: "none", cursor: "pointer", padding: "6px 20px",
               }}
-              onMouseEnter={e => (e.currentTarget.style.color = clr.white(0.75))}
-              onMouseLeave={e => (e.currentTarget.style.color = clr.white(0.35))}
+              onMouseEnter={e => (e.currentTarget.style.color = clr.white(0.7))}
+              onMouseLeave={e => (e.currentTarget.style.color = clr.white(0.3))}
             >done</button>
           </div>
         )}
