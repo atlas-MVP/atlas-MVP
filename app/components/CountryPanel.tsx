@@ -930,6 +930,11 @@ interface Props {
   // Clicking a country pill at the top of an active-conflict widget jumps
   // to that country's solo widget (exits the conflict view).
   onCountrySwitch?: (isoCode: string) => void;
+  // URL slug for the current conflict — used to keep the address bar in sync
+  // with the history open/close state (e.g. /israel-us-iran-war/history).
+  conflictSlug?: string;
+  // If true, open history mode immediately on mount (deep-link from /history).
+  defaultHistoryExpanded?: boolean;
 }
 
 function parseCasualties(s: string): number {
@@ -940,11 +945,12 @@ function extractSourceName(label: string): string {
   return label.split(" — ")[0].split(" —")[0].trim();
 }
 
-export default function CountryPanel({ countryCode, onClose, onViewFeed, onConflictSelect, onFocusCountry, onFocusPosition, onCountryHome, onAuthorClick, onTimelineStrike, onSourceTap, onCasualtyHighlight, onPlayEvent, onHistoryDate, initialAlertText, onAlertLock, onCountrySwitch }: Props) {
+export default function CountryPanel({ countryCode, onClose, onViewFeed, onConflictSelect, onFocusCountry, onFocusPosition, onCountryHome, onAuthorClick, onTimelineStrike, onSourceTap, onCasualtyHighlight, onPlayEvent, onHistoryDate, initialAlertText, onAlertLock, onCountrySwitch, conflictSlug, defaultHistoryExpanded = false }: Props) {
   const [selectedConflictId, setSelectedConflictId] = useState<string | null>(null);
   const [civTooltip, setCivTooltip]       = useState<string | null>(null);
   const [showAllCasualties, setShowAllCasualties] = useState(false);
-  const [timelineExpanded, setTimelineExpanded] = useState(false);
+  const [timelineExpanded, setTimelineExpanded] = useState(defaultHistoryExpanded);
+  const [uploadTick, setUploadTick] = useState(0);
   const [activeTile, setActiveTile]     = useState(-1);
   const [hoveredTile, setHoveredTile]   = useState<number | null>(null);
   const [pinnedBulletsTile, setPinnedBulletsTile] = useState<number | null>(null);
@@ -967,6 +973,16 @@ export default function CountryPanel({ countryCode, onClose, onViewFeed, onConfl
 
   const cancelLeave = () => { if (leaveTimer.current) clearTimeout(leaveTimer.current); };
   const scheduleLeave = () => { cancelLeave(); leaveTimer.current = setTimeout(() => { setHoveredAlert(null); setSourcesOpen(false); }, 220); };
+
+  // History URL sync — keep the address bar in step with open/close.
+  // /israel-us-iran-war → /israel-us-iran-war/history and back.
+  useEffect(() => {
+    if (!conflictSlug || typeof window === "undefined") return;
+    const target = timelineExpanded ? `/${conflictSlug}/history` : `/${conflictSlug}`;
+    if (window.location.pathname !== target) {
+      window.history.replaceState(null, "", target);
+    }
+  }, [timelineExpanded, conflictSlug]);
 
   // Auto-play effect — must be before early returns (React hook rules)
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -1772,7 +1788,7 @@ export default function CountryPanel({ countryCode, onClose, onViewFeed, onConfl
                             <div style={{ flex: 1, height: 1, background: "rgba(255,255,255,0.06)" }} />
                           </div>
                         )}
-                        <div style={{ display: "flex", gap: 12, paddingLeft: 4 }}>
+                        <div style={{ display: "flex", gap: 12, paddingLeft: 4, alignItems: "flex-start" }}>
                           <div style={{ flexShrink: 0, marginTop: 4 }}>
                             <div style={{
                               width: 7, height: 7, borderRadius: "50%",
@@ -1782,7 +1798,7 @@ export default function CountryPanel({ countryCode, onClose, onViewFeed, onConfl
                               transition: "all 0.3s ease",
                             }} />
                           </div>
-                          <div>
+                          <div style={{ flex: 1, minWidth: 0 }}>
                             <div style={{ display: "flex", alignItems: "center", gap: 8, margin: "0 0 5px" }}>
                               <span style={{ fontSize: 11, fontFamily: "monospace", fontWeight: 600, color: palette.date, letterSpacing: "0.03em" }}>
                                 {(() => { const d = event.date; if (/^(19|20)\d\d/.test(d)) return d; return d.replace(/,?\s*(19|20)\d\d/, ""); })()}
@@ -1869,6 +1885,18 @@ export default function CountryPanel({ countryCode, onClose, onViewFeed, onConfl
                               </div>
                             )}
                           </div>
+                          {/* Upload chip — sits at the right edge of every tile.
+                              stopPropagation prevents the tile click handler from
+                              activating the tile when the popup opens. */}
+                          <div
+                            style={{ flexShrink: 0, paddingTop: 1 }}
+                            onClick={e => e.stopPropagation()}
+                          >
+                            <EventUploadButton
+                              eventId={eventFolderId(conflict.id, event.date)}
+                              onUploaded={() => setUploadTick(t => t + 1)}
+                            />
+                          </div>
                         </div>
                       </div>
                     );
@@ -1903,7 +1931,7 @@ export default function CountryPanel({ countryCode, onClose, onViewFeed, onConfl
       // every event — video-heavy, article-heavy, or empty — looks consistent.
       return (
         <EventVideoBubble
-          key={eventFolderId(conflict.id, ev.date)}
+          key={`${eventFolderId(conflict.id, ev.date)}-${uploadTick}`}
           eventDate={ev.date}
           eventId={eventFolderId(conflict.id, ev.date)}
           slides={ev.slides ?? []}

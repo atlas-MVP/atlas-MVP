@@ -131,6 +131,8 @@ export default function Home() {
   const [historyDate, setHistoryDate]         = useState<string | null>(null);
   const [liveReset, setLiveReset]             = useState(0);
   const [lockedAlertId, setLockedAlertId]     = useState<string | null>(null);
+  const [currentConflictSlug, setCurrentConflictSlug] = useState<string | null>(null);
+  const [openWithHistory, setOpenWithHistory] = useState(false);
 
   // Deep link: /?reel=<id> → redirect to the dedicated /you page so shared
   // links land on the full reels experience, not the HQ widget.
@@ -144,7 +146,9 @@ export default function Home() {
   // Deep link: /<slug> → pre-select conflict or fly to disaster on first mount.
   useEffect(() => {
     if (typeof window === "undefined") return;
-    const slug = window.location.pathname.replace(/^\/+|\/+$/g, "");
+    const parts = window.location.pathname.replace(/^\/+|\/+$/g, "").split("/");
+    const slug  = parts[0];
+    const historyMode = parts[1] === "history";
     if (!slug) return;
     // Conflict slug → open CountryPanel + apply conflict state
     const conflictId = SLUG_TO_CONFLICT[slug];
@@ -153,6 +157,7 @@ export default function Home() {
       if (!country) return;
       setShowRadar(false);
       setSelectedCountry(country);
+      if (historyMode) setOpenWithHistory(true);
       setTimeout(() => applyConflict(conflictId, country), 0);
       return;
     }
@@ -241,6 +246,7 @@ export default function Home() {
     setFocusCountries(all);
     // URL sync — each active conflict has its own deep-link path.
     const slug = CONFLICT_SLUGS[conflictId];
+    setCurrentConflictSlug(slug ?? null);
     if (slug && typeof window !== "undefined" && window.location.pathname !== `/${slug}`) {
       window.history.replaceState(null, "", `/${slug}`);
     }
@@ -248,6 +254,7 @@ export default function Home() {
 
   const handleConflictSelect = (conflictId: string) => {
     if (!selectedCountry) return;
+    setOpenWithHistory(false);
     applyConflict(conflictId, selectedCountry);
   };
 
@@ -337,6 +344,8 @@ export default function Home() {
           onHistoryDate={setHistoryDate}
           initialAlertText={radarAlertText ?? undefined}
           onCountrySwitch={handleCountryClick}
+          conflictSlug={currentConflictSlug ?? undefined}
+          defaultHistoryExpanded={openWithHistory}
         />
       )}
 
