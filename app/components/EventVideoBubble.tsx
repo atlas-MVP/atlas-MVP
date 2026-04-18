@@ -323,7 +323,7 @@ export default function EventVideoBubble({ eventDate: _eventDate, eventId, slide
     <div
       className="absolute z-20"
       style={{
-        left: T.PANEL_W, right: 0, top: T.VIDEO_CONTAINER_TOP,
+        left: T.PANEL_W, right: T.VIDEO_RIGHT_GAP, top: T.VIDEO_CONTAINER_TOP,
         display: "flex", flexDirection: "row", alignItems: "flex-start",
         pointerEvents: "none",
       }}
