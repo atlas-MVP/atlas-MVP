@@ -315,7 +315,7 @@ export default function AtlasHQ({ onClose, onNavigate, onHeadlinesToggle, onSour
         </div>
 
         {/* LIVE ALERTS — label instant, rows fade in */}
-        <SectionLabel label="live alerts" />
+        <SectionLabel label="live alerts TEST RUN!" />
         <Reveal minStage={3} stage={loadStage}>
           <div style={{ padding: "0 6px" }}>
             {LIVE_FEED.slice(0, 2).map((item, i) => (
