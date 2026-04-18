@@ -90,6 +90,7 @@ interface Conflict {
   label: string;
   sub: string;
   code: string; // country code to open in CountryPanel
+  slug: string; // URL slug — e.g. "israel-us-iran-war"
   flyTo: { center: [number,number]; zoom: number };
   pulse?: boolean;
 }
@@ -99,26 +100,28 @@ const TOP_CONFLICTS: Conflict[] = [
     label: "Israel — Lebanon conflict",
     sub: "cross-border exchanges intensifying. IDF artillery active in southern Lebanon. Hezbollah rockets reported in Galilee.",
     code: "LBN",
+    slug: "israel-lebanon",
     flyTo: { center: [35.2, 33.0] as [number,number], zoom: 7.2 },
   },
   {
     label: "US — Israel — Iran war",
     sub: "regional escalation ongoing. US 5th Fleet conducting operations in Persian Gulf. Iran nuclear program at center of diplomatic breakdown.",
     code: "ISR",
+    slug: "israel-us-iran-war",
     flyTo: { center: [44.0, 30.0] as [number,number], zoom: 4.2 },
   },
 ];
 
 const MORE_CONFLICTS: Conflict[] = [
-  { label: "Russia — Ukraine war",        sub: "Russian forces continue grinding advances in Donetsk. Ukraine launches drone strikes deep into Russian territory. Front lines largely static with heavy casualties on both sides.",                                                                           code: "UKR", flyTo: { center: [34.0, 49.0] as [number,number], zoom: 4.5 } },
-  { label: "Gaza genocide",               sub: "Israel's military campaign has killed 58,000+ Palestinians. Aid blockade continues. ICJ and ICC proceedings ongoing. No ceasefire in effect.",                                                                                                           code: "PSE", flyTo: { center: [34.4, 31.5] as [number,number], zoom: 7.0 } },
-  { label: "Sudan civil war + genocide",  sub: "SAF and RSF forces fight for control of Khartoum and Darfur. 10M+ displaced — world's largest displacement crisis. Mass atrocities documented. 20,000+ killed.",                                                                                       code: "SDN", flyTo: { center: [32.5, 15.6] as [number,number], zoom: 5.5 } },
-  { label: "Myanmar civil war",           sub: "Military junta losing territorial control to ethnic armed groups and the People's Defence Force. 2.6M+ displaced. Junta airstrikes on civilian areas continue.",                                                                                        code: "MMR", flyTo: { center: [96.1, 19.7] as [number,number], zoom: 5.0 } },
+  { label: "Russia — Ukraine war",        sub: "Russian forces continue grinding advances in Donetsk. Ukraine launches drone strikes deep into Russian territory. Front lines largely static with heavy casualties on both sides.",                                                                           code: "UKR", slug: "russia-ukraine-war", flyTo: { center: [34.0, 49.0] as [number,number], zoom: 4.5 } },
+  { label: "Gaza genocide",               sub: "Israel's military campaign has killed 58,000+ Palestinians. Aid blockade continues. ICJ and ICC proceedings ongoing. No ceasefire in effect.",                                                                                                           code: "PSE", slug: "israel-gaza",        flyTo: { center: [34.4, 31.5] as [number,number], zoom: 7.0 } },
+  { label: "Sudan civil war + genocide",  sub: "SAF and RSF forces fight for control of Khartoum and Darfur. 10M+ displaced — world's largest displacement crisis. Mass atrocities documented. 20,000+ killed.",                                                                                       code: "SDN", slug: "sudan-civil-war",    flyTo: { center: [32.5, 15.6] as [number,number], zoom: 5.5 } },
+  { label: "Myanmar civil war",           sub: "Military junta losing territorial control to ethnic armed groups and the People's Defence Force. 2.6M+ displaced. Junta airstrikes on civilian areas continue.",                                                                                        code: "MMR", slug: "myanmar-civil-war",  flyTo: { center: [96.1, 19.7] as [number,number], zoom: 5.0 } },
 ];
 
 const DISASTERS = [
-  { label: "Myanmar earthquake",  sub: "Mandalay Region",      affected: "14.5M affected", casualties: "3,800+ dead · 5,000+ injured", flyTo: { center: [96.0, 21.9] as [number,number], zoom: 5.5 } },
-  { label: "LA wildfires",         sub: "California, USA",      affected: "180K displaced",  casualties: "29 dead · 12,000 structures",  flyTo: { center: [-118.4, 34.1] as [number,number], zoom: 7.5 } },
+  { label: "Myanmar earthquake", slug: "myanmar-earthquake", sub: "Mandalay Region",  affected: "14.5M affected", casualties: "3,800+ dead · 5,000+ injured", flyTo: { center: [96.0, 21.9]   as [number,number], zoom: 5.5 } },
+  { label: "LA wildfires",       slug: "la-wildfires",       sub: "California, USA",  affected: "180K displaced",  casualties: "29 dead · 12,000 structures",  flyTo: { center: [-118.4, 34.1] as [number,number], zoom: 7.5 } },
 ];
 
 // ─── News cards ───────────────────────────────────────────────────────────────
@@ -155,6 +158,8 @@ const LIVE_FEED: FeedItem[] = [
     description: "IDF artillery units opened fire on southern Lebanese villages after Hezbollah launched a salvo of 40+ rockets targeting communities in the Galilee region. Evacuation orders are in effect for several northern Israeli towns. Lebanese civil defense reports casualties in the Bint Jbeil district." },
   { time: "12m",    danger: 5, code: "IRN", text: "US 5th Fleet announces heightened readiness posture in Persian Gulf",                           flyTo: { center: [50.5, 26.2] as [number,number], zoom: 5   }, sources: ["Reuters", "AP"],          confidence: 93,
     description: "The US Navy's 5th Fleet, headquartered in Bahrain, has raised its alert status following intelligence reports of Iranian naval mobilization near the Strait of Hormuz. Two additional destroyers are being repositioned." },
+  { time: "1d",     danger: 3, code: "ISR", text: "Senate vote fails 40-59 to block arms sales to Israel — Sanders resolution draws 85% of Democrats", flyTo: { center: [-77.0, 38.9] as [number,number], zoom: 11 }, sources: ["Senate", "AP", "Reuters"], confidence: 97,
+    description: "The US Senate defeated a resolution introduced by Sen. Bernie Sanders to halt new arms transfers to Israel, 40 in favor to 59 opposed. Despite the failure, the tally marked the highest level of Democratic support to date: 85% of Senate Democrats voted yes. The resolution targeted a pending $8.1B package covering tank rounds, mortar shells, and guidance kits." },
   { time: "28m",    danger: 4, code: "UKR", text: "Ukraine reports overnight drone barrage — Kyiv air defenses activated",                         flyTo: { center: [30.5, 50.4] as [number,number], zoom: 6   }, sources: ["NYT", "Reuters"],         confidence: 89,
     description: "Russia launched 78 Shahed-136 drones in an overnight wave targeting Kyiv, Odessa, and Kharkiv. Ukrainian air defense intercepted 61 drones. Three civilians were killed and 14 injured." },
   { time: "55m",    danger: 4, code: "PSE", text: "Northern Gaza hospitals running on emergency reserves — collapse imminent",                      flyTo: { center: [34.4, 31.6] as [number,number], zoom: 8   }, sources: ["AP", "Al Jazeera"],       confidence: 94,
@@ -167,7 +172,7 @@ const LIVE_FEED: FeedItem[] = [
 
 interface Props {
   onClose: () => void;
-  onNavigate?: (code: string | null, center: [number, number], zoom: number, feedItem?: FeedItem) => void;
+  onNavigate?: (code: string | null, center: [number, number], zoom: number, feedItem?: FeedItem, slug?: string) => void;
   onHeadlinesToggle?: () => void;
   onSourceClick?: (source: string) => void;
   onReelsTap?: () => void;
@@ -246,7 +251,7 @@ export default function AtlasHQ({ onClose, onNavigate, onHeadlinesToggle, onSour
           {TOP_CONFLICTS.map((c, idx) => (
             <Reveal key={c.label} minStage={1 + idx} stage={loadStage}>
               <div
-                onClick={() => onNavigate?.(c.code, c.flyTo.center, c.flyTo.zoom)}
+                onClick={() => onNavigate?.(c.code, c.flyTo.center, c.flyTo.zoom, undefined, c.slug)}
                 style={{
                   padding: "12px 13px",
                   borderRadius: 10,
@@ -280,7 +285,7 @@ export default function AtlasHQ({ onClose, onNavigate, onHeadlinesToggle, onSour
               {MORE_CONFLICTS.map((c) => (
                 <div
                   key={c.label}
-                  onClick={() => onNavigate?.(c.code, c.flyTo.center, c.flyTo.zoom)}
+                  onClick={() => onNavigate?.(c.code, c.flyTo.center, c.flyTo.zoom, undefined, c.slug)}
                   style={{
                     padding: "12px 13px", borderRadius: 10,
                     background: "rgba(255,255,255,0.02)",
@@ -381,7 +386,7 @@ export default function AtlasHQ({ onClose, onNavigate, onHeadlinesToggle, onSour
             {(showAllDisasters ? DISASTERS : DISASTERS.slice(0, 2)).map((d) => (
               <div
                 key={d.label}
-                onClick={() => onNavigate?.(null, d.flyTo.center, d.flyTo.zoom)}
+                onClick={() => onNavigate?.(null, d.flyTo.center, d.flyTo.zoom, undefined, d.slug)}
                 style={{
                   padding: "9px 12px", borderRadius: 10,
                   background: "rgba(255,255,255,0.03)",

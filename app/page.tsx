@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import dynamic from "next/dynamic";
+import { useRouter } from "next/navigation";
 import CountryPanel from "./components/CountryPanel";
 import CountryHome from "./components/CountryHome";
 import FeedPanel from "./components/FeedPanel";
@@ -14,7 +15,7 @@ import SourceInfoPanel from "./components/SourceInfoPanel";
 import AuthorBioPanel from "./components/AuthorBioPanel";
 import SettingsPanel from "./components/SettingsPanel";
 import MapEventPlayer from "./components/MapEventPlayer";
-import ReelsPlayer from "./components/ReelsPlayer";
+import EventUploadButton from "./components/EventUploadButton";
 import type { MapEvent } from "./lib/mapEvents";
 
 // ATLAS appears instantly; clock fades in shortly after as one unit
@@ -44,18 +45,57 @@ const Map = dynamic(() => import("./components/Map"), {
 
 // Map view per conflict (overrides per-country default)
 const CONFLICT_CENTERS: Record<string, { center: [number, number]; zoom: number }> = {
-  "israel-iran":  { center: [44.0, 31.5], zoom: 4.0 },   // wide: Israel ↔ Iran
-  "israel-gaza":  { center: [34.5, 31.6], zoom: 7.8 },   // tight: Gaza strip + Israel south
-  "russia-ukraine": { center: [33.0, 49.0], zoom: 4.0 },
-  "taiwan-strait":  { center: [120.5, 24.5], zoom: 5.5 },
+  "israel-iran":     { center: [44.0, 31.5], zoom: 4.0 },   // wide: Israel ↔ Iran
+  "israel-gaza":     { center: [34.5, 31.6], zoom: 7.8 },   // tight: Gaza strip + Israel south
+  "israel-lebanon":  { center: [35.2, 33.0], zoom: 7.2 },
+  "russia-ukraine":  { center: [33.0, 49.0], zoom: 4.0 },
+  "taiwan-strait":   { center: [120.5, 24.5], zoom: 5.5 },
+  "sudan":           { center: [32.5, 15.6], zoom: 5.5 },
+  "myanmar":         { center: [96.1, 19.7], zoom: 5.0 },
 };
 
 // All countries in each conflict (used to compute secondaries)
 const CONFLICT_ALL_COUNTRIES: Record<string, string[]> = {
   "israel-iran":    ["ISR", "IRN", "LBN", "USA"],
   "israel-gaza":    ["ISR", "PSE"],
+  "israel-lebanon": ["LBN", "ISR"],
   "russia-ukraine": ["UKR", "RUS"],
   "taiwan-strait":  ["CHN", "TWN"],
+  "sudan":          ["SDN"],
+  "myanmar":        ["MMR"],
+};
+
+// URL slug ↔ conflict ID. Each active conflict gets its own path so
+// atlas.boston/israel-us-iran-war deep-links straight into that widget.
+// The app/[conflict]/page.tsx dynamic route picks up these slugs.
+const CONFLICT_SLUGS: Record<string, string> = {
+  "israel-iran":    "israel-us-iran-war",
+  "israel-gaza":    "israel-gaza",
+  "israel-lebanon": "israel-lebanon",
+  "russia-ukraine": "russia-ukraine-war",
+  "taiwan-strait":  "taiwan-strait",
+  "sudan":          "sudan-civil-war",
+  "myanmar":        "myanmar-civil-war",
+};
+const SLUG_TO_CONFLICT: Record<string, string> = Object.fromEntries(
+  Object.entries(CONFLICT_SLUGS).map(([k, v]) => [v, k])
+);
+
+// Disaster slugs — no country panel, just flyTo + URL.
+const DISASTER_SLUGS: Record<string, { center: [number, number]; zoom: number }> = {
+  "myanmar-earthquake": { center: [96.0,   21.9] as [number, number], zoom: 5.5 },
+  "la-wildfires":       { center: [-118.4, 34.1] as [number, number], zoom: 7.5 },
+};
+
+// Default country to pre-select when deep-linking to a conflict slug.
+const CONFLICT_DEFAULT_COUNTRY: Record<string, string> = {
+  "israel-iran":    "ISR",
+  "israel-gaza":    "ISR",
+  "israel-lebanon": "LBN",
+  "russia-ukraine": "UKR",
+  "taiwan-strait":  "TWN",
+  "sudan":          "SDN",
+  "myanmar":        "MMR",
 };
 
 const COUNTRY_NAMES: Record<string, string> = {
@@ -67,6 +107,7 @@ const COUNTRY_NAMES: Record<string, string> = {
 };
 
 export default function Home() {
+  const router = useRouter();
   const [selectedCountry, setSelectedCountry] = useState<string | null>(null);
   const [homeCountry, setHomeCountry]         = useState<string | null>(null);
   const [feedCountry, setFeedCountry]         = useState<string | null>(null);
@@ -87,21 +128,41 @@ export default function Home() {
   const [activeSource, setActiveSource]       = useState<string | null>(null);
   const [radarAlertText, setRadarAlertText]   = useState<string | null>(null);
   const [activeMapEvent, setActiveMapEvent]   = useState<MapEvent | null>(null);
-  const [showReels, setShowReels]             = useState(false);
-  const [initialReelId, setInitialReelId]     = useState<string | null>(null);
   const [historyDate, setHistoryDate]         = useState<string | null>(null);
   const [liveReset, setLiveReset]             = useState(0);
+  const [lockedAlertId, setLockedAlertId]     = useState<string | null>(null);
 
-  // Deep link: /?reel=<id> → open the full Atlas You scroll page and jump
-  // directly to that video so shared links land on the video, not the HQ.
+  // Deep link: /?reel=<id> → redirect to the dedicated /you page so shared
+  // links land on the full reels experience, not the HQ widget.
   useEffect(() => {
     if (typeof window === "undefined") return;
     const params = new URLSearchParams(window.location.search);
     const reelId = params.get("reel");
-    if (reelId) {
-      setInitialReelId(reelId);
-      setShowReels(true);
+    if (reelId) router.replace(`/you?reel=${encodeURIComponent(reelId)}`);
+  }, [router]);
+
+  // Deep link: /<slug> → pre-select conflict or fly to disaster on first mount.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const slug = window.location.pathname.replace(/^\/+|\/+$/g, "");
+    if (!slug) return;
+    // Conflict slug → open CountryPanel + apply conflict state
+    const conflictId = SLUG_TO_CONFLICT[slug];
+    if (conflictId) {
+      const country = CONFLICT_DEFAULT_COUNTRY[conflictId];
+      if (!country) return;
+      setShowRadar(false);
+      setSelectedCountry(country);
+      setTimeout(() => applyConflict(conflictId, country), 0);
+      return;
     }
+    // Disaster slug → fly to location only, no country panel
+    const disasterPos = DISASTER_SLUGS[slug];
+    if (disasterPos) {
+      setShowRadar(false);
+      setFlyToPosition({ ...disasterPos, key: "disaster-" + slug });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleCountryHome = (iso: string) => {
@@ -157,10 +218,13 @@ export default function Home() {
 
   const getFirstConflict = (code: string): string | null => {
     const COUNTRY_FIRST: Record<string, string> = {
-      ISR: "israel-iran", IRN: "israel-iran", LBN: "israel-iran", USA: "israel-iran",
+      ISR: "israel-iran", IRN: "israel-iran", USA: "israel-iran",
+      LBN: "israel-lebanon",
       PSE: "israel-gaza",
       UKR: "russia-ukraine", RUS: "russia-ukraine",
       CHN: "taiwan-strait", TWN: "taiwan-strait",
+      SDN: "sudan",
+      MMR: "myanmar",
     };
     return COUNTRY_FIRST[code] ?? null;
   };
@@ -175,6 +239,11 @@ export default function Home() {
     const all = CONFLICT_ALL_COUNTRIES[conflictId] ?? [];
     setSecondaryCountries(all.filter(c => c !== forCountry));
     setFocusCountries(all);
+    // URL sync — each active conflict has its own deep-link path.
+    const slug = CONFLICT_SLUGS[conflictId];
+    if (slug && typeof window !== "undefined" && window.location.pathname !== `/${slug}`) {
+      window.history.replaceState(null, "", `/${slug}`);
+    }
   };
 
   const handleConflictSelect = (conflictId: string) => {
@@ -214,6 +283,25 @@ export default function Home() {
         onDone={() => setActiveMapEvent(null)}
       />
 
+      {/* Upload button for locked live alert — appears near ATLAS header when an alert is selected */}
+      {lockedAlertId && (
+        <div style={{
+          position: "fixed", top: 10, left: 120, zIndex: 40,
+          display: "flex", alignItems: "center", gap: 8,
+        }}>
+          <EventUploadButton
+            eventId={lockedAlertId}
+            onUploaded={() => {}}
+          />
+          <span style={{
+            fontSize: 9, fontFamily: "monospace", color: "rgba(255,255,255,0.35)",
+            letterSpacing: "0.1em"
+          }}>
+            alert locked
+          </span>
+        </div>
+      )}
+
       {/* Country homepage — loads when pill is tapped from conflict panel */}
       {!historicalYear && homeCountry && (
         <CountryHome
@@ -229,7 +317,8 @@ export default function Home() {
         <CountryPanel
           key={selectedCountry}
           countryCode={selectedCountry}
-          onClose={() => { setSelectedCountry(null); setSecondaryCountries([]); setCasualtyCountries([]); setFocusCountries([]); setActiveStrikes(null); setRadarAlertText(null); setFeedCountry(null); setHistoryDate(null); }}
+          onClose={() => { setSelectedCountry(null); setSecondaryCountries([]); setCasualtyCountries([]); setFocusCountries([]); setActiveStrikes(null); setRadarAlertText(null); setFeedCountry(null); setHistoryDate(null); setLockedAlertId(null); if (typeof window !== "undefined" && window.location.pathname !== "/") window.history.replaceState(null, "", "/"); }}
+          onAlertLock={setLockedAlertId}
           onViewFeed={(code) => { setFeedCountry(code); }}
           onConflictSelect={handleConflictSelect}
           onFocusCountry={(iso) => {
@@ -247,6 +336,7 @@ export default function Home() {
           onPlayEvent={(evt) => { setActiveMapEvent(evt); }}
           onHistoryDate={setHistoryDate}
           initialAlertText={radarAlertText ?? undefined}
+          onCountrySwitch={handleCountryClick}
         />
       )}
 
@@ -255,27 +345,40 @@ export default function Home() {
         <SettingsPanel onClose={() => setShowSettings(false)} />
       )}
 
-      {/* Reels player — replaces AtlasHQ in the same slot */}
-      {mapReady && !historicalYear && showReels && !selectedCountry && !homeCountry && !feedCountry && (
-        <ReelsPlayer onClose={() => setShowReels(false)} initialReelId={initialReelId} />
-      )}
-
       {/* Radar — only visible when explicitly opened via ATLAS button */}
-      {mapReady && !historicalYear && showRadar && !showReels && !selectedCountry && !homeCountry && !feedCountry && (
+      {mapReady && !historicalYear && showRadar && !selectedCountry && !homeCountry && !feedCountry && (
         <AtlasHQ
           onClose={() => { setShowRadar(false); setShowHeadlines(false); }}
-          onNavigate={(code, center, zoom, feedItem) => {
-            setFlyToPosition({ center, zoom, key: String(Date.now()) });
+          onNavigate={(code, center, zoom, feedItem, slug) => {
             if (code) {
               setShowRadar(false);
               setHomeCountry(null);
               setSelectedCountry(code);
+              setFlyToPosition({ center, zoom, key: String(Date.now()) });
               setRadarAlertText(feedItem?.text ?? null);
+              // Resolve conflict: prefer explicit slug from card, fall back to code lookup
+              const conflictId = slug ? SLUG_TO_CONFLICT[slug] : getFirstConflict(code);
+              if (conflictId) {
+                const all = CONFLICT_ALL_COUNTRIES[conflictId] ?? [];
+                setSecondaryCountries(all.filter(c => c !== code));
+                setFocusCountries(all);
+              }
+              // Sync URL — prefer explicit slug from card, else derive from conflictId
+              const urlSlug = slug ?? (conflictId ? CONFLICT_SLUGS[conflictId] : undefined);
+              if (urlSlug && typeof window !== "undefined") {
+                window.history.replaceState(null, "", `/${urlSlug}`);
+              }
+            } else {
+              // Disaster — fly to location, set URL from slug
+              setFlyToPosition({ center, zoom, key: String(Date.now()) });
+              if (slug && typeof window !== "undefined") {
+                window.history.replaceState(null, "", `/${slug}`);
+              }
             }
           }}
           onHeadlinesToggle={() => setShowHeadlines(v => !v)}
           onSourceClick={(s) => setActiveSource(s)}
-          onReelsTap={() => setShowReels(true)}
+          onReelsTap={() => router.push("/you")}
         />
       )}
       {/* Headlines panel — independent of radar, can show alongside country panels */}
@@ -328,7 +431,6 @@ export default function Home() {
               setPreviewYear(null);
               setTimelineOpen(false);
               setHistoryDate(null);
-              setShowReels(false);
               setLiveReset(v => v + 1);
               setShowRadar(true);
               setFlyToPosition({ center: [-98.5, 39.5], zoom: 1.8, key: "atlas-globe-" + Date.now() });
