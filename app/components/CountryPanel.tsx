@@ -950,6 +950,7 @@ export default function CountryPanel({ countryCode, onClose, onViewFeed, onConfl
   const [civTooltip, setCivTooltip]       = useState<string | null>(null);
   const [showAllCasualties, setShowAllCasualties] = useState(false);
   const [timelineExpanded, setTimelineExpanded] = useState(defaultHistoryExpanded);
+  const [uploadTick, setUploadTick] = useState(0);
   const [activeTile, setActiveTile]     = useState(-1);
   const [hoveredTile, setHoveredTile]   = useState<number | null>(null);
   const [pinnedBulletsTile, setPinnedBulletsTile] = useState<number | null>(null);
@@ -1884,6 +1885,15 @@ export default function CountryPanel({ countryCode, onClose, onViewFeed, onConfl
                               </div>
                             )}
                           </div>
+                          <div
+                            style={{ flexShrink: 0, paddingTop: 1 }}
+                            onClick={e => e.stopPropagation()}
+                          >
+                            <EventUploadButton
+                              eventId={eventFolderId(conflict.id, event.date)}
+                              onUploaded={() => setUploadTick(t => t + 1)}
+                            />
+                          </div>
                         </div>
                       </div>
                     );
@@ -1918,7 +1928,7 @@ export default function CountryPanel({ countryCode, onClose, onViewFeed, onConfl
       // every event — video-heavy, article-heavy, or empty — looks consistent.
       return (
         <EventVideoBubble
-          key={eventFolderId(conflict.id, ev.date)}
+          key={`${eventFolderId(conflict.id, ev.date)}-${uploadTick}`}
           eventDate={ev.date}
           eventId={eventFolderId(conflict.id, ev.date)}
           slides={ev.slides ?? []}
