@@ -88,4 +88,16 @@ export const T = {
   VIDEO_COL_GAP:        96,                              // 1 inch panel→video gap
   VIDEO_CONTAINER_TOP: 196,                              // px — aligns with first history tile
   VIDEO_CONTAINER_H:   "calc((100vw - 676px) * 9 / 16)" as string, // one 16:9 frame tall
+
+  // ── Upload size slots ─────────────────────────────────────────────────────
+  // Controls how uploaded media fills the video container.
+  //   1/1 — full container (landscape default): one 16:9 frame, one per page
+  //   1/2 — half width, full height (vertical default): 9:16, pairs center
+  //   1/4 — 2×2 grid (article/news default): 4 cells per page, top-left→bottom-right
+  // Never crop — letterbox or pillarbox as needed.
+  VIDEO_SIZE_FULL:    "1/1" as const,
+  VIDEO_SIZE_HALF:    "1/2" as const,
+  VIDEO_SIZE_QUARTER: "1/4" as const,
 } as const;
+
+export type VideoSize = "1/1" | "1/2" | "1/4";

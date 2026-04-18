@@ -17,6 +17,49 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { T, clr } from "../lib/tokens";
+import type { VideoSize } from "../lib/tokens";
+
+// Mirror of detectEmbedType in r2.ts — runs client-side so we can auto-select
+// the right size default without a round-trip.
+function detectUrlType(url: string): "youtube" | "tweet" | "video" | "article" {
+  if (/youtu\.?be|youtube\.com/.test(url)) return "youtube";
+  if (/twitter\.com|x\.com/.test(url))    return "tweet";
+  if (/\.(mp4|webm|mov|m4v)(\?|#|$)/i.test(url)) return "video";
+  return "article";
+}
+
+// ── Size selector ─────────────────────────────────────────────────────────────
+function SizeSelector({ value, options, onChange }: {
+  value:    VideoSize;
+  options:  VideoSize[];
+  onChange: (v: VideoSize) => void;
+}) {
+  return (
+    <div style={{ display: "flex", alignItems: "center", gap: 5, marginBottom: 10 }}>
+      <span style={{ fontSize: 9, fontFamily: T.MONO, letterSpacing: T.TRACK_MED, color: "rgba(255,255,255,0.28)", textTransform: "uppercase" }}>
+        size
+      </span>
+      {options.map(opt => (
+        <button key={opt} onClick={() => onChange(opt)} style={{
+          padding: "3px 8px", fontSize: 9, fontFamily: T.MONO,
+          letterSpacing: T.TRACK_TIGHT, textTransform: "uppercase",
+          cursor: "pointer", borderRadius: 5,
+          background: value === opt ? "rgba(255,255,255,0.09)" : "transparent",
+          border: `1px solid ${value === opt ? "rgba(255,255,255,0.22)" : "rgba(255,255,255,0.06)"}`,
+          color:  value === opt ? "rgba(255,255,255,0.75)" : "rgba(255,255,255,0.28)",
+        }}>{opt}</button>
+      ))}
+    </div>
+  );
+}
+
+function SizeLocked({ value, reason }: { value: VideoSize; reason: string }) {
+  return (
+    <div style={{ marginBottom: 10, fontSize: 9, fontFamily: T.MONO, letterSpacing: T.TRACK_MED, color: "rgba(255,255,255,0.28)", textTransform: "uppercase" }}>
+      size: {value} <span style={{ opacity: 0.55 }}>({reason})</span>
+    </div>
+  );
+}
 
 interface Props {
   eventId: string;
@@ -100,16 +143,40 @@ export default function EventUploadButton({ eventId, label = "+ upload", onUploa
 
 // ── Inner popup UI ───────────────────────────────────────────────────────────
 function Popup({ eventId, onDone, onUploaded }: { eventId: string; onDone: () => void; onUploaded?: () => void }) {
-  const [mode, setMode]         = useState<"file" | "url">("file");
-  const [file, setFile]         = useState<File | null>(null);
-  const [url, setUrl]           = useState("");
-  const [caption, setCaption]   = useState("");
-  const [handle, setHandle]     = useState("");
-  const [uploading, setUp]      = useState(false);
-  const [pct, setPct]           = useState(0);
-  const [error, setError]       = useState<string | null>(null);
-  const [done, setDone]         = useState(false);
-  const [dragOver, setDragOver] = useState(false);
+  const [mode, setMode]             = useState<"file" | "url">("file");
+  const [file, setFile]             = useState<File | null>(null);
+  const [url, setUrl]               = useState("");
+  const [caption, setCaption]       = useState("");
+  const [handle, setHandle]         = useState("");
+  const [uploading, setUp]          = useState(false);
+  const [pct, setPct]               = useState(0);
+  const [error, setError]           = useState<string | null>(null);
+  const [done, setDone]             = useState(false);
+  const [dragOver, setDragOver]     = useState(false);
+  const [size, setSize]             = useState<VideoSize>("1/1");
+  const [fileOrientation, setFileO] = useState<"landscape" | "vertical" | null>(null);
+
+  // Auto-detect orientation when a video file is picked, then auto-set size.
+  useEffect(() => {
+    if (!file) { setFileO(null); setSize("1/1"); return; }
+    const objUrl = URL.createObjectURL(file);
+    const vid    = document.createElement("video");
+    vid.preload  = "metadata";
+    vid.onloadedmetadata = () => {
+      const isV = vid.videoHeight > vid.videoWidth;
+      setFileO(isV ? "vertical" : "landscape");
+      setSize(isV ? "1/2" : "1/1");
+      URL.revokeObjectURL(objUrl);
+    };
+    vid.src = objUrl;
+    return () => URL.revokeObjectURL(objUrl);
+  }, [file]);
+
+  // Auto-set size default when URL type changes.
+  useEffect(() => {
+    if (!url) { setSize("1/1"); return; }
+    setSize(detectUrlType(url) === "article" ? "1/4" : "1/1");
+  }, [url]);
 
   const submit = useCallback(() => {
     setError(null); setDone(false);
@@ -125,6 +192,7 @@ function Popup({ eventId, onDone, onUploaded }: { eventId: string; onDone: () =>
       form.append("handle",  handle || "atlas");
       form.append("caption", caption);
       form.append("title",   file.name);
+      form.append("size",    size);
 
       const xhr = new XMLHttpRequest();
       xhr.upload.onprogress = e => { if (e.lengthComputable) setPct(Math.round(e.loaded / e.total * 100)); };
@@ -142,7 +210,7 @@ function Popup({ eventId, onDone, onUploaded }: { eventId: string; onDone: () =>
     fetch("/api/upload", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ embedUrl: url, scope: "event", eventId, handle: handle || "atlas", caption, title: url }),
+      body: JSON.stringify({ embedUrl: url, scope: "event", eventId, handle: handle || "atlas", caption, title: url, size }),
     })
       .then(async r => {
         const data = await r.json();
@@ -151,7 +219,7 @@ function Popup({ eventId, onDone, onUploaded }: { eventId: string; onDone: () =>
         else { setDone(true); onUploaded?.(); setTimeout(onDone, 1200); }
       })
       .catch(e => { setUp(false); setError((e as Error).message); });
-  }, [mode, file, url, handle, caption, eventId, onDone]);
+  }, [mode, file, url, handle, caption, eventId, onDone, size]);
 
   // Make the whole popup a drop target — drop a video anywhere inside
   // the bubble and it's picked up automatically (then the user hits attach).
@@ -242,6 +310,20 @@ function Popup({ eventId, onDone, onUploaded }: { eventId: string; onDone: () =>
         style={{ width: "100%", boxSizing: "border-box", padding: "7px 10px", borderRadius: 6, marginBottom: 10,
           background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)",
           color: "rgba(255,255,255,0.72)", fontSize: 11, fontFamily: "monospace", outline: "none", resize: "vertical" }} />
+
+      {/* Size selector — shown after a file is picked or a URL is typed */}
+      {mode === "file" && fileOrientation === "vertical" && (
+        <SizeLocked value="1/2" reason="auto — vertical" />
+      )}
+      {mode === "file" && fileOrientation === "landscape" && (
+        <SizeSelector value={size} options={["1/1", "1/4"]} onChange={setSize} />
+      )}
+      {mode === "url" && url && detectUrlType(url) === "article" && (
+        <SizeLocked value="1/4" reason="auto — article" />
+      )}
+      {mode === "url" && url && detectUrlType(url) !== "article" && (
+        <SizeSelector value={size} options={["1/1", "1/4"]} onChange={setSize} />
+      )}
 
       <button onClick={submit} disabled={uploading || done}
         style={{

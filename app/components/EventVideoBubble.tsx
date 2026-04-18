@@ -1,27 +1,28 @@
 "use client";
 
 /**
- * EventVideoBubble — the floating media column that appears over the map
- * when a timeline event is focused. Always-on-for-every-event layout:
+ * EventVideoBubble — floating media column over the map for a focused event.
  *
- *   1. All hardcoded slide videos from the event (16:9 YouTube, in order)
- *   2. Any user-uploaded videos attached to this event (landscape → vertical)
- *   3. Any linked articles for this event (square preview cards with
- *      og:image on top, headline overlaid on bottom)
- *   4. The upload chip so the user can add more at any time
+ * Content sources (in order):
+ *   1. Hardcoded slide videos from the event (always size "1/1")
+ *   2. Uploaded videos/embeds (size from manifest; default "1/1")
+ *   3. Uploaded articles (always "1/4")
+ *   4. Hardcoded article URLs (always "1/4")
  *
- * No captions anywhere — the timeline tile in the country panel is the
- * source of truth for event context. Captions were redundant and crowded
- * the bubble.
+ * Page-layout algorithm (scroll-snap, one container-height per page):
+ *   "1/1" → solo page (full container, landscape default)
+ *   "1/2" → pair page (two 9:16 side-by-side; centered if only one)
+ *   "1/4" → 2×2 grid page (up to 4 items; articles and quarter-videos mixed)
  *
- * One inch (~96 px) of breathing room on all four sides so the column
- * never hugs the country panel or the viewport wall.
+ * Conditional rendering: returns null when there is no content for the event,
+ * hiding the frosted glass box and upload button entirely.
  */
 
 import { useEffect, useRef, useState } from "react";
 import EventUploadButton from "./EventUploadButton";
 import ArticleCard from "./ArticleCard";
 import { T, clr } from "../lib/tokens";
+import type { VideoSize } from "../lib/tokens";
 
 export interface Slide {
   videoUrl:  string;
@@ -31,65 +32,98 @@ export interface Slide {
 }
 
 interface UploadedVideo {
-  id:        string;
-  type:      "video" | "youtube" | "tweet" | "article";
-  key:       string;
-  embedUrl?: string;
+  id:         string;
+  type:       "video" | "youtube" | "tweet" | "article";
+  key:        string;
+  embedUrl?:  string;
   signedUrl?: string;
-  title:     string;
-  caption:   string;
-  handle:    string;
-  date:      string;
+  title:      string;
+  caption:    string;
+  handle:     string;
+  date:       string;
+  size?:      VideoSize;
 }
 
 interface Props {
   eventDate:  string;
-  eventId:    string;           // slug for R2 folder
-  slides?:    Slide[];          // every hardcoded video for this event
-  articles?:  string[];         // URLs to render as square preview cards
+  eventId:    string;
+  slides?:    Slide[];
+  articles?:  string[];
 }
 
-type Orientation = "landscape" | "vertical";
-
-interface VideoItem {
-  kind:        "slide" | "upload";
-  videoUrl:    string;
-  isYT:        boolean;
+// ── Unified content item ──────────────────────────────────────────────────────
+interface ContentItem {
   id:          string;
-  orientation: Orientation;
+  size:        VideoSize;
+  kind:        "slide" | "upload" | "article";
+  videoUrl?:   string;
+  isYT?:       boolean;
   canDelete:   boolean;
+  articleUrl?: string;
 }
 
+// ── Page-layout types ─────────────────────────────────────────────────────────
+type Page =
+  | { layout: "solo"; items: [ContentItem] }
+  | { layout: "pair"; items: ContentItem[] }  // 1–2 × "1/2"
+  | { layout: "grid"; items: ContentItem[] }; // 1–4 × "1/4"
+
+function buildPages(items: ContentItem[]): Page[] {
+  const pages: Page[] = [];
+  let i = 0;
+  while (i < items.length) {
+    const cur = items[i];
+    if (cur.size === "1/1") {
+      pages.push({ layout: "solo", items: [cur] });
+      i++;
+    } else if (cur.size === "1/2") {
+      const pair: ContentItem[] = [cur];
+      if (i + 1 < items.length && items[i + 1].size === "1/2") pair.push(items[i + 1]);
+      i += pair.length;
+      pages.push({ layout: "pair", items: pair });
+    } else {
+      // "1/4" — fill up to 4 consecutive quarter items
+      const grid: ContentItem[] = [];
+      while (grid.length < 4 && i + grid.length < items.length && items[i + grid.length].size === "1/4") {
+        grid.push(items[i + grid.length]);
+      }
+      i += grid.length;
+      pages.push({ layout: "grid", items: grid });
+    }
+  }
+  return pages;
+}
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
 function isYouTube(url: string) {
   return url.includes("youtube.com") || url.includes("youtu.be");
 }
 
 function youtubeEmbed(url: string): string {
-  // Accept full youtu.be / watch?v= / embed/ URLs and normalize to /embed/<id>.
-  // Preserve any start=/ end= params that were already on the URL.
-  const idMatch  = url.match(/(?:v=|youtu\.be\/|embed\/)([a-zA-Z0-9_-]{11})/);
-  const id       = idMatch?.[1];
+  const idMatch = url.match(/(?:v=|youtu\.be\/|embed\/)([a-zA-Z0-9_-]{11})/);
+  const id      = idMatch?.[1];
   if (!id) return url;
   const hasStart = url.match(/[?&]start=(\d+)/);
   return `https://www.youtube.com/embed/${id}?rel=0&modestbranding=1&playsinline=1${hasStart ? `&start=${hasStart[1]}` : ""}`;
 }
 
+// ── Component ─────────────────────────────────────────────────────────────────
 export default function EventVideoBubble({ eventDate: _eventDate, eventId, slides = [], articles = [] }: Props) {
-  const [uploads,        setUploads]        = useState<UploadedVideo[]>([]);
-  const [refreshTick,    setRefreshTick]    = useState(0);
-  // Self-hosted uploads flip orientation once loadedmetadata reports real
-  // videoWidth/Height. Until then assume vertical (phone reels are the
-  // common case on /api/upload).
-  const [orientationOverride, setOrientationOverride] = useState<Record<string, Orientation>>({});
-  const [busyId, setBusyId] = useState<string | null>(null);
+  const [uploads,     setUploads]     = useState<UploadedVideo[]>([]);
+  const [loaded,      setLoaded]      = useState(false);
+  const [refreshTick, setRefreshTick] = useState(0);
+  const [busyId,      setBusyId]      = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     let cancelled = false;
+    setLoaded(false);
     fetch(`/api/videos?scope=event&eventId=${encodeURIComponent(eventId)}`, { cache: "no-store" })
       .then(r => r.json())
-      .then((data: UploadedVideo[]) => { if (!cancelled) setUploads(Array.isArray(data) ? data : []); })
-      .catch(() => { if (!cancelled) setUploads([]); });
+      .then((data: UploadedVideo[]) => {
+        if (!cancelled) { setUploads(Array.isArray(data) ? data : []); setLoaded(true); }
+      })
+      .catch(() => { if (!cancelled) { setUploads([]); setLoaded(true); } });
     return () => { cancelled = true; };
   }, [eventId, refreshTick]);
 
@@ -111,84 +145,69 @@ export default function EventVideoBubble({ eventDate: _eventDate, eventId, slide
     }
   };
 
-  // ── Build video items: all slides, then uploads (landscape → vertical) ──
-  const rawItems: VideoItem[] = [];
-  for (let i = 0; i < slides.length; i++) {
-    const s = slides[i];
-    if (!s.videoUrl) continue;
+  // ── Build unified content list ────────────────────────────────────────────
+  const contentItems: ContentItem[] = [];
+
+  // 1. Hardcoded slides → always 1/1
+  slides.forEach((s, i) => {
+    if (!s.videoUrl) return;
     const isYT = isYouTube(s.videoUrl);
-    rawItems.push({
-      kind: "slide",
-      videoUrl:    isYT ? youtubeEmbed(s.videoUrl) : s.videoUrl,
+    contentItems.push({
+      id:        `slide-${i}`,
+      size:      "1/1",
+      kind:      "slide",
+      videoUrl:  isYT ? youtubeEmbed(s.videoUrl) : s.videoUrl,
       isYT,
-      id:          `slide-${i}`,
-      orientation: "landscape",   // hardcoded slides are always landscape YouTube
-      canDelete:   false,
+      canDelete: false,
     });
-  }
-  // Article uploads are collected separately — they render as ArticleCard
-  // (square preview, og:image on top, headline overlaid at the bottom),
-  // not in the video column. Each entry carries its own id so the delete
-  // button still removes it from R2 + manifest.
-  const uploadedArticles: { id: string; url: string }[] = [];
-  for (const u of uploads) {
+  });
+
+  // 2. Uploads — articles go to 1/4; everything else uses size from manifest
+  uploads.forEach(u => {
     if (u.type === "article") {
-      if (u.embedUrl) uploadedArticles.push({ id: u.id, url: u.embedUrl });
-      continue;
+      if (u.embedUrl) contentItems.push({
+        id:         u.id,
+        size:       "1/4",
+        kind:       "article",
+        articleUrl: u.embedUrl,
+        canDelete:  true,
+      });
+      return;
     }
-    const src = u.type === "youtube" && u.embedUrl ? youtubeEmbed(u.embedUrl) : (u.signedUrl ?? u.embedUrl ?? "");
-    if (!src) continue;
-    const defaultOrientation: Orientation = u.type === "youtube" ? "landscape" : "vertical";
-    rawItems.push({
-      kind: "upload",
-      videoUrl:    src,
-      isYT:        u.type === "youtube",
-      id:          u.id,
-      orientation: orientationOverride[u.id] ?? defaultOrientation,
-      canDelete:   true,
+    const src = u.type === "youtube" && u.embedUrl
+      ? youtubeEmbed(u.embedUrl)
+      : (u.signedUrl ?? u.embedUrl ?? "");
+    if (!src) return;
+    contentItems.push({
+      id:        u.id,
+      size:      u.size ?? "1/1",
+      kind:      "upload",
+      videoUrl:  src,
+      isYT:      u.type === "youtube",
+      canDelete: true,
     });
-  }
-  const videoItems: VideoItem[] = [
-    ...rawItems.filter(i => i.orientation === "landscape"),
-    ...rawItems.filter(i => i.orientation === "vertical"),
-  ];
+  });
 
-  // Merge hardcoded article URLs (from the timeline data) with uploaded
-  // ones (from the upload popup). Hardcoded ones have no id → no delete.
-  const allArticles: { id: string | null; url: string }[] = [
-    ...articles.map(url => ({ id: null, url })),
-    ...uploadedArticles,
-  ];
+  // 3. Hardcoded article URLs → always 1/4
+  articles.forEach(url => contentItems.push({
+    id:         `hc-${url}`,
+    size:       "1/4",
+    kind:       "article",
+    articleUrl: url,
+    canDelete:  false,
+  }));
 
-  const noteOrientation = (id: string, w: number, h: number) => {
-    if (!w || !h) return;
-    const o: Orientation = w >= h ? "landscape" : "vertical";
-    setOrientationOverride(prev => (prev[id] === o ? prev : { ...prev, [id]: o }));
-  };
+  // ── Conditional rendering ─────────────────────────────────────────────────
+  // Hide everything (frosted glass + upload button) when there is no content.
+  // Show immediately if hardcoded slides/articles exist; wait for fetch otherwise.
+  const staticContent = slides.length > 0 || articles.length > 0;
+  if (!staticContent && !loaded)         return null; // still fetching, nothing static
+  if (loaded && contentItems.length === 0) return null; // loaded — nothing to show
 
-  // ── Collage layout ────────────────────────────────────────────────────
-  //
-  //   Column: 100% wide, padding: 0 96px → hero has exactly 1 inch on each side
-  //
-  //   ┌──────────────────────────────────────────────────────┐
-  //   │ 96px │         Hero video (100% of padded col)│ 96px │
-  //   └──────────────────────────────────────────────────────┘
-  //          │  secondary L (flex:1) │ secondary R  │
-  //          │  article L   (flex:1) │ article R    │
-  //
-  // Smalls use flex:1 so they always span exactly half the hero width.
-  // 1 item in a row → full width. 2 items → each = half. 3 → third. etc.
-  // Articles are 16:9 rectangles (same size as secondary videos).
-  // og:image displayed letterboxed (contain) with black bars on the sides.
-  //
-  // Change T.VIDEO_SIDE_MARGIN in tokens.ts to adjust the 96px margin.
+  const pages = buildPages(contentItems);
 
-  const heroVideo       = videoItems[0];
-  const secondaryVideos = videoItems.slice(1);
-  const hasContent      = videoItems.length > 0 || allArticles.length > 0;
-
-  // Visual chrome for every tile — no flex/sizing here (the wrapper handles that).
-  const tileChromeStyle: React.CSSProperties = {
+  // ── Shared style helpers ──────────────────────────────────────────────────
+  const tileChrome: React.CSSProperties = {
     position:     "absolute",
     inset:        0,
     borderRadius: T.TILE_RADIUS,
@@ -196,48 +215,52 @@ export default function EventVideoBubble({ eventDate: _eventDate, eventId, slide
     overflow:     "hidden",
   };
 
-  // Shared delete-button style.
-  const deleteBtn = (id: string): React.CSSProperties => ({
-    position: "absolute", top: -10, right: -10, zIndex: 20,
-    width: 22, height: 22, borderRadius: 11,
-    background: clr.black(0.72), backdropFilter: "blur(6px)",
-    border: `1px solid ${clr.red(0.35)}`, color: clr.red(0.85),
-    fontSize: 12, lineHeight: 1,
-    cursor: busyId === id ? "wait" : "pointer",
-    display: "flex", alignItems: "center", justifyContent: "center",
-    fontFamily: T.MONO,
+  const delBtnStyle = (id: string): React.CSSProperties => ({
+    position:       "absolute",
+    top: -10, right: -10,
+    zIndex:         20,
+    width: 22, height: 22,
+    borderRadius:   11,
+    background:     clr.black(0.72),
+    backdropFilter: "blur(6px)",
+    border:         `1px solid ${clr.red(0.35)}`,
+    color:          clr.red(0.85),
+    fontSize:       12,
+    lineHeight:     "1",
+    cursor:         busyId === id ? "wait" : "pointer",
+    display:        "flex",
+    alignItems:     "center",
+    justifyContent: "center",
+    fontFamily:     T.MONO,
   });
 
-  // Render one <video>/<iframe> tile.
-  // Wrapper is NOT overflow:hidden so the X button sits outside the tile edge.
-  const renderVideo = (it: VideoItem, aspect: string) => (
-    <div key={it.id} style={{ position: "relative", flex: "1 1 0", minWidth: 0, aspectRatio: aspect }}>
-      {it.canDelete && (
+  // ── Render one content item ───────────────────────────────────────────────
+  const renderItem = (item: ContentItem, wrapStyle: React.CSSProperties) => (
+    <div key={item.id} style={{ position: "relative", ...wrapStyle }}>
+      {item.canDelete && (
         <button
-          onClick={() => handleDelete(it.id)}
-          disabled={busyId === it.id}
+          onClick={() => handleDelete(item.id)}
+          disabled={busyId === item.id}
           title="delete from Atlas + Cloudflare"
-          style={deleteBtn(it.id)}
-          onMouseEnter={e => { e.currentTarget.style.background = clr.red(0.2); e.currentTarget.style.color = "#fff"; }}
+          style={delBtnStyle(item.id)}
+          onMouseEnter={e => { e.currentTarget.style.background = clr.red(0.2);    e.currentTarget.style.color = "#fff"; }}
           onMouseLeave={e => { e.currentTarget.style.background = clr.black(0.72); e.currentTarget.style.color = clr.red(0.85); }}
-        >{busyId === it.id ? "…" : "×"}</button>
+        >{busyId === item.id ? "…" : "×"}</button>
       )}
-      <div style={tileChromeStyle}>
-        {it.isYT ? (
+      <div style={tileChrome}>
+        {item.kind === "article" ? (
+          <ArticleCard url={item.articleUrl!} width="100%" />
+        ) : item.isYT ? (
           <iframe
-            src={it.videoUrl}
+            src={item.videoUrl!}
             style={{ width: "100%", height: "100%", border: "none", display: "block" }}
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
             allowFullScreen
           />
         ) : (
           <video
-            src={it.videoUrl}
+            src={item.videoUrl!}
             autoPlay loop muted controls playsInline
-            onLoadedMetadata={(e) => {
-              const v = e.currentTarget;
-              if (it.kind === "upload") noteOrientation(it.id, v.videoWidth, v.videoHeight);
-            }}
             style={{ width: "100%", height: "100%", objectFit: "contain", background: "#000", display: "block" }}
           />
         )}
@@ -245,22 +268,55 @@ export default function EventVideoBubble({ eventDate: _eventDate, eventId, slide
     </div>
   );
 
-  // Shared tile chrome for article wrappers (keeps border+radius, used inline).
-  const tileStyle: React.CSSProperties = {
-    position:     "relative",
-    flex:         "1 1 0",
-    minWidth:     0,
-    borderRadius: T.TILE_RADIUS,
-    border:       T.TILE_BORDER,
-    overflow:     "hidden",
+  // ── Render one snap page ──────────────────────────────────────────────────
+  const pageBase: React.CSSProperties = {
+    width:           "100%",
+    height:          T.VIDEO_CONTAINER_H,
+    scrollSnapAlign: "start",
+    flexShrink:      0,
   };
 
+  const renderPage = (page: Page, key: number) => {
+    if (page.layout === "solo") {
+      return (
+        <div key={key} style={pageBase}>
+          {renderItem(page.items[0], { width: "100%", height: "100%" })}
+        </div>
+      );
+    }
+
+    if (page.layout === "pair") {
+      const solo = page.items.length === 1;
+      return (
+        <div key={key} style={{ ...pageBase, display: "flex", gap: 4, justifyContent: solo ? "center" : "flex-start" }}>
+          {page.items.map(item => renderItem(item, {
+            width:    solo ? "50%" : undefined,
+            flex:     solo ? undefined : "1 1 0",
+            height:   "100%",
+            minWidth: 0,
+          }))}
+        </div>
+      );
+    }
+
+    // grid — 2×2, fills cells top-left → bottom-right in order
+    return (
+      <div key={key} style={{
+        ...pageBase,
+        display:             "grid",
+        gridTemplateColumns: "1fr 1fr",
+        gridTemplateRows:    "1fr 1fr",
+        gap:                 4,
+      }}>
+        {page.items.map(item => renderItem(item, {}))}
+      </div>
+    );
+  };
+
+  // ── Render ────────────────────────────────────────────────────────────────
   return (
-    // Outer spans left:580 → right:0 (full to screen edge) as a flex row:
-    //   [ video column (flex:1, same width as before) ][ 96px controls ]
-    // This gives equal 96px breathing room on both sides of the video:
-    //   left  = 580 - panel_right(484) = 96px
-    //   right = the 96px controls column (upload + X when applicable)
+    // Outer: left:580 → right:0 as a flex row so the video column + the 96px
+    // controls column give equal 96px breathing room on both sides.
     <div
       className="absolute z-20"
       style={{
@@ -269,136 +325,47 @@ export default function EventVideoBubble({ eventDate: _eventDate, eventId, slide
         pointerEvents: "none",
       }}
     >
-      {/* ── Frosted glass backdrop — extends ~10px beyond video edges ──────
-          Apple-style: barely-there translucent grey + blur, tight radius. */}
+      {/* ── Frosted glass backdrop — Apple-style: barely-there blur + tint ── */}
       <div style={{
-        width:              "calc(100% - 96px)",
-        padding:            4,
-        boxSizing:          "border-box",
-        background:         "rgba(200,200,200,0.025)",
-        backdropFilter:     "blur(8px)",
-        WebkitBackdropFilter: "blur(8px)",
-        borderRadius:       T.TILE_RADIUS + 4,
-        pointerEvents:      "auto",
+        width:               "calc(100% - 96px)",
+        padding:             4,
+        boxSizing:           "border-box",
+        background:          "rgba(200,200,200,0.025)",
+        backdropFilter:      "blur(8px)",
+        WebkitBackdropFilter:"blur(8px)",
+        borderRadius:        T.TILE_RADIUS + 4,
+        pointerEvents:       "auto",
       }}>
-
-      {/* ── Visibility scroll container ───────────────────────────────────
-          Width = 100% (fills the frosted wrapper).
-          Exactly one 16:9 frame tall. Snap-scrolls in pages.            */}
-      <div
-        ref={scrollRef}
-        style={{
-          width: "100%",
-          height: T.VIDEO_CONTAINER_H,
-          overflowY: "auto",
-          scrollSnapType: "y mandatory",
-          scrollbarWidth: "none",
-          pointerEvents: "auto",
-        }}
-      >
-        {/* Page 1 — Hero */}
-        {heroVideo && (
-          <div style={{ position: "relative", width: "100%", height: T.VIDEO_CONTAINER_H, scrollSnapAlign: "start" }}>
-            <div style={tileChromeStyle}>
-              {heroVideo.isYT ? (
-                <iframe
-                  src={heroVideo.videoUrl}
-                  style={{ width: "100%", height: "100%", border: "none", display: "block" }}
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                  allowFullScreen
-                />
-              ) : (
-                <video
-                  src={heroVideo.videoUrl}
-                  autoPlay loop muted controls playsInline
-                  style={{ width: "100%", height: "100%", objectFit: "contain", background: "#000", display: "block" }}
-                />
-              )}
-            </div>
-          </div>
-        )}
-
-        {/* Page 2 — secondary videos + articles grouped.
-            marginTop (not paddingTop) keeps the inter-page gap outside this
-            group's own height, so the rows fit exactly within T.VIDEO_CONTAINER_H. */}
-        {(secondaryVideos.length > 0 || allArticles.length > 0) && (
-          <div style={{
-            scrollSnapAlign: "start",
-            display: "flex", flexDirection: "column", gap: 4,
-            marginTop: 10,
-          }}>
-            {secondaryVideos.length > 0 && (
-              <div style={{ display: "flex", gap: 4, width: "100%" }}>
-                {secondaryVideos.map(it => renderVideo(
-                  it,
-                  it.orientation === "landscape" ? "16 / 9" : "9 / 16",
-                ))}
-              </div>
-            )}
-
-            {allArticles.length > 0 && (
-              <div style={{ display: "flex", gap: 4, width: "100%" }}>
-                {allArticles.map((a) => (
-                  <div key={a.id ?? a.url} style={{ ...tileStyle, aspectRatio: "16 / 9" }}>
-                    {a.id && (
-                      <button
-                        onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleDelete(a.id!); }}
-                        disabled={busyId === a.id}
-                        title="delete from Atlas + Cloudflare"
-                        style={{
-                          position: "absolute", top: 6, right: 6, zIndex: 5,
-                          width: 22, height: 22, borderRadius: 11,
-                          background: clr.black(0.55), backdropFilter: "blur(4px)",
-                          border: `1px solid ${clr.red(0.3)}`, color: clr.red(0.85),
-                          fontSize: 11, lineHeight: 1,
-                          cursor: busyId === a.id ? "wait" : "pointer",
-                          display: "flex", alignItems: "center", justifyContent: "center",
-                          fontFamily: T.MONO,
-                        }}
-                        onMouseEnter={e => { e.currentTarget.style.background = clr.red(0.2); e.currentTarget.style.color = "#fff"; }}
-                        onMouseLeave={e => { e.currentTarget.style.background = clr.black(0.55); e.currentTarget.style.color = clr.red(0.85); }}
-                      >{busyId === a.id ? "…" : "×"}</button>
-                    )}
-                    <ArticleCard url={a.url} width="100%" />
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
+        {/* Snap-scroll container — exactly one 16:9 frame tall */}
+        <div
+          ref={scrollRef}
+          style={{
+            width:          "100%",
+            height:         T.VIDEO_CONTAINER_H,
+            overflowY:      "scroll",
+            scrollSnapType: "y mandatory",
+            scrollbarWidth: "none",
+            pointerEvents:  "auto",
+          }}
+        >
+          {pages.map((page, i) => renderPage(page, i))}
+        </div>
       </div>
-      </div>{/* end frosted glass backdrop */}
 
-      {/* ── Controls column — 96px wide, sits in the right margin.
-          Floats outside the video so it never covers it.
-          X appears only when the hero is a user upload (canDelete).    */}
+      {/* ── Controls column — 96px, sits in the right-side breathing room ── */}
       <div
         style={{
-          width: 96, flexShrink: 0,
-          display: "flex", flexDirection: "column", alignItems: "center",
-          gap: 10, paddingTop: 12,
-          pointerEvents: "auto",
+          width:          96,
+          flexShrink:     0,
+          display:        "flex",
+          flexDirection:  "column",
+          alignItems:     "center",
+          gap:            10,
+          paddingTop:     12,
+          pointerEvents:  "auto",
         }}
-        onClick={(e) => e.stopPropagation()}
+        onClick={e => e.stopPropagation()}
       >
-        {heroVideo?.canDelete && (
-          <button
-            onClick={() => handleDelete(heroVideo.id)}
-            disabled={busyId === heroVideo.id}
-            title="delete from Atlas + Cloudflare"
-            style={{
-              width: 26, height: 26, borderRadius: 13,
-              background: clr.black(0.72), backdropFilter: "blur(6px)",
-              border: `1px solid ${clr.red(0.35)}`, color: clr.red(0.85),
-              fontSize: 13, lineHeight: 1,
-              cursor: busyId === heroVideo.id ? "wait" : "pointer",
-              display: "flex", alignItems: "center", justifyContent: "center",
-              fontFamily: T.MONO,
-            }}
-            onMouseEnter={e => { e.currentTarget.style.background = clr.red(0.2); e.currentTarget.style.color = "#fff"; }}
-            onMouseLeave={e => { e.currentTarget.style.background = clr.black(0.72); e.currentTarget.style.color = clr.red(0.85); }}
-          >{busyId === heroVideo.id ? "…" : "×"}</button>
-        )}
         <EventUploadButton eventId={eventId} onUploaded={handleUploaded} />
       </div>
     </div>

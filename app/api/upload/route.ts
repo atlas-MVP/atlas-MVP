@@ -21,7 +21,7 @@ export async function POST(request: Request): Promise<NextResponse> {
         embedUrl: string; title?: string; date?: string;
         location?: string; handle?: string; caption?: string;
         scope?: "reels" | "event" | "alert"; eventId?: string; alertId?: string;
-        renderMode?: "embed" | "mp4";
+        renderMode?: "embed" | "mp4"; size?: "1/1" | "1/2" | "1/4";
       };
       if (!body.embedUrl) return NextResponse.json({ error: "embedUrl required" }, { status: 400 });
 
@@ -56,6 +56,7 @@ export async function POST(request: Request): Promise<NextResponse> {
         ...(eventId ? { eventId } : {}),
         ...(alertId ? { alertId } : {}),
         ...(body.renderMode ? { renderMode: body.renderMode } : {}),
+        size: body.size ?? (type === "article" ? "1/4" : "1/1"),
       };
 
       const manifest = await getManifest();
@@ -75,6 +76,7 @@ export async function POST(request: Request): Promise<NextResponse> {
     const rawScope = form.get("scope")    as string | null;
     const rawEvent = form.get("eventId")  as string | null;
     const rawAlert = form.get("alertId")  as string | null;
+    const rawSize  = form.get("size")     as string | null;
 
     if (!file) return NextResponse.json({ error: "No file provided" }, { status: 400 });
     if (!file.type.startsWith("video/")) {
@@ -111,6 +113,10 @@ export async function POST(request: Request): Promise<NextResponse> {
       Body: buffer, ContentType: file.type,
     }));
 
+    const fileSize: "1/1" | "1/2" | "1/4" =
+      rawSize === "1/2" ? "1/2" :
+      rawSize === "1/4" ? "1/4" : "1/1";
+
     const entry: VideoEntry = {
       id, type: "video", key,
       title:      title    ?? file.name,
@@ -122,6 +128,7 @@ export async function POST(request: Request): Promise<NextResponse> {
       scope,
       ...(eventId ? { eventId } : {}),
       ...(alertId ? { alertId } : {}),
+      size: fileSize,
     };
 
     const manifest = await getManifest();
@@ -142,8 +149,8 @@ export async function POST(request: Request): Promise<NextResponse> {
 // and deletes the underlying R2 object if one exists (embeds have key: "").
 export async function DELETE(request: Request): Promise<NextResponse> {
   try {
-    const { searchParams } = new URL(request.url);
-    const id = searchParams.get("id");
+    const url = new URL(request.url);
+    const id  = url.searchParams.get("id");
     if (!id) return NextResponse.json({ error: "id required" }, { status: 400 });
 
     const manifest = await getManifest();

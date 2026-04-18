@@ -52,6 +52,10 @@ export interface VideoEntry {
   // but shows author/text/media); undefined/"mp4" renders our autoplay MP4
   // proxy (default). Per-post override so mixed modes can coexist.
   renderMode?: "embed" | "mp4";
+  // Display size slot — controls layout in the video container.
+  // "1/1" full frame (landscape default), "1/2" half-width (vertical default),
+  // "1/4" 2×2 grid cell (article default). Never crops — always letterboxes.
+  size?: "1/1" | "1/2" | "1/4";
 }
 
 export async function getManifest(): Promise<VideoEntry[]> {
