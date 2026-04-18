@@ -970,8 +970,6 @@ export default function CountryPanel({ countryCode, onClose, onViewFeed, onConfl
   const scrollRef = useRef<HTMLDivElement>(null);
   const autoPlayRef = useRef(false);
   const activeTileRef = useRef(-1);
-  const tileRefs = useRef<(HTMLDivElement | null)[]>([]);
-  const [tileTops, setTileTops] = useState<number[]>([]);
 
   const cancelLeave = () => { if (leaveTimer.current) clearTimeout(leaveTimer.current); };
   const scheduleLeave = () => { cancelLeave(); leaveTimer.current = setTimeout(() => { setHoveredAlert(null); setSourcesOpen(false); }, 220); };
@@ -986,22 +984,6 @@ export default function CountryPanel({ countryCode, onClose, onViewFeed, onConfl
     }
   }, [timelineExpanded, conflictSlug]);
 
-  // Tile-position tracker — reads each tile's fixed Y offset so we can
-  // render upload buttons floating in the gap zone to the right of the panel.
-  const updateTileTops = () => {
-    setTileTops(tileRefs.current.map(el => el ? el.getBoundingClientRect().top : -9999));
-  };
-
-  // Recalculate whenever history mode opens (tiles just mounted) or the
-  // window is resized.
-  useEffect(() => {
-    if (!timelineExpanded) return;
-    // Small delay so the DOM settles after snap-scroll mount.
-    const t = setTimeout(updateTileTops, 80);
-    window.addEventListener("resize", updateTileTops);
-    return () => { clearTimeout(t); window.removeEventListener("resize", updateTileTops); };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [timelineExpanded]);
 
   // Auto-play effect — must be before early returns (React hook rules)
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -1093,8 +1075,6 @@ export default function CountryPanel({ countryCode, onClose, onViewFeed, onConfl
       navigateToTile(closest);
     }
 
-    // Keep gap-zone upload buttons aligned with their tiles.
-    updateTileTops();
   };
 
   // Shared: navigate map to a given tile index (used by both scroll + tap)
@@ -1777,7 +1757,6 @@ export default function CountryPanel({ countryCode, onClose, onViewFeed, onConfl
                     return (
                       <div
                         key={i}
-                        ref={el => { tileRefs.current[i] = el; }}
                         data-tile={i}
                         {...(event.strikeEvent ? { "data-strike": JSON.stringify(event.strikeEvent) } : {})}
                         onMouseEnter={() => setHoveredTile(i)}
@@ -1930,32 +1909,30 @@ export default function CountryPanel({ countryCode, onClose, onViewFeed, onConfl
       </div>
     </div>
 
-    {/* Gap-zone upload buttons — one per history tile, floating fixed
-        between the panel right edge (PANEL_W) and the video left edge.
-        position:fixed escapes the overflow containers; tileTops keeps
-        them vertically aligned as the user scrolls. */}
-    {timelineExpanded && chronological.map((event, i) => {
-      const top = tileTops[i];
-      if (top === undefined || top < 0) return null;
+    {/* Single gap-zone upload button — fixed position, always visible at
+        the top of the history column. eventId updates automatically as
+        activeTile changes, so it always uploads to the focused tile. */}
+    {timelineExpanded && activeTile >= 0 && (() => {
+      const ev = chronological[activeTile];
+      if (!ev) return null;
       return (
         <div
-          key={`gap-upload-${i}`}
           onClick={e => e.stopPropagation()}
           style={{
             position:      "fixed",
             left:          T.PANEL_W + 12,
-            top:           top + 14,
+            top:           T.VIDEO_CONTAINER_TOP + 14,
             zIndex:        25,
             pointerEvents: "auto",
           }}
         >
           <EventUploadButton
-            eventId={eventFolderId(conflict.id, event.date)}
+            eventId={eventFolderId(conflict.id, ev.date)}
             onUploaded={() => setUploadTick(t => t + 1)}
           />
         </div>
       );
-    })}
+    })()}
 
     {/* Focused event → compact video bubble over the map. Scroll-snap
         container merges the hardcoded slide video with any user-uploaded
