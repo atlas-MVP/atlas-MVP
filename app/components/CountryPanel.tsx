@@ -1586,7 +1586,7 @@ export default function CountryPanel({ countryCode, onClose, onViewFeed, onConfl
               return (
                 <div style={{ padding: "0 16px 16px" }}>
                   <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 14, marginBottom: 14 }}>
-                    <p style={{ fontSize: 11, fontFamily: "monospace", letterSpacing: "0.18em", color: "rgba(255,255,255,0.28)", textTransform: "uppercase", margin: 0, fontWeight: 500 }}>timeline</p>
+                    <p style={{ fontSize: 11, fontFamily: "monospace", letterSpacing: "0.18em", color: "rgba(255,255,255,0.28)", textTransform: "uppercase", margin: 0, fontWeight: 500 }}>timeline TEST RUN!</p>
                   </div>
                   <div style={{ position: "relative", cursor: "pointer" }} onClick={(e) => { e.stopPropagation(); enterHistory(); }}>
                     <div style={{ position: "absolute", left: 5, top: 6, bottom: 6, width: 1, background: "rgba(255,255,255,0.05)" }} />

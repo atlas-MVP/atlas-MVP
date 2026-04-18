@@ -42,9 +42,11 @@ const MONTH_NUM: Record<string, number> = {
 };
 
 export default function Clock({ onYearClick, displayYear, historyDate }: Props) {
+  const [isMounted, setIsMounted] = useState(false);
   const [now, setNow] = useState(new Date());
 
   useEffect(() => {
+    setIsMounted(true);
     const id = setInterval(() => setNow(new Date()), 1000);
     return () => clearInterval(id);
   }, []);
@@ -74,8 +76,14 @@ export default function Clock({ onYearClick, displayYear, historyDate }: Props) 
     }
     yearLine = Number(hist.year);
   } else {
-    dateLine = `${liveMonth}.${liveDay}`;
-    yearLine = displayYear ?? liveYear;
+    // Only render live clock after client mount to avoid hydration mismatch
+    if (!isMounted) {
+      dateLine = "—.—";
+      yearLine = "—";
+    } else {
+      dateLine = `${liveMonth}.${liveDay}`;
+      yearLine = displayYear ?? liveYear;
+    }
   }
 
   return (
