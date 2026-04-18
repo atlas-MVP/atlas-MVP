@@ -23,7 +23,6 @@ interface MediaItem {
   signedUrl?: string;
   size?:      VideoSize;
   eventId?:   string;
-  builtin?:   boolean; // hardcoded slide — read-only, no delete/resize
 }
 
 interface Slide {
@@ -157,37 +156,61 @@ function Thumbnail({ item }: { item: MediaItem }) {
 
 // ── Component ─────────────────────────────────────────────────────────────────
 export default function EventMediaEditor({ eventId, slides = [], onClose, onChanged }: Props) {
-  const [uploads,  setUploads]  = useState<MediaItem[]>([]);
-  const [busy,     setBusy]     = useState<string | null>(null);
-  const [loaded,   setLoaded]   = useState(false);
-  const [dragIdx,  setDragIdx]  = useState<number | null>(null);
-  const [overIdx,  setOverIdx]  = useState<number | null>(null);
+  const [items,  setItems]  = useState<MediaItem[]>([]);
+  const [busy,   setBusy]   = useState<string | null>(null);
+  const [loaded, setLoaded] = useState(false);
+  const [dragIdx, setDragIdx] = useState<number | null>(null);
+  const [overIdx, setOverIdx] = useState<number | null>(null);
 
   useEffect(() => {
+    let cancelled = false;
     setLoaded(false);
-    fetch(`/api/videos?scope=event&eventId=${encodeURIComponent(eventId)}`, { cache: "no-store" })
-      .then(r => r.json())
-      .then(data => { setUploads(Array.isArray(data) ? data : []); setLoaded(true); })
-      .catch(() => setLoaded(true));
+
+    (async () => {
+      // 1. Fetch existing uploads for this event
+      const res  = await fetch(`/api/videos?scope=event&eventId=${encodeURIComponent(eventId)}`, { cache: "no-store" });
+      const data: MediaItem[] = res.ok ? await res.json() : [];
+      if (cancelled) return;
+
+      const existingUrls = new Set(data.map(d => d.embedUrl).filter(Boolean));
+
+      // 2. Auto-register any hardcoded slides not yet in the manifest.
+      //    This converts them to real editable entries so they can be
+      //    dragged, resized, and deleted alongside uploads.
+      const toRegister = slides.filter(s => s.videoUrl && !existingUrls.has(s.videoUrl));
+      const registered: MediaItem[] = [];
+
+      for (const s of toRegister) {
+        try {
+          const r = await fetch("/api/upload", {
+            method:  "POST",
+            headers: { "Content-Type": "application/json" },
+            body:    JSON.stringify({
+              embedUrl: s.videoUrl,
+              title:    s.title || "",
+              scope:    "event",
+              eventId,
+              size:     "1/1",
+            }),
+          });
+          if (r.ok) registered.push(await r.json());
+        } catch { /* ignore */ }
+      }
+
+      if (!cancelled) {
+        setItems([...data, ...registered]);
+        setLoaded(true);
+        if (registered.length > 0) onChanged(); // refresh bubble
+      }
+    })();
+
+    return () => { cancelled = true; };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [eventId]);
-
-  // Merge: hardcoded slides (read-only) + uploads (editable)
-  const builtinItems: MediaItem[] = slides
-    .filter(s => s.videoUrl)
-    .map((s, i) => ({
-      id:       `builtin-${i}`,
-      type:     isYouTube(s.videoUrl) ? "youtube" : "video",
-      title:    s.title || s.subtitle || `Slide ${i + 1}`,
-      embedUrl: s.videoUrl,
-      size:     "1/1",
-      builtin:  true,
-    }));
-
-  const items = [...builtinItems, ...uploads];
 
   // ── Size update ──────────────────────────────────────────────────────────────
   const updateSize = async (id: string, size: VideoSize) => {
-    setUploads(prev => prev.map(it => it.id === id ? { ...it, size } : it));
+    setItems(prev => prev.map(it => it.id === id ? { ...it, size } : it));
     setBusy(id);
     await fetch("/api/upload", {
       method:  "PATCH",
@@ -198,9 +221,9 @@ export default function EventMediaEditor({ eventId, slides = [], onClose, onChan
     onChanged();
   };
 
-  // ── Reorder (shared) — only operates on uploads, not builtins ───────────────
+  // ── Reorder ───────────────────────────────────────────────────────────────────
   const reorder = async (reordered: MediaItem[]) => {
-    setUploads(reordered);
+    setItems(reordered);
     await fetch("/api/upload", {
       method:  "PATCH",
       headers: { "Content-Type": "application/json" },
@@ -211,8 +234,8 @@ export default function EventMediaEditor({ eventId, slides = [], onClose, onChan
 
   const move = (idx: number, dir: -1 | 1) => {
     const next = idx + dir;
-    if (next < 0 || next >= uploads.length) return;
-    const r = [...uploads];
+    if (next < 0 || next >= items.length) return;
+    const r = [...items];
     [r[idx], r[next]] = [r[next], r[idx]];
     reorder(r);
   };
@@ -228,7 +251,7 @@ export default function EventMediaEditor({ eventId, slides = [], onClose, onChan
   const onDrop = (e: React.DragEvent, idx: number) => {
     e.preventDefault(); e.stopPropagation();
     if (dragIdx === null || dragIdx === idx) { setDragIdx(null); setOverIdx(null); return; }
-    const r = [...uploads];
+    const r = [...items];
     const [moved] = r.splice(dragIdx, 1);
     r.splice(idx, 0, moved);
     setDragIdx(null); setOverIdx(null);
@@ -243,7 +266,7 @@ export default function EventMediaEditor({ eventId, slides = [], onClose, onChan
     setBusy(id);
     await fetch(`/api/upload?id=${encodeURIComponent(id)}`, { method: "DELETE" })
       .catch(console.error);
-    setUploads(prev => prev.filter(it => it.id !== id));
+    setItems(prev => prev.filter(it => it.id !== id));
     setBusy(null);
     onChanged();
   };
@@ -325,10 +348,10 @@ export default function EventMediaEditor({ eventId, slides = [], onClose, onChan
           {items.map((item, i) => (
             <div
               key={item.id}
-              draggable={!item.builtin}
-              onDragStart={e => !item.builtin && onDragStart(e, i - builtinItems.length)}
-              onDragOver={e => !item.builtin && onDragOver(e, i - builtinItems.length)}
-              onDrop={e => !item.builtin && onDrop(e, i - builtinItems.length)}
+              draggable
+              onDragStart={e => onDragStart(e, i)}
+              onDragOver={e => onDragOver(e, i)}
+              onDrop={e => onDrop(e, i)}
               onDragEnd={onDragEnd}
               style={{
                 display:    "flex",
@@ -336,22 +359,16 @@ export default function EventMediaEditor({ eventId, slides = [], onClose, onChan
                 gap:        12,
                 padding:    "10px 12px",
                 borderRadius: T.TILE_RADIUS,
-                background: item.builtin
-                  ? clr.white(0.02)
-                  : overIdx === (i - builtinItems.length) && dragIdx !== (i - builtinItems.length)
-                    ? clr.blue(0.08) : clr.white(0.04),
-                border: item.builtin
-                  ? `1px solid ${clr.white(0.06)}`
-                  : overIdx === (i - builtinItems.length) && dragIdx !== (i - builtinItems.length)
-                    ? `1px solid ${clr.blue(0.35)}` : T.TILE_BORDER,
-                opacity:    busy === item.id ? 0.4 : 1,
-                cursor:     item.builtin ? "default" : "grab",
+                background: overIdx === i && dragIdx !== i ? clr.blue(0.08) : clr.white(0.04),
+                border:     overIdx === i && dragIdx !== i ? `1px solid ${clr.blue(0.35)}` : T.TILE_BORDER,
+                opacity:    dragIdx === i ? 0.35 : busy === item.id ? 0.4 : 1,
+                cursor:     "grab",
                 transition: "opacity 0.15s, background 0.1s, border-color 0.1s",
               }}
             >
-              {/* Drag handle — hidden for builtins */}
+              {/* Drag handle */}
               <div style={{
-                flexShrink: 0, color: item.builtin ? "transparent" : clr.white(0.2),
+                flexShrink: 0, color: clr.white(0.2),
                 fontSize: 12, lineHeight: 1, userSelect: "none",
                 letterSpacing: "0.05em",
               }}>⠿</div>
@@ -378,61 +395,50 @@ export default function EventMediaEditor({ eventId, slides = [], onClose, onChan
                 </p>
               </div>
 
-              {/* Size pills — hidden for builtins */}
-              {item.builtin ? (
-                <span style={{
-                  fontSize: 8, fontFamily: T.MONO, letterSpacing: T.TRACK_MED,
-                  color: clr.white(0.2), padding: "3px 8px",
-                  borderRadius: T.PILL_RADIUS, border: `1px solid ${clr.white(0.08)}`,
-                  flexShrink: 0,
-                }}>built-in</span>
-              ) : (
-                <div style={{ display: "flex", gap: 4, flexShrink: 0 }}>
-                  {SIZE_OPTIONS.map(sz => (
-                    <button
-                      key={sz}
-                      onClick={() => updateSize(item.id, sz)}
-                      style={sizeBtn((item.size ?? "1/1") === sz)}
-                      onMouseEnter={e => {
-                        if ((item.size ?? "1/1") !== sz) {
-                          e.currentTarget.style.background = clr.white(0.1);
-                          e.currentTarget.style.color = clr.white(0.7);
-                        }
-                      }}
-                      onMouseLeave={e => {
-                        if ((item.size ?? "1/1") !== sz) {
-                          e.currentTarget.style.background = clr.white(0.06);
-                          e.currentTarget.style.color = clr.white(0.4);
-                        }
-                      }}
-                    >{sz}</button>
-                  ))}
-                </div>
-              )}
+              {/* Size pills */}
+              <div style={{ display: "flex", gap: 4, flexShrink: 0 }}>
+                {SIZE_OPTIONS.map(sz => (
+                  <button
+                    key={sz}
+                    onClick={() => updateSize(item.id, sz)}
+                    style={sizeBtn((item.size ?? "1/1") === sz)}
+                    onMouseEnter={e => {
+                      if ((item.size ?? "1/1") !== sz) {
+                        e.currentTarget.style.background = clr.white(0.1);
+                        e.currentTarget.style.color = clr.white(0.7);
+                      }
+                    }}
+                    onMouseLeave={e => {
+                      if ((item.size ?? "1/1") !== sz) {
+                        e.currentTarget.style.background = clr.white(0.06);
+                        e.currentTarget.style.color = clr.white(0.4);
+                      }
+                    }}
+                  >{sz}</button>
+                ))}
+              </div>
 
-              {/* Delete — hidden for builtins */}
-              {!item.builtin && (
-                <button
-                  onClick={() => deleteItem(item.id)}
-                  disabled={!!busy}
-                  title="delete from Atlas + Cloudflare"
-                  style={{
-                    flexShrink: 0, width: 24, height: 24, borderRadius: 12,
-                    background: clr.black(0.5), border: `1px solid ${clr.red(0.3)}`,
-                    color: clr.red(0.7), fontSize: 13, lineHeight: 1, cursor: "pointer",
-                    display: "flex", alignItems: "center", justifyContent: "center",
-                    fontFamily: T.MONO,
-                  }}
-                  onMouseEnter={e => { e.currentTarget.style.background = clr.red(0.2); e.currentTarget.style.color = "#fff"; }}
-                  onMouseLeave={e => { e.currentTarget.style.background = clr.black(0.5); e.currentTarget.style.color = clr.red(0.7); }}
-                >{busy === item.id ? "…" : "×"}</button>
-              )}
+              {/* Delete */}
+              <button
+                onClick={() => deleteItem(item.id)}
+                disabled={!!busy}
+                title="delete from Atlas + Cloudflare"
+                style={{
+                  flexShrink: 0, width: 24, height: 24, borderRadius: 12,
+                  background: clr.black(0.5), border: `1px solid ${clr.red(0.3)}`,
+                  color: clr.red(0.7), fontSize: 13, lineHeight: 1, cursor: "pointer",
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  fontFamily: T.MONO,
+                }}
+                onMouseEnter={e => { e.currentTarget.style.background = clr.red(0.2); e.currentTarget.style.color = "#fff"; }}
+                onMouseLeave={e => { e.currentTarget.style.background = clr.black(0.5); e.currentTarget.style.color = clr.red(0.7); }}
+              >{busy === item.id ? "…" : "×"}</button>
             </div>
           ))}
         </div>
 
         {/* Done footer */}
-        {loaded && (items.length > 0 || builtinItems.length > 0) && (
+        {loaded && items.length > 0 && (
           <div style={{ marginTop: 20, textAlign: "center" }}>
             <button
               onClick={onClose}
