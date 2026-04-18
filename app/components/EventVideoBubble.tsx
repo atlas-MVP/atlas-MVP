@@ -20,6 +20,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import EventUploadButton from "./EventUploadButton";
+import EventMediaEditor from "./EventMediaEditor";
 import ArticleCard from "./ArticleCard";
 import { T, clr } from "../lib/tokens";
 import type { VideoSize } from "../lib/tokens";
@@ -113,6 +114,7 @@ export default function EventVideoBubble({ eventDate: _eventDate, eventId, slide
   const [loaded,      setLoaded]      = useState(false);
   const [refreshTick, setRefreshTick] = useState(0);
   const [busyId,      setBusyId]      = useState<string | null>(null);
+  const [editorOpen,  setEditorOpen]  = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -328,20 +330,43 @@ export default function EventVideoBubble({ eventDate: _eventDate, eventId, slide
         pointerEvents: "none",
       }}
     >
-      {/* ── Upload zone — in the gap between widget and video ── */}
+      {/* ── Gap zone — upload + edit buttons ── */}
       <div
         style={{
-          width:          T.VIDEO_COL_GAP,
-          flexShrink:     0,
-          display:        "flex",
-          flexDirection:  "column",
-          alignItems:     "center",
-          paddingTop:     12,
-          pointerEvents:  "auto",
+          width:         T.VIDEO_COL_GAP,
+          flexShrink:    0,
+          display:       "flex",
+          flexDirection: "column",
+          alignItems:    "center",
+          paddingTop:    12,
+          gap:           8,
+          pointerEvents: "auto",
         }}
         onClick={e => e.stopPropagation()}
       >
         <EventUploadButton eventId={eventId} onUploaded={handleUploaded} />
+        {/* Edit button — only when there are uploads to manage */}
+        {uploads.length > 0 && (
+          <button
+            onClick={() => setEditorOpen(true)}
+            title="edit media order, size, and deletions"
+            style={{
+              fontSize:       9,
+              fontFamily:     T.MONO,
+              letterSpacing:  T.TRACK_MED,
+              textTransform:  "uppercase",
+              color:          clr.white(0.4),
+              background:     clr.white(0.06),
+              border:         `1px solid ${clr.white(0.12)}`,
+              borderRadius:   T.PILL_RADIUS,
+              padding:        "4px 10px",
+              cursor:         "pointer",
+              whiteSpace:     "nowrap",
+            }}
+            onMouseEnter={e => { e.currentTarget.style.background = clr.white(0.12); e.currentTarget.style.color = clr.white(0.8); }}
+            onMouseLeave={e => { e.currentTarget.style.background = clr.white(0.06); e.currentTarget.style.color = clr.white(0.4); }}
+          >edit</button>
+        )}
       </div>
 
       {/* ── Frosted glass backdrop — Apple-style: barely-there blur + tint ── */}
@@ -370,6 +395,15 @@ export default function EventVideoBubble({ eventDate: _eventDate, eventId, slide
           {pages.map((page, i) => renderPage(page, i))}
         </div>
       </div>
+
+      {/* ── Media editor modal ── */}
+      {editorOpen && (
+        <EventMediaEditor
+          eventId={eventId}
+          onClose={() => setEditorOpen(false)}
+          onChanged={() => { handleUploaded(); }}
+        />
+      )}
     </div>
   );
 }

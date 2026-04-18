@@ -144,6 +144,49 @@ export async function POST(request: Request): Promise<NextResponse> {
   }
 }
 
+// ── Update size or reorder ───────────────────────────────────────────────────
+// PATCH { id, size }          → update a single entry's display size
+// PATCH { eventId, order[] }  → reorder all entries for an event
+export async function PATCH(request: Request): Promise<NextResponse> {
+  try {
+    const body = await request.json() as {
+      id?: string; size?: string;
+      eventId?: string; order?: string[];
+    };
+    const manifest = await getManifest();
+
+    // ── Size update ──────────────────────────────────────────────────────────
+    if (body.id && body.size) {
+      const validSize = body.size === "1/2" ? "1/2" : body.size === "1/4" ? "1/4" : "1/1";
+      const idx = manifest.findIndex(e => e.id === body.id);
+      if (idx === -1) return NextResponse.json({ error: "not found" }, { status: 404 });
+      manifest[idx] = { ...manifest[idx], size: validSize };
+      await saveManifest(manifest);
+      return NextResponse.json(manifest[idx]);
+    }
+
+    // ── Reorder ──────────────────────────────────────────────────────────────
+    // Slot-preserving: replace event entry slots in-order with the new sequence.
+    if (body.eventId && Array.isArray(body.order)) {
+      const orderedIds  = body.order as string[];
+      const eventItems  = orderedIds
+        .map(id => manifest.find(e => e.id === id))
+        .filter(Boolean) as VideoEntry[];
+      let   slot = 0;
+      const newManifest = manifest.map(e =>
+        e.eventId === body.eventId ? (eventItems[slot++] ?? e) : e
+      );
+      await saveManifest(newManifest);
+      return NextResponse.json({ ok: true });
+    }
+
+    return NextResponse.json({ error: "provide {id,size} or {eventId,order}" }, { status: 400 });
+  } catch (err) {
+    console.error("[upload:patch]", err);
+    return NextResponse.json({ error: (err as Error).message }, { status: 500 });
+  }
+}
+
 // ── Undo / delete an upload ──────────────────────────────────────────────────
 // Called by the admin upload page × button. Removes the entry from manifest
 // and deletes the underlying R2 object if one exists (embeds have key: "").
