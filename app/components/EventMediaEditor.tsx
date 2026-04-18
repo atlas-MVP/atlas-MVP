@@ -91,14 +91,15 @@ function Thumbnail({ item }: { item: MediaItem }) {
     );
   }
 
-  // Self-hosted video — first frame via video element
+  // Self-hosted video — #t=0.001 forces browser to decode & display first frame
   if (item.type === "video" && item.signedUrl) {
     return (
       <div style={box}>
         <video
-          src={item.signedUrl}
+          src={`${item.signedUrl}#t=0.001`}
           preload="metadata"
           muted
+          playsInline
           style={{ width: "100%", height: "100%", objectFit: "cover" }}
         />
       </div>
@@ -190,14 +191,16 @@ export default function EventMediaEditor({ eventId, onClose, onChanged }: Props)
     reorder(r);
   };
 
-  // ── Drag-to-reorder handlers ──────────────────────────────────────────────
-  const onDragStart = (idx: number) => setDragIdx(idx);
-  const onDragOver  = (e: React.DragEvent, idx: number) => {
-    e.preventDefault();
-    setOverIdx(idx);
+  // ── Drag-to-reorder handlers ─────────────────────────────────────────────
+  // stopPropagation on every drag event so Mapbox never sees them.
+  const onDragStart = (e: React.DragEvent, idx: number) => {
+    e.stopPropagation(); setDragIdx(idx);
+  };
+  const onDragOver = (e: React.DragEvent, idx: number) => {
+    e.preventDefault(); e.stopPropagation(); setOverIdx(idx);
   };
   const onDrop = (e: React.DragEvent, idx: number) => {
-    e.preventDefault();
+    e.preventDefault(); e.stopPropagation();
     if (dragIdx === null || dragIdx === idx) { setDragIdx(null); setOverIdx(null); return; }
     const r = [...items];
     const [moved] = r.splice(dragIdx, 1);
@@ -205,7 +208,7 @@ export default function EventMediaEditor({ eventId, onClose, onChanged }: Props)
     setDragIdx(null); setOverIdx(null);
     reorder(r);
   };
-  const onDragEnd = () => { setDragIdx(null); setOverIdx(null); };
+  const onDragEnd = (e: React.DragEvent) => { e.stopPropagation(); setDragIdx(null); setOverIdx(null); };
 
   // ── Delete ───────────────────────────────────────────────────────────────────
   const deleteItem = async (id: string) => {
@@ -243,7 +246,10 @@ export default function EventMediaEditor({ eventId, onClose, onChanged }: Props)
       />
 
       {/* Modal */}
-      <div style={{
+      <div
+        onMouseDown={e => e.stopPropagation()}
+        onClick={e => e.stopPropagation()}
+        style={{
         position:     "fixed",
         top:          "50%",
         left:         "50%",
@@ -294,7 +300,7 @@ export default function EventMediaEditor({ eventId, onClose, onChanged }: Props)
             <div
               key={item.id}
               draggable
-              onDragStart={() => onDragStart(i)}
+              onDragStart={e => onDragStart(e, i)}
               onDragOver={e => onDragOver(e, i)}
               onDrop={e => onDrop(e, i)}
               onDragEnd={onDragEnd}

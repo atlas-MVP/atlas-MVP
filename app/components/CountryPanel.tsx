@@ -6,6 +6,7 @@ import { SIDE_COLORS, getCountrySide } from "../lib/sides";
 import { getEventsForTimeline, type MapEvent } from "../lib/mapEvents";
 import VideoPlayer from "./VideoPlayer";
 import EventUploadButton from "./EventUploadButton";
+import EventMediaEditor from "./EventMediaEditor";
 import EventVideoBubble from "./EventVideoBubble";
 import { playTts, type TtsHandle } from "../lib/tts";
 import { T, clr, confColor } from "../lib/tokens";
@@ -951,6 +952,7 @@ export default function CountryPanel({ countryCode, onClose, onViewFeed, onConfl
   const [showAllCasualties, setShowAllCasualties] = useState(false);
   const [timelineExpanded, setTimelineExpanded] = useState(defaultHistoryExpanded);
   const [uploadTick, setUploadTick] = useState(0);
+  const [editorOpen, setEditorOpen] = useState(false);
   const [activeTile, setActiveTile]     = useState(-1);
   const [hoveredTile, setHoveredTile]   = useState<number | null>(null);
   const [pinnedBulletsTile, setPinnedBulletsTile] = useState<number | null>(null);
@@ -1071,10 +1073,9 @@ export default function CountryPanel({ countryCode, onClose, onViewFeed, onConfl
     if (closest !== activeTileRef.current && closest >= 0) {
       activeTileRef.current = closest;
       setActiveTile(closest);
-      // Fire map camera for this tile
+      setEditorOpen(false); // close editor when scrolling to a different tile
       navigateToTile(closest);
     }
-
   };
 
   // Shared: navigate map to a given tile index (used by both scroll + tap)
@@ -1909,28 +1910,55 @@ export default function CountryPanel({ countryCode, onClose, onViewFeed, onConfl
       </div>
     </div>
 
-    {/* Single gap-zone upload button — fixed position, always visible at
-        the top of the history column. eventId updates automatically as
-        activeTile changes, so it always uploads to the focused tile. */}
+    {/* Gap-zone buttons — upload + edit, fixed in the 96px column.
+        Both track activeTile so they always target the focused paragraph.
+        Vertical positions controlled by T.GAP_UPLOAD_TOP / T.GAP_EDIT_TOP. */}
     {timelineExpanded && activeTile >= 0 && (() => {
       const ev = chronological[activeTile];
       if (!ev) return null;
+      const evId = eventFolderId(conflict.id, ev.date);
       return (
-        <div
-          onClick={e => e.stopPropagation()}
-          style={{
-            position:      "fixed",
-            left:          T.PANEL_W + 12,
-            top:           T.VIDEO_CONTAINER_TOP + 14,
-            zIndex:        25,
-            pointerEvents: "auto",
-          }}
-        >
-          <EventUploadButton
-            eventId={eventFolderId(conflict.id, ev.date)}
-            onUploaded={() => setUploadTick(t => t + 1)}
-          />
-        </div>
+        <>
+          {/* Upload */}
+          <div
+            onClick={e => e.stopPropagation()}
+            style={{ position: "fixed", left: T.PANEL_W + 12, top: T.GAP_UPLOAD_TOP, zIndex: 25, pointerEvents: "auto" }}
+          >
+            <EventUploadButton
+              eventId={evId}
+              onUploaded={() => setUploadTick(t => t + 1)}
+            />
+          </div>
+
+          {/* Edit */}
+          <div
+            onClick={e => e.stopPropagation()}
+            style={{ position: "fixed", left: T.PANEL_W + 12, top: T.GAP_EDIT_TOP, zIndex: 25, pointerEvents: "auto" }}
+          >
+            <button
+              onClick={() => setEditorOpen(true)}
+              title="edit media — resize, reorder, delete"
+              style={{
+                fontSize: 9, fontFamily: T.MONO, letterSpacing: T.TRACK_MED,
+                textTransform: "uppercase", color: clr.white(0.4),
+                background: clr.white(0.06), border: `1px solid ${clr.white(0.12)}`,
+                borderRadius: T.PILL_RADIUS, padding: "4px 10px",
+                cursor: "pointer", whiteSpace: "nowrap",
+              }}
+              onMouseEnter={e => { e.currentTarget.style.background = clr.white(0.12); e.currentTarget.style.color = clr.white(0.8); }}
+              onMouseLeave={e => { e.currentTarget.style.background = clr.white(0.06); e.currentTarget.style.color = clr.white(0.4); }}
+            >edit</button>
+          </div>
+
+          {/* Media editor modal */}
+          {editorOpen && (
+            <EventMediaEditor
+              eventId={evId}
+              onClose={() => setEditorOpen(false)}
+              onChanged={() => setUploadTick(t => t + 1)}
+            />
+          )}
+        </>
       );
     })()}
 

@@ -97,6 +97,11 @@ export const T = {
   VIDEO_RIGHT_GAP:      96,                              // px — right breathing room (matches VIDEO_COL_GAP)
   VIDEO_CONTAINER_H:   "calc((100vw - 676px) * 9 / 16)" as string, // one 16:9 frame tall
 
+  // ── Gap-zone button positions (fixed, in the 96px column between panel and video) ──
+  // Change these two values to reposition the upload + edit buttons site-wide.
+  GAP_UPLOAD_TOP:      210,                              // px — upload button Y (VIDEO_CONTAINER_TOP + 14)
+  GAP_EDIT_TOP:        250,                              // px — edit button Y (below upload)
+
   // ── Upload size slots ─────────────────────────────────────────────────────
   // Controls how uploaded media fills the video container.
   //   1/1 — full container (landscape default): one 16:9 frame, one per page
