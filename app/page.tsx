@@ -144,12 +144,25 @@ export default function Home() {
   }, [router]);
 
   // Deep link: /<slug> → pre-select conflict or fly to disaster on first mount.
+  const initialPathRef = useRef<string | null>(null);
+  const deepLinkAppliedRef = useRef(false);
+
   useEffect(() => {
     if (typeof window === "undefined") return;
-    const parts = window.location.pathname.replace(/^\/+|\/+$/g, "").split("/");
+    if (initialPathRef.current === null) {
+      initialPathRef.current = window.location.pathname;
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === "undefined" || !mapReady || deepLinkAppliedRef.current) return;
+    const pathname = initialPathRef.current ?? window.location.pathname;
+    const parts = pathname.replace(/^\/+|\/+$/g, "").split("/");
     const slug  = parts[0];
     const historyMode = parts[1] === "history";
     if (!slug) return;
+
     // Conflict slug → open CountryPanel + apply conflict state
     const conflictId = SLUG_TO_CONFLICT[slug];
     if (conflictId) {
@@ -158,12 +171,8 @@ export default function Home() {
       setShowRadar(false);
       setSelectedCountry(country);
       if (historyMode) setOpenWithHistory(true);
-      // Wait for map to be ready before applying conflict position
-      if (mapReady) {
-        applyConflict(conflictId, country);
-      } else {
-        setTimeout(() => applyConflict(conflictId, country), 100);
-      }
+      applyConflict(conflictId, country);
+      deepLinkAppliedRef.current = true;
       return;
     }
     // Disaster slug → fly to location only, no country panel
@@ -171,6 +180,7 @@ export default function Home() {
     if (disasterPos) {
       setShowRadar(false);
       setFlyToPosition({ ...disasterPos, key: "disaster-" + slug });
+      deepLinkAppliedRef.current = true;
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mapReady]);
