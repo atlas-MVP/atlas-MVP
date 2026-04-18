@@ -318,13 +318,13 @@ export default function AtlasHQ({ onClose, onNavigate, onHeadlinesToggle, onSour
         <SectionLabel label="live alerts" />
         <Reveal minStage={3} stage={loadStage}>
           <div style={{ padding: "0 6px" }}>
-            {LIVE_FEED.slice(0, 2).map((item, i) => (
+            {LIVE_FEED.slice(0, 4).map((item, i) => (
               <LiveAlertRow
                 key={`${item.code}-${item.time}`}
                 item={item}
                 onSourceClick={onSourceClick}
                 onClick={() => onNavigate?.(item.code, item.flyTo.center, item.flyTo.zoom, item)}
-                bottomBorder={i < 1}
+                bottomBorder={i < 3}
                 showConfidenceInline={false}
                 expandOnHover={false}
               />
