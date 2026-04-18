@@ -20,14 +20,21 @@ export async function POST(request: Request): Promise<NextResponse> {
       const body = await request.json() as {
         embedUrl: string; title?: string; date?: string;
         location?: string; handle?: string; caption?: string;
-        scope?: "reels" | "event"; eventId?: string;
+        scope?: "reels" | "event" | "alert"; eventId?: string; alertId?: string;
+        renderMode?: "embed" | "mp4";
       };
       if (!body.embedUrl) return NextResponse.json({ error: "embedUrl required" }, { status: 400 });
 
-      const scope   = body.scope === "event" ? "event" : "reels";
-      const eventId = scope === "event" ? (body.eventId || "") : undefined;
+      const scope: "reels" | "event" | "alert" =
+        body.scope === "event" ? "event" :
+        body.scope === "alert" ? "alert" : "reels";
+      const eventId = scope === "event" ? (body.eventId || "").trim() : undefined;
+      const alertId = scope === "alert" ? (body.alertId || "").trim() : undefined;
       if (scope === "event" && !eventId) {
         return NextResponse.json({ error: "eventId required when scope='event'" }, { status: 400 });
+      }
+      if (scope === "alert" && !alertId) {
+        return NextResponse.json({ error: "alertId required when scope='alert'" }, { status: 400 });
       }
 
       const type = detectEmbedType(body.embedUrl);
@@ -47,6 +54,8 @@ export async function POST(request: Request): Promise<NextResponse> {
         uploadedAt: new Date().toISOString(),
         scope,
         ...(eventId ? { eventId } : {}),
+        ...(alertId ? { alertId } : {}),
+        ...(body.renderMode ? { renderMode: body.renderMode } : {}),
       };
 
       const manifest = await getManifest();
@@ -65,23 +74,35 @@ export async function POST(request: Request): Promise<NextResponse> {
     const caption  = form.get("caption")  as string | null;
     const rawScope = form.get("scope")    as string | null;
     const rawEvent = form.get("eventId")  as string | null;
+    const rawAlert = form.get("alertId")  as string | null;
 
     if (!file) return NextResponse.json({ error: "No file provided" }, { status: 400 });
     if (!file.type.startsWith("video/")) {
       return NextResponse.json({ error: "Only video files supported" }, { status: 400 });
     }
 
-    const scope: "reels" | "event" = rawScope === "event" ? "event" : "reels";
+    const scope: "reels" | "event" | "alert" =
+      rawScope === "event" ? "event" :
+      rawScope === "alert" ? "alert" : "reels";
     const eventId = scope === "event" ? (rawEvent || "").trim() : "";
+    const alertId = scope === "alert" ? (rawAlert || "").trim() : "";
     if (scope === "event" && !eventId) {
       return NextResponse.json({ error: "eventId required when scope='event'" }, { status: 400 });
+    }
+    if (scope === "alert" && !alertId) {
+      return NextResponse.json({ error: "alertId required when scope='alert'" }, { status: 400 });
     }
 
     const id     = randomUUID();
     const ext    = file.name.split(".").pop() ?? "mp4";
-    // Folder layout:  reels/<uuid>.ext  OR  events/<eventId>/<uuid>.ext
+    // Folder layout:
+    //   reels/<uuid>.ext
+    //   events/<eventId>/<uuid>.ext
+    //   alerts/<alertId>/<uuid>.ext
     const key    = scope === "event"
       ? `events/${eventId}/${id}.${ext}`
+      : scope === "alert"
+      ? `alerts/${alertId}/${id}.${ext}`
       : `reels/${id}.${ext}`;
     const buffer = Buffer.from(await file.arrayBuffer());
 
@@ -100,6 +121,7 @@ export async function POST(request: Request): Promise<NextResponse> {
       uploadedAt: new Date().toISOString(),
       scope,
       ...(eventId ? { eventId } : {}),
+      ...(alertId ? { alertId } : {}),
     };
 
     const manifest = await getManifest();

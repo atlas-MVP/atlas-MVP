@@ -16,6 +16,7 @@
  */
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { T, clr } from "../lib/tokens";
 
 interface Props {
   eventId: string;
@@ -44,13 +45,13 @@ export default function EventUploadButton({ eventId, label = "+ upload", onUploa
       <button
         onClick={(e) => { e.stopPropagation(); setOpen(v => !v); }}
         style={{
-          fontSize: 9, fontFamily: "monospace", letterSpacing: "0.1em",
-          color: "rgba(239,68,68,0.7)", background: "rgba(239,68,68,0.06)",
-          border: "1px solid rgba(239,68,68,0.2)", borderRadius: 10,
+          fontSize: 9, fontFamily: T.MONO, letterSpacing: T.TRACK_WIDE,
+          color: clr.red(0.7), background: clr.red(0.06),
+          border: `1px solid ${clr.red(0.2)}`, borderRadius: 10,
           cursor: "pointer", padding: "3px 9px", textTransform: "uppercase",
         }}
-        onMouseEnter={e => { e.currentTarget.style.background = "rgba(239,68,68,0.12)"; e.currentTarget.style.color = "rgba(239,68,68,0.9)"; }}
-        onMouseLeave={e => { e.currentTarget.style.background = "rgba(239,68,68,0.06)"; e.currentTarget.style.color = "rgba(239,68,68,0.7)"; }}
+        onMouseEnter={e => { e.currentTarget.style.background = clr.red(0.12); e.currentTarget.style.color = clr.red(0.9); }}
+        onMouseLeave={e => { e.currentTarget.style.background = clr.red(0.06); e.currentTarget.style.color = clr.red(0.7); }}
       >{label}</button>
 
       {open && (
@@ -74,9 +75,9 @@ export default function EventUploadButton({ eventId, label = "+ upload", onUploa
               position: "relative",
               width: "min(420px, 100%)",
               padding: 20,
-              background: "rgba(10,13,26,0.98)",
-              border: "1px solid rgba(255,255,255,0.1)", borderRadius: 14,
-              boxShadow: "0 24px 80px rgba(0,0,0,0.6)",
+              background: T.MODAL_BG,
+              border: T.MODAL_BORDER, borderRadius: T.MODAL_RADIUS,
+              boxShadow: T.MODAL_SHADOW,
             }}
           >
             <button
@@ -224,7 +225,7 @@ function Popup({ eventId, onDone, onUploaded }: { eventId: string; onDone: () =>
           onChange={e => setFile(e.target.files?.[0] ?? null)}
           style={{ width: "100%", fontSize: 11, color: "rgba(255,255,255,0.6)", marginBottom: 10 }} />
       ) : (
-        <input type="url" placeholder="youtube / x / direct video url"
+        <input type="url" placeholder="youtube / x / article / video url"
           value={url} onChange={e => setUrl(e.target.value)}
           style={{ width: "100%", boxSizing: "border-box", padding: "7px 10px", borderRadius: 6,
             background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)",

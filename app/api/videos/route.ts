@@ -16,6 +16,7 @@ export async function GET(request: Request): Promise<NextResponse> {
     const { searchParams } = new URL(request.url);
     const scope   = (searchParams.get("scope") ?? "reels").toLowerCase();
     const eventId = searchParams.get("eventId") ?? "";
+    const alertId = searchParams.get("alertId") ?? "";
 
     const all = await getManifest();
 
@@ -23,6 +24,8 @@ export async function GET(request: Request): Promise<NextResponse> {
       scope === "all"   ? all
       : scope === "event"
         ? all.filter(e => e.scope === "event" && e.eventId === eventId)
+      : scope === "alert"
+        ? all.filter(e => e.scope === "alert" && e.alertId === alertId)
         : all.filter(e => !e.scope || e.scope === "reels");
 
     // Generate presigned URLs in parallel (only for entries with an R2 key)

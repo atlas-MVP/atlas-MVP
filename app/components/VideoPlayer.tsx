@@ -103,6 +103,9 @@ export default function VideoPlayer({ src, isActive = false }: VideoPlayerProps)
       <video
         ref={videoRef}
         src={src}
+        autoPlay
+        loop
+        muted
         playsInline
         style={{ width: "100%", height: "100%", objectFit: "contain", display: "block" }}
         onPlay={() => setPlaying(true)}

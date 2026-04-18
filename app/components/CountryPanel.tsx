@@ -7,6 +7,8 @@ import { getEventsForTimeline, type MapEvent } from "../lib/mapEvents";
 import VideoPlayer from "./VideoPlayer";
 import EventUploadButton from "./EventUploadButton";
 import EventVideoBubble from "./EventVideoBubble";
+import { playTts, type TtsHandle } from "../lib/tts";
+import { T, clr, confColor } from "../lib/tokens";
 
 // Stable per-event R2 folder id: "<conflictId>-<slug-of-date>"
 // e.g. ("israel-gaza", "October 7, 2023") → "israel-gaza-october-7-2023"
@@ -45,6 +47,10 @@ const CONFLICT_ALERTS: Record<string, LiveAlert[]> = {
       text: "US 5th Fleet announces heightened readiness posture in Persian Gulf",
       description: "The US Navy's 5th Fleet, headquartered in Bahrain, has raised its alert status following intelligence reports of Iranian naval mobilization near the Strait of Hormuz. Two additional destroyers are being repositioned.",
       flyTo: { center: [50.5, 26.2] as [number,number], zoom: 5 } },
+    { time: "1d ago", danger: 3, confidence: 97, sources: ["Senate", "AP", "Reuters"],
+      text: "Senate vote fails 40-59 to block arms sales to Israel — Sanders resolution draws 85% of Democrats",
+      description: "The US Senate defeated a resolution introduced by Sen. Bernie Sanders to halt new arms transfers to Israel, 40 in favor to 59 opposed. Despite the failure, the tally marked the highest level of Democratic support to date: 85% of Senate Democrats voted yes, including several members who had previously opposed similar measures. The resolution targeted a pending $8.1B package covering tank rounds, mortar shells, and guidance kits. The White House had lobbied against passage.",
+      flyTo: { center: [-77.0, 38.9] as [number,number], zoom: 11 } },
     { time: "2d ago", danger: 4, confidence: 91, sources: ["NYT", "Haaretz", "AP"],
       text: "IDF strikes Hezbollah command node in Beirut southern suburbs — 3 commanders killed",
       description: "Israeli Air Force F-35Is struck a Hezbollah command-and-control node beneath a residential building in the Dahieh district of Beirut. IDF confirms three senior Hezbollah field commanders were killed. Lebanese civil defense reports 11 civilians injured. The operation is the deepest strike inside Beirut since the 2024 ceasefire.",
@@ -145,6 +151,9 @@ interface TimelineEvent {
   mapView?: { center: [number, number]; zoom: number };
   /** Scrollable video slides — each slide is a leader/moment with its own video */
   slides?: VideoSlide[];
+  /** External article URLs to embed as square OG preview cards under the
+   *  videos. Fetched + parsed by /api/og; safe to point at any http(s) URL. */
+  articles?: string[];
   /** Pulsing pills linking to other conflicts/categories (cross-timeline) */
   linkedConflicts?: { id: string; label: string; type?: "conflict" | "attack" }[];
   /** Category tag shown above text — e.g. "terrorist attack", "genocide" */
@@ -177,6 +186,23 @@ const SRC = {
   cnn:       { label: "CNN", url: "https://www.cnn.com/world" },
 };
 
+// Wide "home" camera per conflict — the camera position shown when the user
+// taps the conflict title. Zoomed out far enough to see the whole region of
+// operations, not a single strike location.
+const CONFLICT_HOMEVIEW: Record<string, { center: [number, number]; zoom: number }> = {
+  "israel-iran":    { center: [ 47,   30 ], zoom: 2.8 },
+  "israel-gaza":    { center: [ 35,   31 ], zoom: 6.0 },
+  "russia-ukraine": { center: [ 35,   49 ], zoom: 4.0 },
+  "sudan":          { center: [ 30,   15 ], zoom: 4.3 },
+  "myanmar":        { center: [ 97,   20 ], zoom: 4.6 },
+  "yemen":          { center: [ 47,   15 ], zoom: 5.0 },
+  "drc":            { center: [ 25,   -2 ], zoom: 4.3 },
+  "mexico-cartel":  { center: [-102,  23 ], zoom: 4.0 },
+  "taiwan-strait":  { center: [121,   24 ], zoom: 5.2 },
+  "haiti":          { center: [-72,   19 ], zoom: 6.2 },
+};
+const DEFAULT_HOMEVIEW = { center: [ 47, 30 ] as [number, number], zoom: 2.8 };
+
 const CONFLICTS: Record<string, Conflict> = {
   "israel-iran": {
     id: "israel-iran",
@@ -203,9 +229,6 @@ const CONFLICTS: Record<string, Conflict> = {
         { label: "Reuters — Israel war casualties", url: "https://www.reuters.com/world/middle-east/israel/" },
         { label: "NYT — Israel conflict coverage", url: "https://www.nytimes.com/section/world/middleeast" },
         { label: "IDF official spokesperson", url: "https://www.idf.il/en/" },
-      ]},
-      { country: "Sri Lanka", injured: "", killed: "87", civilianPct: 100, civSources: [
-        { label: "Reuters — Iranian warship incident", url: "https://www.reuters.com/world/asia-pacific/sri-lanka/" },
       ]},
       { country: "USA", injured: "84", killed: "13", civilianPct: 0, civSources: [
         { label: "AP — Pentagon casualty report", url: "https://apnews.com/hub/pentagon" },
@@ -492,6 +515,21 @@ const CONFLICTS: Record<string, Conflict> = {
             subtitle: "45th President of the United States",
             info: "Trump calls the JCPOA \"a horrible, one-sided deal that should have never, ever been made.\" He signs a presidential memorandum reinstating all US sanctions on Iran, effectively killing the agreement.",
           },
+          {
+            videoUrl: "https://www.youtube.com/embed/f0O3l1XtNiE",
+            title: "Netanyahu's response to the US withdrawal",
+            subtitle: "Prime Minister of Israel",
+          },
+          {
+            videoUrl: "https://www.youtube.com/embed/z0LS7ayXaGw",
+            title: "Macron addresses Congress on the Iran nuclear deal",
+            subtitle: "President of France",
+            info: "In his address to a joint meeting of Congress on April 25, 2018, Macron argues the US should not abandon the JCPOA until a broader agreement is forged — 'it is not perfect, but we should not abandon it.'",
+          },
+        ],
+        articles: [
+          "https://www.washingtoninstitute.org/policy-analysis/why-israel-sort-misses-iran-deal",
+          "https://www.newyorker.com/news/daily-comment/why-netanyahu-really-wanted-trump-to-scuttle-the-iran-deal",
         ],
       },
       {
@@ -888,6 +926,10 @@ interface Props {
   onPlayEvent?: (event: MapEvent) => void;
   onHistoryDate?: (date: string | null) => void;
   initialAlertText?: string;
+  onAlertLock?: (alertId: string | null) => void;
+  // Clicking a country pill at the top of an active-conflict widget jumps
+  // to that country's solo widget (exits the conflict view).
+  onCountrySwitch?: (isoCode: string) => void;
 }
 
 function parseCasualties(s: string): number {
@@ -898,18 +940,24 @@ function extractSourceName(label: string): string {
   return label.split(" — ")[0].split(" —")[0].trim();
 }
 
-export default function CountryPanel({ countryCode, onClose, onViewFeed, onConflictSelect, onFocusCountry, onFocusPosition, onCountryHome, onAuthorClick, onTimelineStrike, onSourceTap, onCasualtyHighlight, onPlayEvent, onHistoryDate, initialAlertText }: Props) {
+export default function CountryPanel({ countryCode, onClose, onViewFeed, onConflictSelect, onFocusCountry, onFocusPosition, onCountryHome, onAuthorClick, onTimelineStrike, onSourceTap, onCasualtyHighlight, onPlayEvent, onHistoryDate, initialAlertText, onAlertLock, onCountrySwitch }: Props) {
   const [selectedConflictId, setSelectedConflictId] = useState<string | null>(null);
   const [civTooltip, setCivTooltip]       = useState<string | null>(null);
   const [showAllCasualties, setShowAllCasualties] = useState(false);
   const [timelineExpanded, setTimelineExpanded] = useState(false);
   const [activeTile, setActiveTile]     = useState(-1);
+  const [hoveredTile, setHoveredTile]   = useState<number | null>(null);
+  const [pinnedBulletsTile, setPinnedBulletsTile] = useState<number | null>(null);
   const [activeSlide, setActiveSlide]   = useState(0);
   const [autoPlaying, setAutoPlaying]   = useState(false);
-  const [ttsPlaying, setTtsPlaying]     = useState(false);
-  const ttsRef = useRef<{ cancel: () => void } | null>(null);
+  // TTS state machine: "idle" → "playing" ↔ "paused". Paused holds position
+  // in the current MP3 chunk so clicking resume picks up mid-sentence.
+  const [ttsState, setTtsState] = useState<"idle" | "playing" | "paused">("idle");
+  const ttsPlaying = ttsState === "playing";
+  const ttsRef = useRef<TtsHandle | null>(null);
   const slideContainerRef = useRef<HTMLDivElement>(null);
   const [hoveredAlert,  setHoveredAlert]  = useState<number | null>(null);
+  const [lockedAlertIdx, setLockedAlertIdx] = useState<number | null>(null);
   const [hoverMidY,     setHoverMidY]     = useState(0);
   const [sourcesOpen,   setSourcesOpen]   = useState(false);
   const leaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -1039,8 +1087,9 @@ export default function CountryPanel({ countryCode, onClose, onViewFeed, onConfl
     const first = chronological[0];
     onTimelineStrike?.(first?.strikeEvent ?? null);
     onHistoryDate?.(first?.date ?? null);
-    // Zoom out to show all involved countries (wide Middle East + Iran)
-    onFocusPosition?.([47, 30], 2.8);
+    // Zoom out to this conflict's wide "home" camera.
+    const home = CONFLICT_HOMEVIEW[conflict.id] ?? DEFAULT_HOMEVIEW;
+    onFocusPosition?.(home.center, home.zoom);
     // After render, snap the first tile to the top of the history scroller.
     setTimeout(() => {
       const el = scrollRef.current?.querySelector<HTMLElement>("[data-tile='0']");
@@ -1060,21 +1109,25 @@ export default function CountryPanel({ countryCode, onClose, onViewFeed, onConfl
     scrollRef.current?.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  // ── Auto-play: advance tiles at reading pace ──────────────────────────────
-  // ── TTS narration ──
+  // ── TTS narration (ElevenLabs via /api/tts) ──────────────────────────────
+  // Swapped from window.speechSynthesis → the /api/tts route so the voice is
+  // a real newsroom voice (ElevenLabs "Charlie") and not the OS's robot TTS.
+  // The server caches every generation in R2 by hash(voice+model+text), so
+  // the same conflict timeline only burns credits the first time it's read.
   const stopTts = () => {
-    if (typeof window !== "undefined" && window.speechSynthesis) {
-      window.speechSynthesis.cancel();
-    }
+    ttsRef.current?.cancel();
     ttsRef.current = null;
-    setTtsPlaying(false);
+    setTtsState("idle");
   };
 
   const startTts = () => {
-    if (typeof window === "undefined" || !window.speechSynthesis) return;
-    stopTts();
+    if (typeof window === "undefined") return;
+    // Full reset — any prior handle is dead after this.
+    ttsRef.current?.cancel();
+    ttsRef.current = null;
 
-    // Build full narration: conflict title + each tile's date + text
+    // Build full narration: conflict title + each tile's date + text.
+    // " ... " separator becomes a natural pause when ElevenLabs reads it.
     const parts: string[] = [`${conflict.title}.`];
     const tiles = timelineExpanded ? chronological : [conflict.timeline[0]];
     for (const ev of tiles) {
@@ -1083,28 +1136,53 @@ export default function CountryPanel({ countryCode, onClose, onViewFeed, onConfl
     }
     const fullText = parts.join(" ... ");
 
-    const utt = new SpeechSynthesisUtterance(fullText);
-    utt.rate = 0.95;
-    utt.pitch = 0.95;
-    // Prefer a neutral English voice
-    const voices = window.speechSynthesis.getVoices();
-    const preferred = voices.find(v => v.name.includes("Samantha")) ??
-                      voices.find(v => v.lang.startsWith("en") && v.name.includes("Google")) ??
-                      voices.find(v => v.lang.startsWith("en"));
-    if (preferred) utt.voice = preferred;
-
-    utt.onend = () => { setTtsPlaying(false); ttsRef.current = null; };
-    utt.onerror = () => { setTtsPlaying(false); ttsRef.current = null; };
-
-    window.speechSynthesis.speak(utt);
-    setTtsPlaying(true);
-    ttsRef.current = { cancel: () => window.speechSynthesis.cancel() };
+    ttsRef.current = playTts(fullText, {
+      onEnd:   () => { setTtsState("idle"); ttsRef.current = null; },
+      onError: (err) => {
+        console.error("[tts]", err);
+        setTtsState("idle");
+        ttsRef.current = null;
+      },
+    });
+    setTtsState("playing");
   };
 
-  const toggleTts = () => { ttsPlaying ? stopTts() : startTts(); };
+  // Single-button state machine:
+  //   idle    → start from the top
+  //   playing → pause (hold currentTime mid-chunk)
+  //   paused  → resume from that exact spot
+  const toggleTts = () => {
+    if (ttsState === "idle")    { startTts(); return; }
+    if (ttsState === "playing") {
+      ttsRef.current?.pause();
+      setTtsState("paused");
+      return;
+    }
+    if (ttsState === "paused") {
+      ttsRef.current?.resume();
+      setTtsState("playing");
+      return;
+    }
+  };
 
-  // Cleanup TTS on unmount
-  useEffect(() => () => { if (typeof window !== "undefined" && window.speechSynthesis) window.speechSynthesis.cancel(); }, []);
+  // Cleanup on unmount — release any still-playing audio element.
+  useEffect(() => () => { ttsRef.current?.cancel(); }, []);
+
+  // Stop narration when the user navigates to a different conflict; the old
+  // narration is about the wrong thing now.
+  useEffect(() => {
+    return () => { ttsRef.current?.cancel(); ttsRef.current = null; setTtsState("idle"); };
+  }, [selectedConflictId]);
+
+  // Notify parent when alert lock changes
+  useEffect(() => {
+    if (!onAlertLock) return;
+    if (lockedAlertIdx !== null) {
+      onAlertLock(`${conflict.id}-alert-${lockedAlertIdx}`);
+    } else {
+      onAlertLock(null);
+    }
+  }, [lockedAlertIdx, conflict.id]);
 
   const toggleAutoPlay = () => {
     const next = !autoPlaying;
@@ -1262,26 +1340,63 @@ export default function CountryPanel({ countryCode, onClose, onViewFeed, onConfl
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ display: "flex", alignItems: "center", gap: 7, flexWrap: "wrap" }}>
                 <h2
-                  onClick={() => { if (timelineExpanded) exitHistory(); }}
-                  style={{ margin: 0, fontSize: 15, fontWeight: 600, color: "rgba(255,255,255,0.9)", letterSpacing: "0.02em", lineHeight: 1.2, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", cursor: timelineExpanded ? "pointer" : "default" }}
+                  onClick={() => {
+                    // Respawn the map to this conflict's wide "home" camera —
+                    // the original perspective over the entire region, not a
+                    // single strike location. Works any time; if a timeline
+                    // was expanded, collapse it back to the overview too.
+                    const home = CONFLICT_HOMEVIEW[conflict.id] ?? DEFAULT_HOMEVIEW;
+                    onFocusPosition?.(home.center, home.zoom);
+                    if (timelineExpanded) exitHistory();
+                  }}
+                  style={{ margin: 0, fontSize: 15, fontWeight: 600, color: "rgba(255,255,255,0.9)", letterSpacing: "0.02em", lineHeight: 1.2, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", cursor: "pointer" }}
                 >
                   {conflict.title}
                 </h2>
-                {countryCode && (() => {
-                  const displayName = ISO_TO_NAME[countryCode] ?? countryCode;
+                {(() => {
+                  const countries = conflict.casualties.slice(0, 4).map(c => c.country);
                   return (
-                    <button
-                      onClick={(e) => { e.stopPropagation(); onCountryHome?.(countryCode); }}
-                      style={{
-                        fontSize: 8, fontFamily: "monospace", letterSpacing: "0.12em",
-                        padding: "2px 6px", borderRadius: 4, flexShrink: 0, cursor: "pointer",
-                        background: "rgba(255,255,255,0.04)",
-                        border: "1px solid rgba(255,255,255,0.10)",
-                        color: "rgba(255,255,255,0.55)",
-                      }}
-                      onMouseEnter={e => (e.currentTarget.style.background = "rgba(255,255,255,0.08)")}
-                      onMouseLeave={e => (e.currentTarget.style.background = "rgba(255,255,255,0.04)")}
-                    >{displayName.toUpperCase()}</button>
+                    <div style={{ display: "flex", gap: 4, flexWrap: "wrap" }}>
+                      {countries.map(name => {
+                        const iso = CASUALTY_ISO[name];
+                        const clickable = !!iso && !!onCountrySwitch;
+                        return (
+                          <button
+                            key={name}
+                            disabled={!clickable}
+                            onClick={(e) => {
+                              if (!clickable) return;
+                              e.stopPropagation();
+                              // Exit the conflict view and transport to this
+                              // country's solo widget.
+                              stopTts();
+                              onCountrySwitch?.(iso);
+                            }}
+                            onMouseEnter={e => {
+                              if (!clickable) return;
+                              e.currentTarget.style.background = "rgba(255,255,255,0.10)";
+                              e.currentTarget.style.color      = "rgba(255,255,255,0.9)";
+                              e.currentTarget.style.borderColor = "rgba(255,255,255,0.22)";
+                            }}
+                            onMouseLeave={e => {
+                              if (!clickable) return;
+                              e.currentTarget.style.background = "rgba(255,255,255,0.04)";
+                              e.currentTarget.style.color      = "rgba(255,255,255,0.55)";
+                              e.currentTarget.style.borderColor = "rgba(255,255,255,0.10)";
+                            }}
+                            style={{
+                              fontSize: 8, fontFamily: "monospace", letterSpacing: "0.12em",
+                              padding: "2px 6px", borderRadius: 4, flexShrink: 0,
+                              background: "rgba(255,255,255,0.04)",
+                              border: "1px solid rgba(255,255,255,0.10)",
+                              color: "rgba(255,255,255,0.55)",
+                              cursor: clickable ? "pointer" : "default",
+                              transition: "background 0.12s, color 0.12s, border-color 0.12s",
+                            }}
+                          >{name.toUpperCase()}</button>
+                        );
+                      })}
+                    </div>
                   );
                 })()}
               </div>
@@ -1296,24 +1411,16 @@ export default function CountryPanel({ countryCode, onClose, onViewFeed, onConfl
               <span style={{ fontSize: 9, fontFamily: "monospace", letterSpacing: "0.18em", color: "rgba(255,255,255,0.22)", textTransform: "uppercase" }}>
                 active conflict
               </span>
-              {/* Always a "← back" button. Previously showed × when on the
-                  original conflict; the user wants no × anywhere in the app. */}
-              <button
-                onClick={() => {
-                  if (selectedConflictId && selectedConflictId !== conflictIds[0]) {
-                    setSelectedConflictId(null);
-                    stopTts();
-                  } else {
-                    onClose();
-                    setSelectedConflictId(null);
-                    stopTts();
-                  }
-                }}
-                title="back"
-                style={{ color: "rgba(255,255,255,0.35)", fontSize: 11, fontFamily: "monospace", letterSpacing: "0.08em", textTransform: "uppercase", background: "none", border: "none", cursor: "pointer", lineHeight: 1, padding: "2px 4px" }}
-                onMouseEnter={e => (e.currentTarget.style.color = "rgba(255,255,255,0.85)")}
-                onMouseLeave={e => (e.currentTarget.style.color = "rgba(255,255,255,0.35)")}
-              >← back</button>
+              {/* "← back" only appears when on a secondary (non-primary) conflict */}
+              {selectedConflictId && selectedConflictId !== conflictIds[0] && (
+                <button
+                  onClick={() => { setSelectedConflictId(null); stopTts(); }}
+                  title="back"
+                  style={{ color: "rgba(255,255,255,0.35)", fontSize: 11, fontFamily: "monospace", letterSpacing: "0.08em", textTransform: "uppercase", background: "none", border: "none", cursor: "pointer", lineHeight: 1, padding: "2px 4px" }}
+                  onMouseEnter={e => (e.currentTarget.style.color = "rgba(255,255,255,0.85)")}
+                  onMouseLeave={e => (e.currentTarget.style.color = "rgba(255,255,255,0.35)")}
+                >← back</button>
+              )}
             </div>
           </div>
 
@@ -1396,22 +1503,44 @@ export default function CountryPanel({ countryCode, onClose, onViewFeed, onConfl
             return (
               <div style={{ padding: "14px 6px 6px", borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
                 <p style={{ margin: "0 0 6px 12px", fontSize: 11, fontFamily: "monospace", letterSpacing: "0.18em", color: "rgba(255,255,255,0.28)", textTransform: "uppercase", fontWeight: 500 }}>live alerts</p>
-                {conflictAlerts.slice(0, 4).map((a, i, arr) => (
-                  <LiveAlertRow
-                    key={i}
-                    item={a}
-                    bottomBorder={i < arr.length - 1}
-                    showConfidenceInline={false}
-                    expandOnHover={true}
-                    defaultExpanded={!!initialAlertText && a.text === initialAlertText}
-                    isActive={hoveredAlert === i}
-                    onHoverChange={(active, anchorY) => {
-                      cancelLeave();
-                      if (active) { setHoveredAlert(i); setHoverMidY(anchorY); }
-                      else scheduleLeave();
-                    }}
-                  />
-                ))}
+                {conflictAlerts.slice(0, 4).map((a, i, arr) => {
+                  const alertId = `${conflict.id}-alert-${i}`;
+                  const isLocked = lockedAlertIdx === i;
+                  return (
+                    <div key={i} style={{ display: "flex", alignItems: "flex-start", gap: 4 }}>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <LiveAlertRow
+                          item={a}
+                          bottomBorder={i < arr.length - 1}
+                          showConfidenceInline={false}
+                          expandOnHover={true}
+                          defaultExpanded={!!initialAlertText && a.text === initialAlertText}
+                          isActive={isLocked || hoveredAlert === i}
+                          onClick={() => setLockedAlertIdx(prev => prev === i ? null : i)}
+                          onHoverChange={(active, anchorY) => {
+                            cancelLeave();
+                            if (active) { setHoveredAlert(i); setHoverMidY(anchorY); }
+                            else scheduleLeave();
+                          }}
+                        />
+                      </div>
+                      {/* × close button only shown inline when locked. The
+                          upload chip was moved out of the alert row into the
+                          floating confidence panel to the right, matching the
+                          hover-on-the-outside pattern of the confidence UI. */}
+                      {isLocked && (
+                        <div style={{ flexShrink: 0, paddingTop: 6 }}>
+                          <button
+                            onClick={() => setLockedAlertIdx(null)}
+                            style={{ color: "rgba(255,255,255,0.4)", fontSize: 13, background: "none", border: "none", cursor: "pointer", lineHeight: 1, padding: "4px 6px" }}
+                            onMouseEnter={e => (e.currentTarget.style.color = "rgba(255,255,255,0.85)")}
+                            onMouseLeave={e => (e.currentTarget.style.color = "rgba(255,255,255,0.4)")}
+                          >×</button>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             );
           })()}
@@ -1443,7 +1572,7 @@ export default function CountryPanel({ countryCode, onClose, onViewFeed, onConfl
                   <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 14, marginBottom: 14 }}>
                     <p style={{ fontSize: 11, fontFamily: "monospace", letterSpacing: "0.18em", color: "rgba(255,255,255,0.28)", textTransform: "uppercase", margin: 0, fontWeight: 500 }}>timeline</p>
                   </div>
-                  <div style={{ position: "relative" }}>
+                  <div style={{ position: "relative", cursor: "pointer" }} onClick={(e) => { e.stopPropagation(); enterHistory(); }}>
                     <div style={{ position: "absolute", left: 5, top: 6, bottom: 6, width: 1, background: "rgba(255,255,255,0.05)" }} />
                     <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
                       {latest && (
@@ -1539,18 +1668,30 @@ export default function CountryPanel({ countryCode, onClose, onViewFeed, onConfl
                       }}
                     >{autoPlaying ? "⏸ pause" : "▶ play"}</button>
                     {/* Audio toggle — only visible while play is active, so
-                        the rail stays clean until the user opts into narration. */}
+                        the rail stays clean until the user opts into narration.
+                        Three-state: idle 🔇 · playing ⏸ · paused ▶. Paused holds
+                        position mid-sentence; resume picks up from the exact
+                        currentTime, not from the top. */}
                     {autoPlaying && (
                       <button
                         onClick={(e) => { e.stopPropagation(); toggleTts(); }}
-                        title={ttsPlaying ? "mute narration" : "unmute narration"}
+                        title={
+                          ttsState === "playing" ? "pause narration" :
+                          ttsState === "paused"  ? "resume narration" :
+                                                   "start narration"
+                        }
                         style={{
-                          fontSize: 12, background: ttsPlaying ? "rgba(255,255,255,0.08)" : "none",
+                          fontSize: 12,
+                          background: ttsState !== "idle" ? "rgba(255,255,255,0.08)" : "none",
                           border: "none", cursor: "pointer", padding: "2px 4px", borderRadius: 4,
-                          color: ttsPlaying ? "rgba(255,255,255,0.75)" : "rgba(255,255,255,0.35)",
+                          color: ttsState !== "idle" ? "rgba(255,255,255,0.75)" : "rgba(255,255,255,0.35)",
                           lineHeight: 1,
                         }}
-                      >{ttsPlaying ? "🔊" : "🔇"}</button>
+                      >{
+                        ttsState === "playing" ? "⏸" :
+                        ttsState === "paused"  ? "▶" :
+                                                 "🔇"
+                      }</button>
                     )}
                     {/* Back → leaves history mode, returns to active-conflict view */}
                     <button
@@ -1582,14 +1723,32 @@ export default function CountryPanel({ countryCode, onClose, onViewFeed, onConfl
                     const prevYear = prevEvent ? extractYear(prevEvent.date) : null;
                     const showYearBefore = i === 0 || (prevYear !== null && prevYear !== currentYear);
 
+                    // Bullet popup: pull slide.info, drop the @blue/@red
+                    // signatory lines (they live in the video caption), keep
+                    // only • bullet lines so the popup stays a tight
+                    // requirements list rather than a wall of prose.
+                    const rawBullets = (event.slides?.[0]?.info ?? "")
+                      .split("\n")
+                      .map(l => l.trim())
+                      .filter(l => l.startsWith("•"))
+                      .map(l => l.replace(/^•\s*/, ""));
+                    const showBullets =
+                      rawBullets.length > 0 &&
+                      (hoveredTile === i || pinnedBulletsTile === i);
+
                     return (
                       <div
                         key={i}
                         data-tile={i}
                         {...(event.strikeEvent ? { "data-strike": JSON.stringify(event.strikeEvent) } : {})}
+                        onMouseEnter={() => setHoveredTile(i)}
+                        onMouseLeave={() => setHoveredTile(prev => (prev === i ? null : prev))}
                         onClick={(e) => {
                           activeTileRef.current = i;
                           setActiveTile(i);
+                          // Toggle the pinned bullets on click so a second
+                          // click dismisses the popup.
+                          setPinnedBulletsTile(prev => (prev === i ? null : i));
                           navigateToTile(i);
                           // Pin the clicked tile to the top of the history
                           // scroller so the selected event is always the first
@@ -1644,6 +1803,37 @@ export default function CountryPanel({ countryCode, onClose, onViewFeed, onConfl
                             <p style={{ margin: 0, fontSize: 14, color: isActive ? "rgba(255,255,255,0.85)" : palette.text, lineHeight: 1.65, transition: "color 0.3s ease" }}>
                               {event.text}
                             </p>
+                            {/* No provenance tag here — the timeline tiles are
+                                written by jeni kim and william, not the model. */}
+                            {/* Bullet-point popup: fed from slide.info's
+                                "• …" lines. Appears on hover, pinned on click
+                                (click again to dismiss). Bullets use a warm
+                                tinted color so they read as supplemental
+                                context rather than primary body text. */}
+                            {showBullets && (
+                              <div
+                                onMouseEnter={() => setHoveredTile(i)}
+                                onMouseLeave={() => setHoveredTile(prev => (prev === i ? null : prev))}
+                                style={{
+                                  marginTop: 10,
+                                  padding: "10px 12px",
+                                  borderRadius: 10,
+                                  background: "rgba(255,255,255,0.03)",
+                                  border: "1px solid rgba(255,255,255,0.08)",
+                                  boxShadow: pinnedBulletsTile === i ? "0 4px 18px rgba(0,0,0,0.35)" : "none",
+                                  transition: "box-shadow 0.2s",
+                                }}
+                              >
+                                <ul style={{ margin: 0, padding: 0, listStyle: "none", display: "flex", flexDirection: "column", gap: 5 }}>
+                                  {rawBullets.map((b, bi) => (
+                                    <li key={bi} style={{ display: "flex", gap: 8, alignItems: "flex-start", fontSize: 12, lineHeight: 1.55 }}>
+                                      <span style={{ color: "rgba(251,191,36,0.75)", flexShrink: 0, fontWeight: 700, marginTop: 1 }}>•</span>
+                                      <span style={{ color: "rgba(253,224,171,0.78)" }}>{b}</span>
+                                    </li>
+                                  ))}
+                                </ul>
+                              </div>
+                            )}
                             {/* Linked conflict/attack pills — pulsing cross-timeline bridges */}
                             {event.linkedConflicts && event.linkedConflicts.length > 0 && (
                               <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginTop: 10 }}>
@@ -1708,31 +1898,23 @@ export default function CountryPanel({ countryCode, onClose, onViewFeed, onConfl
     {timelineExpanded && activeTile >= 0 && (() => {
       const ev = chronological[activeTile];
       if (!ev) return null;
-      const slide = ev.slides?.[0] ?? null;
-
-      const rawInfo = (slide?.info ?? "")
-        .split("\n")
-        .filter(l => !l.startsWith("@blue ") && !l.startsWith("@red "))
-        .join("\n")
-        .trim();
-      const INFO_MAX = 350;
-      const infoTrimmed = rawInfo.length > INFO_MAX
-        ? rawInfo.slice(0, INFO_MAX).replace(/\s+\S*$/, "") + "…"
-        : rawInfo;
-
+      // Pass EVERY slide + EVERY article so the bubble can render the full
+      // media column. The bubble itself decides layout/spacing/sizing so
+      // every event — video-heavy, article-heavy, or empty — looks consistent.
       return (
         <EventVideoBubble
+          key={eventFolderId(conflict.id, ev.date)}
           eventDate={ev.date}
           eventId={eventFolderId(conflict.id, ev.date)}
-          baseSlide={slide}
-          infoTrimmed={infoTrimmed}
+          slides={ev.slides ?? []}
+          articles={ev.articles ?? []}
         />
       );
     })()}
 
     {/* Floating confidence + sources — sibling outside backdropFilter stacking context */}
     {activeAlert && (() => {
-      const cc = activeAlert.confidence >= 90 ? "#22c55e" : activeAlert.confidence >= 80 ? "#86efac" : activeAlert.confidence >= 70 ? "#fbbf24" : "#f87171";
+      const cc = confColor(activeAlert.confidence);
       return (
         <div
           onMouseEnter={() => { cancelLeave(); setSourcesOpen(true); }}
@@ -1753,6 +1935,14 @@ export default function CountryPanel({ countryCode, onClose, onViewFeed, onConfl
               <div style={{ width: `${activeAlert.confidence}%`, height: "100%", borderRadius: 99, background: cc, transition: "width 0.3s" }} />
             </div>
             <span style={{ fontSize: 10, fontFamily: "monospace", fontWeight: 700, color: cc, minWidth: 30 }}>{activeAlert.confidence}%</span>
+            {/* Upload chip — lives in the floating panel so it hovers outside
+                the live alerts list instead of cluttering each row. */}
+            <div style={{ marginLeft: 4 }}>
+              <EventUploadButton
+                eventId={`${activeId}-alert-${hoveredAlert}`}
+                onUploaded={() => {}}
+              />
+            </div>
           </div>
           {sourcesOpen && (
             <div style={{ marginTop: 8, paddingTop: 8, borderTop: "1px solid rgba(255,255,255,0.06)", display: "flex", flexWrap: "wrap", gap: 5, alignItems: "center" }}>
@@ -1762,7 +1952,7 @@ export default function CountryPanel({ countryCode, onClose, onViewFeed, onConfl
                   onClick={e => { e.stopPropagation(); onSourceTap?.(s); }}
                   onMouseEnter={e => { e.currentTarget.style.background = "rgba(255,255,255,0.14)"; e.currentTarget.style.color = "#fff"; }}
                   onMouseLeave={e => { e.currentTarget.style.background = "rgba(255,255,255,0.07)"; e.currentTarget.style.color = "rgba(255,255,255,0.65)"; }}
-                  style={{ fontSize: 10, fontFamily: "monospace", letterSpacing: "0.08em", padding: "2px 8px", borderRadius: 99, cursor: "pointer", background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.16)", color: "rgba(255,255,255,0.65)" }}
+                  style={{ fontSize: 10, fontFamily: T.MONO, letterSpacing: T.TRACK_TIGHT, padding: "2px 8px", borderRadius: T.PILL_RADIUS, cursor: "pointer", background: T.PILL_BG, border: T.PILL_BORDER, color: clr.white(0.65) }}
                 >{s}</button>
               ))}
             </div>
@@ -1771,6 +1961,21 @@ export default function CountryPanel({ countryCode, onClose, onViewFeed, onConfl
         </div>
       );
     })()}
+
+    {/* Live alert media bubble — when an alert row is locked, surface any
+        uploaded videos + articles for that alert using the SAME sizing and
+        styling as timeline events. Uploads are keyed by
+        "<conflictId>-alert-<idx>"; the bubble reads them from the events
+        pipeline (scope="event") so the behaviour is 1:1 with history mode.
+        Hidden while history/timeline mode is active so the two bubbles
+        never overlap. */}
+    {conflict && lockedAlertIdx !== null && !timelineExpanded && (
+      <EventVideoBubble
+        key={`${conflict.id}-alert-${lockedAlertIdx}`}
+        eventDate=""
+        eventId={`${conflict.id}-alert-${lockedAlertIdx}`}
+      />
+    )}
     </>
   );
 }

@@ -1,5 +1,6 @@
 "use client";
 import { useState, useRef } from "react";
+import { T, clr, confColor, dangerColor } from "../lib/tokens";
 
 export interface AlertItem {
   time: string;
@@ -9,20 +10,6 @@ export interface AlertItem {
   confidence: number;
   sources: string[];
   pulse?: boolean; // force heat-pulse dot regardless of danger level
-}
-
-function dangerDot(d: number) {
-  if (d >= 4) return "#6d28d9";
-  if (d >= 3) return "#4338ca";
-  if (d >= 2) return "#1d4ed8";
-  return "#1e3a8a";
-}
-
-function confColor(c: number) {
-  if (c >= 90) return "#22c55e";
-  if (c >= 80) return "#86efac";
-  if (c >= 70) return "#fbbf24";
-  return "#f87171";
 }
 
 interface Props {
@@ -46,7 +33,7 @@ export default function LiveAlertRow({
   const [sourcesOpen, setSourcesOpen] = useState(false);
   const rowRef = useRef<HTMLDivElement>(null);
 
-  const dot   = dangerDot(item.danger);
+  const dot   = dangerColor(item.danger);
   const cc    = confColor(item.confidence);
   const isHot = item.danger >= 5 || (item.pulse ?? false);
 
@@ -107,7 +94,7 @@ export default function LiveAlertRow({
         />
 
         <div style={{ flex: 1, minWidth: 0 }}>
-          <span style={{ fontSize: 13, lineHeight: 1.4, color: "rgba(255,255,255,0.78)" }}>
+          <span style={{ fontSize: 14, lineHeight: 1.65, color: "rgba(255,255,255,0.78)" }}>
             {item.text}
           </span>
 
@@ -115,26 +102,33 @@ export default function LiveAlertRow({
           {expanded && expandOnHover && (
             <div>
               <p style={{
-                margin: "8px 0 10px",
+                margin: "8px 0 6px",
                 fontSize: 12,
                 color: "rgba(255,255,255,0.45)",
                 lineHeight: 1.5,
               }}>
                 {item.description}
               </p>
+              {/* Provenance tag — alert bodies are summarized by the
+                  model, kept visible so users see attribution. */}
+              <div style={{
+                marginBottom: 10,
+                fontSize: 8, fontFamily: "monospace", letterSpacing: "0.18em",
+                color: "rgba(255,255,255,0.18)", textTransform: "uppercase",
+              }}>Claude by Anthropic</div>
 
               {/* Inline confidence (CountryPanel doesn't use this — it uses floating panel) */}
               {showConfidenceInline && (
                 <div style={{ display: "flex", alignItems: "center", gap: 7, flexWrap: "wrap" }}>
-                  <span style={{ fontSize: 7, fontFamily: "monospace", letterSpacing: "0.12em", color: "rgba(255,255,255,0.28)", minWidth: 52 }}>confidence</span>
+                  <span style={{ fontSize: 7, fontFamily: T.MONO, letterSpacing: T.TRACK_MED, color: clr.white(0.28), minWidth: 52 }}>confidence</span>
                   <div
                     onMouseEnter={() => setSourcesOpen(true)}
                     onMouseLeave={() => setSourcesOpen(false)}
-                    style={{ width: 80, height: 4, borderRadius: 99, background: "rgba(255,255,255,0.10)", overflow: "hidden", cursor: "pointer" }}
+                    style={{ width: 80, height: 4, borderRadius: T.PILL_RADIUS, background: clr.white(0.10), overflow: "hidden", cursor: "pointer" }}
                   >
-                    <div style={{ width: `${item.confidence}%`, height: "100%", borderRadius: 99, background: cc, transition: "width 0.3s" }} />
+                    <div style={{ width: `${item.confidence}%`, height: "100%", borderRadius: T.PILL_RADIUS, background: cc, transition: "width 0.3s" }} />
                   </div>
-                  <span style={{ fontSize: 8, fontFamily: "monospace", fontWeight: 700, color: cc, minWidth: 28 }}>{item.confidence}%</span>
+                  <span style={{ fontSize: 8, fontFamily: T.MONO, fontWeight: 700, color: cc, minWidth: 28 }}>{item.confidence}%</span>
                   {sourcesOpen && (
                     <div
                       onMouseEnter={() => setSourcesOpen(true)}
@@ -144,9 +138,9 @@ export default function LiveAlertRow({
                       {item.sources.map(s => (
                         <button key={s}
                           onClick={e => { e.stopPropagation(); onSourceClick?.(s); }}
-                          onMouseEnter={e => { e.currentTarget.style.background = "rgba(255,255,255,0.14)"; e.currentTarget.style.color = "#fff"; }}
-                          onMouseLeave={e => { e.currentTarget.style.background = "rgba(255,255,255,0.07)"; e.currentTarget.style.color = "rgba(255,255,255,0.65)"; }}
-                          style={{ fontSize: 8, fontFamily: "monospace", letterSpacing: "0.08em", padding: "2px 7px", borderRadius: 99, cursor: "pointer", background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.16)", color: "rgba(255,255,255,0.65)" }}
+                          onMouseEnter={e => { e.currentTarget.style.background = clr.white(0.14); e.currentTarget.style.color = "#fff"; }}
+                          onMouseLeave={e => { e.currentTarget.style.background = T.PILL_BG; e.currentTarget.style.color = clr.white(0.65); }}
+                          style={{ fontSize: 8, fontFamily: T.MONO, letterSpacing: T.TRACK_TIGHT, padding: "2px 7px", borderRadius: T.PILL_RADIUS, cursor: "pointer", background: T.PILL_BG, border: T.PILL_BORDER, color: clr.white(0.65) }}
                         >{s}</button>
                       ))}
                     </div>

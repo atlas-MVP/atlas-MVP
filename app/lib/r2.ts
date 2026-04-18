@@ -20,7 +20,14 @@ export const r2 = new S3Client({
 export const BUCKET = clean(process.env.R2_BUCKET) || "atlas-media";
 export const MANIFEST_KEY = "manifest.json";
 
-export type ReelType = "video" | "youtube" | "tweet";
+// "video"   — self-hosted mp4/webm in R2 OR a direct-video URL
+// "youtube" — youtube.com / youtu.be
+// "tweet"   — twitter.com / x.com
+// "article" — everything else: news articles, blog posts, reports. Rendered
+//             via ArticleCard using og: metadata (image + headline). Lets
+//             admins drop any URL into the event upload popup and have it
+//             appear as a square preview card without manual curation.
+export type ReelType = "video" | "youtube" | "tweet" | "article";
 
 export interface VideoEntry {
   id:         string;
@@ -37,8 +44,14 @@ export interface VideoEntry {
   // ── Scope routing ────────────────────────────────────────────────────
   // "reels"  → master Atlas Reels feed (opened via Atlas Radar slot)
   // "event"  → attached to a specific timeline event; NOT shown in master feed
-  scope?:     "reels" | "event";
+  // "alert"  → attached to a specific live alert; hover-reveal + click-lock
+  scope?:     "reels" | "event" | "alert";
   eventId?:   string;        // e.g. "october-7" — required when scope === "event"
+  alertId?:   string;        // e.g. "ISR-1d"   — required when scope === "alert"
+  // For tweet entries: "embed" renders the full Twitter widget (no autoplay
+  // but shows author/text/media); undefined/"mp4" renders our autoplay MP4
+  // proxy (default). Per-post override so mixed modes can coexist.
+  renderMode?: "embed" | "mp4";
 }
 
 export async function getManifest(): Promise<VideoEntry[]> {
@@ -68,9 +81,14 @@ export async function signedGetUrl(key: string, expiresIn = 86400): Promise<stri
   );
 }
 
-// Detect embed type from a URL
+// Detect embed type from a URL.
+// Order matters: YouTube and Twitter win first, then direct-video URLs (by
+// extension), then everything else is an article. This lets admins paste
+// ANY URL into the event upload popup and have it classified correctly
+// without extra UI.
 export function detectEmbedType(url: string): ReelType {
-  if (/youtu\.?be|youtube\.com/.test(url)) return "youtube";
-  if (/twitter\.com|x\.com/.test(url)) return "tweet";
-  return "video"; // direct video URL
+  if (/youtu\.?be|youtube\.com/.test(url))      return "youtube";
+  if (/twitter\.com|x\.com/.test(url))          return "tweet";
+  if (/\.(mp4|webm|mov|m4v)(\?|#|$)/i.test(url)) return "video";
+  return "article";
 }

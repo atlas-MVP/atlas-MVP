@@ -8,14 +8,17 @@ import { SIDE_COLORS, COUNTRY_SIDE } from "../lib/sides";
 mapboxgl.accessToken =
   "pk.eyJ1IjoiYXRsYXNib3N0b24iLCJhIjoiY21qejY1c211Nmt2azNlcHMwcnljOGR1dCJ9.Pnq-qa_giDk0LN95OpFvMg";
 
-// Top-4 conflict countries — always blue base + red idle pulse
-const HIGHLIGHTED = ["LBN", "IRN", "UKR", "RUS", "PSE", "SDN"];
+// Top-4 conflict countries — always blue base + red idle pulse.
+// SDN removed: Sudan only highlights when explicitly tapped (matches user
+// request — constant pulse was noisy when Sudan isn't the active topic).
+const HIGHLIGHTED = ["LBN", "IRN", "UKR", "RUS", "PSE", "ISR"];
 
 // Per-country zoom fade ranges [fadeStart, fadeEnd] — proportional to country area
 // Smaller countries keep their highlight visible until much higher zoom levels
 const COUNTRY_FADE_RANGES: Record<string, [number, number]> = {
   PSE: [7.5, 9.5],  // Gaza ~365 km²   — tiny
   LBN: [7.0, 9.0],  // Lebanon ~10k km² — small
+  ISR: [6.8, 8.8],  // Israel ~22k km²  — small
   UKR: [4.5, 6.5],  // Ukraine ~600k km²
   IRN: [3.8, 5.8],  // Iran ~1.65M km²
   SDN: [3.5, 5.5],  // Sudan ~1.86M km²
@@ -264,9 +267,12 @@ export default function Map({ onCountryClick, flyToCode, flyToPosition, selected
     const extraRed  = extra.filter(c => COUNTRY_SIDE[c] === "red");
     const extraNeutral = extra.filter(c => !COUNTRY_SIDE[c]);
 
-    const blueH = HIGHLIGHTED.filter(c => COUNTRY_SIDE[c] === "blue");
-    const redH  = HIGHLIGHTED.filter(c => COUNTRY_SIDE[c] === "red");
-    const neutH = HIGHLIGHTED.filter(c => !COUNTRY_SIDE[c]);
+    const effectiveH = (focusCountries && focusCountries.length > 0)
+      ? HIGHLIGHTED.filter(c => focusCountries.includes(c))
+      : HIGHLIGHTED;
+    const blueH = effectiveH.filter(c => COUNTRY_SIDE[c] === "blue");
+    const redH  = effectiveH.filter(c => COUNTRY_SIDE[c] === "red");
+    const neutH = effectiveH.filter(c => !COUNTRY_SIDE[c]);
 
     const empty = ["all", wf, ["in", ["get", "iso_3166_1_alpha_3"], ["literal", [""]]]];
 
@@ -278,7 +284,7 @@ export default function Map({ onCountryClick, flyToCode, flyToPosition, selected
       : empty);
     m.setFilter("idle-pulse-blue", ["all", wf, ["in", ["get", "iso_3166_1_alpha_3"], ["literal", [...blueH, ...neutH, ...extraBlue, ...extraNeutral]]]]);
     m.setFilter("idle-pulse-red",  ["all", wf, ["in", ["get", "iso_3166_1_alpha_3"], ["literal", [...redH, ...extraRed]]]]);
-  }, [casualtyCountries]);
+  }, [casualtyCountries, focusCountries]);
 
   // Strike marker animation — fast scroll: instant, pause: sequential reveal
   useEffect(() => {
