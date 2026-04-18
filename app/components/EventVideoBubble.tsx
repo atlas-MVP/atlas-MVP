@@ -273,12 +273,12 @@ export default function EventVideoBubble({ eventDate: _eventDate, eventId, slide
           Apple-style: barely-there translucent grey + blur, tight radius. */}
       <div style={{
         width:              "calc(100% - 96px)",
-        padding:            10,
+        padding:            4,
         boxSizing:          "border-box",
-        background:         "rgba(200,200,200,0.055)",
-        backdropFilter:     "blur(18px)",
-        WebkitBackdropFilter: "blur(18px)",
-        borderRadius:       T.TILE_RADIUS + 8,
+        background:         "rgba(200,200,200,0.025)",
+        backdropFilter:     "blur(8px)",
+        WebkitBackdropFilter: "blur(8px)",
+        borderRadius:       T.TILE_RADIUS + 4,
         pointerEvents:      "auto",
       }}>
 
