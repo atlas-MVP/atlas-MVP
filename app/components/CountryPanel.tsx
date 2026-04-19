@@ -1284,8 +1284,8 @@ export default function CountryPanel({ countryCode, onClose, onViewFeed, onConfl
                   style={{
                     fontSize: 10, fontFamily: "monospace", padding: "2px 6px", borderRadius: 4, cursor: "pointer", border: "none",
                     background: "rgba(255,255,255,0.05)",
-                    color: c.civilianPct > 60 ? "rgba(255,255,255,0.72)" : "rgba(255,255,255,0.32)",
-                    fontWeight: c.civilianPct > 60 ? 700 : 400,
+                    color: "rgba(255,255,255,0.92)",
+                    fontWeight: 700,
                   }}>
                   {c.civilianPct}%
                 </button>
