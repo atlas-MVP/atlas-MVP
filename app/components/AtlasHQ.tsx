@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import LiveAlertRow from "./LiveAlertRow";
 import { setReelResume } from "../lib/reelResume";
+import SenateVoteVisualization from "./SenateVoteVisualization";
 
 // ── Reels preview ─────────────────────────────────────────────────────────────
 // Autoplays the most recent "Atlas You" reel (muted, since browsers block
@@ -115,7 +116,7 @@ const MORE_CONFLICTS: Conflict[] = [
 ];
 
 const DISASTERS = [
-  { label: "Kenya floods", slug: "kenya-floods", sub: "110+ dead · 34,765+ displaced · 30 counties affected", flyTo: { center: [36.9, 0.0] as [number,number], zoom: 5.5 }, image: "/kenya-floods-bus.webp" },
+  { label: "Kenya floods", slug: "kenya-floods", sub: "110+ dead · 34,765+ displaced · 30 counties affected", flyTo: { center: [36.9, 0.0] as [number,number], zoom: 5.5 }, image: "/kenya-floods-debris.webp" },
 ];
 
 
@@ -190,6 +191,63 @@ export default function AtlasHQ({ onClose, onNavigate, onHeadlinesToggle, onSour
   const [showMore, setShowMore] = useState(false);
   const [showAllDisasters, setShowAllDisasters] = useState(false);
   const [loadStage, setLoadStage] = useState(0);
+  const [senateVoteVisible, setSenateVoteVisible] = useState<'hover' | 'locked' | null>(null);
+  const senateAlertRef = useRef<HTMLDivElement>(null);
+
+  // Senate arms sale vote data: 40-59 (40 Aye, 59 No)
+  const senatorsVoteData = [
+    // Democrats who voted Aye (34 of 40 total Ayes)
+    { name: "Bernie Sanders", party: "I" as const, state: "VT", vote: "Aye" as const },
+    { name: "Elizabeth Warren", party: "D" as const, state: "MA", vote: "Aye" as const },
+    { name: "Jeff Merkley", party: "D" as const, state: "OR", vote: "Aye" as const },
+    { name: "Chris Van Hollen", party: "D" as const, state: "MD", vote: "Aye" as const },
+    { name: "Peter Welch", party: "D" as const, state: "VT", vote: "Aye" as const },
+    { name: "Ed Markey", party: "D" as const, state: "MA", vote: "Aye" as const },
+    { name: "Dick Durbin", party: "D" as const, state: "IL", vote: "Aye" as const },
+    { name: "Mazie Hirono", party: "D" as const, state: "HI", vote: "Aye" as const },
+    { name: "Tammy Baldwin", party: "D" as const, state: "WI", vote: "Aye" as const },
+    { name: "Cory Booker", party: "D" as const, state: "NJ", vote: "Aye" as const },
+    { name: "Sherrod Brown", party: "D" as const, state: "OH", vote: "Aye" as const },
+    { name: "Ben Ray Luján", party: "D" as const, state: "NM", vote: "Aye" as const },
+    { name: "Alex Padilla", party: "D" as const, state: "CA", vote: "Aye" as const },
+    { name: "Tina Smith", party: "D" as const, state: "MN", vote: "Aye" as const },
+    { name: "Brian Schatz", party: "D" as const, state: "HI", vote: "Aye" as const },
+    { name: "Ron Wyden", party: "D" as const, state: "OR", vote: "Aye" as const },
+    { name: "Raphael Warnock", party: "D" as const, state: "GA", vote: "Aye" as const },
+    { name: "Jon Ossoff", party: "D" as const, state: "GA", vote: "Aye" as const },
+    { name: "Amy Klobuchar", party: "D" as const, state: "MN", vote: "Aye" as const },
+    { name: "Kirsten Gillibrand", party: "D" as const, state: "NY", vote: "Aye" as const },
+    { name: "Martin Heinrich", party: "D" as const, state: "NM", vote: "Aye" as const },
+    { name: "Debbie Stabenow", party: "D" as const, state: "MI", vote: "Aye" as const },
+    { name: "Gary Peters", party: "D" as const, state: "MI", vote: "Aye" as const },
+    { name: "Tammy Duckworth", party: "D" as const, state: "IL", vote: "Aye" as const },
+    { name: "Patty Murray", party: "D" as const, state: "WA", vote: "Aye" as const },
+    { name: "Maria Cantwell", party: "D" as const, state: "WA", vote: "Aye" as const },
+    { name: "Mark Warner", party: "D" as const, state: "VA", vote: "Aye" as const },
+    { name: "Tim Kaine", party: "D" as const, state: "VA", vote: "Aye" as const },
+    { name: "Bob Casey", party: "D" as const, state: "PA", vote: "Aye" as const },
+    { name: "John Fetterman", party: "D" as const, state: "PA", vote: "No" as const }, // Fetterman voted No
+    { name: "Jacky Rosen", party: "D" as const, state: "NV", vote: "Aye" as const },
+    { name: "Catherine Cortez Masto", party: "D" as const, state: "NV", vote: "Aye" as const },
+    { name: "Mark Kelly", party: "D" as const, state: "AZ", vote: "Aye" as const },
+    { name: "Ruben Gallego", party: "D" as const, state: "AZ", vote: "Aye" as const },
+    { name: "Adam Schiff", party: "D" as const, state: "CA", vote: "Aye" as const },
+    { name: "Laphonza Butler", party: "D" as const, state: "CA", vote: "Aye" as const },
+    // Republicans who voted No (all 49)
+    ...Array.from({ length: 49 }, (_, i) => ({
+      name: `Republican Senator ${i + 1}`,
+      party: "R" as const,
+      state: ["TX", "FL", "OH", "NC", "GA", "TN", "IN", "MO", "AL", "LA"][i % 10],
+      vote: "No" as const,
+    })),
+    // Democrats who voted No (10)
+    ...Array.from({ length: 10 }, (_, i) => ({
+      name: `Democrat Senator ${i + 1}`,
+      party: "D" as const,
+      state: ["DE", "CT", "MD", "NJ", "NY"][i % 5],
+      vote: "No" as const,
+    })),
+  ];
 
   useEffect(() => {
     const timers: ReturnType<typeof setTimeout>[] = [];
@@ -281,18 +339,46 @@ export default function AtlasHQ({ onClose, onNavigate, onHeadlinesToggle, onSour
         {/* LIVE ALERTS — label instant, rows fade in */}
         <SectionLabel label="live alerts" />
         <Reveal minStage={3} stage={loadStage}>
-          <div style={{ padding: "0 6px" }}>
-            {LIVE_FEED.slice(0, 3).map((item, i) => (
-              <LiveAlertRow
-                key={`${item.code}-${item.time}`}
-                item={item}
-                onSourceClick={onSourceClick}
-                onClick={() => onNavigate?.(item.code, item.flyTo.center, item.flyTo.zoom, item)}
-                bottomBorder={i < 2}
-                showConfidenceInline={false}
-                expandOnHover={false}
-              />
-            ))}
+          <div style={{ padding: "0 6px", position: "relative" }}>
+            {LIVE_FEED.slice(0, 3).map((item, i) => {
+              const isSenateVote = item.text.includes("Senate vote fails");
+              return (
+                <div
+                  key={`${item.code}-${item.time}`}
+                  ref={isSenateVote ? senateAlertRef : null}
+                  onMouseEnter={() => {
+                    if (isSenateVote && senateVoteVisible !== 'locked') {
+                      setSenateVoteVisible('hover');
+                    }
+                  }}
+                  onMouseLeave={() => {
+                    if (isSenateVote && senateVoteVisible === 'hover') {
+                      setSenateVoteVisible(null);
+                    }
+                  }}
+                  onClick={() => {
+                    if (isSenateVote) {
+                      if (senateVoteVisible === 'locked') {
+                        setSenateVoteVisible(null);
+                      } else {
+                        setSenateVoteVisible('locked');
+                      }
+                    } else {
+                      onNavigate?.(item.code, item.flyTo.center, item.flyTo.zoom, item);
+                    }
+                  }}
+                >
+                  <LiveAlertRow
+                    item={item}
+                    onSourceClick={onSourceClick}
+                    onClick={() => !isSenateVote && onNavigate?.(item.code, item.flyTo.center, item.flyTo.zoom, item)}
+                    bottomBorder={i < 2}
+                    showConfidenceInline={false}
+                    expandOnHover={false}
+                  />
+                </div>
+              );
+            })}
           </div>
         </Reveal>
 

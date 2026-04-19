@@ -23,7 +23,7 @@ const DISASTER_DATA: Record<string, {
     article: {
       headline:
         "Nairobi slums submerged as Kenya floods kill 110 and displace 35,000 across 30 counties — April 2026",
-      image: "/kenya-floods-debris.webp",
+      image: "/kenya-floods-bus.webp",
       url: "https://www.aljazeera.com/news/2024/4/",
       source: "Al Jazeera",
     },
