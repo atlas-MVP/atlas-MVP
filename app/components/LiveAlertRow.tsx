@@ -5,14 +5,19 @@ import { T, clr, confColor, dangerColor } from "../lib/tokens";
 function relativeTime(ts: string): string {
   const d = new Date(ts);
   if (isNaN(d.getTime())) return ts; // not an ISO string — show as-is
-  const diff  = Date.now() - d.getTime();
-  const mins  = Math.floor(diff / 60000);
-  const hours = Math.floor(diff / 3600000);
-  const days  = Math.floor(diff / 86400000);
-  if (mins  <  1) return "just now";
-  if (mins  < 60) return `${mins}m ago`;
-  if (hours < 24) return `${hours}h ago`;
-  return `${days}d ago`;
+
+  const now          = new Date();
+  const todayMidnight = new Date(now.getFullYear(),  now.getMonth(),  now.getDate());
+  const dateMidnight  = new Date(d.getFullYear(),    d.getMonth(),    d.getDate());
+  const daysDiff      = Math.round((todayMidnight.getTime() - dateMidnight.getTime()) / 86400000);
+
+  if (daysDiff <= 0) {
+    // Same day (or future) → exact time only
+    return d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: true });
+  }
+  if (daysDiff === 1) return "yesterday";
+  if (daysDiff > 60) return ts; // stale/bad timestamp — show raw rather than "913 days ago"
+  return `${daysDiff} days ago`;
 }
 
 export interface AlertItem {
@@ -95,7 +100,7 @@ export default function LiveAlertRow({
       <div style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
         <span style={{
           fontSize: 12, fontFamily: "monospace", color: "rgba(255,255,255,0.32)",
-          flexShrink: 0, width: 52, textAlign: "right", paddingTop: 1,
+          flexShrink: 0, width: 72, textAlign: "right", paddingTop: 1,
         }}>{relativeTime(item.time)}</span>
 
         <div

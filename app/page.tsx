@@ -174,6 +174,14 @@ export default function Home() {
       deepLinkAppliedRef.current = true;
       return;
     }
+    // Violence slug → open gun violence panel
+    if (slug === "violence" || slug === "gun-violence") {
+      setShowRadar(false);
+      setActiveGunViolence("");
+      setFlyToPosition({ center: [-98.5, 39.5], zoom: 4, key: "violence-init" });
+      deepLinkAppliedRef.current = true;
+      return;
+    }
     // Disaster slug → fly to location only, no country panel
     const disasterPos = DISASTER_SLUGS[slug];
     if (disasterPos) {
@@ -359,7 +367,7 @@ export default function Home() {
       {!historicalYear && activeGunViolence !== null && !showRadar && (
         <GunViolencePanel
           highlightId={activeGunViolence}
-          onClose={() => setActiveGunViolence(null)}
+          onClose={() => { setActiveGunViolence(null); if (typeof window !== "undefined") window.history.replaceState(null, "", "/"); }}
           onFlyTo={(center, zoom) => setFlyToPosition({ center, zoom, key: String(Date.now()) })}
         />
       )}
@@ -401,6 +409,9 @@ export default function Home() {
               setShowRadar(false);
               setFlyToPosition({ center, zoom, key: String(Date.now()) });
               setActiveGunViolence(feedItem?.incidentId ?? "");
+              if (typeof window !== "undefined") {
+                window.history.replaceState(null, "", "/violence");
+              }
             } else {
               // Disaster — fly to location, open disaster panel, set URL
               setShowRadar(false);
