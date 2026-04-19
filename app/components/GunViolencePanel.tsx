@@ -190,11 +190,6 @@ export default function GunViolencePanel({ onClose, onFlyTo, highlightId }: Prop
                     margin: "2px 10px",
                     borderRadius: 14,
                     border: `1px solid ${clr.white(0.06)}`,
-                    borderLeftColor: inc.killed >= 4
-                      ? clr.red(0.45)
-                      : inc.killed > 0
-                      ? "rgba(234,88,12,0.45)"
-                      : "rgba(251,191,36,0.42)",
                     background: isActive ? clr.white(0.03) : clr.white(0.012),
                     cursor: "pointer",
                     opacity: isActive || activeIdx < 0 ? 1 : 0.45,
