@@ -456,6 +456,7 @@ export default function Home() {
               setTimelineOpen(false);
               setHistoryDate(null);
               setLiveReset(v => v + 1);
+              setLockedAlertId(null);
               setShowRadar(true);
               setFlyToPosition({ center: [-98.5, 39.5], zoom: 1.8, key: "atlas-globe-" + Date.now() });
               if (typeof window !== "undefined") window.history.replaceState(null, "", "/");
