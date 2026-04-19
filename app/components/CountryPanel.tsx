@@ -1799,7 +1799,7 @@ export default function CountryPanel({ countryCode, onClose, onViewFeed, onConfl
                         {/* Era bracket label — shown only on first tile of each era */}
                         {isEraStart && eraColor && (
                           <div style={{
-                            fontSize: 7, fontFamily: "monospace", letterSpacing: "0.2em",
+                            fontSize: 11, fontFamily: "monospace", letterSpacing: "0.2em",
                             textTransform: "uppercase", color: eraColor.label,
                             marginBottom: 10,
                             borderLeft: `1px solid ${eraColor.border}`,
