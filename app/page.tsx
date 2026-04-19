@@ -358,6 +358,7 @@ export default function Home() {
           onNavigate={(code, center, zoom, feedItem, slug) => {
             if (code) {
               setShowRadar(false);
+              setOpenWithHistory(false);
               setHomeCountry(null);
               setSelectedCountry(code);
               setFlyToPosition({ center, zoom, key: String(Date.now()) });
