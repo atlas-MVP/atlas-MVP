@@ -12,15 +12,14 @@ import Home from "../page";
 // every slug there is a valid /:slug path.
 const VALID_SLUGS = new Set([
   // Conflicts
-  "israel-us-iran-war",
+  "israel-and-us-in-the-middle-east",
   "israel-palestine-conflict",
   "russia-ukraine-war",
   "taiwan-strait",
   "sudan-civil-war",
   "myanmar-civil-war",
   // Disasters
-  "myanmar-earthquake",
-  "la-wildfires",
+  "kenya-floods",
 ]);
 
 export default async function ConflictPage({

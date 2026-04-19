@@ -98,10 +98,10 @@ interface Conflict {
 
 const TOP_CONFLICTS: Conflict[] = [
   {
-    label: "US — Israel — Iran war",
-    sub: "regional escalation ongoing. US 5th Fleet conducting operations in Persian Gulf. Iran nuclear program at center of diplomatic breakdown.",
+    label: "Israel and US in the Middle East",
+    sub: "",
     code: "ISR",
-    slug: "israel-us-iran-war",
+    slug: "israel-and-us-in-the-middle-east",
     flyTo: { center: [44.0, 30.0] as [number,number], zoom: 4.2 },
     image: "/geopolitics-conflict.webp",
   },
@@ -115,7 +115,7 @@ const MORE_CONFLICTS: Conflict[] = [
 ];
 
 const DISASTERS = [
-  { label: "Myanmar earthquake", slug: "myanmar-earthquake", sub: "3,800+ dead · 5,000+ injured · 14.5M affected", flyTo: { center: [96.0, 21.9] as [number,number], zoom: 5.5 }, image: "https://images.unsplash.com/photo-1547683905-f686c993aae5?w=600&q=80" },
+  { label: "Kenya floods", slug: "kenya-floods", sub: "110+ dead · 34,765+ displaced · 30 counties affected", flyTo: { center: [37.9, 0.0] as [number,number], zoom: 5.5 }, image: "https://images.unsplash.com/photo-1625498543745-9b42ed58edc3?w=600&q=80" },
 ];
 
 

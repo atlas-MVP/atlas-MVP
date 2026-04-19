@@ -10,7 +10,7 @@ import Home from "../../page";
 // Keep in sync with CONFLICT_SLUGS in ../../page.tsx — every conflict
 // slug is a valid /[conflict]/history path. Disasters have no history.
 const VALID_CONFLICT_SLUGS = new Set([
-  "israel-us-iran-war",
+  "israel-and-us-in-the-middle-east",
   "israel-palestine-conflict",
   "russia-ukraine-war",
   "taiwan-strait",

@@ -211,7 +211,7 @@ const DEFAULT_HOMEVIEW = { center: [ 47, 30 ] as [number, number], zoom: 2.8 };
 const CONFLICTS: Record<string, Conflict> = {
   "israel-iran": {
     id: "israel-iran",
-    title: "Israel–US–Iran war",
+    title: "Israel and US in the Middle East",
     date: "March 2026 – Present",
     feedKey: "IRN",
     sides: {

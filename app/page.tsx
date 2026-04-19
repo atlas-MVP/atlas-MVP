@@ -66,7 +66,7 @@ const CONFLICT_ALL_COUNTRIES: Record<string, string[]> = {
 // atlas.boston/israel-us-iran-war deep-links straight into that widget.
 // The app/[conflict]/page.tsx dynamic route picks up these slugs.
 const CONFLICT_SLUGS: Record<string, string> = {
-  "israel-iran":    "israel-us-iran-war",
+  "israel-iran":    "israel-and-us-in-the-middle-east",
   "israel-gaza":    "israel-palestine-conflict",
   "russia-ukraine": "russia-ukraine-war",
   "taiwan-strait":  "taiwan-strait",
@@ -79,8 +79,7 @@ const SLUG_TO_CONFLICT: Record<string, string> = Object.fromEntries(
 
 // Disaster slugs — no country panel, just flyTo + URL.
 const DISASTER_SLUGS: Record<string, { center: [number, number]; zoom: number }> = {
-  "myanmar-earthquake": { center: [96.0,   21.9] as [number, number], zoom: 5.5 },
-  "la-wildfires":       { center: [-118.4, 34.1] as [number, number], zoom: 7.5 },
+  "kenya-floods": { center: [37.9, 0.0] as [number, number], zoom: 5.5 },
 };
 
 // Default country to pre-select when deep-linking to a conflict slug.
