@@ -4,6 +4,14 @@ import React, { useState, useEffect, useRef } from "react";
 import LiveAlertRow from "./LiveAlertRow";
 import { setReelResume } from "../lib/reelResume";
 import SenateVoteVisualization from "./SenateVoteVisualization";
+import RadarEditor, {
+  type RadarConfig,
+  type LiveAlertItem as RadarAlertItem,
+  type ConflictItem as RadarConflictItem,
+  type ViolenceItem as RadarViolenceItem,
+  type FinanceItem as RadarFinanceItem,
+  type DisasterItem as RadarDisasterItem,
+} from "./RadarEditor";
 
 // ── Reels preview ─────────────────────────────────────────────────────────────
 // Autoplays the most recent "Atlas You" reel (muted, since browsers block
@@ -153,9 +161,8 @@ const LIVE_FEED: FeedItem[] = [
 const VIOLENCE_ITEMS = [
   {
     slug: "violence",
-    headline: "5 shot near University of Iowa campus after fight erupts on Ped Mall — one victim critical",
+    headline: "5 shot near University of Iowa campus",
     image: "/violence.webp",
-    source: "AP",
     flyTo: { center: [-98.5, 39.5] as [number,number], zoom: 4 },
     incidentId: "iowa-city-2026-04-19",
   },
@@ -216,6 +223,8 @@ export default function AtlasHQ({ onClose, onNavigate, onHeadlinesToggle, onSour
   const [loadStage, setLoadStage] = useState(0);
   const [senateVoteVisible, setSenateVoteVisible] = useState<'hover' | 'locked' | null>(null);
   const senateAlertRef = useRef<HTMLDivElement>(null);
+  const [editorOpen, setEditorOpen] = useState(false);
+  const [liveConfig, setLiveConfig] = useState<RadarConfig | null>(null);
 
   // Senate arms sale vote data: 40-59 (40 Aye, 59 No)
   const senatorsVoteData = [
@@ -289,6 +298,27 @@ export default function AtlasHQ({ onClose, onNavigate, onHeadlinesToggle, onSour
     return () => timers.forEach(clearTimeout);
   }, []);
 
+  useEffect(() => {
+    fetch("/api/radar-config", { cache: "no-store" })
+      .then(r => r.json())
+      .then((data: RadarConfig) => setLiveConfig(data))
+      .catch(() => {});
+  }, []);
+
+  const activeFeed      = (liveConfig?.liveAlerts?.length     ? liveConfig.liveAlerts     : LIVE_FEED) as FeedItem[];
+  const activeViolence  = (liveConfig?.violenceItems?.length  ? liveConfig.violenceItems  : VIOLENCE_ITEMS) as RadarViolenceItem[];
+  const activeFinance   = (liveConfig?.financeItems?.length   ? liveConfig.financeItems   : FINANCE_ITEMS) as RadarFinanceItem[];
+  const activeDisasters = (liveConfig?.disasters?.length      ? liveConfig.disasters      : DISASTERS) as RadarDisasterItem[];
+
+  const currentConfig: RadarConfig = {
+    liveAlerts:   activeFeed as RadarAlertItem[],
+    topConflicts: (liveConfig?.topConflicts?.length ? liveConfig.topConflicts : TOP_CONFLICTS) as RadarConflictItem[],
+    moreConflicts: (liveConfig?.moreConflicts?.length ? liveConfig.moreConflicts : MORE_CONFLICTS) as RadarConflictItem[],
+    violenceItems: activeViolence as RadarViolenceItem[],
+    financeItems:  activeFinance as RadarFinanceItem[],
+    disasters:     activeDisasters as RadarDisasterItem[],
+  };
+
   return (
     <>
     <div style={{
@@ -308,15 +338,30 @@ export default function AtlasHQ({ onClose, onNavigate, onHeadlinesToggle, onSour
     }}>
 
       {/* Scrollable body */}
-      <div className="radar-scroll" style={{ flex: 1, overflowY: "auto", overflowX: "hidden" }}>
+      <div className="radar-scroll" style={{ flex: 1, overflowY: "auto", overflowX: "hidden", position: "relative" }}>
+
+        {/* Edit button */}
+        <button
+          onClick={() => setEditorOpen(true)}
+          style={{
+            position: "absolute", top: 10, right: 10, zIndex: 30,
+            background: "rgba(255,255,255,0.07)",
+            border: "1px solid rgba(255,255,255,0.14)",
+            borderRadius: 6, color: "rgba(255,255,255,0.55)",
+            fontFamily: "monospace", fontSize: 11, letterSpacing: "0.10em",
+            padding: "3px 9px", cursor: "pointer",
+          }}
+          onMouseEnter={e => (e.currentTarget.style.background = "rgba(255,255,255,0.12)")}
+          onMouseLeave={e => (e.currentTarget.style.background = "rgba(255,255,255,0.07)")}
+        >✎</button>
 
         {/* GEOPOLITICS — label instant, cards staggered */}
         <SectionLabel label="geopolitics" onClick={() => setShowMore(v => !v)} />
         <div style={{ padding: "0 14px", display: "flex", flexDirection: "column", gap: 6 }}>
-          {TOP_CONFLICTS.map((c, idx) => (
+          {currentConfig.topConflicts.map((c, idx) => (
             <Reveal key={c.label} minStage={1 + idx} stage={loadStage}>
               <div
-                onClick={() => onNavigate?.(c.code, c.flyTo.center, c.flyTo.zoom, undefined, c.slug)}
+                onClick={() => onNavigate?.(c.code, c.flyTo?.center ?? [0,0], c.flyTo?.zoom ?? 4, undefined, c.slug)}
                 style={{
                   height: 196, borderRadius: 14, overflow: "hidden",
                   position: "relative", cursor: "pointer",
@@ -324,7 +369,7 @@ export default function AtlasHQ({ onClose, onNavigate, onHeadlinesToggle, onSour
                   background: "#0a0c18",
                 }}
               >
-                {c.image && <img src={c.image} alt={c.label} style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} onError={e => { (e.currentTarget as HTMLImageElement).style.opacity = "0"; }} />}
+                {(c.imageUrl || c.image) && <img src={c.imageUrl || c.image} alt={c.label} style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} onError={e => { (e.currentTarget as HTMLImageElement).style.opacity = "0"; }} />}
                 <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom, transparent 35%, rgba(0,0,0,0.88) 100%)" }} />
                 <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, padding: "8px 10px 10px" }}>
                   <div style={{ fontSize: 12, fontFamily: "monospace", letterSpacing: "0.06em", color: "rgba(255,255,255,0.92)", fontWeight: 700, lineHeight: 1.3 }}>{c.label}</div>
@@ -335,10 +380,10 @@ export default function AtlasHQ({ onClose, onNavigate, onHeadlinesToggle, onSour
 
           {showMore && (
             <>
-              {MORE_CONFLICTS.map((c) => (
+              {currentConfig.moreConflicts.map((c) => (
                 <div
                   key={c.label}
-                  onClick={() => onNavigate?.(c.code, c.flyTo.center, c.flyTo.zoom, undefined, c.slug)}
+                  onClick={() => onNavigate?.(c.code, c.flyTo?.center ?? [0,0], c.flyTo?.zoom ?? 4, undefined, c.slug)}
                   style={{
                     padding: "12px 13px", borderRadius: 10,
                     background: "rgba(255,255,255,0.02)",
@@ -349,7 +394,7 @@ export default function AtlasHQ({ onClose, onNavigate, onHeadlinesToggle, onSour
                   onMouseEnter={e => (e.currentTarget.style.background = "rgba(255,255,255,0.04)")}
                   onMouseLeave={e => (e.currentTarget.style.background = "rgba(255,255,255,0.02)")}
                 >
-                  <div style={{ fontSize: 15, fontFamily: "monospace", letterSpacing: "0.07em", color: "rgba(255,255,255,0.92)", fontWeight: 700 }}>{c.label}</div>
+                  <div style={{ fontSize: 12, fontFamily: "monospace", letterSpacing: "0.07em", color: "rgba(255,255,255,0.92)", fontWeight: 700 }}>{c.label}</div>
                   <div style={{ fontSize: 11, color: "rgba(255,255,255,0.52)", marginTop: 5, lineHeight: 1.45, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{c.sub}</div>
                 </div>
               ))}
@@ -371,7 +416,7 @@ export default function AtlasHQ({ onClose, onNavigate, onHeadlinesToggle, onSour
         <SectionLabel label="live alerts" />
         <Reveal minStage={3} stage={loadStage}>
           <div style={{ padding: "0 6px", position: "relative" }}>
-            {LIVE_FEED.slice(0, 3).map((item, i) => {
+            {activeFeed.slice(0, 3).map((item, i) => {
               const isSenateVote = item.text.includes("Senate vote fails");
               return (
                 <div
@@ -393,14 +438,14 @@ export default function AtlasHQ({ onClose, onNavigate, onHeadlinesToggle, onSour
                       setSenateVoteVisible(newState);
                       onSenateVoteLocked?.(newState === 'locked');
                     } else {
-                      onNavigate?.(item.code, item.flyTo.center, item.flyTo.zoom, item, item.slug);
+                      onNavigate?.(item.code, item.flyTo?.center ?? [0,0] as [number,number], item.flyTo?.zoom ?? 4, item, item.slug);
                     }
                   }}
                 >
                   <LiveAlertRow
                     item={item}
                     onSourceClick={onSourceClick}
-                    onClick={() => !isSenateVote && onNavigate?.(item.code, item.flyTo.center, item.flyTo.zoom, item, item.slug)}
+                    onClick={() => !isSenateVote && onNavigate?.(item.code, item.flyTo?.center ?? [0,0] as [number,number], item.flyTo?.zoom ?? 4, item, item.slug)}
                     bottomBorder={i < 2}
                     showConfidenceInline={false}
                     expandOnHover={false}
@@ -415,10 +460,10 @@ export default function AtlasHQ({ onClose, onNavigate, onHeadlinesToggle, onSour
         <SectionLabel label="violence" />
         <Reveal minStage={5} stage={loadStage}>
           <div style={{ padding: "0 14px 6px" }}>
-            {VIOLENCE_ITEMS.map((item) => (
+            {activeViolence.map((item) => (
               <div
                 key={item.headline}
-                onClick={() => onViolenceTap?.(item.incidentId, item.flyTo.center, item.flyTo.zoom)}
+                onClick={() => onViolenceTap?.(item.incidentId ?? "", item.flyTo?.center ?? [0,0] as [number,number], item.flyTo?.zoom ?? 4)}
                 style={{
                   height: 196, borderRadius: 14, overflow: "hidden",
                   position: "relative", cursor: "pointer",
@@ -427,8 +472,7 @@ export default function AtlasHQ({ onClose, onNavigate, onHeadlinesToggle, onSour
                 }}
               >
                 <img
-                  src={item.image}
-                  alt={item.headline}
+                  src={item.imageUrl || item.image}
                   style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
                   onError={e => { (e.currentTarget as HTMLImageElement).style.opacity = "0"; }}
                 />
@@ -446,7 +490,7 @@ export default function AtlasHQ({ onClose, onNavigate, onHeadlinesToggle, onSour
         <SectionLabel label="finance" />
         <Reveal minStage={5} stage={loadStage}>
           <div style={{ padding: "0 14px 6px", display: "flex", gap: 8 }}>
-            {FINANCE_ITEMS.map((item) => (
+            {activeFinance.map((item) => (
               <div
                 key={item.headline}
                 onClick={() => onFinanceTap?.(item.slug)}
@@ -458,7 +502,7 @@ export default function AtlasHQ({ onClose, onNavigate, onHeadlinesToggle, onSour
                 }}
               >
                 <img
-                  src={item.image}
+                  src={item.imageUrl || item.image}
                   alt={item.headline}
                   style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
                   onError={e => { (e.currentTarget as HTMLImageElement).style.opacity = "0"; }}
@@ -477,10 +521,10 @@ export default function AtlasHQ({ onClose, onNavigate, onHeadlinesToggle, onSour
         <SectionLabel label="disasters" />
         <Reveal minStage={5} stage={loadStage}>
           <div style={{ padding: "0 14px 20px" }}>
-            {DISASTERS.map((d) => (
+            {activeDisasters.map((d) => (
               <div
                 key={d.label}
-                onClick={() => onNavigate?.(null, d.flyTo.center, d.flyTo.zoom, undefined, d.slug)}
+                onClick={() => onNavigate?.(null, d.flyTo?.center ?? [0,0], d.flyTo?.zoom ?? 4, undefined, d.slug)}
                 style={{
                   height: 196, borderRadius: 14, overflow: "hidden",
                   position: "relative", cursor: "pointer",
@@ -488,7 +532,7 @@ export default function AtlasHQ({ onClose, onNavigate, onHeadlinesToggle, onSour
                   background: "#0a0c18",
                 }}
               >
-                {d.image && <img src={d.image} alt={d.label} style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} onError={e => { (e.currentTarget as HTMLImageElement).style.opacity = "0"; }} />}
+                {(d.imageUrl || d.image) && <img src={d.imageUrl || d.image} alt={d.label} style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} onError={e => { (e.currentTarget as HTMLImageElement).style.opacity = "0"; }} />}
                 <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom, transparent 35%, rgba(0,0,0,0.88) 100%)" }} />
                 <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, padding: "8px 10px 10px" }}>
                   <div style={{ fontSize: 12, fontFamily: "monospace", letterSpacing: "0.06em", color: "rgba(255,255,255,0.92)", fontWeight: 700 }}>{d.label}</div>
@@ -500,6 +544,22 @@ export default function AtlasHQ({ onClose, onNavigate, onHeadlinesToggle, onSour
         </Reveal>
       </div>
     </div>
+
+    {editorOpen && (
+      <RadarEditor
+        config={currentConfig}
+        onSave={async (c) => {
+          setLiveConfig(c);
+          setEditorOpen(false);
+          await fetch("/api/radar-config", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ config: c }),
+          });
+        }}
+        onClose={() => setEditorOpen(false)}
+      />
+    )}
 
     {/* Senate vote visualization — appears to the right on hover/click */}
     {senateVoteVisible && senateAlertRef.current && (() => {
