@@ -33,14 +33,14 @@ export default function SenateVoteVisualization({
   // Generate hemicycle positions for senators
   const generatePositions = () => {
     const positions: Array<{ senator: Senator; x: number; y: number }> = [];
-    const centerX = 400;
-    const centerY = 350;
+    const centerX = 266;
+    const centerY = 233;
     const rows = 7;
     const senatorsPerRow = Math.ceil(senators.length / rows);
 
     let index = 0;
     for (let row = 0; row < rows; row++) {
-      const radius = 100 + row * 35;
+      const radius = 67 + row * 23;
       const senatorsInThisRow = Math.min(senatorsPerRow + row * 2, senators.length - index);
       const angleSpan = Math.PI; // 180 degrees for hemicycle
       const angleStep = angleSpan / (senatorsInThisRow + 1);
@@ -80,29 +80,29 @@ export default function SenateVoteVisualization({
     <div
       style={{
         position: "relative",
-        width: 800,
-        height: 500,
+        width: 533,
+        height: 333,
         background: "rgba(4,6,18,0.85)",
         backdropFilter: "blur(20px)",
-        borderRadius: 14,
-        border: "1px solid rgba(255,255,255,0.1)",
-        boxShadow: "0 24px 80px rgba(0,0,0,0.6)",
-        padding: 20,
+        borderRadius: 10,
+        border: "1px solid rgba(255,255,255,0.08)",
+        boxShadow: "0 16px 48px rgba(0,0,0,0.5)",
+        padding: 8,
       }}
     >
       {/* Title */}
       <div
         style={{
           position: "absolute",
-          top: 20,
+          top: 12,
           left: 0,
           right: 0,
           textAlign: "center",
-          fontSize: 18,
+          fontSize: 11,
           fontWeight: 700,
           fontFamily: "monospace",
           letterSpacing: "0.2em",
-          color: "rgba(255,255,255,0.7)",
+          color: "rgba(255,255,255,0.6)",
         }}
       >
         {title}
@@ -115,7 +115,7 @@ export default function SenateVoteVisualization({
           top: "50%",
           left: "50%",
           transform: "translate(-50%, -50%)",
-          fontSize: 48,
+          fontSize: 32,
           fontWeight: 700,
           fontFamily: "monospace",
           color: "rgba(255,255,255,0.9)",
@@ -125,16 +125,16 @@ export default function SenateVoteVisualization({
       </div>
 
       {/* Senate floor dots */}
-      <svg width="800" height="500" style={{ position: "absolute", top: 0, left: 0 }}>
+      <svg width="533" height="333" style={{ position: "absolute", top: 0, left: 0 }}>
         {positions.map(({ senator, x, y }, i) => (
           <circle
             key={i}
             cx={x}
             cy={y}
-            r={6}
+            r={4}
             fill={getDotColor(senator)}
             stroke={getDotBorder(senator)}
-            strokeWidth={1.5}
+            strokeWidth={1}
             style={{ cursor: "pointer", transition: "all 0.2s" }}
             onMouseEnter={(e) => {
               setHoveredSenator(senator);

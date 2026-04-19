@@ -444,32 +444,37 @@ export default function AtlasHQ({ onClose, onNavigate, onHeadlinesToggle, onSour
     </div>
 
     {/* Senate vote visualization — appears to the right on hover/click */}
-    {senateVoteVisible && senateAlertRef.current && (
-      <div
-        onMouseEnter={() => {
-          if (senateVoteVisible !== 'locked') {
-            setSenateVoteVisible('hover');
-          }
-        }}
-        onMouseLeave={() => {
-          if (senateVoteVisible === 'hover') {
-            setSenateVoteVisible(null);
-          }
-        }}
-        style={{
-          position: "fixed",
-          left: 528, // 20px (left) + 488px (panel width) + 20px gap
-          top: senateAlertRef.current.getBoundingClientRect().top,
-          zIndex: 100,
-          pointerEvents: "auto",
-        }}
-      >
-        <SenateVoteVisualization
-          title="SENATE"
-          senators={senatorsVoteData}
-        />
-      </div>
-    )}
+    {senateVoteVisible && senateAlertRef.current && (() => {
+      const alertRect = senateAlertRef.current.getBoundingClientRect();
+      const alertCenterY = alertRect.top + alertRect.height / 2;
+      const vizHeight = 333;
+      return (
+        <div
+          onMouseEnter={() => {
+            if (senateVoteVisible !== 'locked') {
+              setSenateVoteVisible('hover');
+            }
+          }}
+          onMouseLeave={() => {
+            if (senateVoteVisible === 'hover') {
+              setSenateVoteVisible(null);
+            }
+          }}
+          style={{
+            position: "fixed",
+            left: 528, // 20px (left) + 488px (panel width) + 20px gap
+            top: alertCenterY - vizHeight / 2, // Center vertically with alert
+            zIndex: 100,
+            pointerEvents: "auto",
+          }}
+        >
+          <SenateVoteVisualization
+            title="SENATE"
+            senators={senatorsVoteData}
+          />
+        </div>
+      );
+    })()}
 
     </>
 
