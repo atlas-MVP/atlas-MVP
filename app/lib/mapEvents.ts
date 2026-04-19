@@ -108,13 +108,13 @@ export const MAP_EVENTS: Record<string, MapEvent> = {
     timelineDate: "October 7, 2023",
     steps: [
       {
-        flyTo: { center: [34.50, 31.45], zoom: 8.5, duration: 2500 },
-        narration: "October 7, 2023 — 6:30 AM — Southern Israel",
+        flyTo: { center: [34.48, 31.38], zoom: 10.5, duration: 2500 },
+        narration: "October 7, 2023 — 6:30 AM — Southern Israel and Gaza border",
         delay: 0,
         hold: 2000,
       },
       {
-        flyTo: { center: [34.48, 31.42], zoom: 10.5, duration: 3000 },
+        flyTo: { center: [34.50, 31.36], zoom: 11.5, duration: 3000 },
         narration: "Hamas fighters breach the Gaza border fence at multiple points",
         delay: 500,
         hold: 2500,
