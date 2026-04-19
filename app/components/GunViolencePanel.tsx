@@ -213,8 +213,8 @@ export default function GunViolencePanel({ onClose, onFlyTo, highlightId }: Prop
                       <span style={{
                         fontSize: 8, fontFamily: T.MONO, letterSpacing: T.TRACK_WIDE,
                         textTransform: "uppercase", padding: "1px 6px", borderRadius: 3,
-                        background: clr.red(0.12), color: clr.red(0.8),
-                        border: `1px solid ${clr.red(0.2)}`,
+                        background: clr.white(0.08), color: clr.white(0.6),
+                        border: `1px solid ${clr.white(0.12)}`,
                       }}>breaking</span>
                     )}
                   </div>
