@@ -545,13 +545,11 @@ const CONFLICTS: Record<string, Conflict> = {
             videoUrl: "https://www.youtube.com/embed/KqCswpINDTA",
             title: "Obama announces the Iran Nuclear Deal",
             subtitle: "44th President of the United States",
-            info: "Key requirements of the JCPOA:\n• Iran limited to 3.67% uranium enrichment for 15 years\n• Stockpile capped at 300 kg of low-enriched uranium\n• Two-thirds of centrifuges dismantled (from 19,000 to 6,104)\n• Fordow facility converted to research-only — no enrichment\n• Arak heavy-water reactor redesigned to prevent plutonium production\n• IAEA granted unprecedented 24/7 monitoring and inspection access\n• In exchange: US, EU, and UN sanctions on Iran lifted\n• Arms embargo maintained for 5 years, missile restrictions for 8\n\nSignatories:\n@blue United States\n@blue United Kingdom\n@blue France\n@blue Germany\n@red Russia\n@red China\n@red Iran",
           },
           {
             videoUrl: "https://www.youtube.com/embed/KphsWS_ieBE",
             title: "Khamenei's response to the JCPOA",
             subtitle: "Supreme Leader of Iran",
-            info: "• Khamenei publicly endorsed the deal but set conditions limiting its scope\n• Insisted sanctions must be lifted immediately, not gradually\n• Banned IAEA inspections of military sites\n• Continued ballistic missile development — declared non-negotiable\n• Stated the US \"cannot be trusted\" and Iran must remain self-reliant",
           },
         ],
       },
