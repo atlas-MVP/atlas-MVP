@@ -46,7 +46,6 @@ const Map = dynamic(() => import("./components/Map"), {
 const CONFLICT_CENTERS: Record<string, { center: [number, number]; zoom: number }> = {
   "israel-iran":     { center: [45.0, 35.0], zoom: 4.0 },   // wide: Israel ↔ Iran
   "israel-gaza":     { center: [34.5, 31.6], zoom: 7.8 },   // tight: Gaza strip + Israel south
-  "israel-lebanon":  { center: [35.2, 33.0], zoom: 7.2 },
   "russia-ukraine":  { center: [33.0, 49.0], zoom: 4.0 },
   "taiwan-strait":   { center: [120.5, 24.5], zoom: 5.5 },
   "sudan":           { center: [32.5, 15.6], zoom: 5.5 },
@@ -57,7 +56,6 @@ const CONFLICT_CENTERS: Record<string, { center: [number, number]; zoom: number 
 const CONFLICT_ALL_COUNTRIES: Record<string, string[]> = {
   "israel-iran":    ["ISR", "IRN", "LBN", "USA"],
   "israel-gaza":    ["ISR", "PSE"],
-  "israel-lebanon": ["LBN", "ISR"],
   "russia-ukraine": ["UKR", "RUS"],
   "taiwan-strait":  ["CHN", "TWN"],
   "sudan":          ["SDN"],
@@ -70,7 +68,6 @@ const CONFLICT_ALL_COUNTRIES: Record<string, string[]> = {
 const CONFLICT_SLUGS: Record<string, string> = {
   "israel-iran":    "israel-us-iran-war",
   "israel-gaza":    "israel-palestine-conflict",
-  "israel-lebanon": "israel-lebanon",
   "russia-ukraine": "russia-ukraine-war",
   "taiwan-strait":  "taiwan-strait",
   "sudan":          "sudan-civil-war",
@@ -90,7 +87,6 @@ const DISASTER_SLUGS: Record<string, { center: [number, number]; zoom: number }>
 const CONFLICT_DEFAULT_COUNTRY: Record<string, string> = {
   "israel-iran":    "ISR",
   "israel-gaza":    "ISR",
-  "israel-lebanon": "LBN",
   "russia-ukraine": "UKR",
   "taiwan-strait":  "TWN",
   "sudan":          "SDN",
@@ -237,7 +233,6 @@ export default function Home() {
   const getFirstConflict = (code: string): string | null => {
     const COUNTRY_FIRST: Record<string, string> = {
       ISR: "israel-iran", IRN: "israel-iran", USA: "israel-iran",
-      LBN: "israel-lebanon",
       PSE: "israel-gaza",
       UKR: "russia-ukraine", RUS: "russia-ukraine",
       CHN: "taiwan-strait", TWN: "taiwan-strait",

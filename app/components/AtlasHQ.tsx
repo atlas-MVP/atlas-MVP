@@ -97,13 +97,6 @@ interface Conflict {
 
 const TOP_CONFLICTS: Conflict[] = [
   {
-    label: "Israel — Lebanon conflict",
-    sub: "cross-border exchanges intensifying. IDF artillery active in southern Lebanon. Hezbollah rockets reported in Galilee.",
-    code: "LBN",
-    slug: "israel-lebanon",
-    flyTo: { center: [35.2, 33.0] as [number,number], zoom: 7.2 },
-  },
-  {
     label: "US — Israel — Iran war",
     sub: "regional escalation ongoing. US 5th Fleet conducting operations in Persian Gulf. Iran nuclear program at center of diplomatic breakdown.",
     code: "ISR",
@@ -138,20 +131,10 @@ interface FeedItem {
 }
 
 const LIVE_FEED: FeedItem[] = [
-  { time: "NOW",    danger: 5, code: "LBN", text: "Israel-Lebanon border exchange — IDF artillery responds to Hezbollah rocket fire in Galilee",  flyTo: { center: [35.2, 33.1] as [number,number], zoom: 7   }, sources: ["AP", "Reuters", "ACLED"], confidence: 96,
-    description: "IDF artillery units opened fire on southern Lebanese villages after Hezbollah launched a salvo of 40+ rockets targeting communities in the Galilee region. Evacuation orders are in effect for several northern Israeli towns. Lebanese civil defense reports casualties in the Bint Jbeil district." },
-  { time: "12m",    danger: 5, code: "IRN", text: "US 5th Fleet announces heightened readiness posture in Persian Gulf",                           flyTo: { center: [50.5, 26.2] as [number,number], zoom: 5   }, sources: ["Reuters", "AP"],          confidence: 93,
-    description: "The US Navy's 5th Fleet, headquartered in Bahrain, has raised its alert status following intelligence reports of Iranian naval mobilization near the Strait of Hormuz. Two additional destroyers are being repositioned." },
-  { time: "1d",     danger: 3, code: "ISR", text: "Senate vote fails 40-59 to block arms sales to Israel — Sanders resolution draws 85% of Democrats", flyTo: { center: [-77.0, 38.9] as [number,number], zoom: 11 }, sources: ["Senate", "AP", "Reuters"], confidence: 97,
+  { time: "1d",  danger: 3, code: "ISR", text: "Senate vote fails 40-59 to block arms sales to Israel — Sanders resolution draws 85% of Democrats", flyTo: { center: [-77.0, 38.9] as [number,number], zoom: 11 }, sources: ["Senate", "AP", "Reuters"], confidence: 97,
     description: "The US Senate defeated a resolution introduced by Sen. Bernie Sanders to halt new arms transfers to Israel, 40 in favor to 59 opposed. Despite the failure, the tally marked the highest level of Democratic support to date: 85% of Senate Democrats voted yes. The resolution targeted a pending $8.1B package covering tank rounds, mortar shells, and guidance kits." },
-  { time: "28m",    danger: 4, code: "UKR", text: "Ukraine reports overnight drone barrage — Kyiv air defenses activated",                         flyTo: { center: [30.5, 50.4] as [number,number], zoom: 6   }, sources: ["NYT", "Reuters"],         confidence: 89,
-    description: "Russia launched 78 Shahed-136 drones in an overnight wave targeting Kyiv, Odessa, and Kharkiv. Ukrainian air defense intercepted 61 drones. Three civilians were killed and 14 injured." },
-  { time: "55m",    danger: 4, code: "PSE", text: "Northern Gaza hospitals running on emergency reserves — collapse imminent",                      flyTo: { center: [34.4, 31.6] as [number,number], zoom: 8   }, sources: ["AP", "Al Jazeera"],       confidence: 94,
-    description: "Al-Ahli Arab Hospital and Kamal Adwan Hospital in northern Gaza have issued emergency declarations after fuel stocks dropped below 24-hour reserves. UNRWA reports 14 aid trucks held at the Kerem Shalom crossing for 11 days." },
-  { time: "41m",    danger: 5, code: "SDN", text: "SAF drone strike kills 40+ at wedding celebration in North Darfur — RSF-held town targeted", flyTo: { center: [32.5, 15.6] as [number,number], zoom: 6   }, sources: ["UN", "Sudan Tribune"],   confidence: 82,
-    description: "Sudan's armed forces killed at least forty and burned dozens more homes in a drone strike on a wedding celebration in an RSF-held town in North Darfur state. A recent survey describes widespread hunger, separation, and social disruption as families reckon with a lack of access to basic services amid the continued risk of violence." },
-  { time: "1h 10m", danger: 2, code: "TWN", text: "PLA carrier group Shandong approaches Taiwan median line — GDELT naval index elevated",          flyTo: { center: [121.5, 24.5] as [number,number], zoom: 6.5}, sources: ["ACLED", "GDELT"],         confidence: 79,
-    description: "The PLA Navy carrier strike group led by the Shandong has approached within 40 nautical miles of the Taiwan Strait median line. Taiwan's MND has scrambled F-16 and Mirage 2000 fighters. The GDELT conflict index for the Taiwan Strait has risen to its highest level since August 2022." },
+  { time: "12m", danger: 5, code: "IRN", text: "US 5th Fleet announces heightened readiness posture in Persian Gulf",                           flyTo: { center: [50.5, 26.2] as [number,number], zoom: 5   }, sources: ["Reuters", "AP"],          confidence: 93,
+    description: "The US Navy's 5th Fleet, headquartered in Bahrain, has raised its alert status following intelligence reports of Iranian naval mobilization near the Strait of Hormuz. Two additional destroyers are being repositioned." },
 ];
 
 const FINANCE_ITEMS = [
@@ -160,12 +143,6 @@ const FINANCE_ITEMS = [
     image: "https://upload.wikimedia.org/wikipedia/commons/thumb/5/5c/Oil_platform_P-51_%28Brazil%29.jpg/640px-Oil_platform_P-51_%28Brazil%29.jpg",
     url: "https://www.bloomberg.com/energy",
     source: "Bloomberg",
-  },
-  {
-    headline: "Defense stocks hit record highs as Lockheed, RTX surge on renewed Pentagon contracts",
-    image: "https://upload.wikimedia.org/wikipedia/commons/thumb/7/7e/F-35A_flight_%28cropped%29.jpg/640px-F-35A_flight_%28cropped%29.jpg",
-    url: "https://www.ft.com/defence",
-    source: "FT",
   },
 ];
 
@@ -314,13 +291,13 @@ export default function AtlasHQ({ onClose, onNavigate, onHeadlinesToggle, onSour
         <SectionLabel label="live alerts" />
         <Reveal minStage={3} stage={loadStage}>
           <div style={{ padding: "0 6px" }}>
-            {LIVE_FEED.slice(0, 4).map((item, i) => (
+            {LIVE_FEED.slice(0, 2).map((item, i) => (
               <LiveAlertRow
                 key={`${item.code}-${item.time}`}
                 item={item}
                 onSourceClick={onSourceClick}
                 onClick={() => onNavigate?.(item.code, item.flyTo.center, item.flyTo.zoom, item)}
-                bottomBorder={i < 3}
+                bottomBorder={i < 1}
                 showConfidenceInline={false}
                 expandOnHover={false}
               />

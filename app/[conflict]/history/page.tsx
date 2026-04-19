@@ -12,7 +12,6 @@ import Home from "../../page";
 const VALID_CONFLICT_SLUGS = new Set([
   "israel-us-iran-war",
   "israel-palestine-conflict",
-  "israel-lebanon",
   "russia-ukraine-war",
   "taiwan-strait",
   "sudan-civil-war",
