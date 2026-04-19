@@ -483,7 +483,6 @@ const CONFLICTS: Record<string, Conflict> = {
       {
         date: "October 7, 2023",
         text: "Hamas attacks southern Israel, killing approximately 1,200 people and taking over 250 hostages. Israel launches a full-scale military campaign in Gaza. The next day, Iran-backed Hezbollah opens a second front from Lebanon, striking northern Israel.",
-        tag: "terrorist attack",
         strikeEvent: {
           center: [34.42, 31.40], zoom: 10.5,
           strikes: [
@@ -504,7 +503,7 @@ const CONFLICTS: Record<string, Conflict> = {
           },
         ],
         linkedConflicts: [
-          { id: "israel-gaza", label: "occupation", type: "conflict" },
+          { id: "israel-gaza", label: "Israel–Palestine Conflict", type: "conflict" },
         ],
       },
       {
