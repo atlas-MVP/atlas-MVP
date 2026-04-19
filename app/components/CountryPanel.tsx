@@ -556,7 +556,7 @@ const CONFLICTS: Record<string, Conflict> = {
   },
   "israel-gaza": {
     id: "israel-gaza",
-    title: "Israel occupation & Gaza genocide",
+    title: "Israel–Palestine Conflict",
     date: "1948 – Present",
     feedKey: "ISR",
     sides: {

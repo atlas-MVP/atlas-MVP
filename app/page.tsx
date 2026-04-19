@@ -70,7 +70,7 @@ const CONFLICT_ALL_COUNTRIES: Record<string, string[]> = {
 // The app/[conflict]/page.tsx dynamic route picks up these slugs.
 const CONFLICT_SLUGS: Record<string, string> = {
   "israel-iran":    "israel-us-iran-war",
-  "israel-gaza":    "israel-gaza",
+  "israel-gaza":    "israel-palestine-conflict",
   "israel-lebanon": "israel-lebanon",
   "russia-ukraine": "russia-ukraine-war",
   "taiwan-strait":  "taiwan-strait",

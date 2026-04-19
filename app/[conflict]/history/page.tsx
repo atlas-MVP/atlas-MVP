@@ -11,7 +11,7 @@ import Home from "../../page";
 // slug is a valid /[conflict]/history path. Disasters have no history.
 const VALID_CONFLICT_SLUGS = new Set([
   "israel-us-iran-war",
-  "israel-gaza",
+  "israel-palestine-conflict",
   "israel-lebanon",
   "russia-ukraine-war",
   "taiwan-strait",
