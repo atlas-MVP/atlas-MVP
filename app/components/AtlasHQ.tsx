@@ -468,7 +468,7 @@ export default function AtlasHQ({ onClose, onNavigate, onHeadlinesToggle, onSour
           }}
           style={{
             position: "fixed",
-            left: 528, // 20px (left) + 488px (panel width) + 20px gap
+            left: 516, // 20px (left) + 488px (panel width) + 8px gap
             top: alertCenterY - vizHeight / 2, // Center vertically with alert
             zIndex: 100,
             pointerEvents: "auto",
@@ -481,23 +481,6 @@ export default function AtlasHQ({ onClose, onNavigate, onHeadlinesToggle, onSour
         </div>
       );
     })()}
-
-    {/* Black overlay when Senate viz is locked - hides map */}
-    {senateVoteVisible === 'locked' && (
-      <div
-        style={{
-          position: "fixed",
-          inset: 0,
-          background: "rgba(0,0,0,0.96)",
-          zIndex: 15,
-          pointerEvents: "auto",
-        }}
-        onClick={() => {
-          setSenateVoteVisible(null);
-          onSenateVoteLocked?.(false);
-        }}
-      />
-    )}
 
     </>
 

@@ -1513,11 +1513,11 @@ export default function CountryPanel({ countryCode, onClose, onViewFeed, onConfl
                 <table style={{ width: "100%", borderCollapse: "collapse" }}>
                   <thead>
                     <tr>
-                      <th style={{ textAlign: "left", fontSize: 9, fontFamily: "monospace", color: "rgba(255,255,255,0.22)", fontWeight: "normal", paddingBottom: 4, letterSpacing: "0.08em" }}></th>
-                      {!hasMissingCol && <th style={{ textAlign: "right", fontSize: 9, fontFamily: "monospace", color: "rgba(255,255,255,0.22)", fontWeight: "normal", paddingBottom: 4, letterSpacing: "0.08em", paddingRight: 8 }}>Injured</th>}
-                      {hasMissingCol && <th style={{ textAlign: "right", fontSize: 9, fontFamily: "monospace", color: "rgba(255,255,255,0.22)", fontWeight: "normal", paddingBottom: 4, letterSpacing: "0.08em", paddingRight: 8 }}>Missing</th>}
-                      <th style={{ textAlign: "right", fontSize: 9, fontFamily: "monospace", color: "rgba(255,255,255,0.22)", fontWeight: "normal", paddingBottom: 4, letterSpacing: "0.08em", paddingRight: 8 }}>Killed</th>
-                      {hasCivCol && !hasMissingCol && <th style={{ textAlign: "right", fontSize: 9, fontFamily: "monospace", color: "rgba(255,255,255,0.22)", fontWeight: "normal", paddingBottom: 4, letterSpacing: "0.08em" }}>Civ %</th>}
+                      <th style={{ textAlign: "left", fontSize: 10, fontFamily: "monospace", color: "rgba(255,255,255,0.35)", fontWeight: "normal", paddingBottom: 4, letterSpacing: "0.08em" }}></th>
+                      {!hasMissingCol && <th style={{ textAlign: "right", fontSize: 10, fontFamily: "monospace", color: "rgba(255,255,255,0.35)", fontWeight: "normal", paddingBottom: 4, letterSpacing: "0.08em", paddingRight: 8 }}>Injured</th>}
+                      {hasMissingCol && <th style={{ textAlign: "right", fontSize: 10, fontFamily: "monospace", color: "rgba(255,255,255,0.35)", fontWeight: "normal", paddingBottom: 4, letterSpacing: "0.08em", paddingRight: 8 }}>Missing</th>}
+                      <th style={{ textAlign: "right", fontSize: 10, fontFamily: "monospace", color: "rgba(255,255,255,0.35)", fontWeight: "normal", paddingBottom: 4, letterSpacing: "0.08em", paddingRight: 8 }}>Killed</th>
+                      {hasCivCol && !hasMissingCol && <th style={{ textAlign: "right", fontSize: 10, fontFamily: "monospace", color: "rgba(255,255,255,0.35)", fontWeight: "normal", paddingBottom: 4, letterSpacing: "0.08em" }}>Civ %</th>}
                     </tr>
                   </thead>
                   <tbody>
@@ -1537,9 +1537,9 @@ export default function CountryPanel({ countryCode, onClose, onViewFeed, onConfl
                         onCasualtyHighlight?.([]);
                       }
                     }}
-                    style={{ marginTop: 4, fontSize: 9, fontFamily: "monospace", letterSpacing: "0.08em", color: "rgba(255,255,255,0.2)", background: "none", border: "none", cursor: "pointer", padding: "2px 0", display: "block" }}
-                    onMouseEnter={e => (e.currentTarget.style.color = "rgba(255,255,255,0.45)")}
-                    onMouseLeave={e => (e.currentTarget.style.color = "rgba(255,255,255,0.2)")}>
+                    style={{ marginTop: 4, fontSize: 10, fontFamily: "monospace", letterSpacing: "0.08em", color: "rgba(255,255,255,0.35)", background: "none", border: "none", cursor: "pointer", padding: "2px 0", display: "block" }}
+                    onMouseEnter={e => (e.currentTarget.style.color = "rgba(255,255,255,0.58)")}
+                    onMouseLeave={e => (e.currentTarget.style.color = "rgba(255,255,255,0.35)")}>
                     {showAllCasualties ? "▲ show less" : `▼ +${hiddenCount} more`}
                   </button>
                 )}
@@ -1554,7 +1554,7 @@ export default function CountryPanel({ countryCode, onClose, onViewFeed, onConfl
             if (conflictAlerts.length === 0) return null;
             return (
               <div style={{ padding: "14px 6px 6px", borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
-                <p style={{ margin: "0 0 6px 12px", fontSize: 11, fontFamily: "monospace", letterSpacing: "0.18em", color: "rgba(255,255,255,0.28)", textTransform: "uppercase", fontWeight: 500 }}>live alerts</p>
+                <p style={{ margin: "0 0 6px 12px", fontSize: 11, fontFamily: "monospace", letterSpacing: "0.18em", color: "rgba(255,255,255,0.42)", textTransform: "uppercase", fontWeight: 500 }}>live alerts</p>
                 {conflictAlerts.slice(0, 4).map((a, i, arr) => {
                   const alertId = `${conflict.id}-alert-${i}`;
                   const isLocked = lockedAlertIdx === i;
@@ -1622,7 +1622,7 @@ export default function CountryPanel({ countryCode, onClose, onViewFeed, onConfl
               return (
                 <div style={{ padding: "0 16px 16px" }}>
                   <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 14, marginBottom: 14 }}>
-                    <p style={{ fontSize: 11, fontFamily: "monospace", letterSpacing: "0.18em", color: "rgba(255,255,255,0.28)", textTransform: "uppercase", margin: 0, fontWeight: 500 }}>timeline</p>
+                    <p style={{ fontSize: 11, fontFamily: "monospace", letterSpacing: "0.18em", color: "rgba(255,255,255,0.42)", textTransform: "uppercase", margin: 0, fontWeight: 500 }}>timeline</p>
                   </div>
                   <div style={{ position: "relative", cursor: "pointer" }} onClick={(e) => { e.stopPropagation(); enterHistory(); }}>
                     <div style={{ position: "absolute", left: 5, top: 6, bottom: 6, width: 1, background: "rgba(255,255,255,0.05)" }} />
@@ -1705,7 +1705,7 @@ export default function CountryPanel({ countryCode, onClose, onViewFeed, onConfl
               <div style={{ display: "flex", flexDirection: "column", flex: 1, minHeight: 0 }}>
                 {/* Fixed history header */}
                 <div style={{ padding: "10px 16px", borderBottom: "1px solid rgba(255,255,255,0.06)", display: "flex", alignItems: "center", justifyContent: "space-between", flexShrink: 0 }}>
-                  <p style={{ fontSize: 11, fontFamily: "monospace", letterSpacing: "0.18em", color: "rgba(255,255,255,0.28)", textTransform: "uppercase", margin: 0, fontWeight: 500 }}>history</p>
+                  <p style={{ fontSize: 11, fontFamily: "monospace", letterSpacing: "0.18em", color: "rgba(255,255,255,0.42)", textTransform: "uppercase", margin: 0, fontWeight: 500 }}>history</p>
                   <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
                     {/* Play (was "auto") — kicks off both the narration AND
                         the tile auto-advance at reading pace. */}
@@ -1778,17 +1778,17 @@ export default function CountryPanel({ countryCode, onClose, onViewFeed, onConfl
 
                     // Era bracket — detect era boundaries for bracket label
                     const eraColor = event.era === "genocide"
-                      ? { border: "rgba(220,38,38,0.5)",   label: "rgba(127,29,29,0.18)",  fg: "rgba(252,165,165,0.9)",  text: "Gaza Genocide" }
+                      ? { border: "rgba(220,38,38,0.40)",  fg: "rgba(252,165,165,0.9)",  text: "Gaza Genocide" }
                       : event.era === "occupation"
-                      ? { border: "rgba(251,191,36,0.4)",  label: "rgba(120,53,15,0.18)",  fg: "rgba(253,224,71,0.85)",  text: "Israeli Occupation" }
+                      ? { border: "rgba(251,191,36,0.38)", fg: "rgba(253,224,71,0.85)",  text: "Israeli Occupation" }
                       : event.era === "treaty"
-                      ? { border: "rgba(22,163,74,0.6)",   label: "rgba(20,83,45,0.22)",   fg: "rgba(74,222,128,0.95)",  text: "JCPOA Treaty" }
+                      ? { border: "rgba(22,163,74,0.42)",  fg: "rgba(74,222,128,0.95)",  text: "JCPOA Treaty" }
                       : event.era === "withdrawal"
-                      ? { border: "rgba(220,38,38,0.6)",   label: "rgba(127,29,29,0.22)",  fg: "rgba(252,165,165,0.95)", text: "US Withdrawal" }
+                      ? { border: "rgba(220,38,38,0.42)",  fg: "rgba(252,165,165,0.95)", text: "US Withdrawal" }
                       : event.era === "proxy"
-                      ? { border: "rgba(109,40,217,0.65)", label: "rgba(46,16,101,0.24)",  fg: "rgba(196,181,253,0.95)", text: "Shadow War" }
+                      ? { border: "rgba(76,29,149,0.55)",  fg: "rgba(216,180,254,0.95)", text: "Shadow War" }
                       : event.era === "war"
-                      ? { border: "rgba(234,88,12,0.65)",  label: "rgba(124,45,18,0.22)",  fg: "rgba(253,186,116,0.95)", text: "War" }
+                      ? { border: "rgba(234,88,12,0.45)",  fg: "rgba(253,186,116,0.95)", text: "War" }
                       : null;
                     const isEraStart = event.era && prevEvent?.era !== event.era;
                     const isEraEnd   = event.era && nextEvent?.era !== event.era;
@@ -1828,34 +1828,23 @@ export default function CountryPanel({ countryCode, onClose, onViewFeed, onConfl
                         }}
                         style={{
                           scrollSnapAlign: "start",
-                          padding: "16px 16px 20px",
-                          paddingLeft: eraColor ? 14 : 16,
-                          borderLeft: eraColor ? `3px solid ${eraColor.border}` : "none",
+                          padding: "14px 16px 16px 14px",
+                          margin: "2px 10px",
+                          borderRadius: 14,
+                          borderLeft: eraColor ? `2px solid ${eraColor.border}` : "1px solid rgba(255,255,255,0.04)",
+                          borderTop: "1px solid rgba(255,255,255,0.04)",
+                          borderRight: "1px solid rgba(255,255,255,0.04)",
                           borderBottom: "1px solid rgba(255,255,255,0.04)",
-                          minHeight: 120,
+                          background: isActive ? "rgba(255,255,255,0.03)" : "rgba(255,255,255,0.012)",
+                          minHeight: 100,
                           cursor: "pointer",
                           opacity: isActive || activeTile < 0 ? 1 : 0.35,
-                          transition: "opacity 0.4s ease",
+                          transition: "opacity 0.4s ease, background 0.3s ease",
                         }}
                       >
-                        {/* Era bracket label — pill on first tile of each era (skip if tile already has a tag) */}
-                        {isEraStart && eraColor && !event.tag && (
-                          <div style={{
-                            display: "inline-block",
-                            background: eraColor.label,
-                            border: `1px solid ${eraColor.border}`,
-                            borderRadius: 3,
-                            padding: "2px 7px",
-                            fontSize: 8, fontFamily: "monospace", letterSpacing: "0.14em",
-                            color: eraColor.fg, textTransform: "uppercase",
-                            marginBottom: 10,
-                          }}>
-                            {eraColor.text}
-                          </div>
-                        )}
                         {showYearBefore && currentYear && (
                           <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
-                            <span style={{ fontSize: 11, fontWeight: 700, fontFamily: "monospace", color: "rgba(255,255,255,0.22)", letterSpacing: "0.14em" }}>{currentYear}</span>
+                            <span style={{ fontSize: 11, fontWeight: 700, fontFamily: "monospace", color: "rgba(255,255,255,0.35)", letterSpacing: "0.14em" }}>{currentYear}</span>
                             <div style={{ flex: 1, height: 1, background: "rgba(255,255,255,0.06)" }} />
                           </div>
                         )}
@@ -1979,6 +1968,21 @@ export default function CountryPanel({ countryCode, onClose, onViewFeed, onConfl
                             )}
                           </div>
                         </div>
+                        {/* Era label — outlined oval at bottom of last tile in each era */}
+                        {isEraEnd && eraColor && !event.tag && (
+                          <div style={{
+                            display: "inline-block",
+                            background: "transparent",
+                            border: `1px solid ${eraColor.border}`,
+                            borderRadius: 99,
+                            padding: "2px 9px",
+                            fontSize: 8, fontFamily: "monospace", letterSpacing: "0.14em",
+                            color: eraColor.fg, textTransform: "uppercase",
+                            marginTop: 10,
+                          }}>
+                            {eraColor.text}
+                          </div>
+                        )}
                       </div>
                     );
                   })}

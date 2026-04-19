@@ -144,15 +144,15 @@ export default function HeadlinesPanel({ onClose }: Props) {
               }}>
                 {SOURCE_ABBR[a.source] ?? a.source}
               </span>
-              <span style={{ fontSize: 11, color: "rgba(255,255,255,0.25)" }}>{a.source}</span>
-              <span style={{ fontSize: 10, fontFamily: "monospace", color: "rgba(255,255,255,0.15)", marginLeft: "auto" }}>{a.time}</span>
+              <span style={{ fontSize: 11, color: "rgba(255,255,255,0.42)" }}>{a.source}</span>
+              <span style={{ fontSize: 10, fontFamily: "monospace", color: "rgba(255,255,255,0.30)", marginLeft: "auto" }}>{a.time}</span>
             </div>
 
             {/* Headline + thumbnail */}
             <div style={{ display: "flex", gap: 12 }}>
               <div style={{ flex: 1 }}>
                 <p style={{ margin: "0 0 6px", fontSize: 13, color: "rgba(255,255,255,0.82)", fontWeight: 600, lineHeight: 1.4 }}>{a.headline}</p>
-                <p style={{ margin: 0, fontSize: 11, color: "rgba(255,255,255,0.30)", lineHeight: 1.45, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{a.excerpt}</p>
+                <p style={{ margin: 0, fontSize: 11, color: "rgba(255,255,255,0.48)", lineHeight: 1.45, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{a.excerpt}</p>
               </div>
               <div style={{ width: 56, height: 56, borderRadius: 6, overflow: "hidden", flexShrink: 0, marginTop: 2, background: "rgba(255,255,255,0.05)" }}>
                 <img src={a.img} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", opacity: 0.55 }}
@@ -165,7 +165,7 @@ export default function HeadlinesPanel({ onClose }: Props) {
 
       {/* Footer */}
       <div style={{ padding: "10px 20px", borderTop: "1px solid rgba(255,255,255,0.05)", flexShrink: 0 }}>
-        <p style={{ margin: 0, fontSize: 9, fontFamily: "monospace", letterSpacing: "0.2em", color: "rgba(255,255,255,0.1)", textAlign: "center" }}>ATLAS · INTELLIGENCE FEED</p>
+        <p style={{ margin: 0, fontSize: 10, fontFamily: "monospace", letterSpacing: "0.2em", color: "rgba(255,255,255,0.22)", textAlign: "center" }}>ATLAS · INTELLIGENCE FEED</p>
       </div>
     </div>
   );

@@ -77,8 +77,11 @@ export default function SenateVoteVisualization({
         position: "relative",
         width: 533,
         height: 300,
-        background: "transparent",
-        padding: 0,
+        background: "rgba(4,6,18,0.75)",
+        backdropFilter: "blur(20px)",
+        borderRadius: 12,
+        border: "1px solid rgba(255,255,255,0.08)",
+        padding: "12px 8px 8px",
       }}
     >
       {/* Title */}
