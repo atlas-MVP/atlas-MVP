@@ -103,7 +103,7 @@ const TOP_CONFLICTS: Conflict[] = [
     code: "ISR",
     slug: "israel-us-iran-war",
     flyTo: { center: [44.0, 30.0] as [number,number], zoom: 4.2 },
-    image: "https://upload.wikimedia.org/wikipedia/commons/thumb/9/9d/B-2_spirit_bombing.jpg/640px-B-2_spirit_bombing.jpg",
+    image: "https://images.unsplash.com/photo-1532375810709-75b1da00537c?w=600&q=80",
   },
 ];
 
@@ -115,7 +115,7 @@ const MORE_CONFLICTS: Conflict[] = [
 ];
 
 const DISASTERS = [
-  { label: "Myanmar earthquake", slug: "myanmar-earthquake", sub: "3,800+ dead · 5,000+ injured · 14.5M affected", flyTo: { center: [96.0, 21.9] as [number,number], zoom: 5.5 }, image: "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b8/2011-earthquake-rubble.jpg/640px-2011-earthquake-rubble.jpg" },
+  { label: "Myanmar earthquake", slug: "myanmar-earthquake", sub: "3,800+ dead · 5,000+ injured · 14.5M affected", flyTo: { center: [96.0, 21.9] as [number,number], zoom: 5.5 }, image: "https://images.unsplash.com/photo-1547683905-f686c993aae5?w=600&q=80" },
 ];
 
 
@@ -141,7 +141,7 @@ const LIVE_FEED: FeedItem[] = [
 const FINANCE_ITEMS = [
   {
     headline: "Oil surges past $87 as Strait of Hormuz tensions escalate following US-Iran clashes",
-    image: "https://upload.wikimedia.org/wikipedia/commons/thumb/5/5c/Oil_platform_P-51_%28Brazil%29.jpg/640px-Oil_platform_P-51_%28Brazil%29.jpg",
+    image: "https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=600&q=80",
     url: "https://www.bloomberg.com/energy",
     source: "Bloomberg",
   },
