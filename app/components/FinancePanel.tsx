@@ -1,31 +1,20 @@
 "use client";
 import React from "react";
 
-const DISASTER_DATA: Record<string, {
+const FINANCE_DATA: Record<string, {
   title: string;
-  date: string;
   tag: string;
-  stats: { label: string; value: string }[];
-  intro: string;
   article: { headline: string; image: string; url: string; source: string };
 }> = {
-  "kenya-floods": {
-    title: "Kenya Floods",
-    date: "March–April 2026",
-    tag: "ACTIVE DISASTER",
-    stats: [
-      { label: "Confirmed dead", value: "110+" },
-      { label: "Displaced",      value: "34,765+" },
-      { label: "Counties hit",   value: "30" },
-    ],
-    intro:
-      "Kenya's 2026 long rains arrived early and with exceptional force, submerging informal settlements across Nairobi and destroying over 1,200 hectares of cropland in Kisumu alone. The Kenya Meteorological Department identifies April as peak season, with death tolls and displacement expected to rise. IPC projects 3.7 million people in ASAL counties to face acute food insecurity through June, compounded by cholera and malaria risk from contaminated floodwater.",
+  "oil-hormuz": {
+    title: "Oil Markets",
+    tag: "MARKET ALERT",
     article: {
       headline:
-        "Nairobi slums submerged as Kenya floods kill 110 and displace 35,000 across 30 counties — April 2026",
-      image: "/kenya-floods-bus.webp",
-      url: "https://www.aljazeera.com/news/2024/4/",
-      source: "Al Jazeera",
+        "Oil surges past $87 as Strait of Hormuz tensions escalate following US-Iran clashes",
+      image: "/finance-oil.jpeg",
+      url: "https://www.bloomberg.com/energy",
+      source: "Bloomberg",
     },
   },
 };
@@ -35,8 +24,8 @@ interface Props {
   onClose: () => void;
 }
 
-export default function DisasterPanel({ slug, onClose }: Props) {
-  const data = DISASTER_DATA[slug];
+export default function FinancePanel({ slug, onClose }: Props) {
+  const data = FINANCE_DATA[slug];
   if (!data) return null;
 
   return (
@@ -84,14 +73,6 @@ export default function DisasterPanel({ slug, onClose }: Props) {
               >
                 {data.title}
               </div>
-              <div
-                style={{
-                  fontSize: 11, color: "rgba(255,255,255,0.48)",
-                  fontFamily: "monospace", marginTop: 4,
-                }}
-              >
-                {data.date}
-              </div>
             </div>
             <button
               onClick={onClose}
@@ -104,51 +85,16 @@ export default function DisasterPanel({ slug, onClose }: Props) {
               ✕
             </button>
           </div>
-
-          {/* Stats */}
-          <div style={{ display: "flex", gap: 28, marginTop: 18 }}>
-            {data.stats.map((s) => (
-              <div key={s.label}>
-                <div
-                  style={{
-                    fontSize: 22, fontWeight: 700,
-                    color: "rgba(255,255,255,0.92)", fontFamily: "monospace",
-                  }}
-                >
-                  {s.value}
-                </div>
-                <div
-                  style={{
-                    fontSize: 10, color: "rgba(255,255,255,0.48)",
-                    letterSpacing: "0.12em", textTransform: "uppercase", marginTop: 3,
-                  }}
-                >
-                  {s.label}
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* ── Intro ── */}
-        <div
-          style={{
-            padding: "14px 20px 10px",
-            fontSize: 12, color: "rgba(255,255,255,0.62)",
-            lineHeight: 1.7, fontFamily: "monospace",
-          }}
-        >
-          {data.intro}
         </div>
 
         {/* ── Article card ── */}
-        <div style={{ padding: "6px 16px 20px" }}>
+        <div style={{ padding: "14px 16px 20px" }}>
           <a
             href={data.article.url}
             target="_blank"
             rel="noopener noreferrer"
             style={{
-              height: 196, borderRadius: 14, overflow: "hidden",
+              height: 260, borderRadius: 14, overflow: "hidden",
               position: "relative", display: "block", textDecoration: "none",
               cursor: "pointer", border: "1px solid rgba(255,255,255,0.09)",
               background: "#0a0c18",

@@ -21,14 +21,9 @@ export default function SenateVoteVisualization({
   const [hoveredSenator, setHoveredSenator] = useState<Senator | null>(null);
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
 
-  // Calculate vote counts
-  const republicanAye = senators.filter(s => s.party === "R" && s.vote === "Aye").length;
-  const republicanNo = senators.filter(s => s.party === "R" && s.vote === "No").length;
-  const democratAye = senators.filter(s => s.party === "D" && s.vote === "Aye").length;
-  const democratNo = senators.filter(s => s.party === "D" && s.vote === "No").length;
-
-  const totalAye = republicanAye + democratAye;
-  const totalNo = republicanNo + democratNo;
+  // Calculate vote counts (including all parties)
+  const totalAye = senators.filter(s => s.vote === "Aye").length;
+  const totalNo = senators.filter(s => s.vote === "No").length;
 
   // Generate hemicycle positions for senators
   const generatePositions = () => {
@@ -81,43 +76,40 @@ export default function SenateVoteVisualization({
       style={{
         position: "relative",
         width: 533,
-        height: 333,
-        background: "rgba(4,6,18,0.85)",
-        backdropFilter: "blur(20px)",
-        borderRadius: 10,
-        border: "1px solid rgba(255,255,255,0.08)",
-        boxShadow: "0 16px 48px rgba(0,0,0,0.5)",
-        padding: 8,
+        height: 300,
+        background: "transparent",
+        padding: 0,
       }}
     >
       {/* Title */}
       <div
         style={{
           position: "absolute",
-          top: 12,
+          top: 0,
           left: 0,
           right: 0,
           textAlign: "center",
-          fontSize: 11,
+          fontSize: 16,
           fontWeight: 700,
           fontFamily: "monospace",
           letterSpacing: "0.2em",
-          color: "rgba(255,255,255,0.6)",
+          color: "rgba(255,255,255,0.7)",
         }}
       >
         {title}
       </div>
 
-      {/* Vote count */}
+      {/* Vote count - below floor */}
       <div
         style={{
           position: "absolute",
-          top: "50%",
+          bottom: 10,
           left: "50%",
-          transform: "translate(-50%, -50%)",
-          fontSize: 32,
+          transform: "translateX(-50%)",
+          fontSize: 16,
           fontWeight: 700,
           fontFamily: "monospace",
+          letterSpacing: "0.2em",
           color: "rgba(255,255,255,0.9)",
         }}
       >

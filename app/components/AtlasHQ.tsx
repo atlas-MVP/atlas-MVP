@@ -143,9 +143,9 @@ const LIVE_FEED: FeedItem[] = [
 
 const FINANCE_ITEMS = [
   {
+    slug: "oil-hormuz",
     headline: "Oil surges past $87 as Strait of Hormuz tensions escalate following US-Iran clashes",
-    image: "/finance-oil.jpeg",
-    url: "https://www.bloomberg.com/energy",
+    image: "/finance-card.avif",
     source: "Bloomberg",
   },
 ];
@@ -156,6 +156,8 @@ interface Props {
   onHeadlinesToggle?: () => void;
   onSourceClick?: (source: string) => void;
   onReelsTap?: () => void;
+  onSenateVoteLocked?: (locked: boolean) => void;
+  onFinanceTap?: (slug: string) => void;
 }
 
 // ─── Sequential load stages ──────────────────────────────────────────────────
@@ -187,7 +189,7 @@ function Reveal({ minStage, stage, children }: { minStage: number; stage: number
   );
 }
 
-export default function AtlasHQ({ onClose, onNavigate, onHeadlinesToggle, onSourceClick, onReelsTap }: Props) {
+export default function AtlasHQ({ onClose, onNavigate, onHeadlinesToggle, onSourceClick, onReelsTap, onFinanceTap, onSenateVoteLocked }: Props) {
   const [showMore, setShowMore] = useState(false);
   const [showAllDisasters, setShowAllDisasters] = useState(false);
   const [loadStage, setLoadStage] = useState(0);
@@ -196,8 +198,10 @@ export default function AtlasHQ({ onClose, onNavigate, onHeadlinesToggle, onSour
 
   // Senate arms sale vote data: 40-59 (40 Aye, 59 No)
   const senatorsVoteData = [
-    // Democrats who voted Aye (34 of 40 total Ayes)
+    // Independents who voted Aye (2)
     { name: "Bernie Sanders", party: "I" as const, state: "VT", vote: "Aye" as const },
+    { name: "Angus King", party: "I" as const, state: "ME", vote: "Aye" as const },
+    // Democrats who voted Aye (38)
     { name: "Elizabeth Warren", party: "D" as const, state: "MA", vote: "Aye" as const },
     { name: "Jeff Merkley", party: "D" as const, state: "OR", vote: "Aye" as const },
     { name: "Chris Van Hollen", party: "D" as const, state: "MD", vote: "Aye" as const },
@@ -226,27 +230,33 @@ export default function AtlasHQ({ onClose, onNavigate, onHeadlinesToggle, onSour
     { name: "Mark Warner", party: "D" as const, state: "VA", vote: "Aye" as const },
     { name: "Tim Kaine", party: "D" as const, state: "VA", vote: "Aye" as const },
     { name: "Bob Casey", party: "D" as const, state: "PA", vote: "Aye" as const },
-    { name: "John Fetterman", party: "D" as const, state: "PA", vote: "No" as const }, // Fetterman voted No
     { name: "Jacky Rosen", party: "D" as const, state: "NV", vote: "Aye" as const },
     { name: "Catherine Cortez Masto", party: "D" as const, state: "NV", vote: "Aye" as const },
     { name: "Mark Kelly", party: "D" as const, state: "AZ", vote: "Aye" as const },
     { name: "Ruben Gallego", party: "D" as const, state: "AZ", vote: "Aye" as const },
     { name: "Adam Schiff", party: "D" as const, state: "CA", vote: "Aye" as const },
-    { name: "Laphonza Butler", party: "D" as const, state: "CA", vote: "Aye" as const },
-    // Republicans who voted No (all 49)
+    { name: "Andy Kim", party: "D" as const, state: "NJ", vote: "Aye" as const },
+    { name: "Chuck Schumer", party: "D" as const, state: "NY", vote: "Aye" as const },
+    { name: "John Hickenlooper", party: "D" as const, state: "CO", vote: "Aye" as const },
+    { name: "Michael Bennet", party: "D" as const, state: "CO", vote: "Aye" as const },
+    // Republicans who voted No (49)
     ...Array.from({ length: 49 }, (_, i) => ({
       name: `Republican Senator ${i + 1}`,
       party: "R" as const,
       state: ["TX", "FL", "OH", "NC", "GA", "TN", "IN", "MO", "AL", "LA"][i % 10],
       vote: "No" as const,
     })),
-    // Democrats who voted No (10)
-    ...Array.from({ length: 10 }, (_, i) => ({
-      name: `Democrat Senator ${i + 1}`,
-      party: "D" as const,
-      state: ["DE", "CT", "MD", "NJ", "NY"][i % 5],
-      vote: "No" as const,
-    })),
+    // Democrats who voted No (9) + Independent Sinema (1)
+    { name: "John Fetterman", party: "D" as const, state: "PA", vote: "No" as const },
+    { name: "Joe Manchin", party: "D" as const, state: "WV", vote: "No" as const },
+    { name: "Jeanne Shaheen", party: "D" as const, state: "NH", vote: "No" as const },
+    { name: "Maggie Hassan", party: "D" as const, state: "NH", vote: "No" as const },
+    { name: "Chris Coons", party: "D" as const, state: "DE", vote: "No" as const },
+    { name: "Tom Carper", party: "D" as const, state: "DE", vote: "No" as const },
+    { name: "Elissa Slotkin", party: "D" as const, state: "MI", vote: "No" as const },
+    { name: "Jon Tester", party: "D" as const, state: "MT", vote: "No" as const },
+    { name: "Ruben Kihuen", party: "D" as const, state: "NV", vote: "No" as const },
+    { name: "Kyrsten Sinema", party: "I" as const, state: "AZ", vote: "No" as const },
   ];
 
   useEffect(() => {
@@ -319,18 +329,18 @@ export default function AtlasHQ({ onClose, onNavigate, onHeadlinesToggle, onSour
                   onMouseLeave={e => (e.currentTarget.style.background = "rgba(255,255,255,0.02)")}
                 >
                   <div style={{ fontSize: 15, fontFamily: "monospace", letterSpacing: "0.07em", color: "rgba(255,255,255,0.92)", fontWeight: 700 }}>{c.label}</div>
-                  <div style={{ fontSize: 11, color: "rgba(255,255,255,0.40)", marginTop: 5, lineHeight: 1.45, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{c.sub}</div>
+                  <div style={{ fontSize: 11, color: "rgba(255,255,255,0.52)", marginTop: 5, lineHeight: 1.45, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{c.sub}</div>
                 </div>
               ))}
               <button
                 onClick={() => setShowMore(false)}
                 style={{
                   background: "none", border: "none", padding: "2px 4px", cursor: "pointer",
-                  fontFamily: "monospace", fontSize: 8, letterSpacing: "0.12em",
-                  color: "rgba(255,255,255,0.25)", display: "flex", alignItems: "center", gap: 5,
+                  fontFamily: "monospace", fontSize: 9, letterSpacing: "0.12em",
+                  color: "rgba(255,255,255,0.38)", display: "flex", alignItems: "center", gap: 5,
                 }}
-                onMouseEnter={e => (e.currentTarget.style.color = "rgba(255,255,255,0.55)")}
-                onMouseLeave={e => (e.currentTarget.style.color = "rgba(255,255,255,0.25)")}
+                onMouseEnter={e => (e.currentTarget.style.color = "rgba(255,255,255,0.65)")}
+                onMouseLeave={e => (e.currentTarget.style.color = "rgba(255,255,255,0.38)")}
               >▲ show less</button>
             </>
           )}
@@ -358,11 +368,9 @@ export default function AtlasHQ({ onClose, onNavigate, onHeadlinesToggle, onSour
                   }}
                   onClick={() => {
                     if (isSenateVote) {
-                      if (senateVoteVisible === 'locked') {
-                        setSenateVoteVisible(null);
-                      } else {
-                        setSenateVoteVisible('locked');
-                      }
+                      const newState = senateVoteVisible === 'locked' ? null : 'locked';
+                      setSenateVoteVisible(newState);
+                      onSenateVoteLocked?.(newState === 'locked');
                     } else {
                       onNavigate?.(item.code, item.flyTo.center, item.flyTo.zoom, item);
                     }
@@ -387,14 +395,12 @@ export default function AtlasHQ({ onClose, onNavigate, onHeadlinesToggle, onSour
         <Reveal minStage={5} stage={loadStage}>
           <div style={{ padding: "0 14px 6px", display: "flex", gap: 8 }}>
             {FINANCE_ITEMS.map((item) => (
-              <a
+              <div
                 key={item.headline}
-                href={item.url}
-                target="_blank"
-                rel="noopener noreferrer"
+                onClick={() => onFinanceTap?.(item.slug)}
                 style={{
                   flex: 1, height: 196, borderRadius: 14, overflow: "hidden",
-                  position: "relative", display: "block", textDecoration: "none",
+                  position: "relative", display: "block",
                   cursor: "pointer", border: "1px solid rgba(255,255,255,0.09)",
                   background: "#0a0c18", minWidth: 0,
                 }}
@@ -408,9 +414,9 @@ export default function AtlasHQ({ onClose, onNavigate, onHeadlinesToggle, onSour
                 <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom, transparent 35%, rgba(0,0,0,0.88) 100%)" }} />
                 <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, padding: "8px 10px 10px" }}>
                   <div style={{ fontSize: 12, fontFamily: "monospace", letterSpacing: "0.03em", color: "rgba(255,255,255,0.88)", lineHeight: 1.4, display: "-webkit-box", WebkitLineClamp: 3, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{item.headline}</div>
-                  <div style={{ fontSize: 8, color: "rgba(255,255,255,0.35)", marginTop: 4, letterSpacing: "0.12em", textTransform: "uppercase" }}>{item.source}</div>
+                  <div style={{ fontSize: 9, color: "rgba(255,255,255,0.48)", marginTop: 4, letterSpacing: "0.12em", textTransform: "uppercase" }}>{item.source}</div>
                 </div>
-              </a>
+              </div>
             ))}
           </div>
         </Reveal>
@@ -434,7 +440,7 @@ export default function AtlasHQ({ onClose, onNavigate, onHeadlinesToggle, onSour
                 <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom, transparent 35%, rgba(0,0,0,0.88) 100%)" }} />
                 <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, padding: "8px 10px 10px" }}>
                   <div style={{ fontSize: 12, fontFamily: "monospace", letterSpacing: "0.06em", color: "rgba(255,255,255,0.92)", fontWeight: 700 }}>{d.label}</div>
-                  <div style={{ fontSize: 9, color: "rgba(255,255,255,0.50)", marginTop: 4 }}>{d.sub}</div>
+                  <div style={{ fontSize: 10, color: "rgba(255,255,255,0.62)", marginTop: 4 }}>{d.sub}</div>
                 </div>
               </div>
             ))}
@@ -476,6 +482,23 @@ export default function AtlasHQ({ onClose, onNavigate, onHeadlinesToggle, onSour
       );
     })()}
 
+    {/* Black overlay when Senate viz is locked - hides map */}
+    {senateVoteVisible === 'locked' && (
+      <div
+        style={{
+          position: "fixed",
+          inset: 0,
+          background: "rgba(0,0,0,0.96)",
+          zIndex: 15,
+          pointerEvents: "auto",
+        }}
+        onClick={() => {
+          setSenateVoteVisible(null);
+          onSenateVoteLocked?.(false);
+        }}
+      />
+    )}
+
     </>
 
   );
@@ -488,11 +511,11 @@ function SectionLabel({ label, onClick }: { label: string; onClick?: () => void 
         onClick={onClick}
         style={{
           fontSize: 11, fontFamily: "monospace", letterSpacing: "0.18em",
-          color: "rgba(255,255,255,0.28)", textTransform: "uppercase",
+          color: "rgba(255,255,255,0.42)", textTransform: "uppercase",
           fontWeight: 500, cursor: onClick ? "pointer" : "default", userSelect: "none",
         }}
-        onMouseEnter={e => { if (onClick) e.currentTarget.style.color = "rgba(255,255,255,0.6)"; }}
-        onMouseLeave={e => { if (onClick) e.currentTarget.style.color = "rgba(255,255,255,0.28)"; }}
+        onMouseEnter={e => { if (onClick) e.currentTarget.style.color = "rgba(255,255,255,0.7)"; }}
+        onMouseLeave={e => { if (onClick) e.currentTarget.style.color = "rgba(255,255,255,0.42)"; }}
       >{label}</span>
     </div>
   );

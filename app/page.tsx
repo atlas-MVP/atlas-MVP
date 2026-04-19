@@ -11,6 +11,7 @@ import Clock from "./components/Clock";
 import TimeScrubber from "./components/TimeScrubber";
 import AtlasHQ from "./components/AtlasHQ";
 import DisasterPanel from "./components/DisasterPanel";
+import FinancePanel  from "./components/FinancePanel";
 import HeadlinesPanel from "./components/HeadlinesPanel";
 import SourceInfoPanel from "./components/SourceInfoPanel";
 import AuthorBioPanel from "./components/AuthorBioPanel";
@@ -128,6 +129,7 @@ export default function Home() {
   const [currentConflictSlug, setCurrentConflictSlug] = useState<string | null>(null);
   const [openWithHistory, setOpenWithHistory] = useState(false);
   const [activeDisaster, setActiveDisaster] = useState<string | null>(null);
+  const [activeFinance,  setActiveFinance]  = useState<string | null>(null);
 
   // Deep link: /?reel=<id> → redirect to the dedicated /you page so shared
   // links land on the full reels experience, not the HQ widget.
@@ -351,6 +353,14 @@ export default function Home() {
         />
       )}
 
+      {/* Finance panel — opens when a finance card is tapped */}
+      {!historicalYear && activeFinance && (
+        <FinancePanel
+          slug={activeFinance}
+          onClose={() => setActiveFinance(null)}
+        />
+      )}
+
       {/* Radar — only visible when explicitly opened via ATLAS button */}
       {mapReady && !historicalYear && showRadar && !selectedCountry && !homeCountry && !feedCountry && (
         <AtlasHQ
@@ -388,6 +398,7 @@ export default function Home() {
           onHeadlinesToggle={() => setShowHeadlines(v => !v)}
           onSourceClick={(s) => setActiveSource(s)}
           onReelsTap={() => router.push("/you")}
+          onFinanceTap={(slug) => { setShowRadar(false); setActiveFinance(slug); }}
         />
       )}
       {/* Headlines panel — independent of radar, can show alongside country panels */}
@@ -437,6 +448,7 @@ export default function Home() {
               setActiveSource(null);
               setShowSettings(false);
               setActiveDisaster(null);
+              setActiveFinance(null);
               setHistoricalYear(null);
               setPreviewYear(null);
               setTimelineOpen(false);

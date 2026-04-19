@@ -1778,17 +1778,17 @@ export default function CountryPanel({ countryCode, onClose, onViewFeed, onConfl
 
                     // Era bracket — detect era boundaries for bracket label
                     const eraColor = event.era === "genocide"
-                      ? { border: "rgba(239,68,68,0.45)",  label: "rgba(239,68,68,0.38)",  text: "Gaza Genocide" }
+                      ? { border: "rgba(220,38,38,0.5)",   label: "rgba(127,29,29,0.18)",  fg: "rgba(252,165,165,0.9)",  text: "Gaza Genocide" }
                       : event.era === "occupation"
-                      ? { border: "rgba(251,191,36,0.4)",  label: "rgba(251,191,36,0.32)", text: "Israeli Occupation" }
+                      ? { border: "rgba(251,191,36,0.4)",  label: "rgba(120,53,15,0.18)",  fg: "rgba(253,224,71,0.85)",  text: "Israeli Occupation" }
                       : event.era === "treaty"
-                      ? { border: "rgba(34,197,94,0.5)",   label: "rgba(34,197,94,0.32)",  text: "JCPOA Treaty" }
+                      ? { border: "rgba(22,163,74,0.6)",   label: "rgba(20,83,45,0.22)",   fg: "rgba(74,222,128,0.95)",  text: "JCPOA Treaty" }
                       : event.era === "withdrawal"
-                      ? { border: "rgba(239,68,68,0.5)",   label: "rgba(239,68,68,0.35)",  text: "US Withdrawal" }
+                      ? { border: "rgba(220,38,38,0.6)",   label: "rgba(127,29,29,0.22)",  fg: "rgba(252,165,165,0.95)", text: "US Withdrawal" }
                       : event.era === "proxy"
-                      ? { border: "rgba(251,191,36,0.45)", label: "rgba(251,191,36,0.32)", text: "Shadow War" }
+                      ? { border: "rgba(109,40,217,0.65)", label: "rgba(46,16,101,0.24)",  fg: "rgba(196,181,253,0.95)", text: "Shadow War" }
                       : event.era === "war"
-                      ? { border: "rgba(239,68,68,0.65)",  label: "rgba(239,68,68,0.50)",  text: "Open War" }
+                      ? { border: "rgba(234,88,12,0.65)",  label: "rgba(124,45,18,0.22)",  fg: "rgba(253,186,116,0.95)", text: "War" }
                       : null;
                     const isEraStart = event.era && prevEvent?.era !== event.era;
                     const isEraEnd   = event.era && nextEvent?.era !== event.era;
@@ -1838,17 +1838,17 @@ export default function CountryPanel({ countryCode, onClose, onViewFeed, onConfl
                           transition: "opacity 0.4s ease",
                         }}
                       >
-                        {/* Era bracket label — pill button on first tile of each era */}
-                        {isEraStart && eraColor && (
+                        {/* Era bracket label — pill on first tile of each era (skip if tile already has a tag) */}
+                        {isEraStart && eraColor && !event.tag && (
                           <div style={{
-                            display: "inline-flex", alignItems: "center",
+                            display: "inline-block",
                             background: eraColor.label,
                             border: `1px solid ${eraColor.border}`,
-                            borderRadius: 99,
-                            padding: "2px 9px",
-                            fontSize: 9, fontFamily: "monospace", letterSpacing: "0.15em",
-                            color: "rgba(255,255,255,0.88)", textTransform: "uppercase",
-                            fontWeight: 600, marginBottom: 10,
+                            borderRadius: 3,
+                            padding: "2px 7px",
+                            fontSize: 8, fontFamily: "monospace", letterSpacing: "0.14em",
+                            color: eraColor.fg, textTransform: "uppercase",
+                            marginBottom: 10,
                           }}>
                             {eraColor.text}
                           </div>

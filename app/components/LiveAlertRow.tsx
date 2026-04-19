@@ -81,7 +81,7 @@ export default function LiveAlertRow({
       {/* Row: time · dot · headline */}
       <div style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
         <span style={{
-          fontSize: 11, fontFamily: "monospace", color: "rgba(255,255,255,0.22)",
+          fontSize: 12, fontFamily: "monospace", color: "rgba(255,255,255,0.32)",
           flexShrink: 0, width: 42, textAlign: "right", paddingTop: 1,
         }}>{item.time}</span>
 
@@ -94,7 +94,7 @@ export default function LiveAlertRow({
         />
 
         <div style={{ flex: 1, minWidth: 0 }}>
-          <span style={{ fontSize: 14, lineHeight: 1.65, color: "rgba(255,255,255,0.78)" }}>
+          <span style={{ fontSize: 15, lineHeight: 1.65, color: "rgba(255,255,255,0.86)" }}>
             {item.text}
           </span>
 
@@ -103,8 +103,8 @@ export default function LiveAlertRow({
             <div>
               <p style={{
                 margin: "8px 0 6px",
-                fontSize: 12,
-                color: "rgba(255,255,255,0.45)",
+                fontSize: 13,
+                color: "rgba(255,255,255,0.58)",
                 lineHeight: 1.5,
               }}>
                 {item.description}
@@ -113,14 +113,14 @@ export default function LiveAlertRow({
                   model, kept visible so users see attribution. */}
               <div style={{
                 marginBottom: 10,
-                fontSize: 8, fontFamily: "monospace", letterSpacing: "0.18em",
-                color: "rgba(255,255,255,0.18)", textTransform: "uppercase",
+                fontSize: 9, fontFamily: "monospace", letterSpacing: "0.18em",
+                color: "rgba(255,255,255,0.30)", textTransform: "uppercase",
               }}>Claude by Anthropic</div>
 
               {/* Inline confidence (CountryPanel doesn't use this — it uses floating panel) */}
               {showConfidenceInline && (
                 <div style={{ display: "flex", alignItems: "center", gap: 7, flexWrap: "wrap" }}>
-                  <span style={{ fontSize: 7, fontFamily: T.MONO, letterSpacing: T.TRACK_MED, color: clr.white(0.28), minWidth: 52 }}>confidence</span>
+                  <span style={{ fontSize: 8, fontFamily: T.MONO, letterSpacing: T.TRACK_MED, color: clr.white(0.40), minWidth: 52 }}>confidence</span>
                   <div
                     onMouseEnter={() => setSourcesOpen(true)}
                     onMouseLeave={() => setSourcesOpen(false)}
@@ -128,7 +128,7 @@ export default function LiveAlertRow({
                   >
                     <div style={{ width: `${item.confidence}%`, height: "100%", borderRadius: T.PILL_RADIUS, background: cc, transition: "width 0.3s" }} />
                   </div>
-                  <span style={{ fontSize: 8, fontFamily: T.MONO, fontWeight: 700, color: cc, minWidth: 28 }}>{item.confidence}%</span>
+                  <span style={{ fontSize: 9, fontFamily: T.MONO, fontWeight: 700, color: cc, minWidth: 28 }}>{item.confidence}%</span>
                   {sourcesOpen && (
                     <div
                       onMouseEnter={() => setSourcesOpen(true)}
@@ -140,7 +140,7 @@ export default function LiveAlertRow({
                           onClick={e => { e.stopPropagation(); onSourceClick?.(s); }}
                           onMouseEnter={e => { e.currentTarget.style.background = clr.white(0.14); e.currentTarget.style.color = "#fff"; }}
                           onMouseLeave={e => { e.currentTarget.style.background = T.PILL_BG; e.currentTarget.style.color = clr.white(0.65); }}
-                          style={{ fontSize: 8, fontFamily: T.MONO, letterSpacing: T.TRACK_TIGHT, padding: "2px 7px", borderRadius: T.PILL_RADIUS, cursor: "pointer", background: T.PILL_BG, border: T.PILL_BORDER, color: clr.white(0.65) }}
+                          style={{ fontSize: 9, fontFamily: T.MONO, letterSpacing: T.TRACK_TIGHT, padding: "2px 7px", borderRadius: T.PILL_RADIUS, cursor: "pointer", background: T.PILL_BG, border: T.PILL_BORDER, color: clr.white(0.72) }}
                         >{s}</button>
                       ))}
                     </div>
