@@ -15,7 +15,6 @@ import SourceInfoPanel from "./components/SourceInfoPanel";
 import AuthorBioPanel from "./components/AuthorBioPanel";
 import SettingsPanel from "./components/SettingsPanel";
 import MapEventPlayer from "./components/MapEventPlayer";
-import EventUploadButton from "./components/EventUploadButton";
 import type { MapEvent } from "./lib/mapEvents";
 
 // ATLAS appears instantly; clock fades in shortly after as one unit
@@ -130,7 +129,6 @@ export default function Home() {
   const [activeMapEvent, setActiveMapEvent]   = useState<MapEvent | null>(null);
   const [historyDate, setHistoryDate]         = useState<string | null>(null);
   const [liveReset, setLiveReset]             = useState(0);
-  const [lockedAlertId, setLockedAlertId]     = useState<string | null>(null);
   const [currentConflictSlug, setCurrentConflictSlug] = useState<string | null>(null);
   const [openWithHistory, setOpenWithHistory] = useState(false);
 
@@ -305,25 +303,6 @@ export default function Home() {
         onDone={() => setActiveMapEvent(null)}
       />
 
-      {/* Upload button for locked live alert — appears near ATLAS header when an alert is selected */}
-      {lockedAlertId && (
-        <div style={{
-          position: "fixed", top: 10, left: 120, zIndex: 40,
-          display: "flex", alignItems: "center", gap: 8,
-        }}>
-          <EventUploadButton
-            eventId={lockedAlertId}
-            onUploaded={() => {}}
-          />
-          <span style={{
-            fontSize: 9, fontFamily: "monospace", color: "rgba(255,255,255,0.35)",
-            letterSpacing: "0.1em"
-          }}>
-            alert locked
-          </span>
-        </div>
-      )}
-
       {/* Country homepage — loads when pill is tapped from conflict panel */}
       {!historicalYear && homeCountry && (
         <CountryHome
@@ -339,8 +318,7 @@ export default function Home() {
         <CountryPanel
           key={selectedCountry}
           countryCode={selectedCountry}
-          onClose={() => { setSelectedCountry(null); setSecondaryCountries([]); setCasualtyCountries([]); setFocusCountries([]); setActiveStrikes(null); setRadarAlertText(null); setFeedCountry(null); setHistoryDate(null); setLockedAlertId(null); if (typeof window !== "undefined" && window.location.pathname !== "/") window.history.replaceState(null, "", "/"); }}
-          onAlertLock={setLockedAlertId}
+          onClose={() => { setSelectedCountry(null); setSecondaryCountries([]); setCasualtyCountries([]); setFocusCountries([]); setActiveStrikes(null); setRadarAlertText(null); setFeedCountry(null); setHistoryDate(null); if (typeof window !== "undefined" && window.location.pathname !== "/") window.history.replaceState(null, "", "/"); }}
           onViewFeed={(code) => { setFeedCountry(code); }}
           onConflictSelect={handleConflictSelect}
           onFocusCountry={(iso) => {
@@ -456,7 +434,6 @@ export default function Home() {
               setTimelineOpen(false);
               setHistoryDate(null);
               setLiveReset(v => v + 1);
-              setLockedAlertId(null);
               setShowRadar(true);
               setFlyToPosition({ center: [-98.5, 39.5], zoom: 1.8, key: "atlas-globe-" + Date.now() });
               if (typeof window !== "undefined") window.history.replaceState(null, "", "/");
