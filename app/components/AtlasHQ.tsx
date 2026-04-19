@@ -99,7 +99,7 @@ interface Conflict {
 
 const TOP_CONFLICTS: Conflict[] = [
   {
-    label: "Israel and US in the Middle East",
+    label: "Israel / US in the Middle East",
     sub: "",
     code: "ISR",
     slug: "israel-and-us-in-the-middle-east",

@@ -160,7 +160,7 @@ interface TimelineEvent {
   /** Category tag shown above text — e.g. "treaty" */
   tag?: string;
   /** Era bracket — groups events into a labelled visual bracket on the left */
-  era?: "occupation" | "genocide";
+  era?: "occupation" | "genocide" | "treaty" | "withdrawal" | "proxy" | "war";
   /** External link URL — makes the entire event clickable */
   link?: string;
 }
@@ -211,7 +211,7 @@ const DEFAULT_HOMEVIEW = { center: [ 43, 30 ] as [number, number], zoom: 2.8 };
 const CONFLICTS: Record<string, Conflict> = {
   "israel-iran": {
     id: "israel-iran",
-    title: "Israel and US in the Middle East",
+    title: "Israel / US in the Middle East",
     date: "March 2026 – Present",
     feedKey: "IRN",
     sides: {
@@ -271,11 +271,13 @@ const CONFLICTS: Record<string, Conflict> = {
     timeline: [
       {
         date: "March 2026 — Present",
+        era: "war",
         text: "The war becomes the largest Middle East military engagement since 2003. Iran, now led by Mojtaba Khamenei, continues to resist. Iran establishes a toll system on the Strait of Hormuz — $2–4M per tanker in Chinese yuan or stablecoin. Oil tops $110/barrel. Hezbollah re-enters the conflict. The 82nd Airborne is put on alert. Peace talks underway in Islamabad. No ceasefire reached.",
         mapView: { center: [47.0, 30.5], zoom: 3.8 },
       },
       {
         date: "February 28, 2026 — Operation Epic Fury",
+        era: "war",
         text: "Trump gives the order at 20:38 UTC. In the first 12 hours, US and Israeli forces launch nearly 900 strikes. Israeli decapitation strikes kill Supreme Leader Ali Khamenei and senior officials. The US uses B-2s, B-1s, B-52s, Tomahawk missiles, and HIMARS. Iran retaliates with hundreds of drones and ballistic missiles at Israel and US Gulf bases. Iran moves to close the Strait of Hormuz.",
         highlight: true,
         strikeEvent: {
@@ -298,78 +300,97 @@ const CONFLICTS: Record<string, Conflict> = {
       },
       {
         date: "February 26, 2026",
+        era: "war",
         text: "Third round of talks in Geneva. Sides remain far apart. All US ships leave port in Bahrain. Fleet headquarters reduced to fewer than 100 personnel — the same measures taken before the 2025 strikes. Fourteen refueling tankers arrive at Ben Gurion Airport.",
       },
       {
         date: "February 25, 2026",
+        era: "war",
         text: "Iran's Foreign Minister Araghchi states a \"historic\" deal is \"within reach.\"",
       },
       {
         date: "February 24, 2026",
+        era: "war",
         text: "At the State of the Union, Trump accuses Iran of reviving nuclear weapons efforts. US intelligence indicates Iran's long-range missile capabilities wouldn't be viable until 2035. Netanyahu calls Trump with intelligence on an upcoming Khamenei meeting.",
       },
       {
         date: "February 20, 2026",
+        era: "war",
         text: "Trump issues a 10-day deadline: \"You are going to be finding out over the next, probably, 10 days.\"",
       },
       {
         date: "February 19, 2026",
+        era: "war",
         text: "Reports emerge that US strikes could come within days. The buildup is described as the largest since 2003.",
       },
       {
         date: "February 17, 2026",
+        era: "war",
         text: "Second round of talks in Geneva. Khamenei publicly threatens US warships, saying Iran is \"capable of sinking\" them. The Strait of Hormuz is closed for hours during a live fire drill.",
       },
       {
         date: "February 15–20, 2026",
+        era: "war",
         text: "Iran increases oil exports to three times the normal rate and reduces storage — later interpreted as stockpiling revenue before anticipated conflict.",
       },
       {
         date: "February 13, 2026",
+        era: "war",
         text: "Trump orders a second carrier strike group, led by the USS Gerald R. Ford, to the Middle East.",
       },
       {
         date: "February 6, 2026",
+        era: "war",
         text: "First round of indirect US–Iran nuclear talks in Muscat, Oman, mediated by Oman's foreign minister. US delegation includes Steve Witkoff, Jared Kushner, and CENTCOM commander Admiral Brad Cooper. Described as a \"good start\" but sides do not meet face-to-face.",
       },
       {
         date: "February 3, 2026",
+        era: "war",
         text: "Six IRGC gunboats attempt to seize a US tanker in the Strait of Hormuz. The tanker continues under escort of the USS McFaul. A US F-35 shoots down an Iranian drone approaching the USS Abraham Lincoln.",
       },
       {
         date: "January 23, 2026",
+        era: "war",
         text: "Trump announces a \"massive armada\" heading to the Middle East, including the USS Abraham Lincoln. Becomes the largest US military presence in the region since 2003.",
       },
       {
         date: "January 13, 2026",
+        era: "war",
         text: "Trump tells Iranian protesters to \"keep protesting\" and that \"help is on its way.\" He warns those responsible for killings will \"pay a very big price\" and cancels all meetings with Iranian officials.",
       },
       {
         date: "January 8, 2026",
+        era: "war",
         text: "Iranian security forces unleash a mass crackdown, cutting all internet access. Death toll estimates range from the government's figure of 3,117 to approximately 30,000 according to Iranian health officials. HRANA documents at least 7,007 deaths.",
       },
       {
         date: "January 5, 2026",
+        era: "war",
         text: "Israel's Security Cabinet authorizes additional strikes on Iran following Netanyahu–Trump discussions.",
       },
       {
         date: "December 28, 2025",
+        era: "war",
         text: "Nationwide anti-government protests erupt across all 31 Iranian provinces, driven by currency collapse and rising prices. They become the largest demonstrations since the 1979 revolution, with an estimated 5 million Iranians protesting.",
       },
       {
         date: "December 2025",
+        era: "war",
         text: "Iran's military admits claims of shooting down two Israeli F-35s during the Twelve-Day War were false. The World Bank projects Iran's economy will shrink in both 2025 and 2026 with inflation heading toward 60%. The rial hits a record low.",
       },
       {
         date: "October 2025",
+        era: "war",
         text: "Trump says the US is ready to make a deal. Iran says it would consider any \"fair and balanced\" proposal. No concrete framework materializes.",
       },
       {
         date: "September 2025",
+        era: "war",
         text: "The UK, France, and Germany trigger the reimposition of UN sanctions. Iran's economy deteriorates sharply. The rial continues to collapse.",
       },
       {
         date: "June 13–24, 2025 — The Twelve-Day War",
+        era: "war",
         text: "Israel launches surprise airstrikes on Iran's nuclear and military infrastructure, killing senior commanders and nuclear scientists. The US joins on June 22, striking three nuclear sites. Iran retaliates with over 550 ballistic missiles and 1,000+ drones. Over 600 killed in Iran, 29 in Israel. A US-brokered ceasefire takes hold June 24.",
         highlight: true,
         strikeEvent: {
@@ -389,16 +410,19 @@ const CONFLICTS: Record<string, Conflict> = {
       },
       {
         date: "February 4, 2025",
+        era: "proxy",
         text: "Trump signs a presidential memorandum restoring maximum pressure sanctions and directing efforts to drive Iranian oil exports to zero.",
         mapView: { center: [-77.04, 38.90], zoom: 10 },
       },
       {
         date: "December 2024",
+        era: "proxy",
         text: "Syrian President Bashar al-Assad flees the country, collapsing a major pillar of Iran's Axis of Resistance. The IAEA reports Iran has enough highly enriched uranium for an estimated nine nuclear warheads.",
         mapView: { center: [38.0, 34.8], zoom: 5.5 },
       },
       {
         date: "October 26, 2024 — Operation Days of Repentance",
+        era: "proxy",
         text: "Israel launches its largest-ever strike on Iran. Over 100 aircraft including F-35s strike 20 locations. The strikes destroy nearly all of Iran's Russian-supplied S-300 air defense systems, removing a key layer of protection for future strikes.",
         highlight: true,
         strikeEvent: {
@@ -414,6 +438,7 @@ const CONFLICTS: Record<string, Conflict> = {
       },
       {
         date: "October 1, 2024",
+        era: "proxy",
         text: "Iran fires approximately 200 ballistic missiles at Israel, hitting military bases (Operation True Promise II). The largest attack on Iran since the Iran–Iraq War.",
         strikeEvent: {
           center: [36.5, 31.5], zoom: 5.0,
@@ -426,6 +451,7 @@ const CONFLICTS: Record<string, Conflict> = {
       },
       {
         date: "September 2024",
+        era: "proxy",
         text: "Israel decimates Hezbollah's leadership. Pager and walkie-talkie explosions across Lebanon kill 42 members on September 17–18. On September 27, an airstrike in Beirut kills Hezbollah Secretary-General Hassan Nasrallah and IRGC deputy commander Abbas Nilforoushan.",
         strikeEvent: {
           center: [35.4, 33.6], zoom: 6.5,
@@ -439,6 +465,7 @@ const CONFLICTS: Record<string, Conflict> = {
       },
       {
         date: "July 31, 2024",
+        era: "proxy",
         text: "Israel assassinates Hamas political leader Ismail Haniyeh in Tehran. Hours earlier, a Beirut airstrike kills senior Hezbollah commander Fuad Shukr.",
         strikeEvent: {
           center: [44.5, 34.5], zoom: 4.5,
@@ -450,11 +477,13 @@ const CONFLICTS: Record<string, Conflict> = {
       },
       {
         date: "April 19, 2024",
+        era: "proxy",
         text: "Israel retaliates with a targeted strike on an air defense radar facility near Isfahan, near the Natanz nuclear site. The strike is deliberately limited — a signal of capability.",
         mapView: { center: [51.67, 32.62], zoom: 6.5 },
       },
       {
         date: "April 13, 2024 — Operation True Promise",
+        era: "proxy",
         text: "Iran launches its first-ever direct attack on Israel: over 300 drones, cruise missiles, and ballistic missiles. The US, UK, France, and Jordan help intercept what Israel says is 99% of the incoming fire.",
         highlight: true,
         strikeEvent: {
@@ -469,6 +498,7 @@ const CONFLICTS: Record<string, Conflict> = {
       },
       {
         date: "April 1, 2024",
+        era: "proxy",
         text: "Israel bombs the Iranian consular annex in Damascus, Syria, killing 16 people including senior IRGC Quds Force commander Brigadier General Mohammad Reza Zahedi.",
         strikeEvent: {
           center: [35.8, 32.8], zoom: 5.8,
@@ -479,11 +509,13 @@ const CONFLICTS: Record<string, Conflict> = {
       },
       {
         date: "February 14, 2024",
+        era: "proxy",
         text: "An Israeli sabotage operation causes multiple explosions on an Iranian natural gas pipeline in western Iran.",
         mapView: { center: [48.5, 33.5], zoom: 5.8 },
       },
       {
         date: "October 7, 2023",
+        era: "proxy",
         text: "Hamas attacks southern Israel, killing approximately 1,200 people and taking over 250 hostages. Israel launches a full-scale military campaign in Gaza. The next day, Iran-backed Hezbollah opens a second front from Lebanon, striking northern Israel.",
         strikeEvent: {
           center: [34.42, 31.40], zoom: 10.5,
@@ -507,6 +539,7 @@ const CONFLICTS: Record<string, Conflict> = {
       },
       {
         date: "2018 — JCPOA Withdrawal",
+        era: "withdrawal",
         text: "Trump unilaterally withdraws the US from the JCPOA and reinstates maximum pressure sanctions. Iran begins stockpiling enriched uranium and restricting IAEA monitoring.",
         tag: "withdrawal",
         mapView: { center: [-77.04, 38.90], zoom: 10 },
@@ -536,6 +569,7 @@ const CONFLICTS: Record<string, Conflict> = {
       },
       {
         date: "2015 — JCPOA",
+        era: "treaty",
         text: "Six world powers and Iran reach the JCPOA nuclear deal, limiting Iran's uranium enrichment in exchange for lifting sanctions.",
         tag: "treaty",
         link: "https://obamawhitehouse.archives.gov/node/328996",
@@ -1744,9 +1778,17 @@ export default function CountryPanel({ countryCode, onClose, onViewFeed, onConfl
 
                     // Era bracket — detect era boundaries for bracket label
                     const eraColor = event.era === "genocide"
-                      ? { border: "rgba(239,68,68,0.45)", label: "rgba(239,68,68,0.4)", text: "Gaza Genocide" }
+                      ? { border: "rgba(239,68,68,0.45)",  label: "rgba(239,68,68,0.38)",  text: "Gaza Genocide" }
                       : event.era === "occupation"
-                      ? { border: "rgba(251,191,36,0.4)", label: "rgba(251,191,36,0.35)", text: "Israeli Occupation" }
+                      ? { border: "rgba(251,191,36,0.4)",  label: "rgba(251,191,36,0.32)", text: "Israeli Occupation" }
+                      : event.era === "treaty"
+                      ? { border: "rgba(34,197,94,0.5)",   label: "rgba(34,197,94,0.32)",  text: "JCPOA Treaty" }
+                      : event.era === "withdrawal"
+                      ? { border: "rgba(239,68,68,0.5)",   label: "rgba(239,68,68,0.35)",  text: "US Withdrawal" }
+                      : event.era === "proxy"
+                      ? { border: "rgba(251,191,36,0.45)", label: "rgba(251,191,36,0.32)", text: "Shadow War" }
+                      : event.era === "war"
+                      ? { border: "rgba(239,68,68,0.65)",  label: "rgba(239,68,68,0.50)",  text: "Open War" }
                       : null;
                     const isEraStart = event.era && prevEvent?.era !== event.era;
                     const isEraEnd   = event.era && nextEvent?.era !== event.era;
@@ -1796,14 +1838,17 @@ export default function CountryPanel({ countryCode, onClose, onViewFeed, onConfl
                           transition: "opacity 0.4s ease",
                         }}
                       >
-                        {/* Era bracket label — shown only on first tile of each era */}
+                        {/* Era bracket label — pill button on first tile of each era */}
                         {isEraStart && eraColor && (
                           <div style={{
-                            fontSize: 11, fontFamily: "monospace", letterSpacing: "0.2em",
-                            textTransform: "uppercase", color: eraColor.label,
-                            marginBottom: 10,
-                            borderLeft: `1px solid ${eraColor.border}`,
-                            paddingLeft: 6,
+                            display: "inline-flex", alignItems: "center",
+                            background: eraColor.label,
+                            border: `1px solid ${eraColor.border}`,
+                            borderRadius: 99,
+                            padding: "2px 9px",
+                            fontSize: 9, fontFamily: "monospace", letterSpacing: "0.15em",
+                            color: "rgba(255,255,255,0.88)", textTransform: "uppercase",
+                            fontWeight: 600, marginBottom: 10,
                           }}>
                             {eraColor.text}
                           </div>
