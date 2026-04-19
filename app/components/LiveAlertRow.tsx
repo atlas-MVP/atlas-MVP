@@ -3,20 +3,22 @@ import { useState, useRef } from "react";
 import { T, clr, confColor, dangerColor } from "../lib/tokens";
 
 function relativeTime(ts: string): string {
-  const d = new Date(ts);
-  if (isNaN(d.getTime())) return ts; // not an ISO string — show as-is
+  // Require ISO format (YYYY-MM-DD…) — rejects "Apr 19" before it even hits Date.parse
+  if (!/^\d{4}-\d{2}-\d{2}/.test(ts)) return "";
 
-  const now          = new Date();
-  const todayMidnight = new Date(now.getFullYear(),  now.getMonth(),  now.getDate());
-  const dateMidnight  = new Date(d.getFullYear(),    d.getMonth(),    d.getDate());
+  const d = new Date(ts);
+  if (isNaN(d.getTime())) return "";
+
+  const now           = new Date();
+  const todayMidnight = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const dateMidnight  = new Date(d.getFullYear(),   d.getMonth(),  d.getDate());
   const daysDiff      = Math.round((todayMidnight.getTime() - dateMidnight.getTime()) / 86400000);
 
   if (daysDiff <= 0) {
-    // Same day (or future) → exact time only
+    // Same day → show exact time of report
     return d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: true });
   }
   if (daysDiff === 1) return "yesterday";
-  if (daysDiff > 60) return ts; // stale/bad timestamp — show raw rather than "913 days ago"
   return `${daysDiff} days ago`;
 }
 
