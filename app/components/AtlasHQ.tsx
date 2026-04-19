@@ -443,6 +443,34 @@ export default function AtlasHQ({ onClose, onNavigate, onHeadlinesToggle, onSour
       </div>
     </div>
 
+    {/* Senate vote visualization — appears to the right on hover/click */}
+    {senateVoteVisible && senateAlertRef.current && (
+      <div
+        onMouseEnter={() => {
+          if (senateVoteVisible !== 'locked') {
+            setSenateVoteVisible('hover');
+          }
+        }}
+        onMouseLeave={() => {
+          if (senateVoteVisible === 'hover') {
+            setSenateVoteVisible(null);
+          }
+        }}
+        style={{
+          position: "fixed",
+          left: 528, // 20px (left) + 488px (panel width) + 20px gap
+          top: senateAlertRef.current.getBoundingClientRect().top,
+          zIndex: 100,
+          pointerEvents: "auto",
+        }}
+      >
+        <SenateVoteVisualization
+          title="SENATE"
+          senators={senatorsVoteData}
+        />
+      </div>
+    )}
+
     </>
 
   );
