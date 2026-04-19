@@ -458,6 +458,7 @@ export default function Home() {
               setLiveReset(v => v + 1);
               setShowRadar(true);
               setFlyToPosition({ center: [-98.5, 39.5], zoom: 1.8, key: "atlas-globe-" + Date.now() });
+              if (typeof window !== "undefined") window.history.replaceState(null, "", "/");
             }}
             style={{ background: "none", border: "none", cursor: "pointer", padding: 0 }}
           >
