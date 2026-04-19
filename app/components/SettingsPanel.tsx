@@ -46,7 +46,7 @@ export default function SettingsPanel({ onClose }: { onClose: () => void }) {
       position: "absolute",
       top: 72, left: 20,
       zIndex: 20,
-      width: 300,
+      width: 360,
       background: "rgba(4,6,18,0.62)",
       border: "1px solid rgba(255,255,255,0.06)",
       borderRadius: 16,

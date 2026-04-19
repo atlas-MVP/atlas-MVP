@@ -7,7 +7,7 @@ interface Props {
 export default function AuthorBioPanel({ onClose }: Props) {
   return (
     <div style={{
-      position: "absolute", top: 72, left: 500, zIndex: 25, width: 300,
+      position: "absolute", top: 72, left: 560, zIndex: 25, width: 300,
       background: "rgba(4,6,18,0.95)", backdropFilter: "blur(28px)",
       border: "1px solid rgba(255,255,255,0.08)", borderRadius: 12,
       boxShadow: "0 0 40px rgba(0,0,0,0.7)",

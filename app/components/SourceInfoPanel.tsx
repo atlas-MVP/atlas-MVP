@@ -193,7 +193,7 @@ export default function SourceInfoPanel({ source, onClose }: Props) {
   return (
     <div style={{
       position: "absolute",
-      top: 72, left: 468, zIndex: 28,
+      top: 72, left: 528, zIndex: 28,
       width: 320,
       background: "rgba(4,6,18,0.97)",
       backdropFilter: "blur(28px)",

@@ -102,20 +102,20 @@ const TOP_CONFLICTS: Conflict[] = [
     sub: "",
     code: "ISR",
     slug: "israel-and-us-in-the-middle-east",
-    flyTo: { center: [44.0, 30.0] as [number,number], zoom: 4.2 },
+    flyTo: { center: [42.0, 30.0] as [number,number], zoom: 4.2 },
     image: "/geopolitics-conflict.webp",
   },
 ];
 
 const MORE_CONFLICTS: Conflict[] = [
-  { label: "Russia — Ukraine war",        sub: "Russian forces continue grinding advances in Donetsk. Ukraine launches drone strikes deep into Russian territory. Front lines largely static with heavy casualties on both sides.",                                                                           code: "UKR", slug: "russia-ukraine-war", flyTo: { center: [34.0, 49.0] as [number,number], zoom: 4.5 } },
-  { label: "Israel–Palestine Conflict",   sub: "Israel's military campaign has killed 58,000+ Palestinians. Aid blockade continues. ICJ and ICC proceedings ongoing. No ceasefire in effect.",                                                                                                           code: "PSE", slug: "israel-palestine-conflict", flyTo: { center: [34.4, 31.5] as [number,number], zoom: 7.0 } },
-  { label: "Sudan civil war + genocide",  sub: "SAF and RSF forces fight for control of Khartoum and Darfur. 10M+ displaced — world's largest displacement crisis. Mass atrocities documented. 20,000+ killed.",                                                                                       code: "SDN", slug: "sudan-civil-war",    flyTo: { center: [32.5, 15.6] as [number,number], zoom: 5.5 } },
-  { label: "Myanmar civil war",           sub: "Military junta losing territorial control to ethnic armed groups and the People's Defence Force. 2.6M+ displaced. Junta airstrikes on civilian areas continue.",                                                                                        code: "MMR", slug: "myanmar-civil-war",  flyTo: { center: [96.1, 19.7] as [number,number], zoom: 5.0 } },
+  { label: "Russia — Ukraine war",        sub: "Russian forces continue grinding advances in Donetsk. Ukraine launches drone strikes deep into Russian territory. Front lines largely static with heavy casualties on both sides.",                                                                           code: "UKR", slug: "russia-ukraine-war", flyTo: { center: [32.0, 49.0] as [number,number], zoom: 4.5 } },
+  { label: "Israel–Palestine Conflict",   sub: "Israel's military campaign has killed 58,000+ Palestinians. Aid blockade continues. ICJ and ICC proceedings ongoing. No ceasefire in effect.",                                                                                                           code: "PSE", slug: "israel-palestine-conflict", flyTo: { center: [34.1, 31.5] as [number,number], zoom: 7.0 } },
+  { label: "Sudan civil war + genocide",  sub: "SAF and RSF forces fight for control of Khartoum and Darfur. 10M+ displaced — world's largest displacement crisis. Mass atrocities documented. 20,000+ killed.",                                                                                       code: "SDN", slug: "sudan-civil-war",    flyTo: { center: [31.5, 15.6] as [number,number], zoom: 5.5 } },
+  { label: "Myanmar civil war",           sub: "Military junta losing territorial control to ethnic armed groups and the People's Defence Force. 2.6M+ displaced. Junta airstrikes on civilian areas continue.",                                                                                        code: "MMR", slug: "myanmar-civil-war",  flyTo: { center: [95.1, 19.7] as [number,number], zoom: 5.0 } },
 ];
 
 const DISASTERS = [
-  { label: "Kenya floods", slug: "kenya-floods", sub: "110+ dead · 34,765+ displaced · 30 counties affected", flyTo: { center: [37.9, 0.0] as [number,number], zoom: 5.5 }, image: "/kenya-floods-debris.webp" },
+  { label: "Kenya floods", slug: "kenya-floods", sub: "110+ dead · 34,765+ displaced · 30 counties affected", flyTo: { center: [36.9, 0.0] as [number,number], zoom: 5.5 }, image: "/kenya-floods-debris.webp" },
 ];
 
 const DISASTER_ARTICLE = {
@@ -212,7 +212,7 @@ export default function AtlasHQ({ onClose, onNavigate, onHeadlinesToggle, onSour
     <div style={{
       position: "absolute",
       top: 72, left: 20, bottom: 20,
-      width: 428,
+      width: 488,
       zIndex: 20,
       display: "flex",
       flexDirection: "column",

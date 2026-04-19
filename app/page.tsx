@@ -44,12 +44,12 @@ const Map = dynamic(() => import("./components/Map"), {
 
 // Map view per conflict (overrides per-country default)
 const CONFLICT_CENTERS: Record<string, { center: [number, number]; zoom: number }> = {
-  "israel-iran":     { center: [45.0, 35.0], zoom: 4.0 },   // wide: Israel ↔ Iran
-  "israel-gaza":     { center: [34.5, 31.6], zoom: 7.8 },   // tight: Gaza strip + Israel south
-  "russia-ukraine":  { center: [33.0, 49.0], zoom: 4.0 },
-  "taiwan-strait":   { center: [120.5, 24.5], zoom: 5.5 },
-  "sudan":           { center: [32.5, 15.6], zoom: 5.5 },
-  "myanmar":         { center: [96.1, 19.7], zoom: 5.0 },
+  "israel-iran":     { center: [43.0, 35.0], zoom: 4.0 },   // wide: Israel ↔ Iran
+  "israel-gaza":     { center: [34.2, 31.6], zoom: 7.8 },   // tight: Gaza strip + Israel south
+  "russia-ukraine":  { center: [31.0, 49.0], zoom: 4.0 },
+  "taiwan-strait":   { center: [119.5, 24.5], zoom: 5.5 },
+  "sudan":           { center: [31.5, 15.6], zoom: 5.5 },
+  "myanmar":         { center: [95.1, 19.7], zoom: 5.0 },
 };
 
 // All countries in each conflict (used to compute secondaries)
@@ -79,7 +79,7 @@ const SLUG_TO_CONFLICT: Record<string, string> = Object.fromEntries(
 
 // Disaster slugs — no country panel, just flyTo + URL.
 const DISASTER_SLUGS: Record<string, { center: [number, number]; zoom: number }> = {
-  "kenya-floods": { center: [37.9, 0.0] as [number, number], zoom: 5.5 },
+  "kenya-floods": { center: [36.9, 0.0] as [number, number], zoom: 5.5 },
 };
 
 // Default country to pre-select when deep-linking to a conflict slug.

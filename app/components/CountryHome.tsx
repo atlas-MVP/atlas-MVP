@@ -218,7 +218,7 @@ export default function CountryHome({ countryCode, onClose, onSourceTap }: Props
 
   return (
     <div
-      className="absolute left-6 z-20 w-[420px]"
+      className="absolute left-6 z-20 w-[480px]"
       style={{ top: 72, bottom: 24, display: "flex", flexDirection: "column" }}
     >
       <div style={{

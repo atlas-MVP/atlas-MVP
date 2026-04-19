@@ -195,18 +195,18 @@ const SRC = {
 // taps the conflict title. Zoomed out far enough to see the whole region of
 // operations, not a single strike location.
 const CONFLICT_HOMEVIEW: Record<string, { center: [number, number]; zoom: number }> = {
-  "israel-iran":    { center: [ 47,   30 ], zoom: 2.8 },
-  "israel-gaza":    { center: [ 35,   31 ], zoom: 6.0 },
-  "russia-ukraine": { center: [ 35,   49 ], zoom: 4.0 },
-  "sudan":          { center: [ 30,   15 ], zoom: 4.3 },
-  "myanmar":        { center: [ 97,   20 ], zoom: 4.6 },
-  "yemen":          { center: [ 47,   15 ], zoom: 5.0 },
-  "drc":            { center: [ 25,   -2 ], zoom: 4.3 },
-  "mexico-cartel":  { center: [-102,  23 ], zoom: 4.0 },
-  "taiwan-strait":  { center: [121,   24 ], zoom: 5.2 },
-  "haiti":          { center: [-72,   19 ], zoom: 6.2 },
+  "israel-iran":    { center: [ 43,   30 ], zoom: 2.8 },
+  "israel-gaza":    { center: [ 34.5, 31 ], zoom: 6.0 },
+  "russia-ukraine": { center: [ 33,   49 ], zoom: 4.0 },
+  "sudan":          { center: [ 28,   15 ], zoom: 4.3 },
+  "myanmar":        { center: [ 95,   20 ], zoom: 4.6 },
+  "yemen":          { center: [ 46,   15 ], zoom: 5.0 },
+  "drc":            { center: [ 23,   -2 ], zoom: 4.3 },
+  "mexico-cartel":  { center: [-104,  23 ], zoom: 4.0 },
+  "taiwan-strait":  { center: [120,   24 ], zoom: 5.2 },
+  "haiti":          { center: [-72.5, 19 ], zoom: 6.2 },
 };
-const DEFAULT_HOMEVIEW = { center: [ 47, 30 ] as [number, number], zoom: 2.8 };
+const DEFAULT_HOMEVIEW = { center: [ 43, 30 ] as [number, number], zoom: 2.8 };
 
 const CONFLICTS: Record<string, Conflict> = {
   "israel-iran": {
@@ -1337,7 +1337,7 @@ export default function CountryPanel({ countryCode, onClose, onViewFeed, onConfl
   return (
     <>
     <div
-      className="absolute left-6 z-20 w-[460px]"
+      className="absolute left-6 z-20 w-[520px]"
       style={{ top: 72, bottom: 24, display: "flex", flexDirection: "column" }}
       onClick={closeCiv}
     >

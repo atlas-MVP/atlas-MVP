@@ -390,7 +390,7 @@ export default function FeedPanel({ countryCode, countryName, onClose, onSourceT
   const articles = allArticles.filter((a) => freeOnly ? !a.paywall : true);
 
   return (
-    <div className="absolute z-20 flex flex-col w-[460px]"
+    <div className="absolute z-20 flex flex-col w-[520px]"
       style={{
         top: 72, bottom: 24, right: 24,
         background: "rgba(4,6,16,0.95)",

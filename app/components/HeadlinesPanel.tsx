@@ -90,7 +90,7 @@ export default function HeadlinesPanel({ onClose }: Props) {
       top: 0,
       right: 0,
       bottom: 0,
-      width: 384,
+      width: 444,
       zIndex: 25,
       display: "flex",
       flexDirection: "column",

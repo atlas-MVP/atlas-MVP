@@ -72,15 +72,15 @@ export const T = {
 
   // Video column layout — EventVideoBubble geometry.
   //
-  //  ┌── panel (460px) ──┬─ 96px ─┬────────── VIDEO ──────────┬─ 96px ─┐
-  //  │   left-6 → 484px │  1 in  │  left:580 → right:96      │  1 in  │
+  //  ┌── panel (520px) ──┬─ 96px ─┬────────── VIDEO ──────────┬─ 96px ─┐
+  //  │   left-6 → 544px │  1 in  │  left:640 → right:96      │  1 in  │
   //  └───────────────────┴────────┴───────────────────────────┴────────┘
   //
   //  Top aligns with the first history tile (year separator) in CountryPanel:
   //    panel_top(72) + sticky_header(83) + history_header(41) = 196px
   //
   //  Height = exactly one 16:9 hero video tall at the column width:
-  //    column_width = 100vw - 676px  (left:580 + right:96)
+  //    column_width = 100vw - 736px  (left:640 + right:96)
   //    height       = column_width × 9/16
   //
   VIDEO_INSET:         254,                              // legacy vertical formula
@@ -89,13 +89,13 @@ export const T = {
   VIDEO_CONTAINER_TOP: 196,                              // px — aligns with first history tile
   //
   // Layout geometry:
-  //   PANEL_W (484) ── upload zone (96) ── VIDEO ── right gap (96)
+  //   PANEL_W (544) ── upload zone (96) ── VIDEO ── right gap (96)
   //   96px breathing room on BOTH sides of the video (symmetric)
-  //   VIDEO width = 100vw - PANEL_W - VIDEO_COL_GAP×2 = 100vw - 676
+  //   VIDEO width = 100vw - PANEL_W - VIDEO_COL_GAP×2 = 100vw - 736
   //   VIDEO height = VIDEO width × 9/16 (one 16:9 frame)
-  PANEL_W:             484,                              // px — CountryPanel right edge / upload zone start
+  PANEL_W:             544,                              // px — CountryPanel right edge / upload zone start
   VIDEO_RIGHT_GAP:      96,                              // px — right breathing room (matches VIDEO_COL_GAP)
-  VIDEO_CONTAINER_H:   "calc((100vw - 676px) * 9 / 16)" as string, // one 16:9 frame tall
+  VIDEO_CONTAINER_H:   "calc((100vw - 736px) * 9 / 16)" as string, // one 16:9 frame tall
 
   // ── Gap-zone button positions (fixed, in the 96px column between panel and video) ──
   // Change these two values to reposition the upload + edit buttons site-wide.
