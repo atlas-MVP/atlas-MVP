@@ -170,6 +170,17 @@ const LIVE_FEED: FeedItem[] = [
     description: "The PLA Navy carrier strike group led by the Shandong has approached within 40 nautical miles of the Taiwan Strait median line. Taiwan's MND has scrambled F-16 and Mirage 2000 fighters. The GDELT conflict index for the Taiwan Strait has risen to its highest level since August 2022." },
 ];
 
+const FINANCE_ITEMS = [
+  { ticker: "WTI",   name: "Crude Oil",     price: "$84.12",    change: "+1.4%",  positive: true  },
+  { ticker: "BRENT", name: "Brent Crude",   price: "$87.44",    change: "+1.1%",  positive: true  },
+  { ticker: "XAU",   name: "Gold",          price: "$3,321.80", change: "+0.6%",  positive: true  },
+  { ticker: "LMT",   name: "Lockheed",      price: "$492.30",   change: "+2.3%",  positive: true  },
+  { ticker: "RTX",   name: "RTX Corp",      price: "$138.76",   change: "+1.8%",  positive: true  },
+  { ticker: "SPX",   name: "S&P 500",       price: "5,282.70",  change: "-0.4%",  positive: false },
+  { ticker: "ILS",   name: "Israeli Shekel",price: "₪3.74",     change: "-0.9%",  positive: false },
+  { ticker: "RUB",   name: "Russian Ruble", price: "₽89.20",    change: "-1.2%",  positive: false },
+];
+
 interface Props {
   onClose: () => void;
   onNavigate?: (code: string | null, center: [number, number], zoom: number, feedItem?: FeedItem, slug?: string) => void;
@@ -238,9 +249,6 @@ export default function AtlasHQ({ onClose, onNavigate, onHeadlinesToggle, onSour
       overflow: "hidden",
       pointerEvents: "auto",
     }}>
-
-      {/* Reels preview — tap to open full player */}
-      <ReelsPreview onTap={onReelsTap} />
 
       {/* Scrollable body */}
       <div style={{ flex: 1, overflowY: "auto", overflowX: "hidden" }}>
@@ -375,6 +383,33 @@ export default function AtlasHQ({ onClose, onNavigate, onHeadlinesToggle, onSour
                   <div style={{ fontSize: 8, color: "rgba(255,255,255,0.35)", marginTop: 4, letterSpacing: "0.12em", textTransform: "uppercase" }}>{item.source}</div>
                 </div>
               </a>
+            ))}
+          </div>
+        </Reveal>
+
+        {/* FINANCE */}
+        <SectionLabel label="finance" />
+        <Reveal minStage={5} stage={loadStage}>
+          <div style={{ padding: "0 14px 4px", display: "flex", flexDirection: "column", gap: 3 }}>
+            {FINANCE_ITEMS.map((item) => (
+              <div key={item.ticker} style={{
+                display: "flex", alignItems: "center", justifyContent: "space-between",
+                padding: "8px 12px", borderRadius: 8,
+                background: "rgba(255,255,255,0.02)",
+                border: "1px solid rgba(255,255,255,0.06)",
+              }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <span style={{ fontSize: 11, fontFamily: "monospace", color: "rgba(255,255,255,0.85)", fontWeight: 700, letterSpacing: "0.06em" }}>{item.ticker}</span>
+                  <span style={{ fontSize: 9, fontFamily: "monospace", color: "rgba(255,255,255,0.28)", letterSpacing: "0.06em" }}>{item.name}</span>
+                </div>
+                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                  <span style={{ fontSize: 11, fontFamily: "monospace", color: "rgba(255,255,255,0.72)", letterSpacing: "0.04em" }}>{item.price}</span>
+                  <span style={{
+                    fontSize: 9, fontFamily: "monospace", letterSpacing: "0.06em",
+                    color: item.positive ? "rgba(34,197,94,0.85)" : "rgba(239,68,68,0.85)",
+                  }}>{item.change}</span>
+                </div>
+              </div>
             ))}
           </div>
         </Reveal>
