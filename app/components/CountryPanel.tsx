@@ -157,8 +157,10 @@ interface TimelineEvent {
   articles?: string[];
   /** Pulsing pills linking to other conflicts/categories (cross-timeline) */
   linkedConflicts?: { id: string; label: string; type?: "conflict" | "attack" }[];
-  /** Category tag shown above text — e.g. "terrorist attack", "genocide", "treaty" */
+  /** Category tag shown above text — e.g. "treaty" */
   tag?: string;
+  /** Era bracket — groups events into a labelled visual bracket on the left */
+  era?: "occupation" | "genocide";
   /** External link URL — makes the entire event clickable */
   link?: string;
 }
@@ -584,23 +586,23 @@ const CONFLICTS: Record<string, Conflict> = {
       xUrl: "https://x.com/search?q=%23Gaza",
     },
     timeline: [
-      // ── Genocide (2023–Present) ──
+      // ── Gaza Genocide (2023–Present) ──
       {
         date: "March 2025 – Present",
         text: "Gaza death toll surpasses 46,000. Northern Gaza declared in full famine by UN WFP. Over 1.9 million displaced — 85% of the population. Entire neighborhoods flattened. Aid deliveries blocked or bombed.",
-        tag: "genocide",
+        era: "genocide",
         mapView: { center: [34.44, 31.42], zoom: 10 },
       },
       {
         date: "January 26, 2024",
         text: "The International Court of Justice rules that Israel must prevent genocidal acts in Gaza and orders immediate provisional measures. South Africa's case alleging genocide proceeds.",
-        tag: "genocide",
+        era: "genocide",
         mapView: { center: [4.35, 52.07], zoom: 5 },
       },
       {
         date: "December 2023",
         text: "Israel expands ground operations to southern Gaza. Khan Younis besieged. Hospitals across Gaza overwhelmed or destroyed. 70% of housing stock damaged or destroyed.",
-        tag: "genocide",
+        era: "genocide",
         strikeEvent: {
           center: [34.30, 31.35], zoom: 10.5,
           strikes: [
@@ -613,7 +615,7 @@ const CONFLICTS: Record<string, Conflict> = {
       {
         date: "October 27, 2023",
         text: "Israel launches a full-scale ground invasion of northern Gaza. Communications blackout imposed. Al-Shifa Hospital surrounded and raided. Mass displacement south begins.",
-        tag: "genocide",
+        era: "genocide",
         strikeEvent: {
           center: [34.44, 31.50], zoom: 11,
           strikes: [
@@ -622,11 +624,11 @@ const CONFLICTS: Record<string, Conflict> = {
           ],
         },
       },
-      // ── Terrorist attack ──
+      // ── October 7 (boundary — closes occupation era) ──
       {
         date: "October 7, 2023",
         text: "Hamas fighters breach the Gaza border fence at dawn, killing approximately 1,200 Israelis and taking 253 hostages. The deadliest day in Israeli history. The Nova music festival near Re'im is the deadliest single site — 364 killed.",
-        tag: "terrorist attack",
+        era: "occupation",
         highlight: true,
         strikeEvent: {
           center: [34.42, 31.40], zoom: 10.5,
@@ -639,63 +641,61 @@ const CONFLICTS: Record<string, Conflict> = {
             { lng: 34.3460, lat: 31.4180, side: "amber",   label: "Gaza City (IDF response)", confidence: 95, sources: [SRC.idf, SRC.reuters] },
           ],
         },
-        linkedConflicts: [
-          { id: "israel-iran", label: "Israel–Iran conflict", type: "conflict" },
-        ],
       },
-      // ── Terrorist attacks (pre-Oct 7) ──
+      // ── Occupation (1967–2023) ──
       {
         date: "May 2021",
         text: "Hamas fires over 4,000 rockets at Israel in 11 days. Israel responds with airstrikes on Gaza, killing 256 Palestinians including 66 children. 13 killed in Israel. Ceasefire brokered by Egypt.",
-        tag: "terrorist attack",
+        era: "occupation",
         mapView: { center: [34.44, 31.50], zoom: 9 },
       },
       {
         date: "2014 — Operation Protective Edge",
         text: "50-day war after Hamas kidnaps and kills three Israeli teenagers. Israel launches ground invasion of Gaza. Over 2,200 Palestinians killed (70% civilians per UN), 73 Israelis killed. Massive destruction across Gaza.",
-        tag: "terrorist attack",
+        era: "occupation",
         mapView: { center: [34.40, 31.40], zoom: 9.5 },
       },
       {
         date: "2008 — Operation Cast Lead",
         text: "Israel launches a 22-day military offensive on Gaza after Hamas rocket fire. Over 1,400 Palestinians killed, 13 Israelis killed. The UN Goldstone Report accuses both sides of war crimes.",
-        tag: "terrorist attack",
+        era: "occupation",
         mapView: { center: [34.44, 31.50], zoom: 9 },
       },
       {
         date: "2005",
         text: "Israel withdraws all settlers and military forces from Gaza. Hamas wins Palestinian legislative elections the following year. Israel and Egypt impose a blockade on Gaza that continues to this day.",
-        tag: "occupation",
+        era: "occupation",
         mapView: { center: [34.44, 31.42], zoom: 9.5 },
       },
       {
         date: "2000 — Second Intifada",
         text: "Five years of Palestinian uprising after the collapse of peace talks. Suicide bombings kill over 1,000 Israelis. Israeli military operations kill over 3,000 Palestinians. Israel begins construction of the West Bank separation barrier.",
-        tag: "terrorist attack",
+        era: "occupation",
         mapView: { center: [35.2, 31.8], zoom: 8 },
       },
       {
         date: "1993 — Oslo Accords",
         text: "Israel and the PLO sign the Oslo Accords, establishing the Palestinian Authority and a framework for Palestinian self-governance. Rabin and Arafat shake hands on the White House lawn. The two-state solution appears possible.",
+        era: "occupation",
         mapView: { center: [-77.04, 38.90], zoom: 10 },
       },
       {
         date: "1987 — First Intifada",
         text: "Palestinian uprising erupts across the occupied territories. Six years of mass protests, strikes, and stone-throwing against Israeli military occupation. Over 1,000 Palestinians and 160 Israelis killed. Hamas is founded during this period.",
-        tag: "occupation",
+        era: "occupation",
         mapView: { center: [35.2, 31.8], zoom: 8 },
       },
       {
         date: "1967 — Six-Day War",
         text: "Israel captures the West Bank, Gaza Strip, Sinai Peninsula, and Golan Heights in six days. Military occupation of Palestinian territories begins. UN Resolution 242 calls for Israeli withdrawal — Israel does not comply.",
-        tag: "occupation",
+        era: "occupation",
         highlight: true,
         mapView: { center: [35.0, 31.5], zoom: 7 },
       },
+      // ── 1948 — standalone ──
       {
         date: "1948 — Nakba",
         text: "Israel declares independence. In the war that follows, over 700,000 Palestinians are expelled or flee their homes — an event Palestinians call the Nakba (\"catastrophe\"). Palestinian villages are destroyed. The refugee crisis that defines the conflict begins.",
-        tag: "occupation",
         highlight: true,
         mapView: { center: [35.0, 31.5], zoom: 7.5 },
       },
@@ -1740,8 +1740,18 @@ export default function CountryPanel({ countryCode, onClose, onViewFeed, onConfl
                     const isActive = activeTile === i;
                     const currentYear = extractYear(event.date);
                     const prevEvent = chronological[i - 1];
+                    const nextEvent = chronological[i + 1];
                     const prevYear = prevEvent ? extractYear(prevEvent.date) : null;
                     const showYearBefore = i === 0 || (prevYear !== null && prevYear !== currentYear);
+
+                    // Era bracket — detect era boundaries for bracket label
+                    const eraColor = event.era === "genocide"
+                      ? { border: "rgba(239,68,68,0.45)", label: "rgba(239,68,68,0.4)", text: "Gaza Genocide" }
+                      : event.era === "occupation"
+                      ? { border: "rgba(251,191,36,0.4)", label: "rgba(251,191,36,0.35)", text: "Occupation" }
+                      : null;
+                    const isEraStart = event.era && prevEvent?.era !== event.era;
+                    const isEraEnd   = event.era && nextEvent?.era !== event.era;
 
                     // Bullet popup: pull slide.info, drop the @blue/@red
                     // signatory lines (they live in the video caption), keep
@@ -1779,6 +1789,8 @@ export default function CountryPanel({ countryCode, onClose, onViewFeed, onConfl
                         style={{
                           scrollSnapAlign: "start",
                           padding: "16px 16px 20px",
+                          paddingLeft: eraColor ? 14 : 16,
+                          borderLeft: eraColor ? `3px solid ${eraColor.border}` : "none",
                           borderBottom: "1px solid rgba(255,255,255,0.04)",
                           minHeight: 120,
                           cursor: "pointer",
@@ -1786,6 +1798,18 @@ export default function CountryPanel({ countryCode, onClose, onViewFeed, onConfl
                           transition: "opacity 0.4s ease",
                         }}
                       >
+                        {/* Era bracket label — shown only on first tile of each era */}
+                        {isEraStart && eraColor && (
+                          <div style={{
+                            fontSize: 7, fontFamily: "monospace", letterSpacing: "0.2em",
+                            textTransform: "uppercase", color: eraColor.label,
+                            marginBottom: 10,
+                            borderLeft: `1px solid ${eraColor.border}`,
+                            paddingLeft: 6,
+                          }}>
+                            {eraColor.text}
+                          </div>
+                        )}
                         {showYearBefore && currentYear && (
                           <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
                             <span style={{ fontSize: 11, fontWeight: 700, fontFamily: "monospace", color: "rgba(255,255,255,0.22)", letterSpacing: "0.14em" }}>{currentYear}</span>
