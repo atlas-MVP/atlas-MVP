@@ -157,8 +157,10 @@ interface TimelineEvent {
   articles?: string[];
   /** Pulsing pills linking to other conflicts/categories (cross-timeline) */
   linkedConflicts?: { id: string; label: string; type?: "conflict" | "attack" }[];
-  /** Category tag shown above text — e.g. "terrorist attack", "genocide" */
+  /** Category tag shown above text — e.g. "terrorist attack", "genocide", "treaty" */
   tag?: string;
+  /** External link URL — makes the entire event clickable */
+  link?: string;
 }
 
 interface Conflict {
@@ -534,8 +536,10 @@ const CONFLICTS: Record<string, Conflict> = {
         ],
       },
       {
-        date: "2015 — JCPOA",
+        date: "JCPOA",
         text: "Six world powers and Iran reach the JCPOA nuclear deal, limiting Iran's uranium enrichment in exchange for lifting sanctions.",
+        tag: "treaty",
+        link: "https://obamawhitehouse.archives.gov/node/328996",
         mapView: { center: [45, 35], zoom: 3.2 },
         slides: [
           {
@@ -1811,17 +1815,39 @@ export default function CountryPanel({ countryCode, onClose, onViewFeed, onConfl
                                 <span style={{
                                   fontSize: 8, fontFamily: "monospace", letterSpacing: "0.14em", textTransform: "uppercase",
                                   padding: "2px 7px", borderRadius: 3, flexShrink: 0,
-                                  background: event.tag === "terrorist attack" ? "rgba(239,68,68,0.12)" : event.tag === "genocide" ? "rgba(239,68,68,0.08)" : "rgba(255,255,255,0.05)",
-                                  color: event.tag === "terrorist attack" ? "rgba(239,68,68,0.7)" : event.tag === "genocide" ? "rgba(239,68,68,0.5)" : "rgba(255,255,255,0.3)",
-                                  border: `1px solid ${event.tag === "terrorist attack" ? "rgba(239,68,68,0.2)" : event.tag === "genocide" ? "rgba(239,68,68,0.1)" : "rgba(255,255,255,0.08)"}`,
+                                  background: event.tag === "terrorist attack" ? "rgba(239,68,68,0.12)" : event.tag === "genocide" ? "rgba(239,68,68,0.08)" : event.tag === "treaty" ? "rgba(34,197,94,0.12)" : "rgba(255,255,255,0.05)",
+                                  color: event.tag === "terrorist attack" ? "rgba(239,68,68,0.7)" : event.tag === "genocide" ? "rgba(239,68,68,0.5)" : event.tag === "treaty" ? "rgba(34,197,94,0.8)" : "rgba(255,255,255,0.3)",
+                                  border: `1px solid ${event.tag === "terrorist attack" ? "rgba(239,68,68,0.2)" : event.tag === "genocide" ? "rgba(239,68,68,0.1)" : event.tag === "treaty" ? "rgba(34,197,94,0.25)" : "rgba(255,255,255,0.08)"}`,
                                 }}>
                                   {event.tag}
                                 </span>
                               )}
                             </div>
-                            <p style={{ margin: 0, fontSize: 14, color: isActive ? "rgba(255,255,255,0.85)" : palette.text, lineHeight: 1.65, transition: "color 0.3s ease" }}>
-                              {event.text}
-                            </p>
+                            {event.link ? (
+                              <a
+                                href={event.link}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                style={{
+                                  margin: 0,
+                                  fontSize: 14,
+                                  color: isActive ? "rgba(255,255,255,0.85)" : palette.text,
+                                  lineHeight: 1.65,
+                                  transition: "color 0.3s ease",
+                                  textDecoration: "none",
+                                  display: "block",
+                                  cursor: "pointer",
+                                }}
+                                onMouseEnter={(e) => { e.currentTarget.style.color = "rgba(34,197,94,0.9)"; }}
+                                onMouseLeave={(e) => { e.currentTarget.style.color = isActive ? "rgba(255,255,255,0.85)" : palette.text; }}
+                              >
+                                {event.text}
+                              </a>
+                            ) : (
+                              <p style={{ margin: 0, fontSize: 14, color: isActive ? "rgba(255,255,255,0.85)" : palette.text, lineHeight: 1.65, transition: "color 0.3s ease" }}>
+                                {event.text}
+                              </p>
+                            )}
                             {/* No provenance tag here — the timeline tiles are
                                 written by jeni kim and william, not the model. */}
                             {/* Bullet-point popup: fed from slide.info's
