@@ -136,6 +136,8 @@ const LIVE_FEED: FeedItem[] = [
     description: "The US Senate defeated a resolution introduced by Sen. Bernie Sanders to halt new arms transfers to Israel, 40 in favor to 59 opposed. Despite the failure, the tally marked the highest level of Democratic support to date: 85% of Senate Democrats voted yes. The resolution targeted a pending $8.1B package covering tank rounds, mortar shells, and guidance kits." },
   { time: "12m", danger: 5, code: "IRN", text: "US 5th Fleet announces heightened readiness posture in Persian Gulf",                           flyTo: { center: [50.5, 26.2] as [number,number], zoom: 5   }, sources: ["Reuters", "AP"],          confidence: 93,
     description: "The US Navy's 5th Fleet, headquartered in Bahrain, has raised its alert status following intelligence reports of Iranian naval mobilization near the Strait of Hormuz. Two additional destroyers are being repositioned." },
+  { time: "3h",  danger: 4, code: "ISR", text: "Israel strikes Hezbollah command infrastructure in southern Beirut for second consecutive night",  flyTo: { center: [35.5, 33.87] as [number,number], zoom: 10  }, sources: ["Reuters", "IDF"],          confidence: 89,
+    description: "Israeli Air Force struck multiple Hezbollah command and weapons storage sites in the Dahieh suburb of Beirut for the second night running. The IDF cited intelligence indicating imminent rocket launches targeting northern Israel. Lebanese health officials report at least 11 casualties." },
 ];
 
 const FINANCE_ITEMS = [
@@ -217,7 +219,7 @@ export default function AtlasHQ({ onClose, onNavigate, onHeadlinesToggle, onSour
     }}>
 
       {/* Scrollable body */}
-      <div style={{ flex: 1, overflowY: "auto", overflowX: "hidden" }}>
+      <div className="radar-scroll" style={{ flex: 1, overflowY: "auto", overflowX: "hidden" }}>
 
         {/* GEOPOLITICS — label instant, cards staggered */}
         <SectionLabel label="geopolitics" onClick={() => setShowMore(v => !v)} />
@@ -237,7 +239,6 @@ export default function AtlasHQ({ onClose, onNavigate, onHeadlinesToggle, onSour
                 <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom, transparent 35%, rgba(0,0,0,0.88) 100%)" }} />
                 <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, padding: "8px 10px 10px" }}>
                   <div style={{ fontSize: 12, fontFamily: "monospace", letterSpacing: "0.06em", color: "rgba(255,255,255,0.92)", fontWeight: 700, lineHeight: 1.3 }}>{c.label}</div>
-                  <div style={{ fontSize: 9, color: "rgba(255,255,255,0.50)", marginTop: 4, lineHeight: 1.4, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{c.sub}</div>
                 </div>
               </div>
             </Reveal>
@@ -281,13 +282,13 @@ export default function AtlasHQ({ onClose, onNavigate, onHeadlinesToggle, onSour
         <SectionLabel label="live alerts" />
         <Reveal minStage={3} stage={loadStage}>
           <div style={{ padding: "0 6px" }}>
-            {LIVE_FEED.slice(0, 2).map((item, i) => (
+            {LIVE_FEED.slice(0, 3).map((item, i) => (
               <LiveAlertRow
                 key={`${item.code}-${item.time}`}
                 item={item}
                 onSourceClick={onSourceClick}
                 onClick={() => onNavigate?.(item.code, item.flyTo.center, item.flyTo.zoom, item)}
-                bottomBorder={i < 1}
+                bottomBorder={i < 2}
                 showConfidenceInline={false}
                 expandOnHover={false}
               />

@@ -87,6 +87,10 @@ body, html {
 .reels-scroll:hover::-webkit-scrollbar { width: 6px; }
 .reels-scroll:hover::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.25); border-radius: 3px; }
 
+/* Atlas Radar scrollable body — no scrollbar */
+.radar-scroll { scrollbar-width: none; }
+.radar-scroll::-webkit-scrollbar { display: none; }
+
 /* Push Mapbox branding just below the visible frame */
 .mapboxgl-ctrl-bottom-left,
 .mapboxgl-ctrl-bottom-right {
