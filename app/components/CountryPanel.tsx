@@ -504,8 +504,9 @@ const CONFLICTS: Record<string, Conflict> = {
         ],
       },
       {
-        date: "May 2018",
+        date: "2018 — JCPOA Withdrawal",
         text: "Trump unilaterally withdraws the US from the JCPOA and reinstates maximum pressure sanctions. Iran begins stockpiling enriched uranium and restricting IAEA monitoring.",
+        tag: "withdrawal",
         mapView: { center: [-77.04, 38.90], zoom: 10 },
         slides: [
           {
@@ -532,7 +533,7 @@ const CONFLICTS: Record<string, Conflict> = {
         ],
       },
       {
-        date: "JCPOA",
+        date: "2015 — JCPOA",
         text: "Six world powers and Iran reach the JCPOA nuclear deal, limiting Iran's uranium enrichment in exchange for lifting sanctions.",
         tag: "treaty",
         link: "https://obamawhitehouse.archives.gov/node/328996",
@@ -1811,9 +1812,9 @@ export default function CountryPanel({ countryCode, onClose, onViewFeed, onConfl
                                 <span style={{
                                   fontSize: 8, fontFamily: "monospace", letterSpacing: "0.14em", textTransform: "uppercase",
                                   padding: "2px 7px", borderRadius: 3, flexShrink: 0,
-                                  background: event.tag === "terrorist attack" ? "rgba(239,68,68,0.12)" : event.tag === "genocide" ? "rgba(239,68,68,0.08)" : event.tag === "treaty" ? "rgba(34,197,94,0.12)" : "rgba(255,255,255,0.05)",
-                                  color: event.tag === "terrorist attack" ? "rgba(239,68,68,0.7)" : event.tag === "genocide" ? "rgba(239,68,68,0.5)" : event.tag === "treaty" ? "rgba(34,197,94,0.8)" : "rgba(255,255,255,0.3)",
-                                  border: `1px solid ${event.tag === "terrorist attack" ? "rgba(239,68,68,0.2)" : event.tag === "genocide" ? "rgba(239,68,68,0.1)" : event.tag === "treaty" ? "rgba(34,197,94,0.25)" : "rgba(255,255,255,0.08)"}`,
+                                  background: event.tag === "terrorist attack" ? "rgba(239,68,68,0.12)" : event.tag === "genocide" ? "rgba(239,68,68,0.08)" : event.tag === "withdrawal" ? "rgba(239,68,68,0.12)" : event.tag === "treaty" ? "rgba(34,197,94,0.12)" : "rgba(255,255,255,0.05)",
+                                  color: event.tag === "terrorist attack" ? "rgba(239,68,68,0.7)" : event.tag === "genocide" ? "rgba(239,68,68,0.5)" : event.tag === "withdrawal" ? "rgba(239,68,68,0.7)" : event.tag === "treaty" ? "rgba(34,197,94,0.8)" : "rgba(255,255,255,0.3)",
+                                  border: `1px solid ${event.tag === "terrorist attack" ? "rgba(239,68,68,0.2)" : event.tag === "genocide" ? "rgba(239,68,68,0.1)" : event.tag === "withdrawal" ? "rgba(239,68,68,0.2)" : event.tag === "treaty" ? "rgba(34,197,94,0.25)" : "rgba(255,255,255,0.08)"}`,
                                 }}>
                                   {event.tag}
                                 </span>
