@@ -143,15 +143,15 @@ interface FeedItem {
 }
 
 const LIVE_FEED: FeedItem[] = [
-  { time: "Apr 19", danger: 5, code: "USA", slug: "gun-violence", incidentId: "shreveport-2026-04-19", pulse: true,
+  { time: "2026-04-19T12:14:00", danger: 5, code: "USA", slug: "gun-violence", incidentId: "shreveport-2026-04-19", pulse: true,
     text: "8 children killed in Shreveport mass shooting — gunman kills children ages 1 to 14 across two homes before fleeing",
     flyTo: { center: [-93.75, 32.52] as [number,number], zoom: 12 }, sources: ["AP", "Reuters", "CNN"], confidence: 98,
     description: "Eight children and juveniles ages 1–14 were killed in a mass shooting in Shreveport, Louisiana. The shooter, who appears to have been known to the victims, targeted two homes on the same block before fleeing. He subsequently carjacked a vehicle and was killed by police during pursuit. Mayor Tom Arceneaux called it 'maybe the worst tragic situation we've ever had in Shreveport.'" },
-  { time: "Apr 17", danger: 2, code: "LBN",
+  { time: "2026-04-17T08:00:00", danger: 2, code: "LBN",
     text: "Trump announces 10-day Israel-Lebanon ceasefire, catching Netanyahu's cabinet off guard",
     flyTo: { center: [35.5, 33.9] as [number,number], zoom: 8 }, sources: ["AP", "Reuters", "Axios"], confidence: 96,
     description: "President Trump announced a 10-day ceasefire between Israel and Hezbollah in Lebanon, effective immediately, following a call with Israeli PM Netanyahu. The announcement blindsided several cabinet ministers who learned of the deal through press reports rather than official channels. The ceasefire is described as a humanitarian pause to allow aid into southern Lebanon, with no permanent framework attached." },
-  { time: "Apr 17", danger: 3, code: "ISR",
+  { time: "2026-04-17T15:30:00", danger: 3, code: "ISR",
     text: "Senate vote fails 40-59 to block arms sales to Israel — Sanders resolution draws 85% of Democrats",
     flyTo: { center: [-77.0, 38.9] as [number,number], zoom: 11 }, sources: ["Senate", "AP", "Reuters"], confidence: 97,
     description: "The US Senate defeated a resolution introduced by Sen. Bernie Sanders to halt new arms transfers to Israel, 40 in favor to 59 opposed. Despite the failure, the tally marked the highest level of Democratic support to date: 85% of Senate Democrats voted yes. The resolution targeted a pending $8.1B package covering tank rounds, mortar shells, and guidance kits." },

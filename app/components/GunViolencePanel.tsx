@@ -135,21 +135,10 @@ export default function GunViolencePanel({ onClose, onFlyTo, highlightId }: Prop
             <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between" }}>
               <div>
                 <div style={{
-                  fontSize: 10, fontFamily: T.MONO, letterSpacing: T.TRACK_XWIDE,
-                  color: clr.white(0.48), textTransform: "uppercase", marginBottom: 6,
-                }}>
-                  ACTIVE CRISIS
-                </div>
-                <div style={{
                   fontSize: 20, fontWeight: 700, color: clr.white(0.92),
                   letterSpacing: "-0.01em", lineHeight: 1.15,
                 }}>
                   Gun Violence in America
-                </div>
-                <div style={{
-                  fontSize: 11, color: clr.white(0.42), fontFamily: T.MONO, marginTop: 4,
-                }}>
-                  2026 · United States
                 </div>
               </div>
               <button
@@ -200,13 +189,7 @@ export default function GunViolencePanel({ onClose, onFlyTo, highlightId }: Prop
                     padding: "14px 16px 16px 14px",
                     margin: "2px 10px",
                     borderRadius: 14,
-                    borderLeft: inc.killed >= 4
-                      ? `2px solid ${clr.red(0.45)}`
-                      : inc.killed > 0
-                      ? `2px solid rgba(234,88,12,0.45)`
-                      : `2px solid rgba(251,191,36,0.42)`,
-                    border: `1px solid ${clr.white(0.04)}`,
-                    borderLeftWidth: 2,
+                    border: `1px solid ${clr.white(0.06)}`,
                     borderLeftColor: inc.killed >= 4
                       ? clr.red(0.45)
                       : inc.killed > 0
@@ -237,13 +220,6 @@ export default function GunViolencePanel({ onClose, onFlyTo, highlightId }: Prop
                   </div>
 
                   <div style={{ display: "flex", gap: 12, alignItems: "flex-start" }}>
-                    {/* Dot */}
-                    <div style={{
-                      width: 7, height: 7, borderRadius: "50%", flexShrink: 0, marginTop: 5,
-                      background: inc.killed >= 4 ? clr.red(0.85) : inc.killed > 0 ? "rgba(234,88,12,0.85)" : "rgba(251,191,36,0.85)",
-                      boxShadow: `0 0 6px ${inc.killed >= 4 ? clr.red(0.5) : "rgba(234,88,12,0.5)"}`,
-                    }} />
-
                     <div style={{ flex: 1, minWidth: 0 }}>
                       {/* Location */}
                       <div style={{
@@ -253,23 +229,15 @@ export default function GunViolencePanel({ onClose, onFlyTo, highlightId }: Prop
                         {inc.location}
                       </div>
 
-                      {/* Killed / injured chips */}
-                      <div style={{ display: "flex", gap: 8, marginBottom: 8 }}>
-                        {inc.killed > 0 && (
-                          <span style={{
-                            fontSize: 9, fontFamily: T.MONO, letterSpacing: T.TRACK_MED,
-                            padding: "2px 7px", borderRadius: 3,
-                            background: clr.red(0.12), color: clr.red(0.8),
-                            border: `1px solid ${clr.red(0.22)}`,
-                            textTransform: "uppercase",
-                          }}>{inc.killed} killed</span>
-                        )}
+                      {/* Killed / injured - styled like conflict stats */}
+                      <div style={{ display: "flex", gap: 16, marginBottom: 8 }}>
                         <span style={{
-                          fontSize: 9, fontFamily: T.MONO, letterSpacing: T.TRACK_MED,
-                          padding: "2px 7px", borderRadius: 3,
-                          background: "rgba(251,191,36,0.10)", color: "rgba(251,191,36,0.82)",
-                          border: "1px solid rgba(251,191,36,0.22)",
-                          textTransform: "uppercase",
+                          fontSize: 12, fontFamily: T.MONO, fontWeight: 700,
+                          color: clr.white(0.88),
+                        }}>{inc.killed} killed</span>
+                        <span style={{
+                          fontSize: 12, fontFamily: T.MONO,
+                          color: clr.white(0.35),
                         }}>{inc.injured} injured</span>
                       </div>
 

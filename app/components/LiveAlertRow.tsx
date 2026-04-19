@@ -2,6 +2,19 @@
 import { useState, useRef } from "react";
 import { T, clr, confColor, dangerColor } from "../lib/tokens";
 
+function relativeTime(ts: string): string {
+  const d = new Date(ts);
+  if (isNaN(d.getTime())) return ts; // not an ISO string — show as-is
+  const diff  = Date.now() - d.getTime();
+  const mins  = Math.floor(diff / 60000);
+  const hours = Math.floor(diff / 3600000);
+  const days  = Math.floor(diff / 86400000);
+  if (mins  <  1) return "just now";
+  if (mins  < 60) return `${mins}m ago`;
+  if (hours < 24) return `${hours}h ago`;
+  return `${days}d ago`;
+}
+
 export interface AlertItem {
   time: string;
   text: string;
@@ -82,8 +95,8 @@ export default function LiveAlertRow({
       <div style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
         <span style={{
           fontSize: 12, fontFamily: "monospace", color: "rgba(255,255,255,0.32)",
-          flexShrink: 0, width: 42, textAlign: "right", paddingTop: 1,
-        }}>{item.time}</span>
+          flexShrink: 0, width: 52, textAlign: "right", paddingTop: 1,
+        }}>{relativeTime(item.time)}</span>
 
         <div
           style={{
