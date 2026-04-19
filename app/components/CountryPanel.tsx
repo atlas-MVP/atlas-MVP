@@ -502,9 +502,6 @@ const CONFLICTS: Record<string, Conflict> = {
             info: "Raw footage captured by Hamas body cameras and GoPros during the October 7 attack on southern Israel. Warning: graphic content.",
           },
         ],
-        linkedConflicts: [
-          { id: "israel-gaza", label: "Israel–Palestine Conflict", type: "conflict" },
-        ],
       },
       {
         date: "May 2018",
