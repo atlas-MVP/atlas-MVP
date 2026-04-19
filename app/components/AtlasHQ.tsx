@@ -322,6 +322,7 @@ export default function AtlasHQ({ onClose, onNavigate, onHeadlinesToggle, onSour
     violenceItems: activeViolence as RadarViolenceItem[],
     financeItems:  activeFinance as RadarFinanceItem[],
     disasters:     activeDisasters as RadarDisasterItem[],
+    sectionOrder:  liveConfig?.sectionOrder, // undefined = default order
   };
 
   return (
@@ -360,193 +361,138 @@ export default function AtlasHQ({ onClose, onNavigate, onHeadlinesToggle, onSour
           onMouseLeave={e => (e.currentTarget.style.background = "rgba(255,255,255,0.07)")}
         >✎</button>
 
-        {/* GEOPOLITICS — label instant, cards staggered */}
-        <SectionLabel label="geopolitics" onClick={() => setShowMore(v => !v)} />
-        <div style={{ padding: "0 14px", display: "flex", flexDirection: "column", gap: 6 }}>
-          {currentConfig.topConflicts.map((c, idx) => (
-            <Reveal key={c.label} minStage={1 + idx} stage={loadStage}>
-              <div
-                onClick={() => onNavigate?.(c.code, c.flyTo?.center ?? [0,0], c.flyTo?.zoom ?? 4, undefined, c.slug)}
-                style={{
-                  height: 196, borderRadius: 14, overflow: "hidden",
-                  position: "relative", cursor: "pointer",
-                  border: "1px solid rgba(255,255,255,0.09)",
-                  background: "#0a0c18",
-                }}
-              >
-                {(c.imageUrl || c.image) && <img src={c.imageUrl || c.image} alt={c.label} style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} onError={e => { (e.currentTarget as HTMLImageElement).style.opacity = "0"; }} />}
-                <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom, transparent 35%, rgba(0,0,0,0.88) 100%)" }} />
-                <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, padding: "8px 10px 10px" }}>
-                  <div style={{ fontSize: 12, fontFamily: "monospace", letterSpacing: "0.06em", color: "rgba(255,255,255,0.92)", fontWeight: 700, lineHeight: 1.3 }}>{c.label}</div>
-                </div>
+        {/* Sections rendered in saved drag order */}
+        {(currentConfig.sectionOrder ?? ["geo", "alerts", "violence", "finance", "disasters"]).map(section => {
+          if (section === "geo") return (
+            <React.Fragment key="geo">
+              <SectionLabel label="geopolitics" onClick={() => setShowMore(v => !v)} />
+              <div style={{ padding: "0 14px", display: "flex", flexDirection: "column", gap: 6 }}>
+                {currentConfig.topConflicts.map((c, idx) => (
+                  <Reveal key={c.label} minStage={1 + idx} stage={loadStage}>
+                    <div onClick={() => onNavigate?.(c.code, c.flyTo?.center ?? [0,0], c.flyTo?.zoom ?? 4, undefined, c.slug)}
+                      style={{ height: 196, borderRadius: 14, overflow: "hidden", position: "relative", cursor: "pointer", border: "1px solid rgba(255,255,255,0.09)", background: "#0a0c18" }}>
+                      {(c.imageUrl || c.image) && <img src={c.imageUrl || c.image} alt={c.label} style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} onError={e => { (e.currentTarget as HTMLImageElement).style.opacity = "0"; }} />}
+                      <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom, transparent 35%, rgba(0,0,0,0.88) 100%)" }} />
+                      <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, padding: "8px 10px 10px" }}>
+                        <div style={{ fontSize: 12, fontFamily: "monospace", letterSpacing: "0.06em", color: "rgba(255,255,255,0.92)", fontWeight: 700, lineHeight: 1.3 }}>{c.label}</div>
+                      </div>
+                    </div>
+                  </Reveal>
+                ))}
+                {showMore && (
+                  <>
+                    {currentConfig.moreConflicts.map((c) => (
+                      <div key={c.label} onClick={() => onNavigate?.(c.code, c.flyTo?.center ?? [0,0], c.flyTo?.zoom ?? 4, undefined, c.slug)}
+                        style={{ padding: "12px 13px", borderRadius: 10, background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.09)", cursor: "pointer" }}
+                        onMouseEnter={e => (e.currentTarget.style.background = "rgba(255,255,255,0.04)")}
+                        onMouseLeave={e => (e.currentTarget.style.background = "rgba(255,255,255,0.02)")}>
+                        <div style={{ fontSize: 12, fontFamily: "monospace", letterSpacing: "0.07em", color: "rgba(255,255,255,0.92)", fontWeight: 700 }}>{c.label}</div>
+                        <div style={{ fontSize: 11, color: "rgba(255,255,255,0.52)", marginTop: 5, lineHeight: 1.45, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{c.sub}</div>
+                      </div>
+                    ))}
+                    <button onClick={() => setShowMore(false)}
+                      style={{ background: "none", border: "none", padding: "2px 4px", cursor: "pointer", fontFamily: "monospace", fontSize: 9, letterSpacing: "0.12em", color: "rgba(255,255,255,0.38)", display: "flex", alignItems: "center", gap: 5 }}
+                      onMouseEnter={e => (e.currentTarget.style.color = "rgba(255,255,255,0.65)")}
+                      onMouseLeave={e => (e.currentTarget.style.color = "rgba(255,255,255,0.38)")}>▲ show less</button>
+                  </>
+                )}
               </div>
-            </Reveal>
-          ))}
+            </React.Fragment>
+          );
 
-          {showMore && (
-            <>
-              {currentConfig.moreConflicts.map((c) => (
-                <div
-                  key={c.label}
-                  onClick={() => onNavigate?.(c.code, c.flyTo?.center ?? [0,0], c.flyTo?.zoom ?? 4, undefined, c.slug)}
-                  style={{
-                    padding: "12px 13px", borderRadius: 10,
-                    background: "rgba(255,255,255,0.02)",
-                    border: "1px solid rgba(255,255,255,0.09)",
-                    boxShadow: "inset 0 1px 0 rgba(255,255,255,0.06)",
-                    cursor: "pointer",
-                  }}
-                  onMouseEnter={e => (e.currentTarget.style.background = "rgba(255,255,255,0.04)")}
-                  onMouseLeave={e => (e.currentTarget.style.background = "rgba(255,255,255,0.02)")}
-                >
-                  <div style={{ fontSize: 12, fontFamily: "monospace", letterSpacing: "0.07em", color: "rgba(255,255,255,0.92)", fontWeight: 700 }}>{c.label}</div>
-                  <div style={{ fontSize: 11, color: "rgba(255,255,255,0.52)", marginTop: 5, lineHeight: 1.45, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{c.sub}</div>
+          if (section === "alerts") return (
+            <React.Fragment key="alerts">
+              <SectionLabel label="live alerts" />
+              <Reveal minStage={3} stage={loadStage}>
+                <div style={{ padding: "0 6px", position: "relative" }}>
+                  {activeFeed.slice(0, 3).map((item, i) => {
+                    const isSenateVote = item.text.includes("Senate vote fails");
+                    return (
+                      <div key={`${item.code}-${item.time}`}
+                        ref={isSenateVote ? senateAlertRef : null}
+                        onMouseEnter={() => { if (isSenateVote && senateVoteVisible !== 'locked') setSenateVoteVisible('hover'); }}
+                        onMouseLeave={() => { if (isSenateVote && senateVoteVisible === 'hover') setSenateVoteVisible(null); }}
+                        onClick={() => {
+                          if (isSenateVote) { const s = senateVoteVisible === 'locked' ? null : 'locked'; setSenateVoteVisible(s); onSenateVoteLocked?.(s === 'locked'); }
+                          else onNavigate?.(item.code, item.flyTo?.center ?? [0,0] as [number,number], item.flyTo?.zoom ?? 4, item, item.slug);
+                        }}>
+                        <LiveAlertRow item={item} onSourceClick={onSourceClick}
+                          onClick={() => !isSenateVote && onNavigate?.(item.code, item.flyTo?.center ?? [0,0] as [number,number], item.flyTo?.zoom ?? 4, item, item.slug)}
+                          bottomBorder={i < 2} showConfidenceInline={false} expandOnHover={false} />
+                      </div>
+                    );
+                  })}
                 </div>
-              ))}
-              <button
-                onClick={() => setShowMore(false)}
-                style={{
-                  background: "none", border: "none", padding: "2px 4px", cursor: "pointer",
-                  fontFamily: "monospace", fontSize: 9, letterSpacing: "0.12em",
-                  color: "rgba(255,255,255,0.38)", display: "flex", alignItems: "center", gap: 5,
-                }}
-                onMouseEnter={e => (e.currentTarget.style.color = "rgba(255,255,255,0.65)")}
-                onMouseLeave={e => (e.currentTarget.style.color = "rgba(255,255,255,0.38)")}
-              >▲ show less</button>
-            </>
-          )}
-        </div>
+              </Reveal>
+            </React.Fragment>
+          );
 
-        {/* LIVE ALERTS — label instant, rows fade in */}
-        <SectionLabel label="live alerts" />
-        <Reveal minStage={3} stage={loadStage}>
-          <div style={{ padding: "0 6px", position: "relative" }}>
-            {activeFeed.slice(0, 3).map((item, i) => {
-              const isSenateVote = item.text.includes("Senate vote fails");
-              return (
-                <div
-                  key={`${item.code}-${item.time}`}
-                  ref={isSenateVote ? senateAlertRef : null}
-                  onMouseEnter={() => {
-                    if (isSenateVote && senateVoteVisible !== 'locked') {
-                      setSenateVoteVisible('hover');
-                    }
-                  }}
-                  onMouseLeave={() => {
-                    if (isSenateVote && senateVoteVisible === 'hover') {
-                      setSenateVoteVisible(null);
-                    }
-                  }}
-                  onClick={() => {
-                    if (isSenateVote) {
-                      const newState = senateVoteVisible === 'locked' ? null : 'locked';
-                      setSenateVoteVisible(newState);
-                      onSenateVoteLocked?.(newState === 'locked');
-                    } else {
-                      onNavigate?.(item.code, item.flyTo?.center ?? [0,0] as [number,number], item.flyTo?.zoom ?? 4, item, item.slug);
-                    }
-                  }}
-                >
-                  <LiveAlertRow
-                    item={item}
-                    onSourceClick={onSourceClick}
-                    onClick={() => !isSenateVote && onNavigate?.(item.code, item.flyTo?.center ?? [0,0] as [number,number], item.flyTo?.zoom ?? 4, item, item.slug)}
-                    bottomBorder={i < 2}
-                    showConfidenceInline={false}
-                    expandOnHover={false}
-                  />
+          if (section === "violence") return (
+            <React.Fragment key="violence">
+              <SectionLabel label="violence" />
+              <Reveal minStage={5} stage={loadStage}>
+                <div style={{ padding: "0 14px 6px" }}>
+                  {activeViolence.map((item) => (
+                    <div key={item.headline}
+                      onClick={() => onViolenceTap?.(item.incidentId ?? "", item.flyTo?.center ?? [0,0] as [number,number], item.flyTo?.zoom ?? 4)}
+                      style={{ height: 196, borderRadius: 14, overflow: "hidden", position: "relative", cursor: "pointer", border: "1px solid rgba(255,255,255,0.09)", background: "#0a0c18" }}>
+                      <img src={item.imageUrl || item.image} style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} onError={e => { (e.currentTarget as HTMLImageElement).style.opacity = "0"; }} />
+                      <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom, transparent 30%, rgba(0,0,0,0.90) 100%)" }} />
+                      <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, padding: "8px 10px 10px" }}>
+                        <div style={{ fontSize: 12, fontFamily: "monospace", letterSpacing: "0.03em", color: "rgba(255,255,255,0.88)", lineHeight: 1.4, display: "-webkit-box", WebkitLineClamp: 3, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{item.headline}</div>
+                        <div style={{ fontSize: 9, color: "rgba(255,255,255,0.48)", marginTop: 4, letterSpacing: "0.12em", textTransform: "uppercase" }}>{item.source}</div>
+                      </div>
+                    </div>
+                  ))}
                 </div>
-              );
-            })}
-          </div>
-        </Reveal>
+              </Reveal>
+            </React.Fragment>
+          );
 
-        {/* VIOLENCE */}
-        <SectionLabel label="violence" />
-        <Reveal minStage={5} stage={loadStage}>
-          <div style={{ padding: "0 14px 6px" }}>
-            {activeViolence.map((item) => (
-              <div
-                key={item.headline}
-                onClick={() => onViolenceTap?.(item.incidentId ?? "", item.flyTo?.center ?? [0,0] as [number,number], item.flyTo?.zoom ?? 4)}
-                style={{
-                  height: 196, borderRadius: 14, overflow: "hidden",
-                  position: "relative", cursor: "pointer",
-                  border: "1px solid rgba(255,255,255,0.09)",
-                  background: "#0a0c18",
-                }}
-              >
-                <img
-                  src={item.imageUrl || item.image}
-                  style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
-                  onError={e => { (e.currentTarget as HTMLImageElement).style.opacity = "0"; }}
-                />
-                <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom, transparent 30%, rgba(0,0,0,0.90) 100%)" }} />
-                <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, padding: "8px 10px 10px" }}>
-                  <div style={{ fontSize: 12, fontFamily: "monospace", letterSpacing: "0.03em", color: "rgba(255,255,255,0.88)", lineHeight: 1.4, display: "-webkit-box", WebkitLineClamp: 3, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{item.headline}</div>
-                  <div style={{ fontSize: 9, color: "rgba(255,255,255,0.48)", marginTop: 4, letterSpacing: "0.12em", textTransform: "uppercase" }}>{item.source}</div>
+          if (section === "finance") return (
+            <React.Fragment key="finance">
+              <SectionLabel label="finance" />
+              <Reveal minStage={5} stage={loadStage}>
+                <div style={{ padding: "0 14px 6px", display: "flex", gap: 8 }}>
+                  {activeFinance.map((item) => (
+                    <div key={item.headline} onClick={() => onFinanceTap?.(item.slug)}
+                      style={{ flex: 1, height: 196, borderRadius: 14, overflow: "hidden", position: "relative", cursor: "pointer", border: "1px solid rgba(255,255,255,0.09)", background: "#0a0c18", minWidth: 0 }}>
+                      <img src={item.imageUrl || item.image} alt={item.headline} style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} onError={e => { (e.currentTarget as HTMLImageElement).style.opacity = "0"; }} />
+                      <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom, transparent 35%, rgba(0,0,0,0.88) 100%)" }} />
+                      <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, padding: "8px 10px 10px" }}>
+                        <div style={{ fontSize: 12, fontFamily: "monospace", letterSpacing: "0.03em", color: "rgba(255,255,255,0.88)", lineHeight: 1.4, display: "-webkit-box", WebkitLineClamp: 3, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{item.headline}</div>
+                        <div style={{ fontSize: 9, color: "rgba(255,255,255,0.48)", marginTop: 4, letterSpacing: "0.12em", textTransform: "uppercase" }}>{item.source}</div>
+                      </div>
+                    </div>
+                  ))}
                 </div>
-              </div>
-            ))}
-          </div>
-        </Reveal>
+              </Reveal>
+            </React.Fragment>
+          );
 
-        {/* FINANCE */}
-        <SectionLabel label="finance" />
-        <Reveal minStage={5} stage={loadStage}>
-          <div style={{ padding: "0 14px 6px", display: "flex", gap: 8 }}>
-            {activeFinance.map((item) => (
-              <div
-                key={item.headline}
-                onClick={() => onFinanceTap?.(item.slug)}
-                style={{
-                  flex: 1, height: 196, borderRadius: 14, overflow: "hidden",
-                  position: "relative", display: "block",
-                  cursor: "pointer", border: "1px solid rgba(255,255,255,0.09)",
-                  background: "#0a0c18", minWidth: 0,
-                }}
-              >
-                <img
-                  src={item.imageUrl || item.image}
-                  alt={item.headline}
-                  style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
-                  onError={e => { (e.currentTarget as HTMLImageElement).style.opacity = "0"; }}
-                />
-                <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom, transparent 35%, rgba(0,0,0,0.88) 100%)" }} />
-                <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, padding: "8px 10px 10px" }}>
-                  <div style={{ fontSize: 12, fontFamily: "monospace", letterSpacing: "0.03em", color: "rgba(255,255,255,0.88)", lineHeight: 1.4, display: "-webkit-box", WebkitLineClamp: 3, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{item.headline}</div>
-                  <div style={{ fontSize: 9, color: "rgba(255,255,255,0.48)", marginTop: 4, letterSpacing: "0.12em", textTransform: "uppercase" }}>{item.source}</div>
+          if (section === "disasters") return (
+            <React.Fragment key="disasters">
+              <SectionLabel label="disasters" />
+              <Reveal minStage={5} stage={loadStage}>
+                <div style={{ padding: "0 14px 20px" }}>
+                  {activeDisasters.map((d) => (
+                    <div key={d.label} onClick={() => onNavigate?.(null, d.flyTo?.center ?? [0,0], d.flyTo?.zoom ?? 4, undefined, d.slug)}
+                      style={{ height: 196, borderRadius: 14, overflow: "hidden", position: "relative", cursor: "pointer", border: "1px solid rgba(255,255,255,0.09)", background: "#0a0c18" }}>
+                      {(d.imageUrl || d.image) && <img src={d.imageUrl || d.image} alt={d.label} style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} onError={e => { (e.currentTarget as HTMLImageElement).style.opacity = "0"; }} />}
+                      <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom, transparent 35%, rgba(0,0,0,0.88) 100%)" }} />
+                      <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, padding: "8px 10px 10px" }}>
+                        <div style={{ fontSize: 12, fontFamily: "monospace", letterSpacing: "0.06em", color: "rgba(255,255,255,0.92)", fontWeight: 700 }}>{d.label}</div>
+                        <div style={{ fontSize: 10, color: "rgba(255,255,255,0.62)", marginTop: 4 }}>{d.sub}</div>
+                      </div>
+                    </div>
+                  ))}
                 </div>
-              </div>
-            ))}
-          </div>
-        </Reveal>
+              </Reveal>
+            </React.Fragment>
+          );
 
-        {/* DISASTERS */}
-        <SectionLabel label="disasters" />
-        <Reveal minStage={5} stage={loadStage}>
-          <div style={{ padding: "0 14px 20px" }}>
-            {activeDisasters.map((d) => (
-              <div
-                key={d.label}
-                onClick={() => onNavigate?.(null, d.flyTo?.center ?? [0,0], d.flyTo?.zoom ?? 4, undefined, d.slug)}
-                style={{
-                  height: 196, borderRadius: 14, overflow: "hidden",
-                  position: "relative", cursor: "pointer",
-                  border: "1px solid rgba(255,255,255,0.09)",
-                  background: "#0a0c18",
-                }}
-              >
-                {(d.imageUrl || d.image) && <img src={d.imageUrl || d.image} alt={d.label} style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} onError={e => { (e.currentTarget as HTMLImageElement).style.opacity = "0"; }} />}
-                <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom, transparent 35%, rgba(0,0,0,0.88) 100%)" }} />
-                <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, padding: "8px 10px 10px" }}>
-                  <div style={{ fontSize: 12, fontFamily: "monospace", letterSpacing: "0.06em", color: "rgba(255,255,255,0.92)", fontWeight: 700 }}>{d.label}</div>
-                  <div style={{ fontSize: 10, color: "rgba(255,255,255,0.62)", marginTop: 4 }}>{d.sub}</div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </Reveal>
+          return null;
+        })}
       </div>
     </div>
 

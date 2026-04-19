@@ -68,6 +68,7 @@ export interface RadarConfig {
   violenceItems: ViolenceItem[];
   financeItems:  FinanceItem[];
   disasters:     DisasterItem[];
+  sectionOrder?: string[]; // persisted drag order of radar sections
 }
 
 // ── Nav ────────────────────────────────────────────────────────────────────────
@@ -465,11 +466,22 @@ export interface RadarEditorProps {
   onClose: () => void;
 }
 
+const DEFAULT_ORDER: Tab[] = ["geo", "alerts", "violence", "finance", "disasters"];
+
 export default function RadarEditor({ config, onSave, onClose }: RadarEditorProps) {
   const [tab,    setTab]    = useState<Tab>("geo");
-  const [draft,  setDraft]  = useState<RadarConfig>(config);
+  const [draft,  setDraft]  = useState<RadarConfig>({
+    ...config,
+    sectionOrder: config.sectionOrder ?? DEFAULT_ORDER,
+  });
   const [saving, setSaving] = useState(false);
   const [saved,  setSaved]  = useState(false);
+
+  // Nav drag state
+  const [navDragging, setNavDragging] = useState<number | null>(null);
+  const [navOver,     setNavOver]     = useState<number | null>(null);
+
+  const navOrder = (draft.sectionOrder ?? DEFAULT_ORDER) as Tab[];
 
   const patch = (key: keyof RadarConfig, val: unknown) =>
     setDraft(d => ({ ...d, [key]: val }));
@@ -482,6 +494,27 @@ export default function RadarEditor({ config, onSave, onClose }: RadarEditorProp
       setTimeout(() => setSaved(false), 2000);
     } finally { setSaving(false); }
   };
+
+  const navDragProps = (i: number) => ({
+    draggable: true as const,
+    onDragStart: (e: React.DragEvent) => {
+      setNavDragging(i);
+      e.dataTransfer.effectAllowed = "move";
+      e.dataTransfer.setData("text/plain", String(i));
+    },
+    onDragEnd:   () => { setNavDragging(null); setNavOver(null); },
+    onDragOver:  (e: React.DragEvent) => { e.preventDefault(); setNavOver(i); },
+    onDragLeave: () => setNavOver(null),
+    onDrop: (e: React.DragEvent) => {
+      e.preventDefault();
+      if (navDragging !== null && navDragging !== i) {
+        const next = reorder(navOrder, navDragging, i);
+        patch("sectionOrder", next);
+        setTab(navOrder[navDragging]); // keep focus on the dragged section
+      }
+      setNavDragging(null); setNavOver(null);
+    },
+  });
 
   const counts: Record<Tab, number> = {
     geo:       draft.topConflicts.length + draft.moreConflicts.length,
@@ -556,41 +589,59 @@ export default function RadarEditor({ config, onSave, onClose }: RadarEditorProp
         {/* Sidebar + content */}
         <div style={{ display: "flex", flex: 1, overflow: "hidden" }}>
 
-          {/* Sidebar */}
+          {/* Sidebar — draggable pill bubbles, top-to-bottom */}
           <div style={{
-            width: 148, flexShrink: 0,
+            width: 162, flexShrink: 0,
             borderRight: "1px solid rgba(255,255,255,0.06)",
-            padding: "12px 0",
-            display: "flex", flexDirection: "column", gap: 2,
+            padding: "10px 8px",
+            display: "flex", flexDirection: "column", gap: 4,
           }}>
-            {NAV.map(n => {
-              const active = tab === n.id;
+            {navOrder.map((id, i) => {
+              const navItem = NAV.find(n => n.id === id)!;
+              const active  = tab === id;
+              const dragging = navDragging === i;
+              const isOver   = navOver === i;
               return (
-                <button key={n.id} onClick={() => setTab(n.id)} style={{
-                  width: "100%", textAlign: "left",
-                  background: active ? "rgba(255,255,255,0.05)" : "none",
-                  border: "none",
-                  borderLeft: `2px solid ${active ? "rgba(96,165,250,0.7)" : "transparent"}`,
-                  color: active ? "rgba(255,255,255,0.88)" : "rgba(255,255,255,0.38)",
-                  fontFamily: "monospace", fontSize: 11, letterSpacing: "0.10em",
-                  padding: "9px 14px", cursor: "pointer",
-                  display: "flex", justifyContent: "space-between", alignItems: "center",
-                  transition: "background 0.12s, color 0.12s",
-                }}
-                  onMouseEnter={e => { if (!active) { e.currentTarget.style.background = "rgba(255,255,255,0.03)"; e.currentTarget.style.color = "rgba(255,255,255,0.62)"; } }}
-                  onMouseLeave={e => { if (!active) { e.currentTarget.style.background = "none"; e.currentTarget.style.color = "rgba(255,255,255,0.38)"; } }}
+                <div
+                  key={id}
+                  {...navDragProps(i)}
+                  onClick={() => setTab(id)}
+                  style={{
+                    display: "flex", alignItems: "center", gap: 6,
+                    background: isOver
+                      ? "rgba(96,165,250,0.10)"
+                      : active
+                      ? "rgba(255,255,255,0.06)"
+                      : "rgba(255,255,255,0.03)",
+                    border: isOver
+                      ? "1px solid rgba(96,165,250,0.50)"
+                      : active
+                      ? "1px solid rgba(96,165,250,0.28)"
+                      : "1px solid rgba(255,255,255,0.08)",
+                    borderRadius: 99,
+                    padding: "7px 10px 7px 9px",
+                    cursor: "grab",
+                    opacity: dragging ? 0.22 : 1,
+                    userSelect: "none",
+                    transition: "background 0.1s, border-color 0.1s, opacity 0.12s",
+                  }}
                 >
-                  <span>{n.label}</span>
-                  {counts[n.id] > 0 && (
+                  <span style={{ fontSize: 11, color: "rgba(255,255,255,0.18)", letterSpacing: 3, flexShrink: 0 }}>⠿</span>
+                  <span style={{
+                    flex: 1, fontSize: 10, fontFamily: "monospace", letterSpacing: "0.09em",
+                    color: active ? "rgba(96,165,250,0.9)" : "rgba(255,255,255,0.52)",
+                    whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis",
+                  }}>{navItem.label}</span>
+                  {counts[id] > 0 && (
                     <span style={{
-                      fontSize: 9, fontFamily: "monospace",
-                      background: active ? "rgba(96,165,250,0.18)" : "rgba(255,255,255,0.07)",
-                      border: `1px solid ${active ? "rgba(96,165,250,0.25)" : "rgba(255,255,255,0.10)"}`,
-                      color: active ? "rgba(96,165,250,0.9)" : "rgba(255,255,255,0.38)",
-                      borderRadius: 99, padding: "1px 6px", transition: "all 0.12s",
-                    }}>{counts[n.id]}</span>
+                      fontSize: 9, fontFamily: "monospace", flexShrink: 0,
+                      background: active ? "rgba(96,165,250,0.18)" : "rgba(255,255,255,0.06)",
+                      border: `1px solid ${active ? "rgba(96,165,250,0.28)" : "rgba(255,255,255,0.09)"}`,
+                      color: active ? "rgba(96,165,250,0.85)" : "rgba(255,255,255,0.32)",
+                      borderRadius: 99, padding: "1px 5px",
+                    }}>{counts[id]}</span>
                   )}
-                </button>
+                </div>
               );
             })}
           </div>
