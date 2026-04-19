@@ -103,7 +103,7 @@ const TOP_CONFLICTS: Conflict[] = [
     code: "ISR",
     slug: "israel-us-iran-war",
     flyTo: { center: [44.0, 30.0] as [number,number], zoom: 4.2 },
-    image: "https://images.unsplash.com/photo-1532375810709-75b1da00537c?w=600&q=80",
+    image: "/geopolitics-conflict.webp",
   },
 ];
 
