@@ -25,29 +25,56 @@ export default function SenateVoteVisualization({
   const totalAye = senators.filter(s => s.vote === "Aye").length;
   const totalNo = senators.filter(s => s.vote === "No").length;
 
-  // Generate hemicycle positions for senators
+  // Generate hemicycle positions - organized by vote (Aye left, No right)
   const generatePositions = () => {
     const positions: Array<{ senator: Senator; x: number; y: number }> = [];
     const centerX = 266;
     const centerY = 233;
+
+    // Separate senators by vote
+    const ayeVoters = senators.filter(s => s.vote === "Aye");
+    const noVoters = senators.filter(s => s.vote === "No");
+
     const rows = 7;
-    const senatorsPerRow = Math.ceil(senators.length / rows);
+    const baseRadius = 67;
+    const radiusIncrement = 23;
 
-    let index = 0;
+    // Place Aye voters on left side (π to 3π/2)
+    let ayeIndex = 0;
     for (let row = 0; row < rows; row++) {
-      const radius = 67 + row * 23;
-      const senatorsInThisRow = Math.min(senatorsPerRow + row * 2, senators.length - index);
-      const angleSpan = Math.PI; // 180 degrees for hemicycle
-      const angleStep = angleSpan / (senatorsInThisRow + 1);
+      const radius = baseRadius + row * radiusIncrement;
+      const senatorsInRow = Math.min(Math.ceil(ayeVoters.length / rows) + Math.floor(row * 0.5), ayeVoters.length - ayeIndex);
+      const angleStart = Math.PI;
+      const angleEnd = Math.PI * 1.5;
+      const angleStep = (angleEnd - angleStart) / (senatorsInRow + 1);
 
-      for (let i = 0; i < senatorsInThisRow && index < senators.length; i++) {
-        const angle = Math.PI + angleStep * (i + 1); // Start from left side
+      for (let i = 0; i < senatorsInRow && ayeIndex < ayeVoters.length; i++) {
+        const angle = angleStart + angleStep * (i + 1);
         const x = centerX + radius * Math.cos(angle);
         const y = centerY + radius * Math.sin(angle);
-        positions.push({ senator: senators[index], x, y });
-        index++;
+        positions.push({ senator: ayeVoters[ayeIndex], x, y });
+        ayeIndex++;
       }
     }
+
+    // Place No voters on right side (3π/2 to 2π)
+    let noIndex = 0;
+    for (let row = 0; row < rows; row++) {
+      const radius = baseRadius + row * radiusIncrement;
+      const senatorsInRow = Math.min(Math.ceil(noVoters.length / rows) + Math.floor(row * 0.5), noVoters.length - noIndex);
+      const angleStart = Math.PI * 1.5;
+      const angleEnd = Math.PI * 2;
+      const angleStep = (angleEnd - angleStart) / (senatorsInRow + 1);
+
+      for (let i = 0; i < senatorsInRow && noIndex < noVoters.length; i++) {
+        const angle = angleStart + angleStep * (i + 1);
+        const x = centerX + radius * Math.cos(angle);
+        const y = centerY + radius * Math.sin(angle);
+        positions.push({ senator: noVoters[noIndex], x, y });
+        noIndex++;
+      }
+    }
+
     return positions;
   };
 

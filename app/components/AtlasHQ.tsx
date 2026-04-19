@@ -133,8 +133,12 @@ interface FeedItem {
 }
 
 const LIVE_FEED: FeedItem[] = [
+  { time: "12:14p", danger: 5, code: "USA", text: "8 children killed in Louisiana mass shooting", flyTo: { center: [-91.1, 30.45] as [number,number], zoom: 9 }, sources: ["AP", "Reuters", "CNN"], confidence: 98, pulse: true,
+    description: "A gunman opened fire at a public gathering in Louisiana, killing 8 children and wounding at least 14 others. The shooting occurred at 12:14pm local time. Law enforcement has one suspect in custody. The FBI has joined the investigation. This marks one of the deadliest attacks on children in Louisiana history." },
   { time: "1d",  danger: 3, code: "ISR", text: "Senate vote fails 40-59 to block arms sales to Israel — Sanders resolution draws 85% of Democrats", flyTo: { center: [-77.0, 38.9] as [number,number], zoom: 11 }, sources: ["Senate", "AP", "Reuters"], confidence: 97,
     description: "The US Senate defeated a resolution introduced by Sen. Bernie Sanders to halt new arms transfers to Israel, 40 in favor to 59 opposed. Despite the failure, the tally marked the highest level of Democratic support to date: 85% of Senate Democrats voted yes. The resolution targeted a pending $8.1B package covering tank rounds, mortar shells, and guidance kits." },
+  { time: "Apr 19", danger: 2, code: "LBN", text: "Trump announces 10-day Israel-Lebanon ceasefire, catching Netanyahu's cabinet off guard", flyTo: { center: [35.5, 33.9] as [number,number], zoom: 8 }, sources: ["AP", "Reuters", "Axios"], confidence: 96,
+    description: "President Trump announced a 10-day ceasefire between Israel and Hezbollah in Lebanon, effective immediately, following a call with Israeli PM Netanyahu. The announcement blindsided several cabinet ministers who learned of the deal through press reports rather than official channels. The ceasefire is described as a humanitarian pause to allow aid into southern Lebanon, with no permanent framework attached." },
   { time: "12m", danger: 5, code: "IRN", text: "US 5th Fleet announces heightened readiness posture in Persian Gulf",                           flyTo: { center: [50.5, 26.2] as [number,number], zoom: 5   }, sources: ["Reuters", "AP"],          confidence: 93,
     description: "The US Navy's 5th Fleet, headquartered in Bahrain, has raised its alert status following intelligence reports of Iranian naval mobilization near the Strait of Hormuz. Two additional destroyers are being repositioned." },
   { time: "3h",  danger: 4, code: "ISR", text: "Israel strikes Hezbollah command infrastructure in southern Beirut for second consecutive night",  flyTo: { center: [35.5, 33.87] as [number,number], zoom: 10  }, sources: ["Reuters", "IDF"],          confidence: 89,
@@ -350,7 +354,7 @@ export default function AtlasHQ({ onClose, onNavigate, onHeadlinesToggle, onSour
         <SectionLabel label="live alerts" />
         <Reveal minStage={3} stage={loadStage}>
           <div style={{ padding: "0 6px", position: "relative" }}>
-            {LIVE_FEED.slice(0, 3).map((item, i) => {
+            {LIVE_FEED.slice(0, 4).map((item, i) => {
               const isSenateVote = item.text.includes("Senate vote fails");
               return (
                 <div
@@ -380,7 +384,7 @@ export default function AtlasHQ({ onClose, onNavigate, onHeadlinesToggle, onSour
                     item={item}
                     onSourceClick={onSourceClick}
                     onClick={() => !isSenateVote && onNavigate?.(item.code, item.flyTo.center, item.flyTo.zoom, item)}
-                    bottomBorder={i < 2}
+                    bottomBorder={i < 3}
                     showConfidenceInline={false}
                     expandOnHover={false}
                   />
