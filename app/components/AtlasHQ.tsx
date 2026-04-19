@@ -124,22 +124,6 @@ const DISASTERS = [
   { label: "LA wildfires",       slug: "la-wildfires",       sub: "California, USA",  affected: "180K displaced",  casualties: "29 dead · 12,000 structures",  flyTo: { center: [-118.4, 34.1] as [number,number], zoom: 7.5 } },
 ];
 
-// ─── News cards ───────────────────────────────────────────────────────────────
-// Edit items here to swap stories. image = cover photo URL. url = free article.
-const NEWS_ITEMS = [
-  {
-    headline: "US 5th Fleet raises combat readiness as Iran conducts naval drills near Hormuz",
-    image: "https://upload.wikimedia.org/wikipedia/commons/thumb/6/60/Natanz_nuclear_facility.jpg/640px-Natanz_nuclear_facility.jpg",
-    url: "https://www.reuters.com/world/middle-east/",
-    source: "Reuters",
-  },
-  {
-    headline: "ICC prosecutor requests arrest warrants for commanders over northern Gaza strikes",
-    image: "https://upload.wikimedia.org/wikipedia/commons/thumb/5/51/International_Criminal_Court_building%2C_the_Hague_%28Netherlands%29.jpg/640px-International_Criminal_Court_building%2C_the_Hague_%28Netherlands%29.jpg",
-    url: "https://apnews.com/hub/israel-hamas-war",
-    source: "AP",
-  },
-];
 
 interface FeedItem {
   time: string;
@@ -340,53 +324,6 @@ export default function AtlasHQ({ onClose, onNavigate, onHeadlinesToggle, onSour
                 showConfidenceInline={false}
                 expandOnHover={false}
               />
-            ))}
-          </div>
-        </Reveal>
-
-        {/* NEWS — label instant, cards fade in */}
-        <SectionLabel label="news" />
-        <Reveal minStage={4} stage={loadStage}>
-          <div style={{ padding: "0 14px 6px", display: "flex", gap: 8 }}>
-            {NEWS_ITEMS.map((item) => (
-              <a
-                key={item.headline}
-                href={item.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                style={{
-                  flex: 1,
-                  height: 196,
-                  borderRadius: 14,
-                  overflow: "hidden",
-                  position: "relative",
-                  display: "block",
-                  textDecoration: "none",
-                  cursor: "pointer",
-                  border: "1px solid rgba(255,255,255,0.09)",
-                  background: "#0a0c18",
-                  minWidth: 0,
-                }}
-              >
-                <img
-                  src={item.image}
-                  alt={item.headline}
-                  style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
-                  onError={e => { (e.currentTarget as HTMLImageElement).style.opacity = "0"; }}
-                />
-                <div style={{
-                  position: "absolute", inset: 0,
-                  background: "linear-gradient(to bottom, transparent 35%, rgba(0,0,0,0.88) 100%)",
-                }} />
-                <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, padding: "8px 10px 10px" }}>
-                  <div style={{
-                    fontSize: 10, fontFamily: "monospace", letterSpacing: "0.03em",
-                    color: "rgba(255,255,255,0.88)", lineHeight: 1.4,
-                    display: "-webkit-box", WebkitLineClamp: 3, WebkitBoxOrient: "vertical", overflow: "hidden",
-                  }}>{item.headline}</div>
-                  <div style={{ fontSize: 8, color: "rgba(255,255,255,0.35)", marginTop: 4, letterSpacing: "0.12em", textTransform: "uppercase" }}>{item.source}</div>
-                </div>
-              </a>
             ))}
           </div>
         </Reveal>
