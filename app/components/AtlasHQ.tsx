@@ -141,7 +141,7 @@ const LIVE_FEED: FeedItem[] = [
 const FINANCE_ITEMS = [
   {
     headline: "Oil surges past $87 as Strait of Hormuz tensions escalate following US-Iran clashes",
-    image: "https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=600&q=80",
+    image: "/finance-oil.jpeg",
     url: "https://www.bloomberg.com/energy",
     source: "Bloomberg",
   },
