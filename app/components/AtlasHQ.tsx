@@ -115,8 +115,15 @@ const MORE_CONFLICTS: Conflict[] = [
 ];
 
 const DISASTERS = [
-  { label: "Kenya floods", slug: "kenya-floods", sub: "110+ dead · 34,765+ displaced · 30 counties affected", flyTo: { center: [37.9, 0.0] as [number,number], zoom: 5.5 }, image: "https://images.unsplash.com/photo-1625498543745-9b42ed58edc3?w=600&q=80" },
+  { label: "Kenya floods", slug: "kenya-floods", sub: "110+ dead · 34,765+ displaced · 30 counties affected", flyTo: { center: [37.9, 0.0] as [number,number], zoom: 5.5 }, image: "/kenya-floods-debris.webp" },
 ];
+
+const DISASTER_ARTICLE = {
+  headline: "Nairobi slums submerged as Kenya floods kill 110 and displace 35,000 across 30 counties — April 2026",
+  image: "/kenya-floods-bus.webp",
+  url: "https://www.reuters.com/world/africa/",
+  source: "Reuters / AFP",
+};
 
 
 interface FeedItem {
@@ -332,7 +339,27 @@ export default function AtlasHQ({ onClose, onNavigate, onHeadlinesToggle, onSour
         {/* DISASTERS */}
         <SectionLabel label="disasters" />
         <Reveal minStage={5} stage={loadStage}>
-          <div style={{ padding: "0 14px 20px" }}>
+          <div style={{ padding: "0 14px 20px", display: "flex", flexDirection: "column", gap: 6 }}>
+            {/* Article card — top */}
+            <a
+              href={DISASTER_ARTICLE.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{
+                height: 196, borderRadius: 14, overflow: "hidden",
+                position: "relative", display: "block", textDecoration: "none",
+                cursor: "pointer", border: "1px solid rgba(255,255,255,0.09)",
+                background: "#0a0c18",
+              }}
+            >
+              <img src={DISASTER_ARTICLE.image} alt={DISASTER_ARTICLE.headline} style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} onError={e => { (e.currentTarget as HTMLImageElement).style.opacity = "0"; }} />
+              <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom, transparent 35%, rgba(0,0,0,0.88) 100%)" }} />
+              <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, padding: "8px 10px 10px" }}>
+                <div style={{ fontSize: 12, fontFamily: "monospace", letterSpacing: "0.03em", color: "rgba(255,255,255,0.88)", lineHeight: 1.4, display: "-webkit-box", WebkitLineClamp: 3, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{DISASTER_ARTICLE.headline}</div>
+                <div style={{ fontSize: 8, color: "rgba(255,255,255,0.35)", marginTop: 4, letterSpacing: "0.12em", textTransform: "uppercase" }}>{DISASTER_ARTICLE.source}</div>
+              </div>
+            </a>
+            {/* Disaster flyTo cards */}
             {DISASTERS.map((d) => (
               <div
                 key={d.label}
