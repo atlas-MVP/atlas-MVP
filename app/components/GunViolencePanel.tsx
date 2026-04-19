@@ -1,7 +1,6 @@
 "use client";
 import React, { useState } from "react";
 import { T, clr } from "../lib/tokens";
-import EventUploadButton from "./EventUploadButton";
 import LiveAlertRow from "./LiveAlertRow";
 
 // ── Live Alert data (recent incidents) ────────────────────────────────────
@@ -68,159 +67,194 @@ const CASUALTIES = {
   massShootings: "152",
 };
 
-function eventFolderId(incidentId: string): string {
-  return `gun-violence-${incidentId}`;
-}
-
 interface Props {
   onClose: () => void;
   onFlyTo?: (center: [number, number], zoom: number) => void;
-  highlightId?: string; // incident to scroll-highlight on open
+  highlightId?: string;
 }
 
 export default function GunViolencePanel({ onClose, onFlyTo, highlightId }: Props) {
-  const [activeIdx, setActiveIdx]       = useState<number>(() => {
-    if (!highlightId) return -1;
-    const i = LIVE_ALERTS.findIndex(inc => inc.id === highlightId);
-    return i >= 0 ? i : -1;
-  });
-  const [uploadTick, setUploadTick]     = useState(0);
-  const [editorOpen, setEditorOpen]     = useState(false);
-
-  const activeIncident = activeIdx >= 0 ? LIVE_ALERTS[activeIdx] : null;
-  const evId = activeIncident ? eventFolderId(activeIncident.id) : "";
+  const [lockedAlertIdx, setLockedAlertIdx] = useState<number | null>(null);
+  const [hoveredAlert, setHoveredAlert] = useState<number | null>(null);
 
   return (
-    <>
-      {/* ── Main panel ── */}
+    <div
+      className="absolute left-6 z-20 w-[520px]"
+      style={{ top: 72, bottom: 24, display: "flex", flexDirection: "column" }}
+    >
       <div
-        className="absolute left-6 z-20 w-[520px]"
-        style={{ top: 72, bottom: 24, display: "flex", flexDirection: "column" }}
+        style={{
+          flex: 1,
+          overflowY: "auto",
+          scrollbarWidth: "none",
+          background: clr.panel(),
+          backdropFilter: "blur(28px)",
+          WebkitBackdropFilter: "blur(28px)",
+          borderRadius: 20,
+          border: `1px solid ${clr.white(0.07)}`,
+          boxShadow: "0 24px 80px rgba(0,0,0,0.55)",
+          display: "flex",
+          flexDirection: "column",
+        }}
       >
-        <div
-          style={{
-            flex: 1, overflowY: "auto", scrollbarWidth: "none",
-            background: clr.panel(),
-            backdropFilter: "blur(28px)", WebkitBackdropFilter: "blur(28px)",
-            borderRadius: 20,
-            border: `1px solid ${clr.white(0.07)}`,
-            boxShadow: "0 24px 80px rgba(0,0,0,0.55)",
-            display: "flex", flexDirection: "column",
-          }}
-        >
-          {/* ── Header ── */}
-          <div style={{ padding: "18px 20px 16px", borderBottom: `1px solid ${clr.white(0.06)}`, flexShrink: 0 }}>
-            <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between" }}>
-              <div>
-                <div style={{
-                  fontSize: 20, fontWeight: 700, color: clr.white(0.92),
-                  letterSpacing: "-0.01em", lineHeight: 1.15,
-                }}>
-                  Gun Violence in America
-                </div>
+        {/* ── Header ── */}
+        <div style={{ padding: "18px 20px 16px", borderBottom: `1px solid ${clr.white(0.06)}`, flexShrink: 0 }}>
+          <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between" }}>
+            <div>
+              <div style={{
+                fontSize: 20,
+                fontWeight: 700,
+                color: clr.white(0.92),
+                letterSpacing: "-0.01em",
+                lineHeight: 1.15,
+              }}>
+                Gun Violence in America
               </div>
-              <button
-                onClick={onClose}
-                style={{
-                  background: "none", border: "none", cursor: "pointer",
-                  color: clr.white(0.3), fontSize: 18, padding: "2px 6px", lineHeight: 1, flexShrink: 0,
-                }}
-              >✕</button>
+              <div style={{
+                fontSize: 11,
+                color: clr.white(0.42),
+                marginTop: 4,
+                fontFamily: T.MONO,
+              }}>
+                2026 – Present
+              </div>
             </div>
+            <button
+              onClick={onClose}
+              style={{
+                background: "none",
+                border: "none",
+                cursor: "pointer",
+                color: clr.white(0.3),
+                fontSize: 18,
+                padding: "2px 6px",
+                lineHeight: 1,
+                flexShrink: 0,
+              }}
+            >✕</button>
+          </div>
+        </div>
 
-            {/* Stats row */}
-            <div style={{ display: "flex", gap: 28, marginTop: 18 }}>
-              {([["Killed", CASUALTIES.killed], ["Injured", CASUALTIES.injured], ["Mass shootings", CASUALTIES.massShootings]] as [string, string][]).map(([label, value]) => (
-                <div key={label}>
-                  <div style={{ fontSize: 22, fontWeight: 700, color: clr.white(0.92), fontFamily: T.MONO }}>{value}</div>
-                  <div style={{ fontSize: 9, color: clr.white(0.42), letterSpacing: "0.12em", textTransform: "uppercase", marginTop: 3 }}>{label} · 2026 YTD</div>
-                </div>
-              ))}
-            </div>
+        {/* ── Scrollable body ── */}
+        <div style={{ flex: 1, overflowY: "auto", minHeight: 0, display: "flex", flexDirection: "column" }}>
+
+          {/* ── Casualties ── */}
+          <div style={{ padding: "8px 14px 6px", borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
+            <table style={{ width: "100%", borderCollapse: "collapse" }}>
+              <thead>
+                <tr>
+                  <th style={{ textAlign: "left", fontSize: 10, fontFamily: "monospace", color: "rgba(255,255,255,0.35)", fontWeight: "normal", paddingBottom: 4, letterSpacing: "0.08em" }}></th>
+                  <th style={{ textAlign: "right", fontSize: 10, fontFamily: "monospace", color: "rgba(255,255,255,0.35)", fontWeight: "normal", paddingBottom: 4, letterSpacing: "0.08em", paddingRight: 8 }}>Injured</th>
+                  <th style={{ textAlign: "right", fontSize: 10, fontFamily: "monospace", color: "rgba(255,255,255,0.35)", fontWeight: "normal", paddingBottom: 4, letterSpacing: "0.08em", paddingRight: 8 }}>Killed</th>
+                  <th style={{ textAlign: "right", fontSize: 10, fontFamily: "monospace", color: "rgba(255,255,255,0.35)", fontWeight: "normal", paddingBottom: 4, letterSpacing: "0.08em" }}>Incidents</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td style={{ fontSize: 12, fontFamily: "monospace", color: "rgba(255,255,255,0.72)", paddingTop: 2, paddingBottom: 6 }}>USA</td>
+                  <td style={{ textAlign: "right", fontSize: 14, fontFamily: "monospace", fontWeight: 700, color: "rgba(255,255,255,0.88)", paddingTop: 2, paddingBottom: 6, paddingRight: 8 }}>{CASUALTIES.injured}</td>
+                  <td style={{ textAlign: "right", fontSize: 14, fontFamily: "monospace", fontWeight: 700, color: "rgba(255,255,255,0.88)", paddingTop: 2, paddingBottom: 6, paddingRight: 8 }}>{CASUALTIES.killed}</td>
+                  <td style={{ textAlign: "right", fontSize: 14, fontFamily: "monospace", fontWeight: 700, color: "rgba(255,255,255,0.88)", paddingTop: 2, paddingBottom: 6 }}>{CASUALTIES.massShootings}</td>
+                </tr>
+              </tbody>
+            </table>
           </div>
 
-          {/* ── Incident list ── */}
-          <div style={{ flex: 1, overflowY: "auto", scrollbarWidth: "none", padding: "10px 0 16px" }}>
-            <div style={{
-              fontSize: 10, fontFamily: T.MONO, letterSpacing: T.TRACK_XWIDE,
-              color: clr.white(0.42), textTransform: "uppercase",
-              padding: "6px 20px 10px",
-            }}>
-              Recent Incidents
-            </div>
-
-            {LIVE_ALERTS.map((inc, i) => {
-              const isActive = activeIdx === i;
+          {/* ── Live alerts ── */}
+          <div style={{ padding: "14px 6px 6px", borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
+            <p style={{ margin: "0 0 6px 12px", fontSize: 11, fontFamily: "monospace", letterSpacing: "0.18em", color: "rgba(255,255,255,0.42)", textTransform: "uppercase", fontWeight: 500 }}>
+              live alerts
+            </p>
+            {LIVE_ALERTS.slice(0, 4).map((alert, i, arr) => {
+              const isLocked = lockedAlertIdx === i;
               return (
-                <div
-                  key={inc.id}
-                  onClick={() => {
-                    setActiveIdx(isActive ? -1 : i);
-                    if (!isActive) onFlyTo?.(inc.flyTo.center, inc.flyTo.zoom);
-                  }}
-                  style={{
-                    margin: "2px 10px",
-                    opacity: isActive || activeIdx < 0 ? 1 : 0.45,
-                    transition: "opacity 0.3s ease",
-                  }}
-                >
-                  <LiveAlertRow
-                    item={inc}
-                    bottomBorder={i < LIVE_ALERTS.length - 1}
-                    showConfidenceInline={false}
-                    expandOnHover
-                    defaultExpanded={isActive}
-                  />
+                <div key={alert.id} style={{ display: "flex", alignItems: "flex-start", gap: 4 }}>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <LiveAlertRow
+                      item={alert}
+                      bottomBorder={i < arr.length - 1}
+                      showConfidenceInline={false}
+                      expandOnHover={true}
+                      defaultExpanded={highlightId === alert.id}
+                      isActive={isLocked || hoveredAlert === i}
+                      onClick={() => {
+                        setLockedAlertIdx(prev => prev === i ? null : i);
+                        onFlyTo?.(alert.flyTo.center, alert.flyTo.zoom);
+                      }}
+                      onHoverChange={(active) => {
+                        if (active) setHoveredAlert(i);
+                        else setHoveredAlert(null);
+                      }}
+                    />
+                  </div>
+                  {isLocked && (
+                    <div style={{ flexShrink: 0, paddingTop: 6 }}>
+                      <button
+                        onClick={() => setLockedAlertIdx(null)}
+                        style={{
+                          color: "rgba(255,255,255,0.4)",
+                          fontSize: 13,
+                          background: "none",
+                          border: "none",
+                          cursor: "pointer",
+                          lineHeight: 1,
+                          padding: "4px 6px",
+                        }}
+                        onMouseEnter={e => (e.currentTarget.style.color = "rgba(255,255,255,0.85)")}
+                        onMouseLeave={e => (e.currentTarget.style.color = "rgba(255,255,255,0.4)")}
+                      >×</button>
+                    </div>
+                  )}
                 </div>
               );
             })}
           </div>
 
-          {/* ── Footer ── */}
-          <div style={{
-            padding: "10px 20px 14px", borderTop: `1px solid ${clr.white(0.05)}`, flexShrink: 0,
-          }}>
-            <p style={{
-              margin: 0, fontSize: 9, fontFamily: T.MONO, letterSpacing: "0.16em",
-              color: clr.white(0.22), textAlign: "center", textTransform: "uppercase",
-            }}>
-              Gun Violence Archive · Atlas Intelligence
-            </p>
+          {/* ── Timeline ── */}
+          <div style={{ padding: "0 16px 16px" }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 14, marginBottom: 14 }}>
+              <p style={{ fontSize: 11, fontFamily: "monospace", letterSpacing: "0.18em", color: "rgba(255,255,255,0.42)", textTransform: "uppercase", margin: 0, fontWeight: 500 }}>
+                timeline
+              </p>
+            </div>
+            <div style={{ position: "relative" }}>
+              <div style={{ position: "absolute", left: 5, top: 6, bottom: 6, width: 1, background: "rgba(255,255,255,0.05)" }} />
+              <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
+                <div style={{ display: "flex", gap: 12, paddingLeft: 4 }}>
+                  <div style={{ flexShrink: 0, marginTop: 4 }}>
+                    <div style={{ width: 7, height: 7, borderRadius: "50%", background: "rgba(255,255,255,0.85)", border: "1px solid rgba(255,255,255,0.3)", boxShadow: "0 0 6px rgba(255,255,255,0.25)" }} />
+                  </div>
+                  <div>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8, margin: "0 0 5px" }}>
+                      <span style={{ fontSize: 11, fontFamily: "monospace", fontWeight: 600, color: "rgba(255,255,255,0.92)", letterSpacing: "0.03em" }}>
+                        April 19
+                      </span>
+                    </div>
+                    <p style={{ margin: 0, fontSize: 12, color: "rgba(255,255,255,0.72)", lineHeight: 1.5 }}>
+                      Two mass shootings in Louisiana and Iowa mark one of the deadliest days of 2026, bringing the year's total to 152 incidents.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
-      </div>
 
-      {/* ── Upload + edit buttons (gap zone, right of panel) ── */}
-      {activeIncident && (
-        <>
-          <div
-            onClick={e => e.stopPropagation()}
-            style={{ position: "fixed", left: T.PANEL_W + 12, top: T.GAP_UPLOAD_TOP, zIndex: 25, pointerEvents: "auto" }}
-          >
-            <EventUploadButton
-              eventId={`${evId}-${uploadTick}`}
-              onUploaded={() => setUploadTick(t => t + 1)}
-            />
-          </div>
-          <div
-            onClick={e => e.stopPropagation()}
-            style={{ position: "fixed", left: T.PANEL_W + 12, top: T.GAP_EDIT_TOP, zIndex: 25, pointerEvents: "auto" }}
-          >
-            <button
-              onClick={() => setEditorOpen(v => !v)}
-              style={{
-                fontSize: 9, fontFamily: T.MONO, letterSpacing: T.TRACK_MED,
-                textTransform: "uppercase", color: clr.white(0.4),
-                background: clr.white(0.06), border: `1px solid ${clr.white(0.12)}`,
-                borderRadius: T.PILL_RADIUS, padding: "4px 10px",
-                cursor: "pointer", whiteSpace: "nowrap",
-              }}
-              onMouseEnter={e => { e.currentTarget.style.background = clr.white(0.12); e.currentTarget.style.color = clr.white(0.8); }}
-              onMouseLeave={e => { e.currentTarget.style.background = clr.white(0.06); e.currentTarget.style.color = clr.white(0.4); }}
-            >edit</button>
-          </div>
-        </>
-      )}
-    </>
+        {/* ── Footer ── */}
+        <div style={{ padding: "10px 20px 14px", borderTop: `1px solid ${clr.white(0.05)}`, flexShrink: 0 }}>
+          <p style={{
+            margin: 0,
+            fontSize: 9,
+            fontFamily: T.MONO,
+            letterSpacing: "0.16em",
+            color: clr.white(0.22),
+            textAlign: "center",
+            textTransform: "uppercase",
+          }}>
+            Gun Violence Archive · Atlas Intelligence
+          </p>
+        </div>
+      </div>
+    </div>
   );
 }
