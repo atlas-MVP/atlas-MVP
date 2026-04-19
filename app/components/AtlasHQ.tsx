@@ -93,6 +93,7 @@ interface Conflict {
   slug: string; // URL slug — e.g. "israel-us-iran-war"
   flyTo: { center: [number,number]; zoom: number };
   pulse?: boolean;
+  image?: string;
 }
 
 const TOP_CONFLICTS: Conflict[] = [
@@ -102,6 +103,7 @@ const TOP_CONFLICTS: Conflict[] = [
     code: "ISR",
     slug: "israel-us-iran-war",
     flyTo: { center: [44.0, 30.0] as [number,number], zoom: 4.2 },
+    image: "https://upload.wikimedia.org/wikipedia/commons/thumb/9/9d/B-2_spirit_bombing.jpg/640px-B-2_spirit_bombing.jpg",
   },
 ];
 
@@ -113,8 +115,7 @@ const MORE_CONFLICTS: Conflict[] = [
 ];
 
 const DISASTERS = [
-  { label: "Myanmar earthquake", slug: "myanmar-earthquake", sub: "Mandalay Region",  affected: "14.5M affected", casualties: "3,800+ dead · 5,000+ injured", flyTo: { center: [96.0, 21.9]   as [number,number], zoom: 5.5 } },
-  { label: "LA wildfires",       slug: "la-wildfires",       sub: "California, USA",  affected: "180K displaced",  casualties: "29 dead · 12,000 structures",  flyTo: { center: [-118.4, 34.1] as [number,number], zoom: 7.5 } },
+  { label: "Myanmar earthquake", slug: "myanmar-earthquake", sub: "3,800+ dead · 5,000+ injured · 14.5M affected", flyTo: { center: [96.0, 21.9] as [number,number], zoom: 5.5 }, image: "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b8/2011-earthquake-rubble.jpg/640px-2011-earthquake-rubble.jpg" },
 ];
 
 
@@ -226,28 +227,17 @@ export default function AtlasHQ({ onClose, onNavigate, onHeadlinesToggle, onSour
               <div
                 onClick={() => onNavigate?.(c.code, c.flyTo.center, c.flyTo.zoom, undefined, c.slug)}
                 style={{
-                  padding: "12px 13px",
-                  borderRadius: 10,
-                  background: "rgba(255,255,255,0.03)",
+                  height: 196, borderRadius: 14, overflow: "hidden",
+                  position: "relative", cursor: "pointer",
                   border: "1px solid rgba(255,255,255,0.09)",
-                  boxShadow: "inset 0 1px 0 rgba(255,255,255,0.06)",
-                  marginBottom: 2,
-                  cursor: "pointer",
+                  background: "#0a0c18",
                 }}
-                onMouseEnter={e => (e.currentTarget.style.background = "rgba(255,255,255,0.04)")}
-                onMouseLeave={e => (e.currentTarget.style.background = "rgba(255,255,255,0.02)")}
               >
-                <div style={{ display: "flex", alignItems: "flex-start", gap: 11 }}>
-                  {c.pulse && (
-                    <div className="dot-heat" style={{
-                      width: 7, height: 7, borderRadius: "50%", flexShrink: 0, marginTop: 5,
-                      background: "#1e3a8a", boxShadow: "0 0 7px #1e3a8acc",
-                    }} />
-                  )}
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: 15, fontFamily: "monospace", letterSpacing: "0.07em", color: "rgba(255,255,255,0.92)", fontWeight: 700 }}>{c.label}</div>
-                    <div style={{ fontSize: 11, color: "rgba(255,255,255,0.40)", marginTop: 5, lineHeight: 1.45, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{c.sub}</div>
-                  </div>
+                {c.image && <img src={c.image} alt={c.label} style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} onError={e => { (e.currentTarget as HTMLImageElement).style.opacity = "0"; }} />}
+                <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom, transparent 35%, rgba(0,0,0,0.88) 100%)" }} />
+                <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, padding: "8px 10px 10px" }}>
+                  <div style={{ fontSize: 12, fontFamily: "monospace", letterSpacing: "0.06em", color: "rgba(255,255,255,0.92)", fontWeight: 700, lineHeight: 1.3 }}>{c.label}</div>
+                  <div style={{ fontSize: 9, color: "rgba(255,255,255,0.50)", marginTop: 4, lineHeight: 1.4, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{c.sub}</div>
                 </div>
               </div>
             </Reveal>
@@ -338,43 +328,29 @@ export default function AtlasHQ({ onClose, onNavigate, onHeadlinesToggle, onSour
           </div>
         </Reveal>
 
-        {/* DISASTERS — label instant, cards fade in */}
-        <SectionLabel label="disasters" onClick={() => setShowAllDisasters(v => !v)} />
+        {/* DISASTERS */}
+        <SectionLabel label="disasters" />
         <Reveal minStage={5} stage={loadStage}>
-          <div style={{ padding: "0 14px 20px", display: "flex", flexDirection: "column", gap: 4 }}>
-            {(showAllDisasters ? DISASTERS : DISASTERS.slice(0, 2)).map((d) => (
+          <div style={{ padding: "0 14px 20px" }}>
+            {DISASTERS.map((d) => (
               <div
                 key={d.label}
                 onClick={() => onNavigate?.(null, d.flyTo.center, d.flyTo.zoom, undefined, d.slug)}
                 style={{
-                  padding: "9px 12px", borderRadius: 10,
-                  background: "rgba(255,255,255,0.03)",
+                  height: 196, borderRadius: 14, overflow: "hidden",
+                  position: "relative", cursor: "pointer",
                   border: "1px solid rgba(255,255,255,0.09)",
-                  boxShadow: "inset 0 1px 0 rgba(255,255,255,0.06)",
-                  marginBottom: 2,
-                  cursor: "pointer",
+                  background: "#0a0c18",
                 }}
-                onMouseEnter={e => (e.currentTarget.style.background = "rgba(255,255,255,0.05)")}
-                onMouseLeave={e => (e.currentTarget.style.background = "rgba(255,255,255,0.02)")}
               >
-                <div style={{ marginBottom: 3 }}>
-                  <span style={{ fontSize: 14, fontFamily: "monospace", letterSpacing: "0.09em", color: "rgba(255,255,255,0.92)", fontWeight: 700 }}>{d.label}</span>
+                {d.image && <img src={d.image} alt={d.label} style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} onError={e => { (e.currentTarget as HTMLImageElement).style.opacity = "0"; }} />}
+                <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom, transparent 35%, rgba(0,0,0,0.88) 100%)" }} />
+                <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, padding: "8px 10px 10px" }}>
+                  <div style={{ fontSize: 12, fontFamily: "monospace", letterSpacing: "0.06em", color: "rgba(255,255,255,0.92)", fontWeight: 700 }}>{d.label}</div>
+                  <div style={{ fontSize: 9, color: "rgba(255,255,255,0.50)", marginTop: 4 }}>{d.sub}</div>
                 </div>
-                <div style={{ fontSize: 10, color: "rgba(255,255,255,0.40)" }}>{d.affected} — {d.casualties}</div>
               </div>
             ))}
-            {showAllDisasters && (
-              <button
-                onClick={() => setShowAllDisasters(false)}
-                style={{
-                  background: "none", border: "none", padding: "2px 4px", cursor: "pointer",
-                  fontFamily: "monospace", fontSize: 8, letterSpacing: "0.12em",
-                  color: "rgba(255,255,255,0.25)", display: "flex", alignItems: "center",
-                }}
-                onMouseEnter={e => (e.currentTarget.style.color = "rgba(255,255,255,0.55)")}
-                onMouseLeave={e => (e.currentTarget.style.color = "rgba(255,255,255,0.25)")}
-              >▲ show less</button>
-            )}
           </div>
         </Reveal>
       </div>
