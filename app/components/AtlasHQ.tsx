@@ -130,19 +130,35 @@ interface FeedItem {
   sources: string[];
   confidence: number;
   pulse?: boolean;
+  slug?: string;
+  incidentId?: string;
 }
 
 const LIVE_FEED: FeedItem[] = [
-  { time: "12:14p", danger: 5, code: "USA", text: "8 children killed in Louisiana mass shooting", flyTo: { center: [-91.1, 30.45] as [number,number], zoom: 9 }, sources: ["AP", "Reuters", "CNN"], confidence: 98, pulse: true,
-    description: "A gunman opened fire at a public gathering in Louisiana, killing 8 children and wounding at least 14 others. The shooting occurred at 12:14pm local time. Law enforcement has one suspect in custody. The FBI has joined the investigation. This marks one of the deadliest attacks on children in Louisiana history." },
-  { time: "1d",  danger: 3, code: "ISR", text: "Senate vote fails 40-59 to block arms sales to Israel — Sanders resolution draws 85% of Democrats", flyTo: { center: [-77.0, 38.9] as [number,number], zoom: 11 }, sources: ["Senate", "AP", "Reuters"], confidence: 97,
-    description: "The US Senate defeated a resolution introduced by Sen. Bernie Sanders to halt new arms transfers to Israel, 40 in favor to 59 opposed. Despite the failure, the tally marked the highest level of Democratic support to date: 85% of Senate Democrats voted yes. The resolution targeted a pending $8.1B package covering tank rounds, mortar shells, and guidance kits." },
-  { time: "Apr 19", danger: 2, code: "LBN", text: "Trump announces 10-day Israel-Lebanon ceasefire, catching Netanyahu's cabinet off guard", flyTo: { center: [35.5, 33.9] as [number,number], zoom: 8 }, sources: ["AP", "Reuters", "Axios"], confidence: 96,
+  { time: "Apr 19", danger: 5, code: "USA", slug: "gun-violence", incidentId: "shreveport-2026-04-19", pulse: true,
+    text: "8 children killed in Shreveport mass shooting — gunman kills children ages 1 to 14 across two homes before fleeing",
+    flyTo: { center: [-93.75, 32.52] as [number,number], zoom: 12 }, sources: ["AP", "Reuters", "CNN"], confidence: 98,
+    description: "Eight children and juveniles ages 1–14 were killed in a mass shooting in Shreveport, Louisiana. The shooter, who appears to have been known to the victims, targeted two homes on the same block before fleeing. He subsequently carjacked a vehicle and was killed by police during pursuit. Mayor Tom Arceneaux called it 'maybe the worst tragic situation we've ever had in Shreveport.'" },
+  { time: "Apr 17", danger: 2, code: "LBN",
+    text: "Trump announces 10-day Israel-Lebanon ceasefire, catching Netanyahu's cabinet off guard",
+    flyTo: { center: [35.5, 33.9] as [number,number], zoom: 8 }, sources: ["AP", "Reuters", "Axios"], confidence: 96,
     description: "President Trump announced a 10-day ceasefire between Israel and Hezbollah in Lebanon, effective immediately, following a call with Israeli PM Netanyahu. The announcement blindsided several cabinet ministers who learned of the deal through press reports rather than official channels. The ceasefire is described as a humanitarian pause to allow aid into southern Lebanon, with no permanent framework attached." },
-  { time: "12m", danger: 5, code: "IRN", text: "US 5th Fleet announces heightened readiness posture in Persian Gulf",                           flyTo: { center: [50.5, 26.2] as [number,number], zoom: 5   }, sources: ["Reuters", "AP"],          confidence: 93,
-    description: "The US Navy's 5th Fleet, headquartered in Bahrain, has raised its alert status following intelligence reports of Iranian naval mobilization near the Strait of Hormuz. Two additional destroyers are being repositioned." },
-  { time: "3h",  danger: 4, code: "ISR", text: "Israel strikes Hezbollah command infrastructure in southern Beirut for second consecutive night",  flyTo: { center: [35.5, 33.87] as [number,number], zoom: 10  }, sources: ["Reuters", "IDF"],          confidence: 89,
-    description: "Israeli Air Force struck multiple Hezbollah command and weapons storage sites in the Dahieh suburb of Beirut for the second night running. The IDF cited intelligence indicating imminent rocket launches targeting northern Israel. Lebanese health officials report at least 11 casualties." },
+  { time: "Apr 17", danger: 3, code: "ISR",
+    text: "Senate vote fails 40-59 to block arms sales to Israel — Sanders resolution draws 85% of Democrats",
+    flyTo: { center: [-77.0, 38.9] as [number,number], zoom: 11 }, sources: ["Senate", "AP", "Reuters"], confidence: 97,
+    description: "The US Senate defeated a resolution introduced by Sen. Bernie Sanders to halt new arms transfers to Israel, 40 in favor to 59 opposed. Despite the failure, the tally marked the highest level of Democratic support to date: 85% of Senate Democrats voted yes. The resolution targeted a pending $8.1B package covering tank rounds, mortar shells, and guidance kits." },
+];
+
+// Violence section — card linking to GunViolencePanel
+const VIOLENCE_ITEMS = [
+  {
+    slug: "violence",
+    headline: "5 shot near University of Iowa campus after fight erupts on Ped Mall — one victim critical",
+    image: "/violence.webp",
+    source: "AP",
+    flyTo: { center: [-98.5, 39.5] as [number,number], zoom: 4 },
+    incidentId: "iowa-city-2026-04-19",
+  },
 ];
 
 const FINANCE_ITEMS = [
@@ -162,6 +178,7 @@ interface Props {
   onReelsTap?: () => void;
   onSenateVoteLocked?: (locked: boolean) => void;
   onFinanceTap?: (slug: string) => void;
+  onViolenceTap?: (incidentId: string, center: [number, number], zoom: number) => void;
 }
 
 // ─── Sequential load stages ──────────────────────────────────────────────────
@@ -193,7 +210,7 @@ function Reveal({ minStage, stage, children }: { minStage: number; stage: number
   );
 }
 
-export default function AtlasHQ({ onClose, onNavigate, onHeadlinesToggle, onSourceClick, onReelsTap, onFinanceTap, onSenateVoteLocked }: Props) {
+export default function AtlasHQ({ onClose, onNavigate, onHeadlinesToggle, onSourceClick, onReelsTap, onFinanceTap, onViolenceTap, onSenateVoteLocked }: Props) {
   const [showMore, setShowMore] = useState(false);
   const [showAllDisasters, setShowAllDisasters] = useState(false);
   const [loadStage, setLoadStage] = useState(0);
@@ -354,7 +371,7 @@ export default function AtlasHQ({ onClose, onNavigate, onHeadlinesToggle, onSour
         <SectionLabel label="live alerts" />
         <Reveal minStage={3} stage={loadStage}>
           <div style={{ padding: "0 6px", position: "relative" }}>
-            {LIVE_FEED.slice(0, 4).map((item, i) => {
+            {LIVE_FEED.slice(0, 3).map((item, i) => {
               const isSenateVote = item.text.includes("Senate vote fails");
               return (
                 <div
@@ -376,21 +393,52 @@ export default function AtlasHQ({ onClose, onNavigate, onHeadlinesToggle, onSour
                       setSenateVoteVisible(newState);
                       onSenateVoteLocked?.(newState === 'locked');
                     } else {
-                      onNavigate?.(item.code, item.flyTo.center, item.flyTo.zoom, item);
+                      onNavigate?.(item.code, item.flyTo.center, item.flyTo.zoom, item, item.slug);
                     }
                   }}
                 >
                   <LiveAlertRow
                     item={item}
                     onSourceClick={onSourceClick}
-                    onClick={() => !isSenateVote && onNavigate?.(item.code, item.flyTo.center, item.flyTo.zoom, item)}
-                    bottomBorder={i < 3}
+                    onClick={() => !isSenateVote && onNavigate?.(item.code, item.flyTo.center, item.flyTo.zoom, item, item.slug)}
+                    bottomBorder={i < 2}
                     showConfidenceInline={false}
                     expandOnHover={false}
                   />
                 </div>
               );
             })}
+          </div>
+        </Reveal>
+
+        {/* VIOLENCE */}
+        <SectionLabel label="violence" />
+        <Reveal minStage={5} stage={loadStage}>
+          <div style={{ padding: "0 14px 6px" }}>
+            {VIOLENCE_ITEMS.map((item) => (
+              <div
+                key={item.headline}
+                onClick={() => onViolenceTap?.(item.incidentId, item.flyTo.center, item.flyTo.zoom)}
+                style={{
+                  height: 196, borderRadius: 14, overflow: "hidden",
+                  position: "relative", cursor: "pointer",
+                  border: "1px solid rgba(255,255,255,0.09)",
+                  background: "#0a0c18",
+                }}
+              >
+                <img
+                  src={item.image}
+                  alt={item.headline}
+                  style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
+                  onError={e => { (e.currentTarget as HTMLImageElement).style.opacity = "0"; }}
+                />
+                <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom, transparent 30%, rgba(0,0,0,0.90) 100%)" }} />
+                <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, padding: "8px 10px 10px" }}>
+                  <div style={{ fontSize: 12, fontFamily: "monospace", letterSpacing: "0.03em", color: "rgba(255,255,255,0.88)", lineHeight: 1.4, display: "-webkit-box", WebkitLineClamp: 3, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{item.headline}</div>
+                  <div style={{ fontSize: 9, color: "rgba(255,255,255,0.48)", marginTop: 4, letterSpacing: "0.12em", textTransform: "uppercase" }}>{item.source}</div>
+                </div>
+              </div>
+            ))}
           </div>
         </Reveal>
 
