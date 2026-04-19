@@ -1746,7 +1746,7 @@ export default function CountryPanel({ countryCode, onClose, onViewFeed, onConfl
                     const eraColor = event.era === "genocide"
                       ? { border: "rgba(239,68,68,0.45)", label: "rgba(239,68,68,0.4)", text: "Gaza Genocide" }
                       : event.era === "occupation"
-                      ? { border: "rgba(251,191,36,0.4)", label: "rgba(251,191,36,0.35)", text: "Occupation" }
+                      ? { border: "rgba(251,191,36,0.4)", label: "rgba(251,191,36,0.35)", text: "Israeli Occupation" }
                       : null;
                     const isEraStart = event.era && prevEvent?.era !== event.era;
                     const isEraEnd   = event.era && nextEvent?.era !== event.era;
