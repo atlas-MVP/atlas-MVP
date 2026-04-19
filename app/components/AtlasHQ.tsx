@@ -171,14 +171,18 @@ const LIVE_FEED: FeedItem[] = [
 ];
 
 const FINANCE_ITEMS = [
-  { ticker: "WTI",   name: "Crude Oil",     price: "$84.12",    change: "+1.4%",  positive: true  },
-  { ticker: "BRENT", name: "Brent Crude",   price: "$87.44",    change: "+1.1%",  positive: true  },
-  { ticker: "XAU",   name: "Gold",          price: "$3,321.80", change: "+0.6%",  positive: true  },
-  { ticker: "LMT",   name: "Lockheed",      price: "$492.30",   change: "+2.3%",  positive: true  },
-  { ticker: "RTX",   name: "RTX Corp",      price: "$138.76",   change: "+1.8%",  positive: true  },
-  { ticker: "SPX",   name: "S&P 500",       price: "5,282.70",  change: "-0.4%",  positive: false },
-  { ticker: "ILS",   name: "Israeli Shekel",price: "₪3.74",     change: "-0.9%",  positive: false },
-  { ticker: "RUB",   name: "Russian Ruble", price: "₽89.20",    change: "-1.2%",  positive: false },
+  {
+    headline: "Oil surges past $87 as Strait of Hormuz tensions escalate following US-Iran clashes",
+    image: "https://upload.wikimedia.org/wikipedia/commons/thumb/5/5c/Oil_platform_P-51_%28Brazil%29.jpg/640px-Oil_platform_P-51_%28Brazil%29.jpg",
+    url: "https://www.bloomberg.com/energy",
+    source: "Bloomberg",
+  },
+  {
+    headline: "Defense stocks hit record highs as Lockheed, RTX surge on renewed Pentagon contracts",
+    image: "https://upload.wikimedia.org/wikipedia/commons/thumb/7/7e/F-35A_flight_%28cropped%29.jpg/640px-F-35A_flight_%28cropped%29.jpg",
+    url: "https://www.ft.com/defence",
+    source: "FT",
+  },
 ];
 
 interface Props {
@@ -390,26 +394,32 @@ export default function AtlasHQ({ onClose, onNavigate, onHeadlinesToggle, onSour
         {/* FINANCE */}
         <SectionLabel label="finance" />
         <Reveal minStage={5} stage={loadStage}>
-          <div style={{ padding: "0 14px 4px", display: "flex", flexDirection: "column", gap: 3 }}>
+          <div style={{ padding: "0 14px 6px", display: "flex", gap: 8 }}>
             {FINANCE_ITEMS.map((item) => (
-              <div key={item.ticker} style={{
-                display: "flex", alignItems: "center", justifyContent: "space-between",
-                padding: "8px 12px", borderRadius: 8,
-                background: "rgba(255,255,255,0.02)",
-                border: "1px solid rgba(255,255,255,0.06)",
-              }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                  <span style={{ fontSize: 11, fontFamily: "monospace", color: "rgba(255,255,255,0.85)", fontWeight: 700, letterSpacing: "0.06em" }}>{item.ticker}</span>
-                  <span style={{ fontSize: 9, fontFamily: "monospace", color: "rgba(255,255,255,0.28)", letterSpacing: "0.06em" }}>{item.name}</span>
+              <a
+                key={item.headline}
+                href={item.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{
+                  flex: 1, height: 196, borderRadius: 14, overflow: "hidden",
+                  position: "relative", display: "block", textDecoration: "none",
+                  cursor: "pointer", border: "1px solid rgba(255,255,255,0.09)",
+                  background: "#0a0c18", minWidth: 0,
+                }}
+              >
+                <img
+                  src={item.image}
+                  alt={item.headline}
+                  style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
+                  onError={e => { (e.currentTarget as HTMLImageElement).style.opacity = "0"; }}
+                />
+                <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom, transparent 35%, rgba(0,0,0,0.88) 100%)" }} />
+                <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, padding: "8px 10px 10px" }}>
+                  <div style={{ fontSize: 10, fontFamily: "monospace", letterSpacing: "0.03em", color: "rgba(255,255,255,0.88)", lineHeight: 1.4, display: "-webkit-box", WebkitLineClamp: 3, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{item.headline}</div>
+                  <div style={{ fontSize: 8, color: "rgba(255,255,255,0.35)", marginTop: 4, letterSpacing: "0.12em", textTransform: "uppercase" }}>{item.source}</div>
                 </div>
-                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                  <span style={{ fontSize: 11, fontFamily: "monospace", color: "rgba(255,255,255,0.72)", letterSpacing: "0.04em" }}>{item.price}</span>
-                  <span style={{
-                    fontSize: 9, fontFamily: "monospace", letterSpacing: "0.06em",
-                    color: item.positive ? "rgba(34,197,94,0.85)" : "rgba(239,68,68,0.85)",
-                  }}>{item.change}</span>
-                </div>
-              </div>
+              </a>
             ))}
           </div>
         </Reveal>
