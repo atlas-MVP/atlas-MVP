@@ -305,7 +305,11 @@ export default function AtlasHQ({ onClose, onNavigate, onHeadlinesToggle, onSour
       .catch(() => {});
   }, []);
 
-  const activeFeed      = (liveConfig?.liveAlerts?.length     ? liveConfig.liveAlerts     : LIVE_FEED) as FeedItem[];
+  // Only use R2 alerts if they have valid ISO timestamps — guards against stale "Apr 19" strings
+  const hasValidTimes = (alerts: RadarAlertItem[]) =>
+    alerts.length > 0 && !isNaN(new Date(alerts[0].time).getTime());
+  const activeFeed      = (liveConfig?.liveAlerts?.length && hasValidTimes(liveConfig.liveAlerts)
+    ? liveConfig.liveAlerts : LIVE_FEED) as FeedItem[];
   const activeViolence  = (liveConfig?.violenceItems?.length  ? liveConfig.violenceItems  : VIOLENCE_ITEMS) as RadarViolenceItem[];
   const activeFinance   = (liveConfig?.financeItems?.length   ? liveConfig.financeItems   : FINANCE_ITEMS) as RadarFinanceItem[];
   const activeDisasters = (liveConfig?.disasters?.length      ? liveConfig.disasters      : DISASTERS) as RadarDisasterItem[];
