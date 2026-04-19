@@ -2036,7 +2036,7 @@ export default function CountryPanel({ countryCode, onClose, onViewFeed, onConfl
         <div
           onMouseEnter={() => { cancelLeave(); setSourcesOpen(true); }}
           onMouseLeave={() => { setSourcesOpen(false); scheduleLeave(); }}
-          style={{ position: "fixed", left: 444, top: hoverMidY - 92, paddingLeft: 60, paddingTop: 80, paddingBottom: 80, paddingRight: 60, zIndex: 21, pointerEvents: "auto" }}
+          style={{ position: "fixed", left: T.PANEL_W - 40, top: hoverMidY - 92, paddingLeft: 60, paddingTop: 80, paddingBottom: 80, paddingRight: 60, zIndex: 21, pointerEvents: "auto" }}
         >
           <div style={{
             background: "rgba(4,6,18,0.92)",
