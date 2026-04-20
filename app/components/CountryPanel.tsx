@@ -208,7 +208,7 @@ const CONFLICTS: Record<string, Conflict> = {
   "israel-iran": {
     id: "israel-iran",
     title: "Israel / US in the Middle East",
-    date: "February 2026 – Present",
+    date: "March 2026 – Present",
     feedKey: "IRN",
     sides: {
       blue: ["Israel", "USA", "UAE", "Kuwait", "Qatar", "Jordan", "UK", "France"],

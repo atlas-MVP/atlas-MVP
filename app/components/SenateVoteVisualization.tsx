@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 
-interface Senator {
+export interface Senator {
   name: string;
   party: "R" | "D" | "I";
   state: string;
