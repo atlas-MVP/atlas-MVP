@@ -208,7 +208,7 @@ const CONFLICTS: Record<string, Conflict> = {
   "israel-iran": {
     id: "israel-iran",
     title: "Israel / US in the Middle East",
-    date: "March 2026 – Present",
+    date: "February 2026 – Present",
     feedKey: "IRN",
     sides: {
       blue: ["Israel", "USA", "UAE", "Kuwait", "Qatar", "Jordan", "UK", "France"],
@@ -1434,57 +1434,40 @@ export default function CountryPanel({ countryCode, onClose, onViewFeed, onConfl
         >
           {/* Casualties, alerts, feed — hidden in history mode */}
           {!timelineExpanded && (<>
-          {/* Casualties + timeline preview side by side */}
-          <div style={{ padding: "8px 14px 8px", borderBottom: "1px solid rgba(255,255,255,0.05)", display: "flex", gap: 14, alignItems: "flex-start" }}>
-            {/* LEFT: casualties table */}
-            <div style={{ flexShrink: 0 }}>
-              <table style={{ width: "auto", borderCollapse: "collapse" }}>
-                <thead>
-                  <tr>
-                    <th style={{ textAlign: "left", fontSize: 10, fontFamily: "monospace", color: "rgba(255,255,255,0.35)", fontWeight: "normal", paddingBottom: 4 }}></th>
-                    {!hasMissingCol && <th style={{ textAlign: "right", fontSize: 10, fontFamily: "monospace", color: "rgba(255,255,255,0.35)", fontWeight: "normal", paddingBottom: 4, paddingRight: 8 }}>Injured</th>}
-                    {hasMissingCol && <th style={{ textAlign: "right", fontSize: 10, fontFamily: "monospace", color: "rgba(255,255,255,0.35)", fontWeight: "normal", paddingBottom: 4, paddingRight: 8 }}>Missing</th>}
-                    <th style={{ textAlign: "right", fontSize: 10, fontFamily: "monospace", color: "rgba(255,255,255,0.35)", fontWeight: "normal", paddingBottom: 4, paddingRight: 8 }}>Killed</th>
-                    {hasCivCol && !hasMissingCol && <th style={{ textAlign: "right", fontSize: 10, fontFamily: "monospace", color: "rgba(255,255,255,0.35)", fontWeight: "normal", paddingBottom: 4 }}>Civ %</th>}
-                  </tr>
-                </thead>
-                <tbody>
-                  {displayed.map(renderRow)}
-                </tbody>
-              </table>
-              {sorted.length > 2 && (
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    const next = !showAllCasualties;
-                    setShowAllCasualties(next);
-                    if (next) {
-                      const codes = sorted.map(c => CASUALTY_ISO[c.country]).filter(Boolean);
-                      onCasualtyHighlight?.(codes);
-                    } else {
-                      onCasualtyHighlight?.([]);
-                    }
-                  }}
-                  style={{ marginTop: 0, fontSize: 9, fontFamily: "monospace", letterSpacing: "0.08em", color: "rgba(255,255,255,0.35)", background: "none", border: "none", cursor: "pointer", padding: "1px 0", display: "block", animation: "cpFade 2s ease-in-out infinite" }}
-                  onMouseEnter={e => (e.currentTarget.style.animationPlayState = "paused")}
-                  onMouseLeave={e => (e.currentTarget.style.animationPlayState = "running")}>
-                  {showAllCasualties ? "▲ show less" : `▼ +${hiddenCount} more`}
-                </button>
-              )}
-            </div>
-            {/* RIGHT: timeline preview (March — Present) */}
-            {conflict.timeline[0] && (
-              <div
-                style={{ flex: 1, minWidth: 0, paddingLeft: 12, borderLeft: "1px solid rgba(255,255,255,0.06)", cursor: "pointer" }}
-                onClick={(e) => { e.stopPropagation(); enterHistory(); }}
-              >
-                <div style={{ fontSize: 10, fontFamily: "monospace", fontWeight: 600, color: "rgba(255,255,255,0.75)", letterSpacing: "0.03em", marginBottom: 5 }}>
-                  {(() => { const d = conflict.timeline[0].date; if (/^(19|20)\d\d/.test(d)) return d; return d.replace(/,?\s*(19|20)\d\d/, ""); })()}
-                </div>
-                <p style={{ margin: 0, fontSize: 11, color: "rgba(255,255,255,0.48)", lineHeight: 1.55, display: "-webkit-box", WebkitLineClamp: 5, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
-                  {conflict.timeline[0].text}
-                </p>
-              </div>
+          {/* Casualties table */}
+          <div style={{ padding: "8px 14px 8px", borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
+            <table style={{ width: "auto", borderCollapse: "collapse" }}>
+              <thead>
+                <tr>
+                  <th style={{ textAlign: "left", fontSize: 10, fontFamily: "monospace", color: "rgba(255,255,255,0.35)", fontWeight: "normal", paddingBottom: 4 }}></th>
+                  {!hasMissingCol && <th style={{ textAlign: "right", fontSize: 10, fontFamily: "monospace", color: "rgba(255,255,255,0.35)", fontWeight: "normal", paddingBottom: 4, paddingRight: 8 }}>Injured</th>}
+                  {hasMissingCol && <th style={{ textAlign: "right", fontSize: 10, fontFamily: "monospace", color: "rgba(255,255,255,0.35)", fontWeight: "normal", paddingBottom: 4, paddingRight: 8 }}>Missing</th>}
+                  <th style={{ textAlign: "right", fontSize: 10, fontFamily: "monospace", color: "rgba(255,255,255,0.35)", fontWeight: "normal", paddingBottom: 4, paddingRight: 8 }}>Killed</th>
+                  {hasCivCol && !hasMissingCol && <th style={{ textAlign: "right", fontSize: 10, fontFamily: "monospace", color: "rgba(255,255,255,0.35)", fontWeight: "normal", paddingBottom: 4 }}>Civ %</th>}
+                </tr>
+              </thead>
+              <tbody>
+                {displayed.map(renderRow)}
+              </tbody>
+            </table>
+            {sorted.length > 2 && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  const next = !showAllCasualties;
+                  setShowAllCasualties(next);
+                  if (next) {
+                    const codes = sorted.map(c => CASUALTY_ISO[c.country]).filter(Boolean);
+                    onCasualtyHighlight?.(codes);
+                  } else {
+                    onCasualtyHighlight?.([]);
+                  }
+                }}
+                style={{ marginTop: 0, fontSize: 9, fontFamily: "monospace", letterSpacing: "0.08em", color: "rgba(255,255,255,0.35)", background: "none", border: "none", cursor: "pointer", padding: "1px 0", display: "block", animation: "cpFade 2s ease-in-out infinite" }}
+                onMouseEnter={e => (e.currentTarget.style.animationPlayState = "paused")}
+                onMouseLeave={e => (e.currentTarget.style.animationPlayState = "running")}>
+                {showAllCasualties ? "▲ show less" : `▼ +${hiddenCount} more`}
+              </button>
             )}
           </div>
 
@@ -1597,20 +1580,32 @@ export default function CountryPanel({ countryCode, onClose, onViewFeed, onConfl
             const latest = conflict.timeline[0];
 
             if (!timelineExpanded) {
-              // ── Normal mode: action buttons only (preview is in the casualties row) ──
               return (
-                <div style={{ padding: "10px 16px 16px", display: "flex", gap: 8 }}>
+                <div style={{ padding: "10px 16px 16px", display: "flex", flexDirection: "column", gap: 8 }}>
                   {chronological.length > 0 && (
                     <button
                       onClick={(e) => { e.stopPropagation(); enterHistory(); }}
-                      style={{ flex: 1, padding: "8px", fontSize: 10, fontFamily: "monospace", letterSpacing: "0.12em", textTransform: "uppercase", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 8, color: "rgba(255,255,255,0.45)", cursor: "pointer" }}
+                      style={{ width: "100%", padding: "8px", fontSize: 10, fontFamily: "monospace", letterSpacing: "0.12em", textTransform: "uppercase", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 8, color: "rgba(255,255,255,0.45)", cursor: "pointer" }}
                       onMouseEnter={e => { e.currentTarget.style.background = "rgba(255,255,255,0.08)"; e.currentTarget.style.color = "rgba(255,255,255,0.8)"; }}
                       onMouseLeave={e => { e.currentTarget.style.background = "rgba(255,255,255,0.04)"; e.currentTarget.style.color = "rgba(255,255,255,0.45)"; }}
                     >See Timeline →</button>
                   )}
+                  {latest && (
+                    <div
+                      style={{ cursor: "pointer", padding: "8px 2px 2px" }}
+                      onClick={(e) => { e.stopPropagation(); enterHistory(); }}
+                    >
+                      <div style={{ fontSize: 10, fontFamily: "monospace", fontWeight: 600, color: "rgba(255,255,255,0.75)", letterSpacing: "0.03em", marginBottom: 5 }}>
+                        {(() => { const d = latest.date; if (/^(19|20)\d\d/.test(d)) return d; return d.replace(/,?\s*(19|20)\d\d/, ""); })()}
+                      </div>
+                      <p style={{ margin: 0, fontSize: 11, color: "rgba(255,255,255,0.48)", lineHeight: 1.55, display: "-webkit-box", WebkitLineClamp: 4, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
+                        {latest.text}
+                      </p>
+                    </div>
+                  )}
                   <button
                     onClick={(e) => { e.stopPropagation(); onViewFeed(conflict.feedKey); }}
-                    style={{ flex: 1, padding: "8px", fontSize: 10, fontFamily: "monospace", letterSpacing: "0.12em", textTransform: "uppercase", background: "none", border: "none", borderRadius: 8, color: "rgba(255,255,255,0.45)", cursor: "pointer", animation: "cpFade 2s ease-in-out infinite" }}
+                    style={{ width: "100%", padding: "8px", fontSize: 10, fontFamily: "monospace", letterSpacing: "0.12em", textTransform: "uppercase", background: "none", border: "none", borderRadius: 8, color: "rgba(255,255,255,0.45)", cursor: "pointer", animation: "cpFade 2s ease-in-out infinite" }}
                     onMouseEnter={e => { e.currentTarget.style.animationPlayState = "paused"; e.currentTarget.style.opacity = "1"; e.currentTarget.style.color = "rgba(255,255,255,0.8)"; }}
                     onMouseLeave={e => { e.currentTarget.style.animationPlayState = "running"; e.currentTarget.style.color = "rgba(255,255,255,0.45)"; }}
                   >Live Feed</button>
