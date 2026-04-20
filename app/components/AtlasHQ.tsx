@@ -472,7 +472,7 @@ export default function AtlasHQ({ onClose, onNavigate, onHeadlinesToggle, onSour
                         ) : (
                           <LiveAlertRow item={item} onSourceClick={onSourceClick}
                             isActive={false}
-                            bottomBorder={i < arr.length - 1} showConfidenceInline={false} expandOnHover={true} />
+                            bottomBorder={i < arr.length - 1} showConfidenceInline={false} expandOnHover={false} />
                         )}
                       </div>
                     );
