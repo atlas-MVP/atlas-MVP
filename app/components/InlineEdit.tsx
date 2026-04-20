@@ -35,17 +35,23 @@ export function EText({ value, onChange, style, as: Tag = "span" }: ETextProps) 
   const [color,    setColor]    = useState<string | null>(null);
   const [tbPos,    setTbPos]    = useState<{ top: number; left: number } | null>(null);
 
-  // Sync from parent. useLayoutEffect so there's no blank flash when edit mode turns on.
-  // editMode in deps triggers a sync the moment the contentEditable element mounts.
+  // Sync inner HTML from parent. useLayoutEffect avoids blank flash when edit mode turns on.
   useLayoutEffect(() => {
     if (ref.current && !focused) {
-      ref.current.textContent = value;
+      ref.current.innerHTML = value;
     }
   }, [value, focused, editMode]);
 
+  // Read mode — render HTML so any saved bold/italic/underline is visible
   if (!editMode) {
-    return <Tag style={style}>{value}</Tag>;
+    return <Tag style={style} dangerouslySetInnerHTML={{ __html: value }} />;
   }
+
+  // Apply execCommand so the formatting hits the current text selection
+  const fmt = (cmd: string) => {
+    ref.current?.focus();
+    document.execCommand(cmd, false, undefined);
+  };
 
   const computedStyle: React.CSSProperties = {
     ...style,
@@ -57,23 +63,25 @@ export function EText({ value, onChange, style, as: Tag = "span" }: ETextProps) 
       : "1px dashed rgba(255,255,255,0.22)",
     cursor: "text",
     minWidth: 20,
-    display: "inline-block",
+    display: Tag === "span" ? "inline-block" : "block",
   };
 
   const handleFocus = () => {
     setFocused(true);
     if (ref.current) {
       const r = ref.current.getBoundingClientRect();
-      setTbPos({ top: r.top - 40, left: Math.max(8, r.left) });
+      setTbPos({ top: r.top - 42, left: Math.max(8, r.left) });
     }
   };
 
   const handleBlur = (e: React.FocusEvent<HTMLElement>) => {
     setFocused(false);
     setTbPos(null);
-    const text = e.currentTarget.textContent ?? "";
-    if (text !== value) onChange(text);
+    const html = e.currentTarget.innerHTML ?? "";
+    if (html !== value) onChange(html);
   };
+
+  const DIVIDER = <div style={{ width: 1, height: 12, background: "rgba(255,255,255,0.15)", flexShrink: 0 }} />;
 
   const toolbar = focused && tbPos && typeof document !== "undefined"
     ? createPortal(
@@ -86,7 +94,7 @@ export function EText({ value, onChange, style, as: Tag = "span" }: ETextProps) 
             zIndex: 9999,
             display: "flex",
             alignItems: "center",
-            gap: 5,
+            gap: 4,
             background: "rgba(8,10,22,0.97)",
             border: "1px solid rgba(255,255,255,0.13)",
             borderRadius: 6,
@@ -95,8 +103,9 @@ export function EText({ value, onChange, style, as: Tag = "span" }: ETextProps) 
             whiteSpace: "nowrap",
           }}
         >
+          {/* Font size */}
           <select
-            value={fontSize ?? (typeof style?.fontSize === "number" ? style.fontSize : 12)}
+            value={fontSize ?? (typeof style?.fontSize === "number" ? style.fontSize : 13)}
             onChange={e => setFontSize(Number(e.target.value))}
             style={{
               background: "transparent", border: "none",
@@ -108,7 +117,33 @@ export function EText({ value, onChange, style, as: Tag = "span" }: ETextProps) 
               <option key={s} value={s} style={{ background: "#0a0c18" }}>{s}px</option>
             ))}
           </select>
-          <div style={{ width: 1, height: 12, background: "rgba(255,255,255,0.15)" }} />
+          {DIVIDER}
+          {/* Bold / Italic / Underline */}
+          {([
+            { label: "B", cmd: "bold",      s: { fontWeight: 700 as const } },
+            { label: "I", cmd: "italic",    s: { fontStyle: "italic" as const } },
+            { label: "U", cmd: "underline", s: { textDecoration: "underline" as const } },
+          ] as const).map(({ label, cmd, s }) => (
+            <button
+              key={cmd}
+              onMouseDown={e => { e.preventDefault(); fmt(cmd); }}
+              style={{
+                ...s,
+                background: "rgba(255,255,255,0.07)",
+                border: "1px solid rgba(255,255,255,0.14)",
+                color: "rgba(255,255,255,0.85)",
+                borderRadius: 3,
+                padding: "0 5px",
+                cursor: "pointer",
+                fontSize: 11,
+                lineHeight: "16px",
+                height: 18,
+                flexShrink: 0,
+              }}
+            >{label}</button>
+          ))}
+          {DIVIDER}
+          {/* Color swatches */}
           {TEXT_COLORS.map(c => (
             <button
               key={c.value}
@@ -135,8 +170,9 @@ export function EText({ value, onChange, style, as: Tag = "span" }: ETextProps) 
         style: computedStyle,
         onFocus: handleFocus,
         onBlur: handleBlur,
+        // Allow Enter for block elements (div/p); prevent for inline (span)
         onKeyDown: (e: React.KeyboardEvent) => {
-          if (e.key === "Enter") e.preventDefault();
+          if (e.key === "Enter" && Tag === "span") e.preventDefault();
         },
       })}
     </>
