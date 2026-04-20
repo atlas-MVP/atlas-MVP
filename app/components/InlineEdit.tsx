@@ -1,6 +1,6 @@
 "use client";
 import React, {
-  createContext, useContext, useRef, useEffect, useState, useCallback,
+  createContext, useContext, useRef, useEffect, useLayoutEffect, useState, useCallback,
 } from "react";
 import { createPortal } from "react-dom";
 
@@ -35,12 +35,13 @@ export function EText({ value, onChange, style, as: Tag = "span" }: ETextProps) 
   const [color,    setColor]    = useState<string | null>(null);
   const [tbPos,    setTbPos]    = useState<{ top: number; left: number } | null>(null);
 
-  // Sync from parent only when blurred
-  useEffect(() => {
-    if (ref.current && !focused && ref.current.textContent !== value) {
+  // Sync from parent. useLayoutEffect so there's no blank flash when edit mode turns on.
+  // editMode in deps triggers a sync the moment the contentEditable element mounts.
+  useLayoutEffect(() => {
+    if (ref.current && !focused) {
       ref.current.textContent = value;
     }
-  }, [value, focused]);
+  }, [value, focused, editMode]);
 
   if (!editMode) {
     return <Tag style={style}>{value}</Tag>;

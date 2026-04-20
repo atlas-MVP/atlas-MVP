@@ -146,7 +146,7 @@ interface FeedItem {
 const LIVE_FEED: FeedItem[] = [
   { time: "2026-04-19T12:14:00", danger: 5, code: "USA", slug: "gun-violence", incidentId: "shreveport-2026-04-19", pulse: true,
     text: "8 children killed in Shreveport mass shooting — gunman kills children ages 1 to 14 across two homes before fleeing",
-    flyTo: { center: [-93.75, 32.52] as [number,number], zoom: 12 }, sources: ["AP", "Reuters", "CNN"], confidence: 98,
+    flyTo: { center: [-93.7502, 32.5252] as [number,number], zoom: 10 }, sources: ["AP", "Reuters", "CNN"], confidence: 98,
     description: "Eight children and juveniles ages 1–14 were killed in a mass shooting in Shreveport, Louisiana. The shooter, who appears to have been known to the victims, targeted two homes on the same block before fleeing. He subsequently carjacked a vehicle and was killed by police during pursuit. Mayor Tom Arceneaux called it 'maybe the worst tragic situation we've ever had in Shreveport.'" },
   { time: "2026-04-17T08:00:00", danger: 2, code: "LBN",
     text: "Trump announces 10-day Israel-Lebanon ceasefire, catching Netanyahu's cabinet off guard",
@@ -227,8 +227,10 @@ export default function AtlasHQ({ onClose, onNavigate, onHeadlinesToggle, onSour
   const senateAlertRef = useRef<HTMLDivElement>(null);
   const [editorOpen, setEditorOpen] = useState(false);
   const [liveConfig, setLiveConfig] = useState<RadarConfig | null>(null);
-  const [editMode,   setEditMode]   = useState(false);
-  const [editDraft,  setEditDraft]  = useState<RadarConfig | null>(null);
+  const [editMode,    setEditMode]    = useState(false);
+  const [editDraft,   setEditDraft]   = useState<RadarConfig | null>(null);
+  const [dragSection, setDragSection] = useState<number | null>(null);
+  const [overSection, setOverSection] = useState<number | null>(null);
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Senate arms sale vote data: 40-59 (40 Aye, 59 No)
@@ -391,10 +393,39 @@ export default function AtlasHQ({ onClose, onNavigate, onHeadlinesToggle, onSour
 
         <EditModeCtx.Provider value={editMode}>
         {/* Sections rendered in saved drag order */}
-        {(displayConfig.sectionOrder ?? ["geo", "alerts", "violence", "finance", "disasters"]).map(section => {
+        {(displayConfig.sectionOrder ?? ["geo", "alerts", "violence", "finance", "disasters"]).map((section, i) => {
+          const DEFAULT_ORDER = ["geo", "alerts", "violence", "finance", "disasters"];
+          const sectionDragHandle = editMode ? {
+            onDragStart: (e: React.DragEvent<HTMLDivElement>) => {
+              setDragSection(i);
+              e.dataTransfer.effectAllowed = "move";
+              e.dataTransfer.setData("text/plain", String(i));
+            },
+            onDragEnd: () => { setDragSection(null); setOverSection(null); },
+          } : undefined;
+          const isDropTarget = editMode && overSection === i && dragSection !== null && dragSection !== i;
+          const dropHandlers = editMode ? {
+            onDragOver: (e: React.DragEvent) => { e.preventDefault(); setOverSection(i); },
+            onDrop: (e: React.DragEvent) => {
+              e.preventDefault();
+              if (dragSection !== null && dragSection !== i) {
+                const base = displayConfig.sectionOrder ?? DEFAULT_ORDER;
+                const next = [...base];
+                const [moved] = next.splice(dragSection, 1);
+                next.splice(i, 0, moved);
+                patchDraft(d => ({ ...d, sectionOrder: next }));
+              }
+              setDragSection(null); setOverSection(null);
+            },
+          } : {};
+          const wrapStyle: React.CSSProperties = editMode ? {
+            outline: isDropTarget ? "2px solid rgba(100,160,255,0.45)" : "2px solid transparent",
+            borderRadius: 12, opacity: dragSection === i ? 0.35 : 1, transition: "opacity 0.15s",
+          } : {};
+
           if (section === "geo") return (
-            <React.Fragment key="geo">
-              <SectionLabel label="geopolitics" onClick={editMode ? undefined : () => setShowMore(v => !v)} />
+            <div key="geo" {...dropHandlers} style={wrapStyle}>
+              <SectionLabel label="geopolitics" onClick={editMode ? undefined : () => setShowMore(v => !v)} dragHandle={sectionDragHandle} />
               <div style={{ padding: "0 14px", display: "flex", flexDirection: "column", gap: 6 }}>
                 {displayConfig.topConflicts.map((c, idx) => (
                   <Reveal key={c.label} minStage={1 + idx} stage={loadStage}>
@@ -440,14 +471,12 @@ export default function AtlasHQ({ onClose, onNavigate, onHeadlinesToggle, onSour
                   </>
                 )}
               </div>
-            </React.Fragment>
+            </div>
           );
 
           if (section === "alerts") return (
-            <React.Fragment key="alerts">
-              <div onClick={editMode ? undefined : () => setShowAllAlerts(v => !v)} style={{ cursor: editMode ? "default" : "pointer" }}>
-                <SectionLabel label="live alerts" />
-              </div>
+            <div key="alerts" {...dropHandlers} style={wrapStyle}>
+              <SectionLabel label="live alerts" onClick={editMode ? undefined : () => setShowAllAlerts(v => !v)} dragHandle={sectionDragHandle} />
               <Reveal minStage={3} stage={loadStage}>
                 <div style={{ padding: "0 6px", position: "relative" }}>
                   {(displayConfig.liveAlerts as FeedItem[]).slice(0, showAllAlerts ? undefined : 3).map((item, i, arr) => {
@@ -490,12 +519,12 @@ export default function AtlasHQ({ onClose, onNavigate, onHeadlinesToggle, onSour
                   )}
                 </div>
               </Reveal>
-            </React.Fragment>
+            </div>
           );
 
           if (section === "violence") return (
-            <React.Fragment key="violence">
-              <SectionLabel label="violence" />
+            <div key="violence" {...dropHandlers} style={wrapStyle}>
+              <SectionLabel label="violence" dragHandle={sectionDragHandle} />
               <Reveal minStage={5} stage={loadStage}>
                 <div style={{ padding: "0 14px 6px" }}>
                   {displayConfig.violenceItems.map((item, idx) => (
@@ -521,12 +550,12 @@ export default function AtlasHQ({ onClose, onNavigate, onHeadlinesToggle, onSour
                   ))}
                 </div>
               </Reveal>
-            </React.Fragment>
+            </div>
           );
 
           if (section === "finance") return (
-            <React.Fragment key="finance">
-              <SectionLabel label="finance" />
+            <div key="finance" {...dropHandlers} style={wrapStyle}>
+              <SectionLabel label="finance" dragHandle={sectionDragHandle} />
               <Reveal minStage={5} stage={loadStage}>
                 <div style={{ padding: "0 14px 6px", display: "flex", gap: 8 }}>
                   {displayConfig.financeItems.map((item, idx) => (
@@ -552,12 +581,12 @@ export default function AtlasHQ({ onClose, onNavigate, onHeadlinesToggle, onSour
                   ))}
                 </div>
               </Reveal>
-            </React.Fragment>
+            </div>
           );
 
           if (section === "disasters") return (
-            <React.Fragment key="disasters">
-              <SectionLabel label="disasters" />
+            <div key="disasters" {...dropHandlers} style={wrapStyle}>
+              <SectionLabel label="disasters" dragHandle={sectionDragHandle} />
               <Reveal minStage={5} stage={loadStage}>
                 <div style={{ padding: "0 14px 20px" }}>
                   {displayConfig.disasters.map((dis, idx) => (
@@ -585,7 +614,7 @@ export default function AtlasHQ({ onClose, onNavigate, onHeadlinesToggle, onSour
                   ))}
                 </div>
               </Reveal>
-            </React.Fragment>
+            </div>
           );
 
           return null;
@@ -666,9 +695,27 @@ export default function AtlasHQ({ onClose, onNavigate, onHeadlinesToggle, onSour
   );
 }
 
-function SectionLabel({ label, onClick }: { label: string; onClick?: () => void }) {
+function SectionLabel({ label, onClick, dragHandle }: {
+  label: string;
+  onClick?: () => void;
+  dragHandle?: {
+    onDragStart: React.DragEventHandler<HTMLDivElement>;
+    onDragEnd: React.DragEventHandler<HTMLDivElement>;
+  };
+}) {
   return (
-    <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "20px 18px 6px" }}>
+    <div
+      draggable={!!dragHandle}
+      onDragStart={dragHandle?.onDragStart}
+      onDragEnd={dragHandle?.onDragEnd}
+      style={{
+        display: "flex", alignItems: "center", gap: 6, padding: "20px 18px 6px",
+        cursor: dragHandle ? "grab" : "default", userSelect: "none",
+      }}
+    >
+      {dragHandle && (
+        <span style={{ color: "rgba(255,255,255,0.28)", fontSize: 13, lineHeight: 1, flexShrink: 0 }}>⠿</span>
+      )}
       <span
         onClick={onClick}
         style={{
