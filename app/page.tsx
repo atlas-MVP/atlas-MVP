@@ -23,7 +23,7 @@ import type { MapEvent } from "./lib/mapEvents";
 // ATLAS appears instantly; clock fades in shortly after as one unit
 function AtlasWordmark() {
   return (
-    <span className="font-light tracking-[0.3em] text-sm" style={{ color: "rgba(255,255,255,0.85)" }}>ATLAS</span>
+    <span className="font-light tracking-[0.3em] text-sm" style={{ color: "rgba(255,255,255,0.85)" }}>atlas</span>
   );
 }
 
@@ -456,7 +456,7 @@ export default function Home() {
       )}
 
       {/* Header */}
-      <div className="absolute top-0 left-0 right-0 z-10 flex items-center justify-between px-6 py-4 pointer-events-none">
+      <div className="absolute top-0 left-0 right-0 z-10 flex items-center justify-between px-6 py-2 pointer-events-none">
         <div className="flex items-center pointer-events-auto" style={{ gap: 12 }}>
           <button
             onClick={() => {
