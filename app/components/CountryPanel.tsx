@@ -110,6 +110,7 @@ interface CivSource {
 
 interface Casualty {
   country: string;
+  displaced?: string;
   injured: string;
   missing?: string;
   killed: string;
@@ -216,17 +217,17 @@ const CONFLICTS: Record<string, Conflict> = {
     },
     casualties: [
       // All figures since Feb 28, 2026 (Operation Epic Fury)
-      { country: "Lebanon", injured: "5,200", killed: "1,180", civilianPct: 48, civSources: [
+      { country: "Lebanon", displaced: "1,200,000", injured: "5,200", killed: "1,180", civilianPct: 48, civSources: [
         { label: "Al Jazeera — Lebanon death toll tracker", url: "https://www.aljazeera.com/news/liveblog/2024/10/6/live-israel-attacks-lebanon" },
         { label: "Reuters — Lebanon conflict casualties", url: "https://www.reuters.com/world/middle-east/lebanon/" },
         { label: "Lebanese Ministry of Public Health", url: "https://www.moph.gov.lb" },
       ]},
-      { country: "Iran", injured: "1,890", killed: "580", civilianPct: 32, civSources: [
+      { country: "Iran", displaced: "340,000", injured: "1,890", killed: "580", civilianPct: 32, civSources: [
         { label: "AP — Iran strike casualties", url: "https://apnews.com/hub/iran" },
         { label: "NYT — Operation Epic Fury coverage", url: "https://www.nytimes.com/section/world/middleeast" },
         { label: "Reuters — Iran conflict tracker", url: "https://www.reuters.com/world/middle-east/iran/" },
       ]},
-      { country: "Israel", injured: "412", killed: "74", civilianPct: 24, civSources: [
+      { country: "Israel", displaced: "96,000", injured: "412", killed: "74", civilianPct: 24, civSources: [
         { label: "Reuters — Israel war casualties", url: "https://www.reuters.com/world/middle-east/israel/" },
         { label: "NYT — Israel conflict coverage", url: "https://www.nytimes.com/section/world/middleeast" },
         { label: "IDF official spokesperson", url: "https://www.idf.il/en/" },
@@ -595,7 +596,7 @@ const CONFLICTS: Record<string, Conflict> = {
       red:  ["Gaza", "Hamas"],
     },
     casualties: [
-      { country: "Gaza", injured: "110,165", killed: "46,707", civilianPct: 72, civSources: [
+      { country: "Gaza", displaced: "1,900,000", injured: "110,165", killed: "46,707", civilianPct: 72, civSources: [
         { label: "Al Jazeera — Gaza death toll live tracker", url: "https://www.aljazeera.com/news/liveblog/2024/10/6/live-israel-attacks-lebanon" },
         { label: "Gaza Ministry of Health (via UN OCHA)", url: "https://www.ochaopt.org" },
         { label: "NYT — Gaza casualty analysis", url: "https://www.nytimes.com/section/world/middleeast" },
@@ -739,11 +740,11 @@ const CONFLICTS: Record<string, Conflict> = {
       red:  ["Russia"],
     },
     casualties: [
-      { country: "Russia", injured: "512,000", killed: "187,000", civilianPct: 4, civSources: [
+      { country: "Russia", displaced: "—", injured: "512,000", killed: "187,000", civilianPct: 4, civSources: [
         { label: "Reuters — Russia-Ukraine casualty estimates", url: "https://www.reuters.com/world/europe/ukraine/" },
         { label: "NYT — War in Ukraine tracker", url: "https://www.nytimes.com/interactive/2022/world/europe/ukraine-maps.html" },
       ]},
-      { country: "Ukraine", injured: "388,000", killed: "67,000", civilianPct: 31, civSources: [
+      { country: "Ukraine", displaced: "6,500,000", injured: "388,000", killed: "67,000", civilianPct: 31, civSources: [
         { label: "AP — Ukraine war casualties", url: "https://apnews.com/hub/russia-ukraine" },
         { label: "UN Human Rights — Ukraine report", url: "https://ukraine.un.org/en/233060-civilian-casualties-result-armed-conflict-ukraine" },
         { label: "NYT — Ukraine losses tracker", url: "https://www.nytimes.com/interactive/2022/world/europe/ukraine-maps.html" },
@@ -771,7 +772,7 @@ const CONFLICTS: Record<string, Conflict> = {
     title: "Sudan civil war + genocide",
     date: "April 2023 – Present",
     feedKey: "SDN",
-    casualties: [{ country: "Sudan", injured: "14,200", killed: "20,079", killedHasMissing: true, missing: "8,000", }],
+    casualties: [{ country: "Sudan", displaced: "10,700,000", injured: "14,200", killed: "20,079", killedHasMissing: true, missing: "8,000", }],
     xPost: {
       user: "Al Jazeera English",
       handle: "@AJEnglish",
@@ -790,7 +791,7 @@ const CONFLICTS: Record<string, Conflict> = {
     title: "Myanmar civil war",
     date: "February 2021 – Present",
     feedKey: "MMR",
-    casualties: [{ country: "Myanmar", injured: "49,300", killed: "7,214", civilianPct: 61 }],
+    casualties: [{ country: "Myanmar", displaced: "2,600,000", injured: "49,300", killed: "7,214", civilianPct: 61 }],
     xPost: {
       user: "Reuters",
       handle: "@Reuters",
@@ -808,7 +809,7 @@ const CONFLICTS: Record<string, Conflict> = {
     title: "Yemen + Houthi attacks",
     date: "2015 – Present",
     feedKey: "YEM",
-    casualties: [{ country: "Yemen", injured: "47,600", killed: "153,000", civilianPct: 67 }],
+    casualties: [{ country: "Yemen", displaced: "4,500,000", injured: "47,600", killed: "153,000", civilianPct: 67 }],
     xPost: {
       user: "AP",
       handle: "@AP",
@@ -826,7 +827,7 @@ const CONFLICTS: Record<string, Conflict> = {
     title: "DR Congo conflict",
     date: "Ongoing",
     feedKey: "COD",
-    casualties: [{ country: "DR Congo", injured: "unknown", killed: "6,200,000", killedHasMissing: true }],
+    casualties: [{ country: "DR Congo", displaced: "6,900,000", injured: "unknown", killed: "6,200,000", killedHasMissing: true }],
     xPost: {
       user: "Al Jazeera English",
       handle: "@AJEnglish",
@@ -844,7 +845,7 @@ const CONFLICTS: Record<string, Conflict> = {
     title: "Mexico cartel war",
     date: "2006 – Present",
     feedKey: "MEX",
-    casualties: [{ country: "Mexico", injured: "180,000", killed: "470,000", civilianPct: 78 }],
+    casualties: [{ country: "Mexico", displaced: "386,000", injured: "180,000", killed: "470,000", civilianPct: 78 }],
     xPost: {
       user: "Reuters",
       handle: "@Reuters",
@@ -892,7 +893,7 @@ const CONFLICTS: Record<string, Conflict> = {
     title: "Haiti gang crisis",
     date: "2021 – Present",
     feedKey: "HTI",
-    casualties: [{ country: "Haiti", injured: "9,840", killed: "5,317", civilianPct: 91 }],
+    casualties: [{ country: "Haiti", displaced: "580,000", injured: "9,840", killed: "5,317", civilianPct: 91 }],
     xPost: {
       user: "AP",
       handle: "@AP",
@@ -1049,8 +1050,9 @@ export default function CountryPanel({ countryCode, onClose, onViewFeed, onConfl
   const sorted = [...conflict.casualties].sort(
     (a, b) => parseCasualties(b.killed) - parseCasualties(a.killed)
   );
-  const hasMissingCol = conflict.casualties.some(c => c.missing);
-  const hasCivCol     = conflict.casualties.some(c => c.civilianPct !== undefined);
+  const hasMissingCol    = conflict.casualties.some(c => c.missing);
+  const hasCivCol        = conflict.casualties.some(c => c.civilianPct !== undefined);
+  const hasDisplacedCol  = conflict.casualties.some(c => c.displaced !== undefined);
 
   const displayed = showAllCasualties ? sorted : sorted.slice(0, 2);
   const hiddenCount = sorted.length - 2;
@@ -1293,17 +1295,22 @@ export default function CountryPanel({ countryCode, onClose, onViewFeed, onConfl
             )}
           </div>
         </td>
+        {hasDisplacedCol && (
+          <td style={{ textAlign: "right", fontSize: 13, fontFamily: "Arial, sans-serif", color: "rgba(255,255,255,0.55)", paddingRight: 16, paddingTop: 4, paddingBottom: 4 }}>
+            {c.displaced ?? ""}
+          </td>
+        )}
         {!hasMissingCol && (
-          <td style={{ textAlign: "right", fontSize: 13, fontFamily: "Arial, sans-serif", color: "rgba(255,255,255,0.35)", paddingRight: 8, paddingTop: 4, paddingBottom: 4 }}>
+          <td style={{ textAlign: "right", fontSize: 13, fontFamily: "Arial, sans-serif", color: "rgba(255,255,255,0.88)", paddingRight: 16, paddingTop: 4, paddingBottom: 4 }}>
             {hasInjured ? c.injured : ""}
           </td>
         )}
         {hasMissingCol && (
-          <td style={{ textAlign: "right", fontSize: 13, fontFamily: "Arial, sans-serif", color: "rgba(255,255,255,0.32)", paddingRight: 8 }}>
+          <td style={{ textAlign: "right", fontSize: 13, fontFamily: "Arial, sans-serif", color: "rgba(255,255,255,0.55)", paddingRight: 16 }}>
             {c.missing ?? ""}
           </td>
         )}
-        <td style={{ textAlign: "right", fontSize: 13, fontFamily: "Arial, sans-serif", fontWeight: 700, color: "rgba(255,255,255,0.88)", paddingRight: 8, paddingTop: 4, paddingBottom: 4 }}>
+        <td style={{ textAlign: "right", fontSize: 13, fontFamily: "Arial, sans-serif", fontWeight: 700, color: "rgba(255,255,255,0.88)", paddingRight: 16, paddingTop: 4, paddingBottom: 4 }}>
           {c.killed}{c.killedHasMissing ? "+" : ""}
         </td>
         {hasCivCol && !hasMissingCol && (
@@ -1439,16 +1446,18 @@ export default function CountryPanel({ countryCode, onClose, onViewFeed, onConfl
             <table style={{ width: "100%", borderCollapse: "collapse", tableLayout: "fixed" }}>
               <colgroup>
                 <col style={{ width: "auto" }} />
-                <col style={{ width: 72 }} />
-                <col style={{ width: 72 }} />
+                {hasDisplacedCol && <col style={{ width: 88 }} />}
+                <col style={{ width: 80 }} />
+                <col style={{ width: 80 }} />
                 {hasCivCol && !hasMissingCol && <col style={{ width: 52 }} />}
               </colgroup>
               <thead>
                 <tr>
                   <th style={{ textAlign: "left", fontSize: 11, fontFamily: "monospace", color: "rgba(255,255,255,0.35)", fontWeight: "normal", paddingBottom: 4 }}></th>
-                  {!hasMissingCol && <th style={{ textAlign: "right", fontSize: 11, fontFamily: "monospace", color: "rgba(255,255,255,0.35)", fontWeight: "normal", paddingBottom: 4, paddingRight: 8 }}>Injured</th>}
-                  {hasMissingCol && <th style={{ textAlign: "right", fontSize: 11, fontFamily: "monospace", color: "rgba(255,255,255,0.35)", fontWeight: "normal", paddingBottom: 4, paddingRight: 8 }}>Missing</th>}
-                  <th style={{ textAlign: "right", fontSize: 11, fontFamily: "monospace", color: "rgba(255,255,255,0.35)", fontWeight: "normal", paddingBottom: 4, paddingRight: 8 }}>Killed</th>
+                  {hasDisplacedCol && <th style={{ textAlign: "right", fontSize: 11, fontFamily: "monospace", color: "rgba(255,255,255,0.35)", fontWeight: "normal", paddingBottom: 4, paddingRight: 16 }}>Displaced</th>}
+                  {!hasMissingCol && <th style={{ textAlign: "right", fontSize: 11, fontFamily: "monospace", color: "rgba(255,255,255,0.35)", fontWeight: "normal", paddingBottom: 4, paddingRight: 16 }}>Injured</th>}
+                  {hasMissingCol && <th style={{ textAlign: "right", fontSize: 11, fontFamily: "monospace", color: "rgba(255,255,255,0.35)", fontWeight: "normal", paddingBottom: 4, paddingRight: 16 }}>Missing</th>}
+                  <th style={{ textAlign: "right", fontSize: 11, fontFamily: "monospace", color: "rgba(255,255,255,0.35)", fontWeight: "normal", paddingBottom: 4, paddingRight: 16 }}>Killed</th>
                   {hasCivCol && !hasMissingCol && <th style={{ textAlign: "right", fontSize: 11, fontFamily: "monospace", color: "rgba(255,255,255,0.35)", fontWeight: "normal", paddingBottom: 4 }}>Civ %</th>}
                 </tr>
               </thead>
