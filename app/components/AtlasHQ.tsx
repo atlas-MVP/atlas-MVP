@@ -544,8 +544,12 @@ export default function AtlasHQ({ onClose, onNavigate, onHeadlinesToggle, onSour
                       >
                         {editMode ? (
                           <div
-                            style={{ padding: "10px 12px 14px", borderBottom: i < arr.length - 1 ? "1px solid rgba(255,255,255,0.05)" : "none" }}
-                            onClick={e => e.stopPropagation()}
+                            style={{ padding: "10px 12px 14px", borderBottom: i < arr.length - 1 ? "1px solid rgba(255,255,255,0.05)" : "none", cursor: "text" }}
+                            onClick={e => {
+                              e.stopPropagation();
+                              const ce = (e.currentTarget as HTMLElement).querySelector('[contenteditable]') as HTMLElement | null;
+                              ce?.focus();
+                            }}
                           >
                             <div style={{ fontSize: 9, fontFamily: "monospace", letterSpacing: "0.14em", color: "rgba(255,255,255,0.28)", textTransform: "uppercase", marginBottom: 6 }}>click to edit</div>
                             <EText

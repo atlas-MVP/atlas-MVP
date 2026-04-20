@@ -390,20 +390,17 @@ export default function Home() {
               setOpenWithHistory(false);
               setHomeCountry(null);
               setSelectedCountry(code);
-              setFlyToPosition({ center, zoom, key: String(Date.now()) });
               setRadarAlertText(feedItem?.text ?? null);
               // Resolve conflict: prefer explicit slug from card, fall back to code lookup
               const conflictId = slug ? SLUG_TO_CONFLICT[slug] : getFirstConflict(code);
               if (conflictId) {
-                const all = CONFLICT_ALL_COUNTRIES[conflictId] ?? [];
-                setSecondaryCountries(all.filter(c => c !== code));
-                setFocusCountries(all);
+                // applyConflict sets secondaries, focusCountries, currentConflictSlug, and URL
+                applyConflict(conflictId, code);
+              } else if (slug && typeof window !== "undefined") {
+                window.history.replaceState(null, "", `/${slug}`);
               }
-              // Sync URL — prefer explicit slug from card, else derive from conflictId
-              const urlSlug = slug ?? (conflictId ? CONFLICT_SLUGS[conflictId] : undefined);
-              if (urlSlug && typeof window !== "undefined") {
-                window.history.replaceState(null, "", `/${urlSlug}`);
-              }
+              // Always honour the card-specific flyTo (overrides conflict default set above)
+              setFlyToPosition({ center, zoom, key: String(Date.now()) });
             } else if (slug === "gun-violence" || slug === "violence") {
               // Gun violence — fly to incident city, open gun violence panel
               setShowRadar(false);
