@@ -31,7 +31,7 @@ export default function SenateVoteVisualization({
   const generatePositions = () => {
     const positions: Array<{ senator: Senator; x: number; y: number }> = [];
     const centerX = 266;
-    const centerY = 233;
+    const centerY = 243;
 
     // Separate senators by vote
     const ayeVoters = senators.filter(s => s.vote === "Aye");
@@ -144,7 +144,7 @@ export default function SenateVoteVisualization({
         style={{
           position: "absolute",
           left: 12,
-          bottom: 85,
+          bottom: 72,
           fontSize: 9,
           fontFamily: "monospace",
           letterSpacing: "0.1em",
@@ -160,7 +160,7 @@ export default function SenateVoteVisualization({
         style={{
           position: "absolute",
           right: 12,
-          bottom: 85,
+          bottom: 72,
           fontSize: 9,
           fontFamily: "monospace",
           letterSpacing: "0.1em",
@@ -171,18 +171,19 @@ export default function SenateVoteVisualization({
         Nay
       </div>
 
-      {/* Vote count - moved up into semicircle */}
+      {/* Vote count */}
       <div
         style={{
           position: "absolute",
-          bottom: 60, // Moved up from 10
+          bottom: 47,
           left: "50%",
           transform: "translateX(-50%)",
           fontSize: 16,
-          fontWeight: 700,
-          fontFamily: "monospace",
-          letterSpacing: "0.2em",
+          fontWeight: 300,
+          fontFamily: "inherit",
+          letterSpacing: "0.3em",
           color: "rgba(255,255,255,0.9)",
+          whiteSpace: "nowrap",
         }}
       >
         {totalAye}–{totalNo}

@@ -277,7 +277,7 @@ export default function AtlasHQ({ onClose, onNavigate, onHeadlinesToggle, onSour
     { name: "Michael Bennet", party: "D" as const, state: "CO", vote: "Aye" as const },
     { name: "Angela Alsobrooks", party: "D" as const, state: "MD", vote: "Aye" as const },
     // Republicans who voted No (49)
-    ...Array.from({ length: 49 }, (_, i) => ({
+    ...Array.from({ length: 50 }, (_, i) => ({
       name: `Republican Senator ${i + 1}`,
       party: "R" as const,
       state: ["TX", "FL", "OH", "NC", "GA", "TN", "IN", "MO", "AL", "LA"][i % 10],
