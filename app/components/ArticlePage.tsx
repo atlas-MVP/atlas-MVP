@@ -18,7 +18,7 @@ const SCHUMER_DATA = {
   party: "D" as const,
   state: "NY",
   vote: "Aye" as const,
-  photo: "/senators/chuck-schumer.jpg",
+  photo: "/chuck-schumer.jpg",
   age: 73,
   yearsInOffice: 25,
   nextElection: 2028,
@@ -213,44 +213,68 @@ export default function ArticlePage({
           <div style={{
             background: "rgba(4,6,18,0.95)",
             backdropFilter: "blur(30px)",
-            borderRadius: 14,
+            borderRadius: 16,
             border: "1px solid rgba(255,255,255,0.15)",
-            padding: "24px",
-            width: 340,
+            padding: "28px",
+            width: 420,
             boxShadow: "0 20px 60px rgba(0,0,0,0.5)",
           }}>
-            <div style={{
-              fontSize: 20,
-              fontWeight: 700,
-              color: "rgba(255,255,255,0.95)",
-              marginBottom: 12,
-            }}>
-              {SCHUMER_DATA.name}
-            </div>
+            <div style={{ display: "flex", gap: 20, marginBottom: 20 }}>
+              <div style={{
+                width: 100,
+                height: 100,
+                borderRadius: 12,
+                overflow: "hidden",
+                background: "rgba(255,255,255,0.05)",
+                flexShrink: 0,
+              }}>
+                <img
+                  src={SCHUMER_DATA.photo}
+                  alt={SCHUMER_DATA.name}
+                  style={{
+                    width: "100%",
+                    height: "100%",
+                    objectFit: "cover",
+                  }}
+                />
+              </div>
 
-            <div style={{
-              fontSize: 13,
-              color: "rgba(255,255,255,0.62)",
-              marginBottom: 4,
-            }}>
-              Democrat • {SCHUMER_DATA.state}
-            </div>
+              <div style={{ flex: 1 }}>
+                <div style={{
+                  fontSize: 22,
+                  fontWeight: 700,
+                  color: "rgba(255,255,255,0.95)",
+                  marginBottom: 8,
+                }}>
+                  {SCHUMER_DATA.name}
+                </div>
 
-            <div style={{
-              fontSize: 12,
-              color: "rgba(100,200,100,0.85)",
-              marginBottom: 18,
-              fontFamily: "monospace",
-            }}>
-              Vote: {SCHUMER_DATA.vote}
+                <div style={{
+                  fontSize: 14,
+                  color: "rgba(255,255,255,0.62)",
+                  marginBottom: 6,
+                }}>
+                  Democrat • {SCHUMER_DATA.state}
+                </div>
+
+                <div style={{
+                  fontSize: 13,
+                  color: "rgba(100,200,100,0.85)",
+                  fontFamily: "monospace",
+                }}>
+                  Vote: {SCHUMER_DATA.vote}
+                </div>
+              </div>
             </div>
 
             <div style={{
               display: "flex",
               flexDirection: "column",
-              gap: 8,
-              fontSize: 12,
+              gap: 10,
+              fontSize: 13,
               color: "rgba(255,255,255,0.68)",
+              borderTop: "1px solid rgba(255,255,255,0.08)",
+              paddingTop: 18,
             }}>
               <div>Age: {SCHUMER_DATA.age}</div>
               <div>In office: {SCHUMER_DATA.yearsInOffice} years</div>
@@ -282,6 +306,7 @@ export default function ArticlePage({
             <SenateVoteVisualization
               title="SENATE"
               senators={senators}
+              hideTooltip={true}
             />
           </div>
         </div>

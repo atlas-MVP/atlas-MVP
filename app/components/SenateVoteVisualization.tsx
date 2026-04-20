@@ -13,6 +13,7 @@ interface SenateVoteVisualizationProps {
   title?: string;
   senators: Senator[];
   onSenatorHover?: (senator: Senator | null) => void;
+  hideTooltip?: boolean;
 }
 
 const STATE_NAMES: Record<string, string> = {
@@ -35,6 +36,7 @@ export default function SenateVoteVisualization({
   title = "SENATE",
   senators,
   onSenatorHover,
+  hideTooltip = false,
 }: SenateVoteVisualizationProps) {
   const [hoveredSenator, setHoveredSenator] = useState<Senator | null>(null);
   const [lockedSenator,  setLockedSenator]  = useState<Senator | null>(null);
@@ -265,7 +267,7 @@ export default function SenateVoteVisualization({
       </svg>
 
       {/* ── Senator tooltip ───────────────────────────────────────────────── */}
-      {displayed && tooltipPos && (
+      {!hideTooltip && displayed && tooltipPos && (
         <div
           onClick={e => { e.stopPropagation(); if (lockedSenator) { setLockedSenator(null); setTooltipPos(null); } }}
           style={{
