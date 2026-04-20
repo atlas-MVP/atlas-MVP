@@ -583,12 +583,14 @@ export default function AtlasHQ({ onClose, onNavigate, onHeadlinesToggle, onSour
                     <div key={item.headline}
                       onClick={editMode ? undefined : () => onViolenceTap?.(item.incidentId ?? "", item.flyTo?.center ?? [0,0] as [number,number], item.flyTo?.zoom ?? 4)}
                       style={{ height: 196, borderRadius: 14, overflow: "hidden", position: "relative", cursor: editMode ? "default" : "pointer", border: "1px solid rgba(255,255,255,0.09)", background: "#0a0c18" }}>
-                      <EImg
-                        src={item.imageUrl || item.image || ""}
-                        alt={item.headline}
-                        style={{ width: "100%", height: "100%" }}
-                        onUploaded={(key, _) => patchDraft(d => ({ ...d, violenceItems: d.violenceItems.map((x, j) => j === idx ? { ...x, imageKey: key } : x) }))}
-                      />
+                      {(item.imageUrl || item.image) && (
+                        <EImg
+                          src={item.imageUrl || item.image || ""}
+                          alt={item.headline}
+                          style={{ width: "100%", height: "100%" }}
+                          onUploaded={(key, _) => patchDraft(d => ({ ...d, violenceItems: d.violenceItems.map((x, j) => j === idx ? { ...x, imageKey: key } : x) }))}
+                        />
+                      )}
                       <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom, transparent 30%, rgba(0,0,0,0.90) 100%)", pointerEvents: "none" }} />
                       <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, padding: "8px 10px 10px" }}>
                         <EText
@@ -614,12 +616,14 @@ export default function AtlasHQ({ onClose, onNavigate, onHeadlinesToggle, onSour
                     <div key={item.headline}
                       onClick={editMode ? undefined : () => onFinanceTap?.(item.slug)}
                       style={{ flex: 1, height: 196, borderRadius: 14, overflow: "hidden", position: "relative", cursor: editMode ? "default" : "pointer", border: "1px solid rgba(255,255,255,0.09)", background: "#0a0c18", minWidth: 0 }}>
-                      <EImg
-                        src={item.imageUrl || item.image || ""}
-                        alt={item.headline}
-                        style={{ width: "100%", height: "100%" }}
-                        onUploaded={(key, _) => patchDraft(d => ({ ...d, financeItems: d.financeItems.map((x, j) => j === idx ? { ...x, imageKey: key } : x) }))}
-                      />
+                      {(item.imageUrl || item.image) && (
+                        <EImg
+                          src={item.imageUrl || item.image || ""}
+                          alt={item.headline}
+                          style={{ width: "100%", height: "100%" }}
+                          onUploaded={(key, _) => patchDraft(d => ({ ...d, financeItems: d.financeItems.map((x, j) => j === idx ? { ...x, imageKey: key } : x) }))}
+                        />
+                      )}
                       <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom, transparent 35%, rgba(0,0,0,0.88) 100%)", pointerEvents: "none" }} />
                       <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, padding: "8px 10px 14px" }}>
                         <EText
