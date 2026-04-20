@@ -1298,16 +1298,16 @@ export default function CountryPanel({ countryCode, onClose, onViewFeed, onConfl
           </div>
         </td>
         {!hasMissingCol && (
-          <td style={{ textAlign: "right", fontSize: 12, fontFamily: "monospace", color: "rgba(255,255,255,0.35)", paddingRight: 8, paddingTop: 4, paddingBottom: 4 }}>
+          <td style={{ textAlign: "right", fontSize: 12, fontFamily: "sans-serif", color: "rgba(255,255,255,0.35)", paddingRight: 8, paddingTop: 4, paddingBottom: 4 }}>
             {hasInjured ? c.injured : ""}
           </td>
         )}
         {hasMissingCol && (
-          <td style={{ textAlign: "right", fontSize: 12, fontFamily: "monospace", color: "rgba(255,255,255,0.32)", paddingRight: 8 }}>
+          <td style={{ textAlign: "right", fontSize: 12, fontFamily: "sans-serif", color: "rgba(255,255,255,0.32)", paddingRight: 8 }}>
             {c.missing ?? ""}
           </td>
         )}
-        <td style={{ textAlign: "right", fontSize: 12, fontFamily: "monospace", fontWeight: 700, color: "rgba(255,255,255,0.88)", paddingRight: 8, paddingTop: 4, paddingBottom: 4 }}>
+        <td style={{ textAlign: "right", fontSize: 12, fontFamily: "sans-serif", fontWeight: 700, color: "rgba(255,255,255,0.88)", paddingRight: 8, paddingTop: 4, paddingBottom: 4 }}>
           {c.killed}{c.killedHasMissing ? "+" : ""}
         </td>
         {hasCivCol && !hasMissingCol && (
@@ -1391,13 +1391,9 @@ export default function CountryPanel({ countryCode, onClose, onViewFeed, onConfl
         <div style={{ flexShrink: 0, padding: "6px 18px 6px" }}>
           <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 8 }}>
             <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 7, flexWrap: "wrap" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
                 <h2
                   onClick={() => {
-                    // Respawn the map to this conflict's wide "home" camera —
-                    // the original perspective over the entire region, not a
-                    // single strike location. Works any time; if a timeline
-                    // was expanded, collapse it back to the overview too.
                     const home = CONFLICT_HOMEVIEW[conflict.id] ?? DEFAULT_HOMEVIEW;
                     onFocusPosition?.(home.center, home.zoom);
                     if (timelineExpanded) exitHistory();
@@ -1406,52 +1402,6 @@ export default function CountryPanel({ countryCode, onClose, onViewFeed, onConfl
                 >
                   {conflict.title}
                 </h2>
-                {(() => {
-                  const countries = conflict.casualties.slice(0, 4).map(c => c.country);
-                  return (
-                    <div style={{ display: "flex", gap: 4, flexWrap: "wrap" }}>
-                      {countries.map(name => {
-                        const iso = CASUALTY_ISO[name];
-                        const clickable = !!iso && !!onCountrySwitch;
-                        return (
-                          <button
-                            key={name}
-                            disabled={!clickable}
-                            onClick={(e) => {
-                              if (!clickable) return;
-                              e.stopPropagation();
-                              // Exit the conflict view and transport to this
-                              // country's solo widget.
-                              stopTts();
-                              onCountrySwitch?.(iso);
-                            }}
-                            onMouseEnter={e => {
-                              if (!clickable) return;
-                              e.currentTarget.style.background = "rgba(255,255,255,0.10)";
-                              e.currentTarget.style.color      = "rgba(255,255,255,0.9)";
-                              e.currentTarget.style.borderColor = "rgba(255,255,255,0.22)";
-                            }}
-                            onMouseLeave={e => {
-                              if (!clickable) return;
-                              e.currentTarget.style.background = "rgba(255,255,255,0.04)";
-                              e.currentTarget.style.color      = "rgba(255,255,255,0.55)";
-                              e.currentTarget.style.borderColor = "rgba(255,255,255,0.10)";
-                            }}
-                            style={{
-                              fontSize: 8, fontFamily: "monospace", letterSpacing: "0.12em",
-                              padding: "2px 6px", borderRadius: 4, flexShrink: 0,
-                              background: "rgba(255,255,255,0.04)",
-                              border: "1px solid rgba(255,255,255,0.10)",
-                              color: "rgba(255,255,255,0.55)",
-                              cursor: clickable ? "pointer" : "default",
-                              transition: "background 0.12s, color 0.12s, border-color 0.12s",
-                            }}
-                          >{name.toUpperCase()}</button>
-                        );
-                      })}
-                    </div>
-                  );
-                })()}
               </div>
               <p style={{ margin: "3px 0 0", fontSize: 10, fontFamily: "monospace", color: "rgba(255,255,255,0.32)", letterSpacing: "0.06em" }}>
                 {conflict.date}
@@ -1514,11 +1464,11 @@ export default function CountryPanel({ countryCode, onClose, onViewFeed, onConfl
                 <table style={{ width: "100%", borderCollapse: "collapse" }}>
                   <thead>
                     <tr>
-                      <th style={{ textAlign: "left", fontSize: 10, fontFamily: "monospace", color: "rgba(255,255,255,0.35)", fontWeight: "normal", paddingBottom: 4, letterSpacing: "0.08em" }}></th>
-                      {!hasMissingCol && <th style={{ textAlign: "right", fontSize: 10, fontFamily: "monospace", color: "rgba(255,255,255,0.35)", fontWeight: "normal", paddingBottom: 4, letterSpacing: "0.08em", paddingRight: 8 }}>Injured</th>}
-                      {hasMissingCol && <th style={{ textAlign: "right", fontSize: 10, fontFamily: "monospace", color: "rgba(255,255,255,0.35)", fontWeight: "normal", paddingBottom: 4, letterSpacing: "0.08em", paddingRight: 8 }}>Missing</th>}
-                      <th style={{ textAlign: "right", fontSize: 10, fontFamily: "monospace", color: "rgba(255,255,255,0.35)", fontWeight: "normal", paddingBottom: 4, letterSpacing: "0.08em", paddingRight: 8 }}>Killed</th>
-                      {hasCivCol && !hasMissingCol && <th style={{ textAlign: "right", fontSize: 10, fontFamily: "monospace", color: "rgba(255,255,255,0.35)", fontWeight: "normal", paddingBottom: 4, letterSpacing: "0.08em" }}>Civ %</th>}
+                      <th style={{ textAlign: "left", fontSize: 10, fontFamily: "sans-serif", color: "rgba(255,255,255,0.35)", fontWeight: "normal", paddingBottom: 4 }}></th>
+                      {!hasMissingCol && <th style={{ textAlign: "right", fontSize: 10, fontFamily: "sans-serif", color: "rgba(255,255,255,0.35)", fontWeight: "normal", paddingBottom: 4, paddingRight: 8 }}>Injured</th>}
+                      {hasMissingCol && <th style={{ textAlign: "right", fontSize: 10, fontFamily: "sans-serif", color: "rgba(255,255,255,0.35)", fontWeight: "normal", paddingBottom: 4, paddingRight: 8 }}>Missing</th>}
+                      <th style={{ textAlign: "right", fontSize: 10, fontFamily: "sans-serif", color: "rgba(255,255,255,0.35)", fontWeight: "normal", paddingBottom: 4, paddingRight: 8 }}>Killed</th>
+                      {hasCivCol && !hasMissingCol && <th style={{ textAlign: "right", fontSize: 10, fontFamily: "sans-serif", color: "rgba(255,255,255,0.35)", fontWeight: "normal", paddingBottom: 4 }}>Civ %</th>}
                     </tr>
                   </thead>
                   <tbody>
@@ -1550,7 +1500,7 @@ export default function CountryPanel({ countryCode, onClose, onViewFeed, onConfl
 
 
           {/* ── Article cards ── */}
-          <div style={{ padding: "8px 14px 10px", borderBottom: "1px solid rgba(255,255,255,0.05)", display: "flex", gap: 8 }}>
+          <div style={{ padding: "8px 14px 10px", borderBottom: "1px solid rgba(255,255,255,0.05)", display: "flex", gap: 10 }}>
             {([
               { headline: "Who's funded and gained from the Middle East wars?", source: "Atlas Analysis" },
               { headline: "The government's use of AI in war.", source: "Atlas Analysis" },
@@ -1558,19 +1508,23 @@ export default function CountryPanel({ countryCode, onClose, onViewFeed, onConfl
               <div
                 key={i}
                 style={{
-                  flex: 1, height: 242, borderRadius: 8,
+                  flex: 1,
+                  aspectRatio: "1 / 1",
+                  maxWidth: "calc(50% - 5px)",
+                  borderRadius: 8,
                   border: "1px solid rgba(255,255,255,0.08)",
                   background: "rgba(255,255,255,0.02)",
                   padding: "10px 11px",
                   display: "flex", flexDirection: "column", justifyContent: "flex-start",
                   cursor: "pointer", transition: "background 0.12s",
+                  overflow: "hidden",
                 }}
                 onMouseEnter={e => (e.currentTarget.style.background = "rgba(255,255,255,0.05)")}
                 onMouseLeave={e => (e.currentTarget.style.background = "rgba(255,255,255,0.02)")}
               >
                 <div style={{
-                  fontSize: 13, lineHeight: 1.42, color: "rgba(255,255,255,0.78)",
-                  display: "-webkit-box", WebkitLineClamp: 6, WebkitBoxOrient: "vertical", overflow: "hidden",
+                  fontSize: 12, lineHeight: 1.42, color: "rgba(255,255,255,0.78)",
+                  display: "-webkit-box", WebkitLineClamp: 4, WebkitBoxOrient: "vertical", overflow: "hidden",
                 }}>
                   {art.headline}
                 </div>
