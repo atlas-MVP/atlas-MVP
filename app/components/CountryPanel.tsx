@@ -48,10 +48,6 @@ const CONFLICT_ALERTS: Record<string, LiveAlert[]> = {
       text: "US 5th Fleet announces heightened readiness posture in Persian Gulf",
       description: "The US Navy's 5th Fleet, headquartered in Bahrain, has raised its alert status following intelligence reports of Iranian naval mobilization near the Strait of Hormuz. Two additional destroyers are being repositioned.",
       flyTo: { center: [50.5, 26.2] as [number,number], zoom: 5 } },
-    { time: "2026-04-18T08:00:00", danger: 3, confidence: 97, sources: ["Senate", "AP", "Reuters"],
-      text: "Senate vote fails 40-59 to block arms sales to Israel — Sanders resolution draws 85% of Democrats",
-      description: "The US Senate defeated a resolution introduced by Sen. Bernie Sanders to halt new arms transfers to Israel, 40 in favor to 59 opposed. Despite the failure, the tally marked the highest level of Democratic support to date: 85% of Senate Democrats voted yes, including several members who had previously opposed similar measures. The resolution targeted a pending $8.1B package covering tank rounds, mortar shells, and guidance kits. The White House had lobbied against passage.",
-      flyTo: { center: [-77.0, 38.9] as [number,number], zoom: 11 } },
     { time: "2026-04-17T22:15:00", danger: 4, confidence: 91, sources: ["NYT", "Haaretz", "AP"],
       text: "IDF strikes Hezbollah command node in Beirut southern suburbs — 3 commanders killed",
       description: "Israeli Air Force F-35Is struck a Hezbollah command-and-control node beneath a residential building in the Dahieh district of Beirut. IDF confirms three senior Hezbollah field commanders were killed. Lebanese civil defense reports 11 civilians injured. The operation is the deepest strike inside Beirut since the 2024 ceasefire.",
@@ -270,7 +266,7 @@ const CONFLICTS: Record<string, Conflict> = {
     },
     timeline: [
       {
-        date: "February 2026 — Present",
+        date: "March — Present",
         era: "war",
         text: "The war becomes the largest Middle East military engagement since 2003. Iran, now led by Mojtaba Khamenei, continues to resist. Iran establishes a toll system on the Strait of Hormuz — $2–4M per tanker in Chinese yuan or stablecoin. Oil tops $110/barrel. Hezbollah re-enters the conflict. The 82nd Airborne is put on alert. Peace talks underway in Islamabad. No ceasefire reached.",
         mapView: { center: [47.0, 30.5], zoom: 3.8 },
@@ -1298,16 +1294,16 @@ export default function CountryPanel({ countryCode, onClose, onViewFeed, onConfl
           </div>
         </td>
         {!hasMissingCol && (
-          <td style={{ textAlign: "right", fontSize: 12, fontFamily: "sans-serif", color: "rgba(255,255,255,0.35)", paddingRight: 8, paddingTop: 4, paddingBottom: 4 }}>
+          <td style={{ textAlign: "right", fontSize: 12, fontFamily: "monospace", color: "rgba(255,255,255,0.35)", paddingRight: 8, paddingTop: 4, paddingBottom: 4 }}>
             {hasInjured ? c.injured : ""}
           </td>
         )}
         {hasMissingCol && (
-          <td style={{ textAlign: "right", fontSize: 12, fontFamily: "sans-serif", color: "rgba(255,255,255,0.32)", paddingRight: 8 }}>
+          <td style={{ textAlign: "right", fontSize: 12, fontFamily: "monospace", color: "rgba(255,255,255,0.32)", paddingRight: 8 }}>
             {c.missing ?? ""}
           </td>
         )}
-        <td style={{ textAlign: "right", fontSize: 12, fontFamily: "sans-serif", fontWeight: 700, color: "rgba(255,255,255,0.88)", paddingRight: 8, paddingTop: 4, paddingBottom: 4 }}>
+        <td style={{ textAlign: "right", fontSize: 12, fontFamily: "monospace", fontWeight: 700, color: "rgba(255,255,255,0.88)", paddingRight: 8, paddingTop: 4, paddingBottom: 4 }}>
           {c.killed}{c.killedHasMissing ? "+" : ""}
         </td>
         {hasCivCol && !hasMissingCol && (
@@ -1371,6 +1367,7 @@ export default function CountryPanel({ countryCode, onClose, onViewFeed, onConfl
 
   return (
     <>
+    <style>{`@keyframes cpFade{0%,100%{opacity:0}50%{opacity:1}}`}</style>
     <div
       className="absolute left-6 z-20 w-[520px]"
       style={{ top: 72, bottom: 24, display: "flex", flexDirection: "column" }}
@@ -1437,45 +1434,57 @@ export default function CountryPanel({ countryCode, onClose, onViewFeed, onConfl
         >
           {/* Casualties, alerts, feed — hidden in history mode */}
           {!timelineExpanded && (<>
-          {/* Casualties */}
-          <div style={{ padding: "8px 14px 6px", borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
-            {(
-              /* COUNTRY-BY-COUNTRY VIEW */
-              <>
-                <table style={{ width: "100%", borderCollapse: "collapse" }}>
-                  <thead>
-                    <tr>
-                      <th style={{ textAlign: "left", fontSize: 10, fontFamily: "sans-serif", color: "rgba(255,255,255,0.35)", fontWeight: "normal", paddingBottom: 4 }}></th>
-                      {!hasMissingCol && <th style={{ textAlign: "right", fontSize: 10, fontFamily: "sans-serif", color: "rgba(255,255,255,0.35)", fontWeight: "normal", paddingBottom: 4, paddingRight: 8 }}>Injured</th>}
-                      {hasMissingCol && <th style={{ textAlign: "right", fontSize: 10, fontFamily: "sans-serif", color: "rgba(255,255,255,0.35)", fontWeight: "normal", paddingBottom: 4, paddingRight: 8 }}>Missing</th>}
-                      <th style={{ textAlign: "right", fontSize: 10, fontFamily: "sans-serif", color: "rgba(255,255,255,0.35)", fontWeight: "normal", paddingBottom: 4, paddingRight: 8 }}>Killed</th>
-                      {hasCivCol && !hasMissingCol && <th style={{ textAlign: "right", fontSize: 10, fontFamily: "sans-serif", color: "rgba(255,255,255,0.35)", fontWeight: "normal", paddingBottom: 4 }}>Civ %</th>}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {displayed.map(renderRow)}
-                  </tbody>
-                </table>
-                {sorted.length > 2 && (
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      const next = !showAllCasualties;
-                      setShowAllCasualties(next);
-                      if (next) {
-                        const codes = sorted.map(c => CASUALTY_ISO[c.country]).filter(Boolean);
-                        onCasualtyHighlight?.(codes);
-                      } else {
-                        onCasualtyHighlight?.([]);
-                      }
-                    }}
-                    style={{ marginTop: 4, fontSize: 10, fontFamily: "monospace", letterSpacing: "0.08em", color: "rgba(255,255,255,0.35)", background: "none", border: "none", cursor: "pointer", padding: "2px 0", display: "block" }}
-                    onMouseEnter={e => (e.currentTarget.style.color = "rgba(255,255,255,0.58)")}
-                    onMouseLeave={e => (e.currentTarget.style.color = "rgba(255,255,255,0.35)")}>
-                    {showAllCasualties ? "▲ show less" : `▼ +${hiddenCount} more`}
-                  </button>
-                )}
-              </>
+          {/* Casualties + timeline preview side by side */}
+          <div style={{ padding: "8px 14px 8px", borderBottom: "1px solid rgba(255,255,255,0.05)", display: "flex", gap: 14, alignItems: "flex-start" }}>
+            {/* LEFT: casualties table */}
+            <div style={{ flexShrink: 0 }}>
+              <table style={{ width: "auto", borderCollapse: "collapse" }}>
+                <thead>
+                  <tr>
+                    <th style={{ textAlign: "left", fontSize: 10, fontFamily: "monospace", color: "rgba(255,255,255,0.35)", fontWeight: "normal", paddingBottom: 4 }}></th>
+                    {!hasMissingCol && <th style={{ textAlign: "right", fontSize: 10, fontFamily: "monospace", color: "rgba(255,255,255,0.35)", fontWeight: "normal", paddingBottom: 4, paddingRight: 8 }}>Injured</th>}
+                    {hasMissingCol && <th style={{ textAlign: "right", fontSize: 10, fontFamily: "monospace", color: "rgba(255,255,255,0.35)", fontWeight: "normal", paddingBottom: 4, paddingRight: 8 }}>Missing</th>}
+                    <th style={{ textAlign: "right", fontSize: 10, fontFamily: "monospace", color: "rgba(255,255,255,0.35)", fontWeight: "normal", paddingBottom: 4, paddingRight: 8 }}>Killed</th>
+                    {hasCivCol && !hasMissingCol && <th style={{ textAlign: "right", fontSize: 10, fontFamily: "monospace", color: "rgba(255,255,255,0.35)", fontWeight: "normal", paddingBottom: 4 }}>Civ %</th>}
+                  </tr>
+                </thead>
+                <tbody>
+                  {displayed.map(renderRow)}
+                </tbody>
+              </table>
+              {sorted.length > 2 && (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    const next = !showAllCasualties;
+                    setShowAllCasualties(next);
+                    if (next) {
+                      const codes = sorted.map(c => CASUALTY_ISO[c.country]).filter(Boolean);
+                      onCasualtyHighlight?.(codes);
+                    } else {
+                      onCasualtyHighlight?.([]);
+                    }
+                  }}
+                  style={{ marginTop: 0, fontSize: 9, fontFamily: "monospace", letterSpacing: "0.08em", color: "rgba(255,255,255,0.35)", background: "none", border: "none", cursor: "pointer", padding: "1px 0", display: "block", animation: "cpFade 2s ease-in-out infinite" }}
+                  onMouseEnter={e => (e.currentTarget.style.animationPlayState = "paused")}
+                  onMouseLeave={e => (e.currentTarget.style.animationPlayState = "running")}>
+                  {showAllCasualties ? "▲ show less" : `▼ +${hiddenCount} more`}
+                </button>
+              )}
+            </div>
+            {/* RIGHT: timeline preview (March — Present) */}
+            {conflict.timeline[0] && (
+              <div
+                style={{ flex: 1, minWidth: 0, paddingLeft: 12, borderLeft: "1px solid rgba(255,255,255,0.06)", cursor: "pointer" }}
+                onClick={(e) => { e.stopPropagation(); enterHistory(); }}
+              >
+                <div style={{ fontSize: 10, fontFamily: "monospace", fontWeight: 600, color: "rgba(255,255,255,0.75)", letterSpacing: "0.03em", marginBottom: 5 }}>
+                  {(() => { const d = conflict.timeline[0].date; if (/^(19|20)\d\d/.test(d)) return d; return d.replace(/,?\s*(19|20)\d\d/, ""); })()}
+                </div>
+                <p style={{ margin: 0, fontSize: 11, color: "rgba(255,255,255,0.48)", lineHeight: 1.55, display: "-webkit-box", WebkitLineClamp: 5, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
+                  {conflict.timeline[0].text}
+                </p>
+              </div>
             )}
           </div>
 
@@ -1577,16 +1586,6 @@ export default function CountryPanel({ countryCode, onClose, onViewFeed, onConfl
             );
           })()}
 
-          {/* View Feed */}
-          <div style={{ padding: "8px 14px", borderTop: "1px solid rgba(255,255,255,0.05)" }}>
-            <button
-              onClick={(e) => { e.stopPropagation(); onViewFeed(conflict.feedKey); }}
-              style={{ width: "100%", padding: "9px", fontSize: 10, fontFamily: "monospace", letterSpacing: "0.12em", textTransform: "uppercase", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 8, color: "rgba(255,255,255,0.4)", cursor: "pointer" }}
-              onMouseEnter={e => { e.currentTarget.style.background = "rgba(255,255,255,0.08)"; e.currentTarget.style.color = "rgba(255,255,255,0.8)"; }}
-              onMouseLeave={e => { e.currentTarget.style.background = "rgba(255,255,255,0.04)"; e.currentTarget.style.color = "rgba(255,255,255,0.4)"; }}>
-              View Live Feed →
-            </button>
-          </div>
           </>)}
 
           {/* Timeline / History */}
@@ -1598,88 +1597,26 @@ export default function CountryPanel({ countryCode, onClose, onViewFeed, onConfl
             const latest = conflict.timeline[0];
 
             if (!timelineExpanded) {
-              // ── Normal mode: present + "read full story" button ──
+              // ── Normal mode: action buttons only (preview is in the casualties row) ──
               return (
-                <div style={{ padding: "0 16px 16px" }}>
-                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 14, marginBottom: 14 }}>
-                    <p style={{ fontSize: 11, fontFamily: "monospace", letterSpacing: "0.18em", color: "rgba(255,255,255,0.42)", textTransform: "uppercase", margin: 0, fontWeight: 500 }}>timeline</p>
-                  </div>
-                  <div style={{ position: "relative", cursor: "pointer" }} onClick={(e) => { e.stopPropagation(); enterHistory(); }}>
-                    <div style={{ position: "absolute", left: 5, top: 6, bottom: 6, width: 1, background: "rgba(255,255,255,0.05)" }} />
-                    <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
-                      {latest && (
-                        <div {...(latest.strikeEvent ? { "data-strike": JSON.stringify(latest.strikeEvent) } : {})}>
-                          <div style={{ display: "flex", gap: 12, paddingLeft: 4 }}>
-                            <div style={{ flexShrink: 0, marginTop: 4 }}>
-                              <div style={{ width: 7, height: 7, borderRadius: "50%", background: HIGHLIGHT.solid, border: `1px solid ${HIGHLIGHT.border}`, boxShadow: HIGHLIGHT.glow }} />
-                            </div>
-                            <div>
-                              <div style={{ display: "flex", alignItems: "center", gap: 8, margin: "0 0 5px" }}>
-                                <span style={{ fontSize: 11, fontFamily: "monospace", fontWeight: 600, color: HIGHLIGHT.date, letterSpacing: "0.03em" }}>
-                                  {(() => { const d = latest.date; if (/^(19|20)\d\d/.test(d)) return d; return d.replace(/,?\s*(19|20)\d\d/, ""); })()}
-                                </span>
-                                {latest.tag && (
-                                  <span style={{
-                                    fontSize: 8, fontFamily: "monospace", letterSpacing: "0.14em", textTransform: "uppercase",
-                                    padding: "2px 7px", borderRadius: 3,
-                                    background: latest.tag === "terrorist attack" ? "rgba(239,68,68,0.12)" : "rgba(255,255,255,0.05)",
-                                    color: latest.tag === "terrorist attack" ? "rgba(239,68,68,0.7)" : "rgba(255,255,255,0.3)",
-                                    border: `1px solid ${latest.tag === "terrorist attack" ? "rgba(239,68,68,0.2)" : "rgba(255,255,255,0.08)"}`,
-                                  }}>
-                                    {latest.tag}
-                                  </span>
-                                )}
-                              </div>
-                              <p style={{ margin: 0, fontSize: 14, color: HIGHLIGHT.text, lineHeight: 1.65 }}>{latest.text}</p>
-                              {/* Linked pills in normal view too */}
-                              {latest.linkedConflicts && latest.linkedConflicts.length > 0 && (
-                                <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginTop: 10 }}>
-                                  {latest.linkedConflicts.map((lc, lci) => {
-                                    const isAttack = lc.type === "attack";
-                                    const baseColor = isAttack ? "239,68,68" : "96,165,250";
-                                    return (
-                                      <button
-                                        key={lci}
-                                        className={isAttack ? "tooltip-pulse-border" : "link-pulse-border"}
-                                        onClick={(e) => {
-                                          e.stopPropagation();
-                                          setSelectedConflictId(lc.id);
-                                          onConflictSelect?.(lc.id);
-                                        }}
-                                        style={{
-                                          fontSize: 9, fontFamily: "monospace", letterSpacing: "0.1em",
-                                          color: `rgba(${baseColor},0.7)`, background: `rgba(${baseColor},0.06)`,
-                                          border: `1px solid rgba(${baseColor},0.2)`, borderRadius: 10,
-                                          cursor: "pointer", padding: "4px 10px", display: "inline-flex", alignItems: "center", gap: 6,
-                                        }}
-                                        onMouseEnter={e => { e.currentTarget.style.background = `rgba(${baseColor},0.12)`; e.currentTarget.style.color = `rgba(${baseColor},0.9)`; }}
-                                        onMouseLeave={e => { e.currentTarget.style.background = `rgba(${baseColor},0.06)`; e.currentTarget.style.color = `rgba(${baseColor},0.7)`; }}
-                                      >
-                                        <span style={{ width: 5, height: 5, borderRadius: "50%", background: `rgba(${baseColor},0.6)` }} className={isAttack ? "tooltip-pulse-dot" : "link-pulse-dot"} />
-                                        {lc.label} →
-                                      </button>
-                                    );
-                                  })}
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                      )}
-                      {chronological.length > 0 && (
-                        <button
-                          onClick={(e) => { e.stopPropagation(); enterHistory(); }}
-                          style={{ fontSize: 13, fontFamily: "monospace", color: "rgba(255,255,255,0.35)", background: "none", border: "none", cursor: "pointer", padding: "0", textAlign: "left" }}
-                          onMouseEnter={e => (e.currentTarget.style.color = "rgba(255,255,255,0.7)")}
-                          onMouseLeave={e => (e.currentTarget.style.color = "rgba(255,255,255,0.35)")}
-                        >read full story →</button>
-                      )}
-                    </div>
-                  </div>
+                <div style={{ padding: "10px 16px 16px", display: "flex", gap: 8 }}>
+                  {chronological.length > 0 && (
+                    <button
+                      onClick={(e) => { e.stopPropagation(); enterHistory(); }}
+                      style={{ flex: 1, padding: "8px", fontSize: 10, fontFamily: "monospace", letterSpacing: "0.12em", textTransform: "uppercase", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 8, color: "rgba(255,255,255,0.45)", cursor: "pointer" }}
+                      onMouseEnter={e => { e.currentTarget.style.background = "rgba(255,255,255,0.08)"; e.currentTarget.style.color = "rgba(255,255,255,0.8)"; }}
+                      onMouseLeave={e => { e.currentTarget.style.background = "rgba(255,255,255,0.04)"; e.currentTarget.style.color = "rgba(255,255,255,0.45)"; }}
+                    >See Timeline →</button>
+                  )}
+                  <button
+                    onClick={(e) => { e.stopPropagation(); onViewFeed(conflict.feedKey); }}
+                    style={{ flex: 1, padding: "8px", fontSize: 10, fontFamily: "monospace", letterSpacing: "0.12em", textTransform: "uppercase", background: "none", border: "none", borderRadius: 8, color: "rgba(255,255,255,0.45)", cursor: "pointer", animation: "cpFade 2s ease-in-out infinite" }}
+                    onMouseEnter={e => { e.currentTarget.style.animationPlayState = "paused"; e.currentTarget.style.opacity = "1"; e.currentTarget.style.color = "rgba(255,255,255,0.8)"; }}
+                    onMouseLeave={e => { e.currentTarget.style.animationPlayState = "running"; e.currentTarget.style.color = "rgba(255,255,255,0.45)"; }}
+                  >Live Feed</button>
                 </div>
               );
             }
-
             // ── History mode: snap-scroll tiles ──
             return (
               <div style={{ display: "flex", flexDirection: "column", flex: 1, minHeight: 0 }}>
