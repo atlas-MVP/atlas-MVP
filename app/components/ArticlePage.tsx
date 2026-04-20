@@ -13,6 +13,22 @@ interface ArticlePageProps {
   billId: string;
 }
 
+const STATE_NAMES: Record<string, string> = {
+  AL: "Alabama", AK: "Alaska", AZ: "Arizona", AR: "Arkansas",
+  CA: "California", CO: "Colorado", CT: "Connecticut", DE: "Delaware",
+  FL: "Florida", GA: "Georgia", HI: "Hawaii", ID: "Idaho",
+  IL: "Illinois", IN: "Indiana", IA: "Iowa", KS: "Kansas",
+  KY: "Kentucky", LA: "Louisiana", ME: "Maine", MD: "Maryland",
+  MA: "Massachusetts", MI: "Michigan", MN: "Minnesota", MS: "Mississippi",
+  MO: "Missouri", MT: "Montana", NE: "Nebraska", NV: "Nevada",
+  NH: "New Hampshire", NJ: "New Jersey", NM: "New Mexico", NY: "New York",
+  NC: "North Carolina", ND: "North Dakota", OH: "Ohio", OK: "Oklahoma",
+  OR: "Oregon", PA: "Pennsylvania", RI: "Rhode Island", SC: "South Carolina",
+  SD: "South Dakota", TN: "Tennessee", TX: "Texas", UT: "Utah",
+  VT: "Vermont", VA: "Virginia", WA: "Washington", WV: "West Virginia",
+  WI: "Wisconsin", WY: "Wyoming",
+};
+
 const SCHUMER_DATA = {
   name: "Chuck Schumer",
   party: "D" as const,
@@ -36,6 +52,7 @@ export default function ArticlePage({
   const [hoveredSenator, setHoveredSenator] = useState<Senator | null>(null);
   const [senateExpanded, setSenateExpanded] = useState(false);
   const [lockedSenator, setLockedSenator] = useState<Senator | null>(null);
+  const [photoEnlarged, setPhotoEnlarged] = useState(false);
 
   const senators: Senator[] = [
     // AYE voters (40 total: 2 Independents + 38 Democrats)
@@ -204,10 +221,10 @@ export default function ArticlePage({
             margin: "0 auto",
             display: "flex",
             flexDirection: "column",
-            gap: 16,
+            gap: 24,
           }}>
             <h1 style={{
-              fontSize: 32,
+              fontSize: 36,
               fontWeight: 700,
               lineHeight: 1.2,
               margin: 0,
@@ -218,7 +235,7 @@ export default function ArticlePage({
             </h1>
 
             <div style={{
-              fontSize: 12,
+              fontSize: 13,
               fontFamily: "monospace",
               color: "rgba(255,255,255,0.42)",
               letterSpacing: "0.08em",
@@ -228,12 +245,12 @@ export default function ArticlePage({
             </div>
 
             <div style={{
-              fontSize: 15,
-              lineHeight: 1.6,
+              fontSize: 17,
+              lineHeight: 1.7,
               color: "rgba(255,255,255,0.82)",
             }}>
               {description.split("\n\n").map((paragraph, i) => (
-                <p key={i} style={{ margin: "0 0 12px 0" }}>
+                <p key={i} style={{ margin: "0 0 20px 0" }}>
                   {paragraph}
                 </p>
               ))}
@@ -418,22 +435,37 @@ export default function ArticlePage({
                     backdropFilter: "blur(30px)",
                     borderRadius: 16,
                     border: `1px solid rgba(${isAye ? "96,165,250" : "239,68,68"},0.4)`,
-                    padding: "28px",
+                    padding: "20px",
                     width: 420,
                     boxShadow: "0 20px 60px rgba(0,0,0,0.5)",
                     cursor: lockedSenator ? "pointer" : "default",
                   }}
                 >
-                  <div style={{ display: "flex", gap: 20, marginBottom: isSchumer ? 20 : 0 }}>
+                  <div style={{ display: "flex", gap: 14, marginBottom: isSchumer ? 14 : 0 }}>
                     {isSchumer && (
-                      <div style={{
-                        width: 100,
-                        height: 100,
-                        borderRadius: 12,
-                        overflow: "hidden",
-                        background: "rgba(255,255,255,0.05)",
-                        flexShrink: 0,
-                      }}>
+                      <div
+                        onMouseEnter={() => setPhotoEnlarged(true)}
+                        onMouseLeave={() => setPhotoEnlarged(false)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setPhotoEnlarged(!photoEnlarged);
+                        }}
+                        style={{
+                          width: photoEnlarged ? 360 : 120,
+                          height: photoEnlarged ? 360 : 120,
+                          borderRadius: 12,
+                          overflow: "hidden",
+                          background: "rgba(255,255,255,0.05)",
+                          flexShrink: 0,
+                          transition: "all 0.3s ease",
+                          cursor: "pointer",
+                          position: photoEnlarged ? "fixed" : "relative",
+                          top: photoEnlarged ? "50%" : "auto",
+                          left: photoEnlarged ? "50%" : "auto",
+                          transform: photoEnlarged ? "translate(-50%, -50%)" : "none",
+                          zIndex: photoEnlarged ? 300 : "auto",
+                        }}
+                      >
                         <img
                           src={SCHUMER_DATA.photo}
                           alt={SCHUMER_DATA.name}
@@ -457,15 +489,15 @@ export default function ArticlePage({
                       </div>
 
                       <div style={{
-                        fontSize: 14,
+                        fontSize: 15,
                         color: "rgba(255,255,255,0.62)",
                         marginBottom: 6,
                       }}>
-                        {senator.party === "R" ? "Republican" : senator.party === "D" ? "Democrat" : "Independent"} • {senator.state}
+                        {senator.party === "R" ? "Republican" : senator.party === "D" ? "Democrat" : "Independent"} • {STATE_NAMES[senator.state] ?? senator.state}
                       </div>
 
                       <div style={{
-                        fontSize: 13,
+                        fontSize: 14,
                         color: isAye ? "rgba(100,200,100,0.85)" : "rgba(239,68,68,0.85)",
                         fontFamily: "monospace",
                       }}>
@@ -479,14 +511,14 @@ export default function ArticlePage({
                       display: "flex",
                       flexDirection: "column",
                       gap: 10,
-                      fontSize: 13,
+                      fontSize: 14,
                       color: "rgba(255,255,255,0.68)",
                       borderTop: "1px solid rgba(255,255,255,0.08)",
-                      paddingTop: 18,
+                      paddingTop: 14,
                     }}>
-                      <div>Age: {SCHUMER_DATA.age}</div>
-                      <div>In office: {SCHUMER_DATA.yearsInOffice} years</div>
-                      <div>Up for re-election: {SCHUMER_DATA.nextElection}</div>
+                      <div><span style={{ fontWeight: 700 }}>Age:</span> {SCHUMER_DATA.age}</div>
+                      <div><span style={{ fontWeight: 700 }}>In office:</span> {SCHUMER_DATA.yearsInOffice} years</div>
+                      <div><span style={{ fontWeight: 700 }}>Up for re-election:</span> {SCHUMER_DATA.nextElection}</div>
                     </div>
                   )}
                 </div>
