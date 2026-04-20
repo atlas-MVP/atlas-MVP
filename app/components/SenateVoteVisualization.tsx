@@ -13,6 +13,7 @@ interface SenateVoteVisualizationProps {
   title?: string;
   senators: Senator[];
   onSenatorHover?: (senator: Senator | null) => void;
+  onSenatorClick?: (senator: Senator) => void;
   hideTooltip?: boolean;
 }
 
@@ -36,6 +37,7 @@ export default function SenateVoteVisualization({
   title = "SENATE",
   senators,
   onSenatorHover,
+  onSenatorClick,
   hideTooltip = false,
 }: SenateVoteVisualizationProps) {
   const [hoveredSenator, setHoveredSenator] = useState<Senator | null>(null);
@@ -255,11 +257,15 @@ export default function SenateVoteVisualization({
             }}
             onClick={e => {
               e.stopPropagation();
-              if (lockedSenator?.name === senator.name) {
-                setLockedSenator(null); setTooltipPos(null);
+              if (onSenatorClick) {
+                onSenatorClick(senator);
               } else {
-                setLockedSenator(senator);
-                setTooltipPos({ x, y, isLeft: senator.vote === "Aye" });
+                if (lockedSenator?.name === senator.name) {
+                  setLockedSenator(null); setTooltipPos(null);
+                } else {
+                  setLockedSenator(senator);
+                  setTooltipPos({ x, y, isLeft: senator.vote === "Aye" });
+                }
               }
             }}
           />

@@ -236,23 +236,23 @@ export default function ArticlePage({
               ))}
             </div>
 
-            <div style={{
-              display: "flex",
-              justifyContent: "center",
-              marginTop: 16,
-            }}>
-              <div
-                onMouseEnter={() => setSenateExpanded(true)}
-                onMouseLeave={() => setHoveredSenator(null)}
-                style={{ cursor: "pointer" }}
-              >
-                <SenateVoteVisualization
-                  title="SENATE"
-                  senators={senators}
-                  onSenatorHover={setHoveredSenator}
-                />
+            {!senateExpanded && (
+              <div style={{
+                display: "flex",
+                justifyContent: "center",
+                marginTop: 16,
+              }}>
+                <div
+                  onMouseEnter={() => setSenateExpanded(true)}
+                  style={{ cursor: "pointer" }}
+                >
+                  <SenateVoteVisualization
+                    title="SENATE"
+                    senators={senators}
+                  />
+                </div>
               </div>
-            </div>
+            )}
           </div>
         </div>
       </div>
@@ -342,11 +342,17 @@ export default function ArticlePage({
 
       {senateExpanded && (
         <div
-          onMouseLeave={() => { if (!lockedSenator) setSenateExpanded(false); }}
+          onMouseLeave={() => {
+            if (!lockedSenator) {
+              setSenateExpanded(false);
+              setHoveredSenator(null);
+            }
+          }}
           onClick={(e) => {
             if ((e.target as HTMLElement).id === "senate-backdrop") {
               setSenateExpanded(false);
               setLockedSenator(null);
+              setHoveredSenator(null);
             }
           }}
           id="senate-backdrop"
@@ -357,9 +363,8 @@ export default function ArticlePage({
             backdropFilter: "blur(20px)",
             background: "rgba(0,0,0,0.4)",
             display: "flex",
-            alignItems: "flex-end",
+            alignItems: "center",
             justifyContent: "center",
-            paddingBottom: 0,
             pointerEvents: "auto",
           }}
         >
@@ -367,152 +372,127 @@ export default function ArticlePage({
             onClick={(e) => e.stopPropagation()}
             style={{
               position: "relative",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              gap: 40,
-              width: "100%",
-              maxWidth: 1400,
-              paddingBottom: 40,
+              transform: "scale(1.5)",
             }}
           >
-            {/* Aye voters - left side */}
-            <div style={{
-              display: "flex",
-              flexDirection: "column",
-              gap: 12,
-              alignItems: "flex-end",
-              opacity: hoveredSenator?.vote === "Aye" || !hoveredSenator ? 1 : 0.3,
-              transition: "opacity 0.2s",
-            }}>
-              {senators.filter(s => s.vote === "Aye").slice(0, 5).map(senator => (
+            <SenateVoteVisualization
+              title="SENATE"
+              senators={senators}
+              hideTooltip={true}
+              onSenatorHover={setHoveredSenator}
+              onSenatorClick={(senator) => {
+                if (lockedSenator?.name === senator.name) {
+                  setLockedSenator(null);
+                } else {
+                  setLockedSenator(senator);
+                }
+              }}
+            />
+          </div>
+
+          {/* Senator info card - appears on hover/lock */}
+          {(hoveredSenator || lockedSenator) && (() => {
+            const senator = lockedSenator || hoveredSenator;
+            if (!senator) return null;
+
+            const isAye = senator.vote === "Aye";
+            const isSchumer = senator.name === SCHUMER_DATA.name;
+
+            return (
+              <div style={{
+                position: "fixed",
+                [isAye ? "left" : "right"]: 80,
+                top: "50%",
+                transform: "translateY(-50%)",
+                zIndex: 201,
+                pointerEvents: lockedSenator ? "auto" : "none",
+              }}>
                 <div
-                  key={senator.name}
-                  onMouseEnter={() => setHoveredSenator(senator)}
-                  onClick={() => setLockedSenator(senator)}
+                  onClick={() => {
+                    if (lockedSenator) {
+                      setLockedSenator(null);
+                    }
+                  }}
                   style={{
                     background: "rgba(4,6,18,0.95)",
                     backdropFilter: "blur(30px)",
-                    borderRadius: 12,
-                    border: `1px solid rgba(96,165,250,${hoveredSenator?.name === senator.name || lockedSenator?.name === senator.name ? 0.8 : 0.3})`,
-                    padding: "14px 18px",
-                    minWidth: 240,
-                    cursor: "pointer",
-                    transform: hoveredSenator?.name === senator.name || lockedSenator?.name === senator.name ? "scale(1.02)" : "scale(1)",
-                    transition: "all 0.2s",
+                    borderRadius: 16,
+                    border: `1px solid rgba(${isAye ? "96,165,250" : "239,68,68"},0.4)`,
+                    padding: "28px",
+                    width: 420,
+                    boxShadow: "0 20px 60px rgba(0,0,0,0.5)",
+                    cursor: lockedSenator ? "pointer" : "default",
                   }}
                 >
-                  <div style={{
-                    fontSize: 15,
-                    fontWeight: 600,
-                    color: "rgba(255,255,255,0.95)",
-                    marginBottom: 4,
-                  }}>
-                    {senator.name}
-                  </div>
-                  <div style={{
-                    fontSize: 12,
-                    color: "rgba(255,255,255,0.55)",
-                  }}>
-                    {senator.party === "R" ? "Republican" : senator.party === "D" ? "Democrat" : "Independent"} • {senator.state}
-                  </div>
-                  <div style={{
-                    fontSize: 11,
-                    color: "rgba(100,200,100,0.85)",
-                    marginTop: 6,
-                    fontFamily: "monospace",
-                  }}>
-                    Vote: Aye
-                  </div>
-                </div>
-              ))}
-            </div>
+                  <div style={{ display: "flex", gap: 20, marginBottom: isSchumer ? 20 : 0 }}>
+                    {isSchumer && (
+                      <div style={{
+                        width: 100,
+                        height: 100,
+                        borderRadius: 12,
+                        overflow: "hidden",
+                        background: "rgba(255,255,255,0.05)",
+                        flexShrink: 0,
+                      }}>
+                        <img
+                          src={SCHUMER_DATA.photo}
+                          alt={SCHUMER_DATA.name}
+                          style={{
+                            width: "100%",
+                            height: "100%",
+                            objectFit: "cover",
+                          }}
+                        />
+                      </div>
+                    )}
 
-            {/* Senate visualization - center */}
-            <div style={{ transform: "scale(1.4)" }}>
-              <SenateVoteVisualization
-                title="SENATE"
-                senators={senators}
-                hideTooltip={true}
-              />
-            </div>
+                    <div style={{ flex: 1 }}>
+                      <div style={{
+                        fontSize: 22,
+                        fontWeight: 700,
+                        color: "rgba(255,255,255,0.95)",
+                        marginBottom: 8,
+                      }}>
+                        {senator.name}
+                      </div>
 
-            {/* No voters - right side */}
-            <div style={{
-              display: "flex",
-              flexDirection: "column",
-              gap: 12,
-              alignItems: "flex-start",
-              opacity: hoveredSenator?.vote === "No" || !hoveredSenator ? 1 : 0.3,
-              transition: "opacity 0.2s",
-            }}>
-              {senators.filter(s => s.vote === "No" && s.party === "D").map(senator => (
-                <div
-                  key={senator.name}
-                  onMouseEnter={() => setHoveredSenator(senator)}
-                  onClick={() => setLockedSenator(senator)}
-                  style={{
-                    background: "rgba(4,6,18,0.95)",
-                    backdropFilter: "blur(30px)",
-                    borderRadius: 12,
-                    border: `1px solid rgba(239,68,68,${hoveredSenator?.name === senator.name || lockedSenator?.name === senator.name ? 0.8 : 0.3})`,
-                    padding: "14px 18px",
-                    minWidth: 240,
-                    display: "flex",
-                    gap: senator.name === SCHUMER_DATA.name ? 14 : 0,
-                    cursor: "pointer",
-                    transform: hoveredSenator?.name === senator.name || lockedSenator?.name === senator.name ? "scale(1.02)" : "scale(1)",
-                    transition: "all 0.2s",
-                  }}
-                >
-                  {senator.name === SCHUMER_DATA.name && (
+                      <div style={{
+                        fontSize: 14,
+                        color: "rgba(255,255,255,0.62)",
+                        marginBottom: 6,
+                      }}>
+                        {senator.party === "R" ? "Republican" : senator.party === "D" ? "Democrat" : "Independent"} • {senator.state}
+                      </div>
+
+                      <div style={{
+                        fontSize: 13,
+                        color: isAye ? "rgba(100,200,100,0.85)" : "rgba(239,68,68,0.85)",
+                        fontFamily: "monospace",
+                      }}>
+                        Vote: {senator.vote}
+                      </div>
+                    </div>
+                  </div>
+
+                  {isSchumer && (
                     <div style={{
-                      width: 60,
-                      height: 60,
-                      borderRadius: 8,
-                      overflow: "hidden",
-                      background: "rgba(255,255,255,0.05)",
-                      flexShrink: 0,
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: 10,
+                      fontSize: 13,
+                      color: "rgba(255,255,255,0.68)",
+                      borderTop: "1px solid rgba(255,255,255,0.08)",
+                      paddingTop: 18,
                     }}>
-                      <img
-                        src={SCHUMER_DATA.photo}
-                        alt={SCHUMER_DATA.name}
-                        style={{
-                          width: "100%",
-                          height: "100%",
-                          objectFit: "cover",
-                        }}
-                      />
+                      <div>Age: {SCHUMER_DATA.age}</div>
+                      <div>In office: {SCHUMER_DATA.yearsInOffice} years</div>
+                      <div>Up for re-election: {SCHUMER_DATA.nextElection}</div>
                     </div>
                   )}
-                  <div style={{ flex: 1 }}>
-                    <div style={{
-                      fontSize: 15,
-                      fontWeight: 600,
-                      color: "rgba(255,255,255,0.95)",
-                      marginBottom: 4,
-                    }}>
-                      {senator.name}
-                    </div>
-                    <div style={{
-                      fontSize: 12,
-                      color: "rgba(255,255,255,0.55)",
-                    }}>
-                      Democrat • {senator.state}
-                    </div>
-                    <div style={{
-                      fontSize: 11,
-                      color: "rgba(239,68,68,0.85)",
-                      marginTop: 6,
-                      fontFamily: "monospace",
-                    }}>
-                      Vote: No
-                    </div>
-                  </div>
                 </div>
-              ))}
-            </div>
-          </div>
+              </div>
+            );
+          })()}
         </div>
       )}
     </div>
