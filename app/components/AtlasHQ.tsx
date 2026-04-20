@@ -159,7 +159,7 @@ const VIOLENCE_ITEMS = [
   {
     slug: "violence",
     headline: "5 shot near University of Iowa campus",
-    image: "/violence.webp",
+    image: "",
     flyTo: { center: [-98.5, 39.5] as [number,number], zoom: 4 },
     incidentId: "iowa-city-2026-04-19",
   },
@@ -455,7 +455,7 @@ export default function AtlasHQ({ onClose, onNavigate, onHeadlinesToggle, onSour
                           src={c.imageUrl || c.image || ""}
                           alt={c.label}
                           style={{ width: "100%", height: "100%" }}
-                          onUploaded={(key, _) => patchDraft(d => ({ ...d, topConflicts: d.topConflicts.map((x, j) => j === idx ? { ...x, imageKey: key } : x) }))}
+                          onUploaded={(key, url) => patchDraft(d => ({ ...d, topConflicts: d.topConflicts.map((x, j) => j === idx ? { ...x, imageKey: key, imageUrl: url } : x) }))}
                         />
                       )}
                       <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom, transparent 35%, rgba(0,0,0,0.88) 100%)", pointerEvents: "none" }} />
@@ -592,7 +592,7 @@ export default function AtlasHQ({ onClose, onNavigate, onHeadlinesToggle, onSour
                           src={item.imageUrl || item.image || ""}
                           alt={item.headline}
                           style={{ width: "100%", height: "100%" }}
-                          onUploaded={(key, _) => patchDraft(d => ({ ...d, violenceItems: d.violenceItems.map((x, j) => j === idx ? { ...x, imageKey: key } : x) }))}
+                          onUploaded={(key, url) => patchDraft(d => ({ ...d, violenceItems: d.violenceItems.map((x, j) => j === idx ? { ...x, imageKey: key, imageUrl: url } : x) }))}
                         />
                       )}
                       <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom, transparent 30%, rgba(0,0,0,0.90) 100%)", pointerEvents: "none" }} />
@@ -625,7 +625,7 @@ export default function AtlasHQ({ onClose, onNavigate, onHeadlinesToggle, onSour
                           src={item.imageUrl || item.image || ""}
                           alt={item.headline}
                           style={{ width: "100%", height: "100%" }}
-                          onUploaded={(key, _) => patchDraft(d => ({ ...d, financeItems: d.financeItems.map((x, j) => j === idx ? { ...x, imageKey: key } : x) }))}
+                          onUploaded={(key, url) => patchDraft(d => ({ ...d, financeItems: d.financeItems.map((x, j) => j === idx ? { ...x, imageKey: key, imageUrl: url } : x) }))}
                         />
                       )}
                       <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom, transparent 35%, rgba(0,0,0,0.88) 100%)", pointerEvents: "none" }} />
@@ -657,7 +657,7 @@ export default function AtlasHQ({ onClose, onNavigate, onHeadlinesToggle, onSour
                           src={dis.imageUrl || dis.image || ""}
                           alt={dis.label}
                           style={{ width: "100%", height: "100%" }}
-                          onUploaded={(key, _) => patchDraft(d => ({ ...d, disasters: d.disasters.map((x, j) => j === idx ? { ...x, imageKey: key } : x) }))}
+                          onUploaded={(key, url) => patchDraft(d => ({ ...d, disasters: d.disasters.map((x, j) => j === idx ? { ...x, imageKey: key, imageUrl: url } : x) }))}
                         />
                       )}
                       <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom, transparent 35%, rgba(0,0,0,0.88) 100%)", pointerEvents: "none" }} />
