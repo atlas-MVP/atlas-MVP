@@ -20,7 +20,7 @@ const LIVE_ALERTS: LiveAlert[] = [
   {
     id: "shreveport-2026-04-19",
     time: "2026-04-19T12:14:00",
-    text: "Shreveport, LA — 8 killed, 2 injured in domestic dispute across two homes",
+    text: "8 killed, 2 injured in domestic dispute across two homes in Louisiana",
     description: "Eight children and juveniles ages 1–14 killed across two homes in what authorities describe as a domestic dispute. Suspect fled, carjacked a vehicle, and was killed by police during pursuit. Mayor Tom Arceneaux: \"maybe the worst tragic situation we've ever had in Shreveport.\"",
     danger: 5,
     confidence: 97,
@@ -31,7 +31,7 @@ const LIVE_ALERTS: LiveAlert[] = [
   {
     id: "iowa-city-2026-04-19",
     time: "2026-04-19T01:46:00",
-    text: "Iowa City, IA — 5 shot near University of Iowa campus",
+    text: "5 shot near University of Iowa campus in Iowa City",
     description: "Five shot, one critically, after a large fight on the pedestrian mall near University of Iowa. At least three victims are UI students. Police released surveillance photos of four persons of interest. No arrests made.",
     danger: 3,
     confidence: 95,
@@ -41,7 +41,7 @@ const LIVE_ALERTS: LiveAlert[] = [
   {
     id: "chicago-2026-04-12",
     time: "2026-04-12T00:00:00",
-    text: "Chicago, IL — 3 killed, 7 injured in South Side drive-by shooting",
+    text: "3 killed, 7 injured in South Side drive-by shooting in Chicago",
     description: "Drive-by shooting on Chicago's South Side injures seven and kills three during an outdoor gathering. CPD believes the attack was gang-related. Two persons of interest detained.",
     danger: 4,
     confidence: 96,
@@ -51,7 +51,7 @@ const LIVE_ALERTS: LiveAlert[] = [
   {
     id: "houston-2026-04-08",
     time: "2026-04-08T00:00:00",
-    text: "Houston, TX — 2 dead, 6 injured at concert venue shooting",
+    text: "2 killed, 6 injured at concert venue shooting in Houston",
     description: "Shooting at a concert venue in north Houston leaves two dead and six injured. Suspect identified and at large. ATF and HPD jointly investigating.",
     danger: 3,
     confidence: 94,
@@ -60,11 +60,11 @@ const LIVE_ALERTS: LiveAlert[] = [
   },
 ];
 
-// ── 2026 YTD casualty data ─────────────────────────────────────────────
+// ── 2026 YTD casualty data (Gun Violence Archive, as of April 19) ─────
 const CASUALTIES = {
-  killed: "5,247",
-  injured: "9,834",
-  massShootings: "152",
+  killed: "13,798",
+  injured: "26,416",
+  massShootings: "332",
 };
 
 interface Props {
@@ -116,7 +116,7 @@ export default function GunViolencePanel({ onClose, onFlyTo, highlightId }: Prop
                 marginTop: 4,
                 fontFamily: T.MONO,
               }}>
-                2026 – Present
+                2026
               </div>
             </div>
             <button
@@ -143,7 +143,7 @@ export default function GunViolencePanel({ onClose, onFlyTo, highlightId }: Prop
             <table style={{ width: "100%", borderCollapse: "collapse" }}>
               <thead>
                 <tr>
-                  <th style={{ textAlign: "left", fontSize: 10, fontFamily: "monospace", color: "rgba(255,255,255,0.35)", fontWeight: "normal", paddingBottom: 4, letterSpacing: "0.08em" }}></th>
+                  <th style={{ textAlign: "left", fontSize: 10, fontFamily: "monospace", color: "rgba(255,255,255,0.35)", fontWeight: "normal", paddingBottom: 4, letterSpacing: "0.08em" }}>2026 YTD</th>
                   <th style={{ textAlign: "right", fontSize: 10, fontFamily: "monospace", color: "rgba(255,255,255,0.35)", fontWeight: "normal", paddingBottom: 4, letterSpacing: "0.08em", paddingRight: 8 }}>Injured</th>
                   <th style={{ textAlign: "right", fontSize: 10, fontFamily: "monospace", color: "rgba(255,255,255,0.35)", fontWeight: "normal", paddingBottom: 4, letterSpacing: "0.08em", paddingRight: 8 }}>Killed</th>
                   <th style={{ textAlign: "right", fontSize: 10, fontFamily: "monospace", color: "rgba(255,255,255,0.35)", fontWeight: "normal", paddingBottom: 4, letterSpacing: "0.08em" }}>Incidents</th>
