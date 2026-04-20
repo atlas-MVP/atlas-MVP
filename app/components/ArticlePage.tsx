@@ -348,14 +348,11 @@ export default function ArticlePage({
               setHoveredSenator(null);
             }
           }}
-          onClick={(e) => {
-            if ((e.target as HTMLElement).id === "senate-backdrop") {
-              setSenateExpanded(false);
-              setLockedSenator(null);
-              setHoveredSenator(null);
-            }
+          onClick={() => {
+            setSenateExpanded(false);
+            setLockedSenator(null);
+            setHoveredSenator(null);
           }}
-          id="senate-backdrop"
           style={{
             position: "fixed",
             inset: 0,
@@ -369,7 +366,6 @@ export default function ArticlePage({
           }}
         >
           <div
-            onClick={(e) => e.stopPropagation()}
             style={{
               position: "relative",
               transform: "scale(1.5)",
