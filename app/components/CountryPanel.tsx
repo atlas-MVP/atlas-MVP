@@ -1581,34 +1581,38 @@ export default function CountryPanel({ countryCode, onClose, onViewFeed, onConfl
 
             if (!timelineExpanded) {
               return (
-                <div style={{ padding: "10px 16px 16px", display: "flex", flexDirection: "column", gap: 8 }}>
+                <div style={{ display: "flex", flexDirection: "column" }}>
                   {chronological.length > 0 && (
-                    <button
-                      onClick={(e) => { e.stopPropagation(); enterHistory(); }}
-                      style={{ width: "100%", padding: "8px", fontSize: 10, fontFamily: "monospace", letterSpacing: "0.12em", textTransform: "uppercase", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 8, color: "rgba(255,255,255,0.45)", cursor: "pointer" }}
-                      onMouseEnter={e => { e.currentTarget.style.background = "rgba(255,255,255,0.08)"; e.currentTarget.style.color = "rgba(255,255,255,0.8)"; }}
-                      onMouseLeave={e => { e.currentTarget.style.background = "rgba(255,255,255,0.04)"; e.currentTarget.style.color = "rgba(255,255,255,0.45)"; }}
-                    >See Timeline →</button>
+                    <div style={{ padding: "10px 16px 0" }}>
+                      <button
+                        onClick={(e) => { e.stopPropagation(); enterHistory(); }}
+                        style={{ width: "100%", padding: "8px", fontSize: 10, fontFamily: "monospace", letterSpacing: "0.12em", textTransform: "uppercase", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 8, color: "rgba(255,255,255,0.45)", cursor: "pointer" }}
+                        onMouseEnter={e => { e.currentTarget.style.background = "rgba(255,255,255,0.08)"; e.currentTarget.style.color = "rgba(255,255,255,0.8)"; }}
+                        onMouseLeave={e => { e.currentTarget.style.background = "rgba(255,255,255,0.04)"; e.currentTarget.style.color = "rgba(255,255,255,0.45)"; }}
+                      >See Timeline →</button>
+                    </div>
                   )}
                   {latest && (
                     <div
-                      style={{ cursor: "pointer", padding: "8px 2px 2px" }}
+                      style={{ cursor: "pointer", padding: "14px 16px 10px", borderBottom: "1px solid rgba(255,255,255,0.05)" }}
                       onClick={(e) => { e.stopPropagation(); enterHistory(); }}
                     >
-                      <div style={{ fontSize: 10, fontFamily: "monospace", fontWeight: 600, color: "rgba(255,255,255,0.75)", letterSpacing: "0.03em", marginBottom: 5 }}>
+                      <div style={{ fontSize: 11, fontFamily: "monospace", fontWeight: 700, color: "rgba(255,255,255,0.75)", letterSpacing: "0.06em", marginBottom: 8, textTransform: "uppercase" }}>
                         {(() => { const d = latest.date; if (/^(19|20)\d\d/.test(d)) return d; return d.replace(/,?\s*(19|20)\d\d/, ""); })()}
                       </div>
-                      <p style={{ margin: 0, fontSize: 11, color: "rgba(255,255,255,0.48)", lineHeight: 1.55, display: "-webkit-box", WebkitLineClamp: 4, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
+                      <p style={{ margin: 0, fontSize: 14, color: "rgba(255,255,255,0.72)", lineHeight: 1.65 }}>
                         {latest.text}
                       </p>
                     </div>
                   )}
-                  <button
-                    onClick={(e) => { e.stopPropagation(); onViewFeed(conflict.feedKey); }}
-                    style={{ width: "100%", padding: "8px", fontSize: 10, fontFamily: "monospace", letterSpacing: "0.12em", textTransform: "uppercase", background: "none", border: "none", borderRadius: 8, color: "rgba(255,255,255,0.45)", cursor: "pointer", animation: "cpFade 2s ease-in-out infinite" }}
-                    onMouseEnter={e => { e.currentTarget.style.animationPlayState = "paused"; e.currentTarget.style.opacity = "1"; e.currentTarget.style.color = "rgba(255,255,255,0.8)"; }}
-                    onMouseLeave={e => { e.currentTarget.style.animationPlayState = "running"; e.currentTarget.style.color = "rgba(255,255,255,0.45)"; }}
-                  >Live Feed</button>
+                  <div style={{ padding: "10px 16px 16px" }}>
+                    <button
+                      onClick={(e) => { e.stopPropagation(); onViewFeed(conflict.feedKey); }}
+                      style={{ width: "100%", padding: "8px", fontSize: 10, fontFamily: "monospace", letterSpacing: "0.12em", textTransform: "uppercase", background: "none", border: "none", borderRadius: 8, color: "rgba(255,255,255,0.45)", cursor: "pointer", animation: "cpFade 2s ease-in-out infinite" }}
+                      onMouseEnter={e => { e.currentTarget.style.animationPlayState = "paused"; e.currentTarget.style.opacity = "1"; e.currentTarget.style.color = "rgba(255,255,255,0.8)"; }}
+                      onMouseLeave={e => { e.currentTarget.style.animationPlayState = "running"; e.currentTarget.style.color = "rgba(255,255,255,0.45)"; }}
+                    >Live Feed</button>
+                  </div>
                 </div>
               );
             }
