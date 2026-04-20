@@ -1558,27 +1558,21 @@ export default function CountryPanel({ countryCode, onClose, onViewFeed, onConfl
               <div
                 key={i}
                 style={{
-                  flex: 1, height: 90, borderRadius: 8,
+                  flex: 1, height: 242, borderRadius: 8,
                   border: "1px solid rgba(255,255,255,0.08)",
                   background: "rgba(255,255,255,0.02)",
                   padding: "10px 11px",
-                  display: "flex", flexDirection: "column", justifyContent: "space-between",
+                  display: "flex", flexDirection: "column", justifyContent: "flex-start",
                   cursor: "pointer", transition: "background 0.12s",
                 }}
                 onMouseEnter={e => (e.currentTarget.style.background = "rgba(255,255,255,0.05)")}
                 onMouseLeave={e => (e.currentTarget.style.background = "rgba(255,255,255,0.02)")}
               >
                 <div style={{
-                  fontSize: 11, lineHeight: 1.42, color: "rgba(255,255,255,0.78)",
-                  display: "-webkit-box", WebkitLineClamp: 3, WebkitBoxOrient: "vertical", overflow: "hidden",
+                  fontSize: 13, lineHeight: 1.42, color: "rgba(255,255,255,0.78)",
+                  display: "-webkit-box", WebkitLineClamp: 6, WebkitBoxOrient: "vertical", overflow: "hidden",
                 }}>
                   {art.headline}
-                </div>
-                <div style={{
-                  fontSize: 8, fontFamily: "monospace", letterSpacing: "0.12em",
-                  color: "rgba(255,255,255,0.28)", textTransform: "uppercase",
-                }}>
-                  Atlas Analysis
                 </div>
               </div>
             ))}
