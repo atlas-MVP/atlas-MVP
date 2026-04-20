@@ -148,11 +148,7 @@ const LIVE_FEED: FeedItem[] = [
     text: "8 children killed in Shreveport mass shooting — gunman kills children ages 1 to 14 across two homes before fleeing",
     flyTo: { center: [-93.7502, 32.5252] as [number,number], zoom: 10 }, sources: ["AP", "Reuters", "CNN"], confidence: 98,
     description: "Eight children and juveniles ages 1–14 were killed in a mass shooting in Shreveport, Louisiana. The shooter, who appears to have been known to the victims, targeted two homes on the same block before fleeing. He subsequently carjacked a vehicle and was killed by police during pursuit. Mayor Tom Arceneaux called it 'maybe the worst tragic situation we've ever had in Shreveport.'" },
-  { time: "2026-04-17T08:00:00", danger: 2, code: "LBN",
-    text: "Trump announces 10-day Israel-Lebanon ceasefire, catching Netanyahu's cabinet off guard",
-    flyTo: { center: [35.5, 33.9] as [number,number], zoom: 8 }, sources: ["AP", "Reuters", "Axios"], confidence: 96,
-    description: "President Trump announced a 10-day ceasefire between Israel and Hezbollah in Lebanon, effective immediately, following a call with Israeli PM Netanyahu. The announcement blindsided several cabinet ministers who learned of the deal through press reports rather than official channels. The ceasefire is described as a humanitarian pause to allow aid into southern Lebanon, with no permanent framework attached." },
-  { time: "2026-04-17T15:30:00", danger: 3, code: "ISR",
+{ time: "2026-04-17T15:30:00", danger: 3, code: "ISR",
     text: "Senate vote fails 40-59 to block arms sales to Israel — Sanders resolution draws 85% of Democrats",
     flyTo: { center: [-77.0, 38.9] as [number,number], zoom: 11 }, sources: ["Senate", "AP", "Reuters"], confidence: 97,
     description: "The US Senate defeated a resolution introduced by Sen. Bernie Sanders to halt new arms transfers to Israel, 40 in favor to 59 opposed. Despite the failure, the tally marked the highest level of Democratic support to date: 85% of Senate Democrats voted yes. The resolution targeted a pending $8.1B package covering tank rounds, mortar shells, and guidance kits." },
@@ -221,7 +217,6 @@ function Reveal({ minStage, stage, children }: { minStage: number; stage: number
 export default function AtlasHQ({ onClose, onNavigate, onHeadlinesToggle, onSourceClick, onReelsTap, onFinanceTap, onViolenceTap, onSenateVoteLocked }: Props) {
   const [showMore, setShowMore] = useState(false);
   const [showAllDisasters, setShowAllDisasters] = useState(false);
-  const [showAllAlerts, setShowAllAlerts] = useState(false);
   const [loadStage, setLoadStage] = useState(0);
   const [senateVoteVisible, setSenateVoteVisible] = useState<'hover' | 'locked' | null>(null);
   const senateAlertRef = useRef<HTMLDivElement>(null);
@@ -233,6 +228,9 @@ export default function AtlasHQ({ onClose, onNavigate, onHeadlinesToggle, onSour
   const [overSection, setOverSection] = useState<number | null>(null);
   const saveTimerRef        = useRef<ReturnType<typeof setTimeout> | null>(null);
   const senateLeaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Captured once when hover starts (before the alert expands), so the graphic
+  // doesn't shift as the row grows. Reset when the graphic is dismissed.
+  const senateAlertYRef     = useRef<number | null>(null);
 
   // Senate arms sale vote data: 40-59 (40 Aye, 59 No)
   const senatorsVoteData = [
@@ -341,7 +339,10 @@ export default function AtlasHQ({ onClose, onNavigate, onHeadlinesToggle, onSour
   const scheduleSenateLeave = () => {
     if (senateVoteVisible === 'locked') return;
     cancelSenateLeave();
-    senateLeaveTimerRef.current = setTimeout(() => setSenateVoteVisible(null), 250);
+    senateLeaveTimerRef.current = setTimeout(() => {
+      senateAlertYRef.current = null;
+      setSenateVoteVisible(null);
+    }, 250);
   };
 
   const patchDraft = (updater: (d: RadarConfig) => RadarConfig) => {
@@ -486,15 +487,27 @@ export default function AtlasHQ({ onClose, onNavigate, onHeadlinesToggle, onSour
 
           if (section === "alerts") return (
             <div key="alerts" {...dropHandlers} style={wrapStyle}>
-              <SectionLabel label="live alerts" onClick={editMode ? undefined : () => setShowAllAlerts(v => !v)} dragHandle={sectionDragHandle} />
+              <SectionLabel label="live alerts" dragHandle={sectionDragHandle} />
               <Reveal minStage={3} stage={loadStage}>
                 <div style={{ padding: "0 6px", position: "relative" }}>
-                  {(displayConfig.liveAlerts as FeedItem[]).slice(0, showAllAlerts ? undefined : 3).map((item, i, arr) => {
+                  {(displayConfig.liveAlerts as FeedItem[]).slice(0, 3).map((item, i, arr) => {
                     const isSenateVote = item.text.includes("Senate vote fails");
                     return (
                       <div key={`${item.code}-${item.time}`}
                         ref={!editMode && isSenateVote ? senateAlertRef : null}
-                        onMouseEnter={() => { if (!editMode && isSenateVote) { cancelSenateLeave(); if (senateVoteVisible !== 'locked') setSenateVoteVisible('hover'); } }}
+                        onMouseEnter={() => {
+                          if (!editMode && isSenateVote) {
+                            cancelSenateLeave();
+                            if (senateVoteVisible !== 'locked') {
+                              // Capture Y before the row expands — this is the stable anchor point
+                              if (senateVoteVisible === null && senateAlertRef.current) {
+                                const r = senateAlertRef.current.getBoundingClientRect();
+                                senateAlertYRef.current = r.top + r.height / 2;
+                              }
+                              setSenateVoteVisible('hover');
+                            }
+                          }
+                        }}
                         onMouseLeave={() => { if (!editMode && isSenateVote) scheduleSenateLeave(); }}
                         onClick={() => {
                           if (editMode) return;
@@ -505,7 +518,10 @@ export default function AtlasHQ({ onClose, onNavigate, onHeadlinesToggle, onSour
                           // Senate vote → lock/unlock the graphic
                           else if (isSenateVote) {
                             cancelSenateLeave();
-                            setSenateVoteVisible(v => v === 'locked' ? null : 'locked');
+                            setSenateVoteVisible(v => {
+                              if (v === 'locked') { senateAlertYRef.current = null; return null; }
+                              return 'locked';
+                            });
                           }
                           // All other alerts → navigate by their code
                           else {
@@ -540,22 +556,6 @@ export default function AtlasHQ({ onClose, onNavigate, onHeadlinesToggle, onSour
                       </div>
                     );
                   })}
-                  {showAllAlerts && (displayConfig.liveAlerts as FeedItem[]).length > 3 && (
-                    <div style={{ padding: "8px 12px", textAlign: "center" }}>
-                      <button
-                        onClick={(e) => { e.stopPropagation(); setShowAllAlerts(false); }}
-                        style={{
-                          fontSize: 10, fontFamily: "monospace", letterSpacing: "0.08em",
-                          color: "rgba(255,255,255,0.35)", background: "none", border: "none",
-                          cursor: "pointer", padding: "2px 0", textTransform: "uppercase",
-                        }}
-                        onMouseEnter={e => (e.currentTarget.style.color = "rgba(255,255,255,0.58)")}
-                        onMouseLeave={e => (e.currentTarget.style.color = "rgba(255,255,255,0.35)")}
-                      >
-                        see less
-                      </button>
-                    </div>
-                  )}
                 </div>
               </Reveal>
             </div>
@@ -697,15 +697,14 @@ export default function AtlasHQ({ onClose, onNavigate, onHeadlinesToggle, onSour
     )}
 
     {/* Senate vote visualization — appears to the right on hover/click */}
-    {senateVoteVisible && senateAlertRef.current && (() => {
-      const alertRect = senateAlertRef.current.getBoundingClientRect();
-      const alertCenterY = alertRect.top + alertRect.height / 2;
+    {senateVoteVisible && senateAlertRef.current && senateAlertYRef.current !== null && (() => {
+      const alertCenterY = senateAlertYRef.current!;
       const vizHeight = 333;
       return (
         <div
           onMouseEnter={() => { cancelSenateLeave(); if (senateVoteVisible !== 'locked') setSenateVoteVisible('hover'); }}
           onMouseLeave={scheduleSenateLeave}
-          onClick={() => { cancelSenateLeave(); setSenateVoteVisible(v => v === 'locked' ? null : 'locked'); }}
+          onClick={() => { cancelSenateLeave(); setSenateVoteVisible(v => { if (v === 'locked') { senateAlertYRef.current = null; return null; } return 'locked'; }); }}
           style={{
             position: "fixed",
             left: 516, // 20px (left) + 488px (panel width) + 8px gap
