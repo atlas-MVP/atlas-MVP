@@ -135,29 +135,29 @@ const GEO_ALERTS: FeedItem[] = [
     flyTo: { center: [-77.0, 38.9] as [number,number], zoom: 5 }, sources: ["Reuters", "AP", "WH"], confidence: 94,
     description: "President Trump issued a stark warning to Tehran following the latest Houthi missile attack on a US destroyer, stating that Iran would face 'serious consequences' if proxy attacks on American vessels continued. The White House confirmed Trump spoke directly with Saudi Arabia's Crown Prince MBS." },
   { time: "2026-04-17T15:30:00", danger: 3, code: "ISR",
-    text: "Senate vote fails 40-59 to block arms sales to Israel — Sanders resolution draws 85% of Democrats",
+    text: "Senate vote fails 40-59 to block arms sales to Israel",
     flyTo: { center: [-77.0, 38.9] as [number,number], zoom: 11 }, sources: ["Senate", "AP", "Reuters"], confidence: 97,
     description: "The US Senate defeated a resolution introduced by Sen. Bernie Sanders to halt new arms transfers to Israel, 40 in favor to 59 opposed. Despite the failure, the tally marked the highest level of Democratic support to date: 85% of Senate Democrats voted yes. The resolution targeted a pending $8.1B package covering tank rounds, mortar shells, and guidance kits." },
 ];
 
 const VIOLENCE_ALERTS: FeedItem[] = [
   { time: "2026-04-19T12:14:00", danger: 5, code: "USA", slug: "gun-violence", incidentId: "shreveport-2026-04-19", pulse: true,
-    text: "8 children killed in Shreveport mass shooting — gunman kills children ages 1 to 14 across two homes before fleeing",
+    text: "8 children killed in Shreveport mass shooting",
     flyTo: { center: [-93.7502, 32.5252] as [number,number], zoom: 10 }, sources: ["AP", "Reuters", "CNN"], confidence: 98,
     description: "Eight children and juveniles ages 1–14 were killed in a mass shooting in Shreveport, Louisiana. The shooter targeted two homes on the same block before fleeing, carjacked a vehicle, and was killed by police during pursuit." },
   { time: "2026-04-19T09:45:00", danger: 3, code: "USA", slug: "gun-violence", incidentId: "iowa-city-2026-04-19",
-    text: "5 shot near University of Iowa campus — suspect in custody after fleeing on foot",
+    text: "5 shot near University of Iowa campus",
     flyTo: { center: [-91.5302, 41.6611] as [number,number], zoom: 13 }, sources: ["AP", "Iowa City PD"], confidence: 95,
     description: "Five people were shot near the University of Iowa campus in Iowa City. Police apprehended the suspect after a brief foot pursuit. Two victims remain in critical condition at University of Iowa Hospitals." },
 ];
 
 const DISASTER_ALERTS: FeedItem[] = [
   { time: "2026-04-18T11:00:00", danger: 4, code: "KEN", pulse: true,
-    text: "Kenya floods death toll rises to 110+ — 34,765 displaced across 30 counties as rains intensify",
+    text: "Kenya floods death toll rises to 110+",
     flyTo: { center: [36.9, 0.0] as [number,number], zoom: 6 }, sources: ["OCHA", "Reuters", "Kenya Red Cross"], confidence: 91,
     description: "Flash floods across Kenya have killed at least 110 people and displaced more than 34,765 across 30 counties. The Kenya Meteorological Department warns of continued heavy rainfall through the week. Roads and bridges washed out across the Rift Valley." },
   { time: "2026-04-17T08:30:00", danger: 3, code: "USA",
-    text: "Tornado outbreak across Tennessee and Alabama — 4 confirmed dead, dozens of homes destroyed",
+    text: "Tornadoes kill 4 across Tennessee & Alabama",
     flyTo: { center: [-86.8, 35.5] as [number,number], zoom: 7 }, sources: ["NWS", "AP", "Reuters"], confidence: 88,
     description: "A tornado outbreak across Tennessee and Alabama left at least four dead and dozens of homes destroyed. The National Weather Service confirmed multiple EF2 and EF3 tornadoes. Emergency declarations issued in Rutherford and Marshall counties." },
 ];
@@ -179,11 +179,11 @@ interface FeedItem {
 
 const LIVE_FEED: FeedItem[] = [
   { time: "2026-04-19T12:14:00", danger: 5, code: "USA", slug: "gun-violence", incidentId: "shreveport-2026-04-19", pulse: true,
-    text: "8 children killed in Shreveport mass shooting — gunman kills children ages 1 to 14 across two homes before fleeing",
+    text: "8 children killed in Shreveport mass shooting",
     flyTo: { center: [-93.7502, 32.5252] as [number,number], zoom: 10 }, sources: ["AP", "Reuters", "CNN"], confidence: 98,
     description: "Eight children and juveniles ages 1–14 were killed in a mass shooting in Shreveport, Louisiana. The shooter, who appears to have been known to the victims, targeted two homes on the same block before fleeing. He subsequently carjacked a vehicle and was killed by police during pursuit. Mayor Tom Arceneaux called it 'maybe the worst tragic situation we've ever had in Shreveport.'" },
 { time: "2026-04-17T15:30:00", danger: 3, code: "ISR",
-    text: "Senate vote fails 40-59 to block arms sales to Israel — Sanders resolution draws 85% of Democrats",
+    text: "Senate vote fails 40-59 to block arms sales to Israel",
     flyTo: { center: [-77.0, 38.9] as [number,number], zoom: 11 }, sources: ["Senate", "AP", "Reuters"], confidence: 97,
     description: "The US Senate defeated a resolution introduced by Sen. Bernie Sanders to halt new arms transfers to Israel, 40 in favor to 59 opposed. Despite the failure, the tally marked the highest level of Democratic support to date: 85% of Senate Democrats voted yes. The resolution targeted a pending $8.1B package covering tank rounds, mortar shells, and guidance kits." },
 ];
@@ -707,7 +707,7 @@ function SectionLabel({ label, onClick, dragHandle, onLabelChange }: {
       onDragStart={dragHandle?.onDragStart}
       onDragEnd={dragHandle?.onDragEnd}
       style={{
-        display: "flex", alignItems: "center", gap: 6, padding: "10px 18px 6px",
+        display: "flex", alignItems: "center", gap: 6, padding: "20px 18px 6px",
         cursor: dragHandle ? "grab" : "default", userSelect: "none",
       }}
     >
