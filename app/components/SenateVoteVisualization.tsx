@@ -50,12 +50,16 @@ export default function SenateVoteVisualization({
     const centerX       = 286;
     const centerY       = 258;
     const rows          = 7;
-    const baseRadius    = 65;
-    const radiusStep    = 18;  // rows closer together
+    const baseRadius    = 91;   // 40% more space
+    const radiusStep    = 25;   // 40% more space
     const gapAngle      = 0.22 * Math.PI; // ~40° gap between halves at the top
 
     const ayeVoters = senators.filter(s => s.vote === "Aye");
     const noVoters  = senators.filter(s => s.vote === "No");
+
+    // Separate crossover Democrats (voted No) from Republicans
+    const crossoverDems = noVoters.filter(s => s.party === "D");
+    const republicansNo = noVoters.filter(s => s.party !== "D");
 
     const placeGroup = (
       voters: Senator[],
@@ -89,10 +93,29 @@ export default function SenateVoteVisualization({
       }
     };
 
+    // Place crossover Democrats in innermost row on No side
+    const placeCrossovers = (voters: Senator[], arcStart: number, arcEnd: number) => {
+      if (!voters.length) return;
+      const count = voters.length;
+      for (let i = 0; i < count; i++) {
+        const t = count === 1 ? 0.5 : i / (count - 1);
+        const angle = arcStart + t * (arcEnd - arcStart);
+        positions.push({
+          senator: voters[i],
+          x: centerX + baseRadius * Math.cos(angle),
+          y: centerY + baseRadius * Math.sin(angle),
+        });
+      }
+    };
+
     // Aye: π (bottom-left, flush) → just-left-of-top-center
-    // No:  just-right-of-top-center → 2π (bottom-right, flush)
-    placeGroup(ayeVoters, Math.PI,       Math.PI * 1.5 - gapAngle / 2);
-    placeGroup(noVoters,  Math.PI * 1.5 + gapAngle / 2, Math.PI * 2);
+    placeGroup(ayeVoters, Math.PI, Math.PI * 1.5 - gapAngle / 2);
+
+    // Crossover Dems: innermost row on No side
+    placeCrossovers(crossoverDems, Math.PI * 1.5 + gapAngle / 2, Math.PI * 2);
+
+    // Republicans who voted No: outer rows
+    placeGroup(republicansNo, Math.PI * 1.5 + gapAngle / 2, Math.PI * 2);
 
     return positions;
   };
@@ -207,7 +230,7 @@ export default function SenateVoteVisualization({
         {positions.map(({ senator, x, y }, i) => (
           <circle
             key={i}
-            cx={x} cy={y} r={6}
+            cx={x} cy={y} r={7}
             fill={isCrossover(senator) ? "url(#crossoverPulse)" : dotFill(senator)}
             stroke={dotStroke(senator)}
             strokeWidth={1}
