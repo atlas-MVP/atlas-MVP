@@ -156,10 +156,8 @@ export default function SenateVoteVisualization({
         position: "relative",
         width: 650,
         height: 325,
-        background: "rgba(4,6,18,0.75)",
-        backdropFilter: "blur(20px)",
+        background: "transparent",
         borderRadius: 12,
-        border: "1px solid rgba(255,255,255,0.08)",
       }}
     >
       {/* ── Title ─────────────────────────────────────────────────────────── */}
