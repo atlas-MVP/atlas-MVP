@@ -17,7 +17,7 @@ const SCHUMER_DATA = {
   name: "Chuck Schumer",
   party: "D" as const,
   state: "NY",
-  vote: "Aye" as const,
+  vote: "No" as const,
   photo: "/chuck-schumer.jpg",
   age: 73,
   yearsInOffice: 25,
@@ -35,8 +35,10 @@ export default function ArticlePage({
   const router = useRouter();
   const [hoveredSenator, setHoveredSenator] = useState<Senator | null>(null);
   const [senateExpanded, setSenateExpanded] = useState(false);
+  const [lockedSenator, setLockedSenator] = useState<Senator | null>(null);
 
   const senators: Senator[] = [
+    // AYE voters (40 total: 2 Independents + 38 Democrats)
     { name: "Bernie Sanders", party: "I" as const, state: "VT", vote: "Aye" as const },
     { name: "Angus King", party: "I" as const, state: "ME", vote: "Aye" as const },
     { name: "Elizabeth Warren", party: "D" as const, state: "MA", vote: "Aye" as const },
@@ -73,11 +75,12 @@ export default function ArticlePage({
     { name: "Ruben Gallego", party: "D" as const, state: "AZ", vote: "Aye" as const },
     { name: "Adam Schiff", party: "D" as const, state: "CA", vote: "Aye" as const },
     { name: "Andy Kim", party: "D" as const, state: "NJ", vote: "Aye" as const },
-    { name: SCHUMER_DATA.name, party: SCHUMER_DATA.party, state: SCHUMER_DATA.state, vote: SCHUMER_DATA.vote },
     { name: "John Hickenlooper", party: "D" as const, state: "CO", vote: "Aye" as const },
     { name: "Michael Bennet", party: "D" as const, state: "CO", vote: "Aye" as const },
     { name: "Angela Alsobrooks", party: "D" as const, state: "MD", vote: "Aye" as const },
-    ...Array.from({ length: 50 }, (_, i) => ({ name: `R Senator ${i + 1}`, party: "R" as const, state: "XX", vote: "No" as const })),
+
+    // NO voters - Democrats who crossed over (8)
+    { name: SCHUMER_DATA.name, party: SCHUMER_DATA.party, state: SCHUMER_DATA.state, vote: SCHUMER_DATA.vote },
     { name: "John Fetterman", party: "D" as const, state: "PA", vote: "No" as const },
     { name: "Joe Manchin", party: "D" as const, state: "WV", vote: "No" as const },
     { name: "Jeanne Shaheen", party: "D" as const, state: "NH", vote: "No" as const },
@@ -85,8 +88,61 @@ export default function ArticlePage({
     { name: "Chris Coons", party: "D" as const, state: "DE", vote: "No" as const },
     { name: "Tom Carper", party: "D" as const, state: "DE", vote: "No" as const },
     { name: "Elissa Slotkin", party: "D" as const, state: "MI", vote: "No" as const },
-    { name: "Jon Tester", party: "D" as const, state: "MT", vote: "No" as const },
+
+    // NO voters - Independent
     { name: "Kyrsten Sinema", party: "I" as const, state: "AZ", vote: "No" as const },
+
+    // NO voters - Republicans (51)
+    { name: "Mitch McConnell", party: "R" as const, state: "KY", vote: "No" as const },
+    { name: "John Cornyn", party: "R" as const, state: "TX", vote: "No" as const },
+    { name: "Ted Cruz", party: "R" as const, state: "TX", vote: "No" as const },
+    { name: "Marco Rubio", party: "R" as const, state: "FL", vote: "No" as const },
+    { name: "Rick Scott", party: "R" as const, state: "FL", vote: "No" as const },
+    { name: "Lindsey Graham", party: "R" as const, state: "SC", vote: "No" as const },
+    { name: "Tim Scott", party: "R" as const, state: "SC", vote: "No" as const },
+    { name: "Thom Tillis", party: "R" as const, state: "NC", vote: "No" as const },
+    { name: "Josh Hawley", party: "R" as const, state: "MO", vote: "No" as const },
+    { name: "Roger Marshall", party: "R" as const, state: "KS", vote: "No" as const },
+    { name: "John Thune", party: "R" as const, state: "SD", vote: "No" as const },
+    { name: "Mike Rounds", party: "R" as const, state: "SD", vote: "No" as const },
+    { name: "John Barrasso", party: "R" as const, state: "WY", vote: "No" as const },
+    { name: "Cynthia Lummis", party: "R" as const, state: "WY", vote: "No" as const },
+    { name: "Steve Daines", party: "R" as const, state: "MT", vote: "No" as const },
+    { name: "Mike Crapo", party: "R" as const, state: "ID", vote: "No" as const },
+    { name: "Jim Risch", party: "R" as const, state: "ID", vote: "No" as const },
+    { name: "Dan Sullivan", party: "R" as const, state: "AK", vote: "No" as const },
+    { name: "Lisa Murkowski", party: "R" as const, state: "AK", vote: "No" as const },
+    { name: "Chuck Grassley", party: "R" as const, state: "IA", vote: "No" as const },
+    { name: "Joni Ernst", party: "R" as const, state: "IA", vote: "No" as const },
+    { name: "Deb Fischer", party: "R" as const, state: "NE", vote: "No" as const },
+    { name: "Pete Ricketts", party: "R" as const, state: "NE", vote: "No" as const },
+    { name: "Jerry Moran", party: "R" as const, state: "KS", vote: "No" as const },
+    { name: "James Lankford", party: "R" as const, state: "OK", vote: "No" as const },
+    { name: "Markwayne Mullin", party: "R" as const, state: "OK", vote: "No" as const },
+    { name: "John Kennedy", party: "R" as const, state: "LA", vote: "No" as const },
+    { name: "Bill Cassidy", party: "R" as const, state: "LA", vote: "No" as const },
+    { name: "Cindy Hyde-Smith", party: "R" as const, state: "MS", vote: "No" as const },
+    { name: "Roger Wicker", party: "R" as const, state: "MS", vote: "No" as const },
+    { name: "Tommy Tuberville", party: "R" as const, state: "AL", vote: "No" as const },
+    { name: "Katie Britt", party: "R" as const, state: "AL", vote: "No" as const },
+    { name: "Marsha Blackburn", party: "R" as const, state: "TN", vote: "No" as const },
+    { name: "Bill Hagerty", party: "R" as const, state: "TN", vote: "No" as const },
+    { name: "Todd Young", party: "R" as const, state: "IN", vote: "No" as const },
+    { name: "Mike Braun", party: "R" as const, state: "IN", vote: "No" as const },
+    { name: "J.D. Vance", party: "R" as const, state: "OH", vote: "No" as const },
+    { name: "Ron Johnson", party: "R" as const, state: "WI", vote: "No" as const },
+    { name: "Eric Schmitt", party: "R" as const, state: "MO", vote: "No" as const },
+    { name: "Ted Budd", party: "R" as const, state: "NC", vote: "No" as const },
+    { name: "Shelley Moore Capito", party: "R" as const, state: "WV", vote: "No" as const },
+    { name: "Susan Collins", party: "R" as const, state: "ME", vote: "No" as const },
+    { name: "Rand Paul", party: "R" as const, state: "KY", vote: "No" as const },
+    { name: "Mike Lee", party: "R" as const, state: "UT", vote: "No" as const },
+    { name: "Mitt Romney", party: "R" as const, state: "UT", vote: "No" as const },
+    { name: "Kevin Cramer", party: "R" as const, state: "ND", vote: "No" as const },
+    { name: "John Hoeven", party: "R" as const, state: "ND", vote: "No" as const },
+    { name: "James Risch", party: "R" as const, state: "ID", vote: "No" as const },
+    { name: "Markwayne Mullin", party: "R" as const, state: "OK", vote: "No" as const },
+    { name: "Lindsey Graham", party: "R" as const, state: "SC", vote: "No" as const },
   ];
 
   return (
@@ -186,8 +242,8 @@ export default function ArticlePage({
               marginTop: 16,
             }}>
               <div
+                onMouseEnter={() => setSenateExpanded(true)}
                 onMouseLeave={() => setHoveredSenator(null)}
-                onClick={() => setSenateExpanded(true)}
                 style={{ cursor: "pointer" }}
               >
                 <SenateVoteVisualization
@@ -286,28 +342,176 @@ export default function ArticlePage({
 
       {senateExpanded && (
         <div
-          onClick={() => setSenateExpanded(false)}
+          onMouseLeave={() => { if (!lockedSenator) setSenateExpanded(false); }}
+          onClick={(e) => {
+            if ((e.target as HTMLElement).id === "senate-backdrop") {
+              setSenateExpanded(false);
+              setLockedSenator(null);
+            }
+          }}
+          id="senate-backdrop"
           style={{
             position: "fixed",
-            inset: "60px",
+            inset: 0,
             zIndex: 200,
+            backdropFilter: "blur(20px)",
+            background: "rgba(0,0,0,0.4)",
             display: "flex",
-            alignItems: "center",
+            alignItems: "flex-end",
             justifyContent: "center",
+            paddingBottom: 0,
             pointerEvents: "auto",
           }}
         >
           <div
             onClick={(e) => e.stopPropagation()}
             style={{
-              transform: "scale(1.4)",
+              position: "relative",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: 40,
+              width: "100%",
+              maxWidth: 1400,
+              paddingBottom: 40,
             }}
           >
-            <SenateVoteVisualization
-              title="SENATE"
-              senators={senators}
-              hideTooltip={true}
-            />
+            {/* Aye voters - left side */}
+            <div style={{
+              display: "flex",
+              flexDirection: "column",
+              gap: 12,
+              alignItems: "flex-end",
+              opacity: hoveredSenator?.vote === "Aye" || !hoveredSenator ? 1 : 0.3,
+              transition: "opacity 0.2s",
+            }}>
+              {senators.filter(s => s.vote === "Aye").slice(0, 5).map(senator => (
+                <div
+                  key={senator.name}
+                  onMouseEnter={() => setHoveredSenator(senator)}
+                  onClick={() => setLockedSenator(senator)}
+                  style={{
+                    background: "rgba(4,6,18,0.95)",
+                    backdropFilter: "blur(30px)",
+                    borderRadius: 12,
+                    border: `1px solid rgba(96,165,250,${hoveredSenator?.name === senator.name || lockedSenator?.name === senator.name ? 0.8 : 0.3})`,
+                    padding: "14px 18px",
+                    minWidth: 240,
+                    cursor: "pointer",
+                    transform: hoveredSenator?.name === senator.name || lockedSenator?.name === senator.name ? "scale(1.02)" : "scale(1)",
+                    transition: "all 0.2s",
+                  }}
+                >
+                  <div style={{
+                    fontSize: 15,
+                    fontWeight: 600,
+                    color: "rgba(255,255,255,0.95)",
+                    marginBottom: 4,
+                  }}>
+                    {senator.name}
+                  </div>
+                  <div style={{
+                    fontSize: 12,
+                    color: "rgba(255,255,255,0.55)",
+                  }}>
+                    {senator.party === "R" ? "Republican" : senator.party === "D" ? "Democrat" : "Independent"} • {senator.state}
+                  </div>
+                  <div style={{
+                    fontSize: 11,
+                    color: "rgba(100,200,100,0.85)",
+                    marginTop: 6,
+                    fontFamily: "monospace",
+                  }}>
+                    Vote: Aye
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Senate visualization - center */}
+            <div style={{ transform: "scale(1.4)" }}>
+              <SenateVoteVisualization
+                title="SENATE"
+                senators={senators}
+                hideTooltip={true}
+              />
+            </div>
+
+            {/* No voters - right side */}
+            <div style={{
+              display: "flex",
+              flexDirection: "column",
+              gap: 12,
+              alignItems: "flex-start",
+              opacity: hoveredSenator?.vote === "No" || !hoveredSenator ? 1 : 0.3,
+              transition: "opacity 0.2s",
+            }}>
+              {senators.filter(s => s.vote === "No" && s.party === "D").map(senator => (
+                <div
+                  key={senator.name}
+                  onMouseEnter={() => setHoveredSenator(senator)}
+                  onClick={() => setLockedSenator(senator)}
+                  style={{
+                    background: "rgba(4,6,18,0.95)",
+                    backdropFilter: "blur(30px)",
+                    borderRadius: 12,
+                    border: `1px solid rgba(239,68,68,${hoveredSenator?.name === senator.name || lockedSenator?.name === senator.name ? 0.8 : 0.3})`,
+                    padding: "14px 18px",
+                    minWidth: 240,
+                    display: "flex",
+                    gap: senator.name === SCHUMER_DATA.name ? 14 : 0,
+                    cursor: "pointer",
+                    transform: hoveredSenator?.name === senator.name || lockedSenator?.name === senator.name ? "scale(1.02)" : "scale(1)",
+                    transition: "all 0.2s",
+                  }}
+                >
+                  {senator.name === SCHUMER_DATA.name && (
+                    <div style={{
+                      width: 60,
+                      height: 60,
+                      borderRadius: 8,
+                      overflow: "hidden",
+                      background: "rgba(255,255,255,0.05)",
+                      flexShrink: 0,
+                    }}>
+                      <img
+                        src={SCHUMER_DATA.photo}
+                        alt={SCHUMER_DATA.name}
+                        style={{
+                          width: "100%",
+                          height: "100%",
+                          objectFit: "cover",
+                        }}
+                      />
+                    </div>
+                  )}
+                  <div style={{ flex: 1 }}>
+                    <div style={{
+                      fontSize: 15,
+                      fontWeight: 600,
+                      color: "rgba(255,255,255,0.95)",
+                      marginBottom: 4,
+                    }}>
+                      {senator.name}
+                    </div>
+                    <div style={{
+                      fontSize: 12,
+                      color: "rgba(255,255,255,0.55)",
+                    }}>
+                      Democrat • {senator.state}
+                    </div>
+                    <div style={{
+                      fontSize: 11,
+                      color: "rgba(239,68,68,0.85)",
+                      marginTop: 6,
+                      fontFamily: "monospace",
+                    }}>
+                      Vote: No
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       )}
