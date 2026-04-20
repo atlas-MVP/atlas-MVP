@@ -57,37 +57,31 @@ export default function SenateVoteVisualization({
     const ayeVoters = senators.filter(s => s.vote === "Aye");
     const noVoters  = senators.filter(s => s.vote === "No");
 
-    // Distribute senators across rows; outer rows get one extra seat each
-    const distributeRows = (total: number): number[] => {
-      const base  = Math.floor(total / rows);
-      const extra = total - base * rows;
-      return Array.from({ length: rows }, (_, i) =>
-        base + (i >= rows - extra ? 1 : 0)
-      );
-    };
-
     const placeGroup = (
       voters: Senator[],
       arcStart: number,
       arcEnd: number,
     ) => {
       if (!voters.length) return;
-      const counts = distributeRows(voters.length);
-      let idx = 0;
-      for (let row = 0; row < rows; row++) {
-        const r     = baseRadius + row * radiusStep;
-        const count = counts[row];
-        for (let i = 0; i < count && idx < voters.length; i++) {
-          // t=0 → arcStart, t=1 → arcEnd (includes both endpoints)
-          const t     = count === 1 ? 0.5 : i / (count - 1);
-          const angle = arcStart + t * (arcEnd - arcStart);
-          positions.push({
-            senator: voters[idx],
-            x: centerX + r * Math.cos(angle),
-            y: centerY + r * Math.sin(angle),
-          });
-          idx++;
-        }
+
+      // Distribute evenly across rows
+      const senatorsPerRow = Math.ceil(voters.length / rows);
+
+      for (let idx = 0; idx < voters.length; idx++) {
+        const row = Math.floor(idx / senatorsPerRow);
+        const posInRow = idx % senatorsPerRow;
+        const r = baseRadius + row * radiusStep;
+
+        // Even spacing within the arc for this row
+        const countInRow = Math.min(senatorsPerRow, voters.length - row * senatorsPerRow);
+        const t = countInRow === 1 ? 0.5 : posInRow / (countInRow - 1);
+        const angle = arcStart + t * (arcEnd - arcStart);
+
+        positions.push({
+          senator: voters[idx],
+          x: centerX + r * Math.cos(angle),
+          y: centerY + r * Math.sin(angle),
+        });
       }
     };
 
@@ -104,12 +98,18 @@ export default function SenateVoteVisualization({
   const isCrossover = (s: Senator) => s.party === "D" && s.vote === "No";
 
   const dotFill = (s: Senator) => {
+    // Independents are grey
+    if (s.party === "I") return s.vote === "Aye" ? "rgba(150,150,150,0.5)" : "rgba(150,150,150,0.3)";
+    // Republicans are red, Democrats are blue
     if (s.vote === "Aye") return s.party === "R" ? "rgba(239,68,68,0.5)"  : "rgba(96,165,250,0.5)";
     if (s.vote === "No")  return s.party === "R" ? "rgba(239,68,68,0.3)"  : "rgba(96,165,250,0.3)";
     return "rgba(150,150,150,0.3)";
   };
 
   const dotStroke = (s: Senator) => {
+    // Independents are grey
+    if (s.party === "I") return s.vote === "Aye" ? "rgba(150,150,150,0.8)" : "rgba(150,150,150,0.5)";
+    // Republicans are red, Democrats are blue
     if (s.vote === "Aye") return s.party === "R" ? "rgba(239,68,68,0.8)"  : "rgba(96,165,250,0.8)";
     if (s.vote === "No")  return s.party === "R" ? "rgba(239,68,68,0.5)"  : "rgba(96,165,250,0.5)";
     return "rgba(150,150,150,0.5)";
