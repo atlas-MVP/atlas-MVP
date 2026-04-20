@@ -313,7 +313,7 @@ export default function AtlasHQ({ onClose, onNavigate, onHeadlinesToggle, onSour
         else { setEditDraft({ ...currentConfig }); setEditMode(true); }
       }}
       style={{
-        position: "absolute", top: 44, left: 516, zIndex: 25,
+        position: "absolute", top: 52, left: 516, zIndex: 25,
         background: editMode ? "rgba(100,160,255,0.14)" : "rgba(255,255,255,0.07)",
         border: editMode ? "1px solid rgba(100,160,255,0.40)" : "1px solid rgba(255,255,255,0.14)",
         borderRadius: 6,
@@ -326,7 +326,7 @@ export default function AtlasHQ({ onClose, onNavigate, onHeadlinesToggle, onSour
     >{editMode ? "✓ done" : "✎"}</button>
     <div style={{
       position: "absolute",
-      top: 44, left: 20, bottom: 20,
+      top: 52, left: 20, bottom: 28,
       width: 488,
       zIndex: 20,
       display: "flex",

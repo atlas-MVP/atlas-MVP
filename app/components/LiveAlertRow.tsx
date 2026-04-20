@@ -114,7 +114,7 @@ export default function LiveAlertRow({
         />
 
         <div style={{ flex: 1, minWidth: 0 }}>
-          <span style={{ fontSize: 15, lineHeight: 1.65, color: "rgba(255,255,255,0.86)" }}>
+          <span style={{ fontSize: 14, lineHeight: 1.65, color: "rgba(255,255,255,0.86)" }}>
             {item.text}
           </span>
 
