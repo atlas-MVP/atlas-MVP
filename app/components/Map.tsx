@@ -82,7 +82,6 @@ const COUNTRY_CENTERS: Record<string, { center: [number, number]; zoom: number }
 };
 
 const MOCK_EVENTS = [
-  { id: 1,  lng: 34.8,  lat: 31.5,  title: "Israel — Active Conflict",  type: "war" },
   { id: 2,  lng: 35.5,  lat: 33.9,  title: "Lebanon — Active Conflict", type: "war" },
   { id: 3,  lng: 53.6,  lat: 32.4,  title: "Iran — Active Conflict",    type: "war" },
   { id: 4,  lng: 30.5,  lat: 50.4,  title: "Kyiv — Ongoing War",        type: "war" },
@@ -94,7 +93,6 @@ const MOCK_EVENTS = [
   { id: 10, lng: -72.3, lat: 18.9,  title: "Haiti Crisis",              type: "war" },
   { id: 11, lng: -99.1, lat: 19.4,  title: "Mexico Cartel War",         type: "war" },
   { id: 12, lng: 120.9, lat: 23.7,  title: "Taiwan Strait Crisis",      type: "war" },
-  { id: 15, lng: 34.4,  lat: 31.5,  title: "Gaza Genocide",             type: "genocide" },
   { id: 13, lng: 96.0,  lat: 21.9,  title: "Myanmar Earthquake",        type: "disaster" },
   { id: 14, lng: -118.4,lat: 34.1,  title: "LA Wildfires",              type: "disaster" },
 ];
