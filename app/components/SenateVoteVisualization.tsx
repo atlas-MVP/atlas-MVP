@@ -12,6 +12,7 @@ export interface Senator {
 interface SenateVoteVisualizationProps {
   title?: string;
   senators: Senator[];
+  onSenatorHover?: (senator: Senator | null) => void;
 }
 
 const STATE_NAMES: Record<string, string> = {
@@ -33,6 +34,7 @@ const STATE_NAMES: Record<string, string> = {
 export default function SenateVoteVisualization({
   title = "SENATE",
   senators,
+  onSenatorHover,
 }: SenateVoteVisualizationProps) {
   const [hoveredSenator, setHoveredSenator] = useState<Senator | null>(null);
   const [lockedSenator,  setLockedSenator]  = useState<Senator | null>(null);
@@ -239,10 +241,15 @@ export default function SenateVoteVisualization({
               if (!lockedSenator) {
                 setHoveredSenator(senator);
                 setTooltipPos({ x, y, isLeft: senator.vote === "Aye" });
+                onSenatorHover?.(senator);
               }
             }}
             onMouseLeave={() => {
-              if (!lockedSenator) { setHoveredSenator(null); setTooltipPos(null); }
+              if (!lockedSenator) {
+                setHoveredSenator(null);
+                setTooltipPos(null);
+                onSenatorHover?.(null);
+              }
             }}
             onClick={e => {
               e.stopPropagation();

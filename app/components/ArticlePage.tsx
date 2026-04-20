@@ -33,292 +33,223 @@ export default function ArticlePage({
   billId,
 }: ArticlePageProps) {
   const router = useRouter();
-  const [senatePopupOpen, setSenatePopupOpen] = useState(false);
-  const [selectedSenator, setSelectedSenator] = useState<Senator | null>(null);
+  const [hoveredSenator, setHoveredSenator] = useState<Senator | null>(null);
 
   const senators: Senator[] = [
-    ...Array.from({ length: 38 }, (_, i) => ({
-      name: `Senator D${i + 1}`,
-      party: "D" as const,
-      state: "XX",
-      vote: "Aye" as const,
-    })),
-    ...Array.from({ length: 2 }, (_, i) => ({
-      name: `Senator I${i + 1}`,
-      party: "I" as const,
-      state: "XX",
-      vote: "Aye" as const,
-    })),
-    ...Array.from({ length: 51 }, (_, i) => ({
-      name: `Senator R${i + 1}`,
-      party: "R" as const,
-      state: "XX",
-      vote: "No" as const,
-    })),
-    ...Array.from({ length: 7 }, (_, i) => ({
-      name: `Senator D${i + 39}`,
-      party: "D" as const,
-      state: "XX",
-      vote: "No" as const,
-    })),
-    {
-      name: SCHUMER_DATA.name,
-      party: SCHUMER_DATA.party,
-      state: SCHUMER_DATA.state,
-      vote: SCHUMER_DATA.vote,
-    },
+    { name: "Bernie Sanders", party: "I" as const, state: "VT", vote: "Aye" as const },
+    { name: "Angus King", party: "I" as const, state: "ME", vote: "Aye" as const },
+    { name: "Elizabeth Warren", party: "D" as const, state: "MA", vote: "Aye" as const },
+    { name: "Jeff Merkley", party: "D" as const, state: "OR", vote: "Aye" as const },
+    { name: "Chris Van Hollen", party: "D" as const, state: "MD", vote: "Aye" as const },
+    { name: "Peter Welch", party: "D" as const, state: "VT", vote: "Aye" as const },
+    { name: "Ed Markey", party: "D" as const, state: "MA", vote: "Aye" as const },
+    { name: "Dick Durbin", party: "D" as const, state: "IL", vote: "Aye" as const },
+    { name: "Mazie Hirono", party: "D" as const, state: "HI", vote: "Aye" as const },
+    { name: "Tammy Baldwin", party: "D" as const, state: "WI", vote: "Aye" as const },
+    { name: "Cory Booker", party: "D" as const, state: "NJ", vote: "Aye" as const },
+    { name: "Sherrod Brown", party: "D" as const, state: "OH", vote: "Aye" as const },
+    { name: "Ben Ray Luján", party: "D" as const, state: "NM", vote: "Aye" as const },
+    { name: "Alex Padilla", party: "D" as const, state: "CA", vote: "Aye" as const },
+    { name: "Tina Smith", party: "D" as const, state: "MN", vote: "Aye" as const },
+    { name: "Brian Schatz", party: "D" as const, state: "HI", vote: "Aye" as const },
+    { name: "Ron Wyden", party: "D" as const, state: "OR", vote: "Aye" as const },
+    { name: "Raphael Warnock", party: "D" as const, state: "GA", vote: "Aye" as const },
+    { name: "Jon Ossoff", party: "D" as const, state: "GA", vote: "Aye" as const },
+    { name: "Amy Klobuchar", party: "D" as const, state: "MN", vote: "Aye" as const },
+    { name: "Kirsten Gillibrand", party: "D" as const, state: "NY", vote: "Aye" as const },
+    { name: "Martin Heinrich", party: "D" as const, state: "NM", vote: "Aye" as const },
+    { name: "Debbie Stabenow", party: "D" as const, state: "MI", vote: "Aye" as const },
+    { name: "Gary Peters", party: "D" as const, state: "MI", vote: "Aye" as const },
+    { name: "Tammy Duckworth", party: "D" as const, state: "IL", vote: "Aye" as const },
+    { name: "Patty Murray", party: "D" as const, state: "WA", vote: "Aye" as const },
+    { name: "Maria Cantwell", party: "D" as const, state: "WA", vote: "Aye" as const },
+    { name: "Mark Warner", party: "D" as const, state: "VA", vote: "Aye" as const },
+    { name: "Tim Kaine", party: "D" as const, state: "VA", vote: "Aye" as const },
+    { name: "Bob Casey", party: "D" as const, state: "PA", vote: "Aye" as const },
+    { name: "Jacky Rosen", party: "D" as const, state: "NV", vote: "Aye" as const },
+    { name: "Catherine Cortez Masto", party: "D" as const, state: "NV", vote: "Aye" as const },
+    { name: "Mark Kelly", party: "D" as const, state: "AZ", vote: "Aye" as const },
+    { name: "Ruben Gallego", party: "D" as const, state: "AZ", vote: "Aye" as const },
+    { name: "Adam Schiff", party: "D" as const, state: "CA", vote: "Aye" as const },
+    { name: "Andy Kim", party: "D" as const, state: "NJ", vote: "Aye" as const },
+    { name: SCHUMER_DATA.name, party: SCHUMER_DATA.party, state: SCHUMER_DATA.state, vote: SCHUMER_DATA.vote },
+    { name: "John Hickenlooper", party: "D" as const, state: "CO", vote: "Aye" as const },
+    { name: "Michael Bennet", party: "D" as const, state: "CO", vote: "Aye" as const },
+    { name: "Angela Alsobrooks", party: "D" as const, state: "MD", vote: "Aye" as const },
+    ...Array.from({ length: 50 }, (_, i) => ({ name: `R Senator ${i + 1}`, party: "R" as const, state: "XX", vote: "No" as const })),
+    { name: "John Fetterman", party: "D" as const, state: "PA", vote: "No" as const },
+    { name: "Joe Manchin", party: "D" as const, state: "WV", vote: "No" as const },
+    { name: "Jeanne Shaheen", party: "D" as const, state: "NH", vote: "No" as const },
+    { name: "Maggie Hassan", party: "D" as const, state: "NH", vote: "No" as const },
+    { name: "Chris Coons", party: "D" as const, state: "DE", vote: "No" as const },
+    { name: "Tom Carper", party: "D" as const, state: "DE", vote: "No" as const },
+    { name: "Elissa Slotkin", party: "D" as const, state: "MI", vote: "No" as const },
+    { name: "Jon Tester", party: "D" as const, state: "MT", vote: "No" as const },
+    { name: "Kyrsten Sinema", party: "I" as const, state: "AZ", vote: "No" as const },
   ];
 
   return (
-    <div
-      onClick={(e) => {
-        if (senatePopupOpen && (e.target as HTMLElement).id === "senate-backdrop") {
-          setSenatePopupOpen(false);
-        }
-        if (selectedSenator) {
-          setSelectedSenator(null);
-        }
-      }}
-      style={{
-        minHeight: "100vh",
-        background: "linear-gradient(135deg, #0a1929 0%, #152535 25%, #1a2f42 50%, #152535 75%, #0d1b2a 100%)",
-        backgroundSize: "400% 400%",
-        animation: "glossyShift 20s ease infinite",
-        color: "white",
-        padding: "60px 20px 80px",
-        position: "relative",
-      }}
-    >
-      <style>{`
-        @keyframes glossyShift {
-          0%, 100% { background-position: 0% 50%; }
-          50% { background-position: 100% 50%; }
-        }
-      `}</style>
-
-      <button
-        onClick={() => router.push("/")}
-        style={{
-          position: "absolute",
-          top: 20,
-          left: 20,
-          background: "rgba(255,255,255,0.1)",
-          border: "1px solid rgba(255,255,255,0.2)",
-          borderRadius: 8,
-          padding: "8px 16px",
-          color: "white",
-          fontSize: 12,
-          fontFamily: "monospace",
-          cursor: "pointer",
-          backdropFilter: "blur(10px)",
-        }}
-      >
-        ← Back to Atlas
-      </button>
-
+    <div style={{
+      position: "fixed",
+      inset: "10px",
+      zIndex: 50,
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      pointerEvents: "none",
+    }}>
       <div style={{
-        maxWidth: 900,
-        margin: "0 auto",
+        width: "100%",
+        height: "100%",
+        background: "rgba(4,6,18,0.85)",
+        backdropFilter: "blur(40px)",
+        border: "1px solid rgba(255,255,255,0.06)",
+        borderRadius: 16,
+        overflow: "hidden",
         display: "flex",
         flexDirection: "column",
-        gap: 48,
+        pointerEvents: "auto",
+        boxShadow: "0 24px 80px rgba(0,0,0,0.38)",
       }}>
-        <div style={{
-          width: "100%",
-          height: 400,
-          borderRadius: 16,
-          overflow: "hidden",
-          background: "rgba(255,255,255,0.05)",
-          border: "1px solid rgba(255,255,255,0.1)",
-        }}>
-          <img
-            src={heroImage}
-            alt="Bernie Sanders"
-            style={{
-              width: "100%",
-              height: "100%",
-              objectFit: "cover",
-            }}
-            onError={(e) => {
-              (e.target as HTMLImageElement).style.display = "none";
-            }}
-          />
-        </div>
-
-        <h1 style={{
-          fontSize: 42,
-          fontWeight: 700,
-          lineHeight: 1.2,
-          margin: 0,
-          color: "rgba(255,255,255,0.95)",
-          letterSpacing: "-0.02em",
-        }}>
-          {headline}
-        </h1>
-
-        <div style={{
-          fontSize: 13,
-          fontFamily: "monospace",
-          color: "rgba(255,255,255,0.5)",
-          letterSpacing: "0.05em",
-        }}>
-          {date}
-        </div>
-
-        <div style={{
-          fontSize: 18,
-          lineHeight: 1.8,
-          color: "rgba(255,255,255,0.85)",
-          wordSpacing: "0.3em",
-        }}>
-          {description.split("\n\n").map((paragraph, i) => (
-            <p key={i} style={{ margin: "0 0 28px 0" }}>
-              {paragraph}
-            </p>
-          ))}
-        </div>
-
-        <div
-          onClick={() => setSenatePopupOpen(true)}
+        <button
+          onClick={() => router.push("/")}
           style={{
-            display: "flex",
-            justifyContent: "center",
+            position: "absolute",
+            top: 16,
+            left: 16,
+            background: "rgba(255,255,255,0.07)",
+            border: "1px solid rgba(255,255,255,0.14)",
+            borderRadius: 6,
+            padding: "4px 10px",
+            color: "rgba(255,255,255,0.7)",
+            fontSize: 11,
+            fontFamily: "monospace",
             cursor: "pointer",
+            zIndex: 10,
           }}
+          onMouseEnter={e => (e.currentTarget.style.background = "rgba(255,255,255,0.12)")}
+          onMouseLeave={e => (e.currentTarget.style.background = "rgba(255,255,255,0.07)")}
         >
-          <SenateVoteVisualization
-            title="SENATE"
-            senators={senators}
-          />
+          Back
+        </button>
+
+        <div style={{
+          flex: 1,
+          overflowY: "auto",
+          padding: "60px 40px 40px",
+          color: "white",
+        }}>
+          <div style={{
+            maxWidth: 900,
+            margin: "0 auto",
+            display: "flex",
+            flexDirection: "column",
+            gap: 32,
+          }}>
+            <h1 style={{
+              fontSize: 38,
+              fontWeight: 700,
+              lineHeight: 1.2,
+              margin: 0,
+              color: "rgba(255,255,255,0.95)",
+              letterSpacing: "-0.02em",
+            }}>
+              {headline}
+            </h1>
+
+            <div style={{
+              fontSize: 12,
+              fontFamily: "monospace",
+              color: "rgba(255,255,255,0.42)",
+              letterSpacing: "0.08em",
+              textTransform: "uppercase",
+            }}>
+              {date}
+            </div>
+
+            <div style={{
+              fontSize: 16,
+              lineHeight: 1.7,
+              color: "rgba(255,255,255,0.82)",
+            }}>
+              {description.split("\n\n").map((paragraph, i) => (
+                <p key={i} style={{ margin: "0 0 24px 0" }}>
+                  {paragraph}
+                </p>
+              ))}
+            </div>
+
+            <div style={{
+              display: "flex",
+              justifyContent: "center",
+              marginTop: 16,
+            }}>
+              <div onMouseLeave={() => setHoveredSenator(null)}>
+                <SenateVoteVisualization
+                  title="SENATE"
+                  senators={senators}
+                  onSenatorHover={setHoveredSenator}
+                />
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
-      {senatePopupOpen && (
-        <div
-          id="senate-backdrop"
-          style={{
-            position: "fixed",
-            inset: 0,
-            background: "rgba(0,0,0,0.6)",
-            backdropFilter: "blur(12px)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            zIndex: 100,
-          }}
-        >
-          <div
-            style={{
-              background: "rgba(10,15,30,0.95)",
-              borderRadius: 20,
-              border: "1px solid rgba(255,255,255,0.15)",
-              padding: "40px",
-              maxWidth: 900,
-              width: "90%",
-            }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <SenateVoteVisualization
-              title="SENATE"
-              senators={senators}
-            />
-          </div>
-        </div>
-      )}
+      {hoveredSenator && hoveredSenator.name === SCHUMER_DATA.name && (
+        <div style={{
+          position: "fixed",
+          right: 30,
+          top: "50%",
+          transform: "translateY(-50%)",
+          zIndex: 100,
+          pointerEvents: "none",
+        }}>
+          <div style={{
+            background: "rgba(4,6,18,0.95)",
+            backdropFilter: "blur(30px)",
+            borderRadius: 14,
+            border: "1px solid rgba(255,255,255,0.15)",
+            padding: "24px",
+            width: 340,
+            boxShadow: "0 20px 60px rgba(0,0,0,0.5)",
+          }}>
+            <div style={{
+              fontSize: 20,
+              fontWeight: 700,
+              color: "rgba(255,255,255,0.95)",
+              marginBottom: 12,
+            }}>
+              {SCHUMER_DATA.name}
+            </div>
 
-      {selectedSenator && selectedSenator.name === SCHUMER_DATA.name && (
-        <div
-          style={{
-            position: "fixed",
-            inset: 0,
-            background: "rgba(0,0,0,0.7)",
-            backdropFilter: "blur(16px)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            zIndex: 200,
-          }}
-          onClick={() => setSelectedSenator(null)}
-        >
-          <div
-            style={{
-              background: "rgba(15,20,35,0.98)",
-              borderRadius: 16,
-              border: "1px solid rgba(255,255,255,0.2)",
-              padding: "32px",
-              width: 480,
-              boxShadow: "0 20px 60px rgba(0,0,0,0.5)",
-            }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div style={{ display: "flex", gap: 24 }}>
-              <div style={{
-                width: 120,
-                height: 120,
-                borderRadius: 12,
-                overflow: "hidden",
-                background: "rgba(255,255,255,0.08)",
-                flexShrink: 0,
-              }}>
-                <img
-                  src={SCHUMER_DATA.photo}
-                  alt={SCHUMER_DATA.name}
-                  style={{
-                    width: "100%",
-                    height: "100%",
-                    objectFit: "cover",
-                  }}
-                  onError={(e) => {
-                    (e.target as HTMLImageElement).style.display = "none";
-                  }}
-                />
-              </div>
+            <div style={{
+              fontSize: 13,
+              color: "rgba(255,255,255,0.62)",
+              marginBottom: 4,
+            }}>
+              Democrat • {SCHUMER_DATA.state}
+            </div>
 
-              <div style={{ flex: 1 }}>
-                <a
-                  href={SCHUMER_DATA.officialUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  style={{
-                    fontSize: 22,
-                    fontWeight: 700,
-                    color: "rgba(96,165,250,0.95)",
-                    textDecoration: "none",
-                    display: "block",
-                    marginBottom: 12,
-                  }}
-                >
-                  {SCHUMER_DATA.name}
-                </a>
+            <div style={{
+              fontSize: 12,
+              color: "rgba(100,200,100,0.85)",
+              marginBottom: 18,
+              fontFamily: "monospace",
+            }}>
+              Vote: {SCHUMER_DATA.vote}
+            </div>
 
-                <div style={{
-                  fontSize: 14,
-                  color: "rgba(255,255,255,0.65)",
-                  marginBottom: 4,
-                }}>
-                  Democrat • {SCHUMER_DATA.state}
-                </div>
-
-                <div style={{
-                  fontSize: 13,
-                  color: "rgba(255,255,255,0.55)",
-                  marginBottom: 24,
-                }}>
-                  Vote: {SCHUMER_DATA.vote}
-                </div>
-
-                <div style={{
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: 10,
-                  fontSize: 13,
-                  color: "rgba(255,255,255,0.7)",
-                }}>
-                  <div>Age: {SCHUMER_DATA.age}</div>
-                  <div>In office: {SCHUMER_DATA.yearsInOffice} years</div>
-                  <div>Up for re-election: {SCHUMER_DATA.nextElection}</div>
-                </div>
-              </div>
+            <div style={{
+              display: "flex",
+              flexDirection: "column",
+              gap: 8,
+              fontSize: 12,
+              color: "rgba(255,255,255,0.68)",
+            }}>
+              <div>Age: {SCHUMER_DATA.age}</div>
+              <div>In office: {SCHUMER_DATA.yearsInOffice} years</div>
+              <div>Up for re-election: {SCHUMER_DATA.nextElection}</div>
             </div>
           </div>
         </div>
