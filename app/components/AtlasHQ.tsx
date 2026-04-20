@@ -471,7 +471,7 @@ export default function AtlasHQ({ onClose, onNavigate, onHeadlinesToggle, onSour
                         style={{ padding: "12px 13px", borderRadius: 10, background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.09)", cursor: "pointer" }}
                         onMouseEnter={e => (e.currentTarget.style.background = "rgba(255,255,255,0.04)")}
                         onMouseLeave={e => (e.currentTarget.style.background = "rgba(255,255,255,0.02)")}>
-                        <div style={{ fontSize: 12, fontFamily: "monospace", letterSpacing: "0.07em", color: "rgba(255,255,255,0.92)", fontWeight: 700 }}>{c.label}</div>
+                        <div style={{ fontSize: 14, fontFamily: "monospace", letterSpacing: "0.07em", color: "rgba(255,255,255,0.92)", fontWeight: 700 }}>{c.label}</div>
                         <div style={{ fontSize: 11, color: "rgba(255,255,255,0.52)", marginTop: 5, lineHeight: 1.45, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{c.sub}</div>
                       </div>
                     ))}
@@ -644,7 +644,7 @@ export default function AtlasHQ({ onClose, onNavigate, onHeadlinesToggle, onSour
                         <EText
                           value={dis.label}
                           onChange={v => patchDraft(d => ({ ...d, disasters: d.disasters.map((x, j) => j === idx ? { ...x, label: v } : x) }))}
-                          style={{ fontSize: 12, fontFamily: "monospace", letterSpacing: "0.06em", color: "rgba(255,255,255,0.92)", fontWeight: 700 }}
+                          style={{ fontSize: 14, fontFamily: "monospace", letterSpacing: "0.06em", color: "rgba(255,255,255,0.92)", fontWeight: 700 }}
                         />
                         <div style={{ fontSize: 10, color: "rgba(255,255,255,0.62)", marginTop: 4 }}>{dis.sub}</div>
                       </div>
@@ -749,7 +749,7 @@ function SectionLabel({ label, onClick, dragHandle }: {
       <span
         onClick={onClick}
         style={{
-          fontSize: 11, fontFamily: "monospace", letterSpacing: "0.18em",
+          fontSize: 13, fontFamily: "monospace", letterSpacing: "0.18em",
           color: "rgba(255,255,255,0.42)", textTransform: "uppercase",
           fontWeight: 500, cursor: onClick ? "pointer" : "default", userSelect: "none",
         }}
