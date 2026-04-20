@@ -1427,25 +1427,6 @@ export default function CountryPanel({ countryCode, onClose, onViewFeed, onConfl
             </div>
           </div>
 
-          {/* Conflict selector */}
-          {conflictIds.length > 1 && (
-            <div style={{ display: "flex", gap: 6, marginTop: 8 }}>
-              {conflictIds.map((id) => (
-                <button key={id}
-                  onClick={(e) => { e.stopPropagation(); setSelectedConflictId(id); onConflictSelect?.(id); }}
-                  style={{
-                    fontSize: 9, fontFamily: "monospace", letterSpacing: "0.1em", textTransform: "uppercase",
-                    padding: "4px 10px", borderRadius: 8, cursor: "pointer",
-                    background: activeId === id ? "rgba(255,255,255,0.06)" : "rgba(255,255,255,0.02)",
-                    border: `1px solid ${activeId === id ? "rgba(255,255,255,0.14)" : "rgba(255,255,255,0.06)"}`,
-                    color: activeId === id ? "rgba(255,255,255,0.75)" : "rgba(255,255,255,0.25)",
-                    boxShadow: activeId === id ? "inset 0 1px 0 rgba(255,255,255,0.07)" : "none",
-                  }}>
-                  {CONFLICTS[id]?.title}
-                </button>
-              ))}
-            </div>
-          )}
         </div>
 
         {/* ── SCROLLABLE BODY ── */}
