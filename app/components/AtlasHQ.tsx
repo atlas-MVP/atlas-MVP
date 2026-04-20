@@ -608,13 +608,12 @@ export default function AtlasHQ({ onClose, onNavigate, onHeadlinesToggle, onSour
                         onUploaded={(_, url) => patchDraft(d => ({ ...d, financeItems: d.financeItems.map((x, j) => j === idx ? { ...x, imageUrl: url } : x) }))}
                       />
                       <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom, transparent 35%, rgba(0,0,0,0.88) 100%)", pointerEvents: "none" }} />
-                      <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, padding: "8px 10px 10px" }}>
+                      <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, padding: "8px 10px 14px" }}>
                         <EText
                           value={item.headline}
                           onChange={v => patchDraft(d => ({ ...d, financeItems: d.financeItems.map((x, j) => j === idx ? { ...x, headline: v } : x) }))}
                           style={{ fontSize: 12, fontFamily: "monospace", letterSpacing: "0.03em", color: "rgba(255,255,255,0.88)", lineHeight: 1.4 }}
                         />
-                        <div style={{ fontSize: 9, color: "rgba(255,255,255,0.48)", marginTop: 4, letterSpacing: "0.12em", textTransform: "uppercase" }}>{item.source}</div>
                       </div>
                     </div>
                   ))}
