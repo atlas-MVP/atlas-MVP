@@ -64,18 +64,22 @@ export default function SenateVoteVisualization({
     ) => {
       if (!voters.length) return;
 
-      // Distribute evenly across rows
-      const senatorsPerRow = Math.ceil(voters.length / rows);
+      // Calculate number of radial spokes needed
+      const spokes = Math.ceil(voters.length / rows);
 
+      // Create angular positions (spokes from center)
+      const angles: number[] = [];
+      for (let i = 0; i < spokes; i++) {
+        const t = spokes === 1 ? 0.5 : i / (spokes - 1);
+        angles.push(arcStart + t * (arcEnd - arcStart));
+      }
+
+      // Place senators along radial lines (spokes)
       for (let idx = 0; idx < voters.length; idx++) {
-        const row = Math.floor(idx / senatorsPerRow);
-        const posInRow = idx % senatorsPerRow;
+        const spokeIdx = idx % spokes;
+        const row = Math.floor(idx / spokes);
+        const angle = angles[spokeIdx];
         const r = baseRadius + row * radiusStep;
-
-        // Even spacing within the arc for this row
-        const countInRow = Math.min(senatorsPerRow, voters.length - row * senatorsPerRow);
-        const t = countInRow === 1 ? 0.5 : posInRow / (countInRow - 1);
-        const angle = arcStart + t * (arcEnd - arcStart);
 
         positions.push({
           senator: voters[idx],
@@ -203,7 +207,7 @@ export default function SenateVoteVisualization({
         {positions.map(({ senator, x, y }, i) => (
           <circle
             key={i}
-            cx={x} cy={y} r={4.5}
+            cx={x} cy={y} r={6}
             fill={isCrossover(senator) ? "url(#crossoverPulse)" : dotFill(senator)}
             stroke={dotStroke(senator)}
             strokeWidth={1}
