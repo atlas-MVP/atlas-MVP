@@ -169,7 +169,7 @@ const VIOLENCE_ITEMS = [
 const FINANCE_ITEMS = [
   {
     slug: "oil-hormuz",
-    headline: "Oil surges past $87 as Strait of Hormuz tensions escalate following US-Iran clashes",
+    headline: "Oil surges past $87 as Strait of Hormuz tensions escalate",
     image: "/finance-card.avif",
     source: "Bloomberg",
   },
@@ -398,7 +398,7 @@ export default function AtlasHQ({ onClose, onNavigate, onHeadlinesToggle, onSour
                         <EText
                           value={c.label}
                           onChange={v => patchDraft(d => ({ ...d, topConflicts: d.topConflicts.map((x, j) => j === idx ? { ...x, label: v } : x) }))}
-                          style={{ fontSize: 12, fontFamily: "monospace", letterSpacing: "0.06em", color: "rgba(255,255,255,0.92)", fontWeight: 700, lineHeight: 1.3 }}
+                          style={{ fontSize: 14, fontFamily: "monospace", letterSpacing: "0.06em", color: "rgba(255,255,255,0.92)", fontWeight: 700, lineHeight: 1.3 }}
                         />
                       </div>
                     </div>
@@ -502,7 +502,7 @@ export default function AtlasHQ({ onClose, onNavigate, onHeadlinesToggle, onSour
                         <EText
                           value={item.headline}
                           onChange={v => patchDraft(d => ({ ...d, violenceItems: d.violenceItems.map((x, j) => j === idx ? { ...x, headline: v } : x) }))}
-                          style={{ fontSize: 12, fontFamily: "monospace", letterSpacing: "0.03em", color: "rgba(255,255,255,0.88)", lineHeight: 1.4 }}
+                          style={{ fontSize: 14, fontFamily: "monospace", letterSpacing: "0.06em", color: "rgba(255,255,255,0.92)", fontWeight: 700, lineHeight: 1.3 }}
                         />
                         <div style={{ fontSize: 9, color: "rgba(255,255,255,0.48)", marginTop: 4, letterSpacing: "0.12em", textTransform: "uppercase" }}>{item.source}</div>
                       </div>
@@ -535,7 +535,7 @@ export default function AtlasHQ({ onClose, onNavigate, onHeadlinesToggle, onSour
                         <EText
                           value={item.headline}
                           onChange={v => patchDraft(d => ({ ...d, financeItems: d.financeItems.map((x, j) => j === idx ? { ...x, headline: v } : x) }))}
-                          style={{ fontSize: 12, fontFamily: "monospace", letterSpacing: "0.03em", color: "rgba(255,255,255,0.88)", lineHeight: 1.4 }}
+                          style={{ fontSize: 14, fontFamily: "monospace", letterSpacing: "0.06em", color: "rgba(255,255,255,0.92)", fontWeight: 700, lineHeight: 1.3 }}
                         />
                       </div>
                     </div>
