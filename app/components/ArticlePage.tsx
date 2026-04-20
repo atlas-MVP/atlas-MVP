@@ -194,7 +194,7 @@ export default function ArticlePage({
         <div style={{
           flex: 1,
           overflowY: "auto",
-          padding: "60px 40px 40px",
+          padding: "50px 40px 20px",
           color: "white",
         }}>
           <div style={{
@@ -202,10 +202,10 @@ export default function ArticlePage({
             margin: "0 auto",
             display: "flex",
             flexDirection: "column",
-            gap: 32,
+            gap: 16,
           }}>
             <h1 style={{
-              fontSize: 38,
+              fontSize: 32,
               fontWeight: 700,
               lineHeight: 1.2,
               margin: 0,
@@ -226,12 +226,12 @@ export default function ArticlePage({
             </div>
 
             <div style={{
-              fontSize: 16,
-              lineHeight: 1.7,
+              fontSize: 15,
+              lineHeight: 1.6,
               color: "rgba(255,255,255,0.82)",
             }}>
               {description.split("\n\n").map((paragraph, i) => (
-                <p key={i} style={{ margin: "0 0 24px 0" }}>
+                <p key={i} style={{ margin: "0 0 12px 0" }}>
                   {paragraph}
                 </p>
               ))}
