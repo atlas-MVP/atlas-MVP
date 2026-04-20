@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState } from "react";
 
 interface Senator {
   name: string;
@@ -14,102 +14,111 @@ interface SenateVoteVisualizationProps {
   senators: Senator[];
 }
 
+const STATE_NAMES: Record<string, string> = {
+  AL: "Alabama", AK: "Alaska", AZ: "Arizona", AR: "Arkansas",
+  CA: "California", CO: "Colorado", CT: "Connecticut", DE: "Delaware",
+  FL: "Florida", GA: "Georgia", HI: "Hawaii", ID: "Idaho",
+  IL: "Illinois", IN: "Indiana", IA: "Iowa", KS: "Kansas",
+  KY: "Kentucky", LA: "Louisiana", ME: "Maine", MD: "Maryland",
+  MA: "Massachusetts", MI: "Michigan", MN: "Minnesota", MS: "Mississippi",
+  MO: "Missouri", MT: "Montana", NE: "Nebraska", NV: "Nevada",
+  NH: "New Hampshire", NJ: "New Jersey", NM: "New Mexico", NY: "New York",
+  NC: "North Carolina", ND: "North Dakota", OH: "Ohio", OK: "Oklahoma",
+  OR: "Oregon", PA: "Pennsylvania", RI: "Rhode Island", SC: "South Carolina",
+  SD: "South Dakota", TN: "Tennessee", TX: "Texas", UT: "Utah",
+  VT: "Vermont", VA: "Virginia", WA: "Washington", WV: "West Virginia",
+  WI: "Wisconsin", WY: "Wyoming",
+};
+
 export default function SenateVoteVisualization({
   title = "SENATE",
   senators,
 }: SenateVoteVisualizationProps) {
   const [hoveredSenator, setHoveredSenator] = useState<Senator | null>(null);
-  const [lockedSenator, setLockedSenator] = useState<Senator | null>(null);
+  const [lockedSenator,  setLockedSenator]  = useState<Senator | null>(null);
   const [tooltipPos, setTooltipPos] = useState<{ x: number; y: number; isLeft: boolean } | null>(null);
-  const containerRef = useRef<HTMLDivElement>(null);
 
-  // Calculate vote counts (including all parties)
   const totalAye = senators.filter(s => s.vote === "Aye").length;
-  const totalNo = senators.filter(s => s.vote === "No").length;
+  const totalNo  = senators.filter(s => s.vote === "No").length;
 
-  // Generate hemicycle positions - organized by vote (Aye left, No right)
+  // ── Hemicycle layout ─────────────────────────────────────────────────────
+  // Perfect 180° arc (π → 2π). Bottom seats at both ends sit on the same
+  // horizontal line (y = centerY), forming a straight flush base.
+  // A gapAngle splits the two halves at the top so there is visible air.
   const generatePositions = () => {
     const positions: Array<{ senator: Senator; x: number; y: number }> = [];
-    const centerX = 266;
-    const centerY = 243;
+    const centerX       = 266;
+    const centerY       = 262; // pushed down so SENATE title has breathing room
+    const rows          = 7;
+    const baseRadius    = 62;
+    const radiusStep    = 25;  // 25 px between concentric rows
+    const gapAngle      = 0.09 * Math.PI; // gap between halves at the top
 
-    // Separate senators by vote
     const ayeVoters = senators.filter(s => s.vote === "Aye");
-    const noVoters = senators.filter(s => s.vote === "No");
+    const noVoters  = senators.filter(s => s.vote === "No");
 
-    const rows = 7;
-    const baseRadius = 70; // Increased from 67 for more spacing
-    const radiusIncrement = 26; // Increased from 23 for more spacing
+    // Distribute senators across rows; outer rows get one extra seat each
+    const distributeRows = (total: number): number[] => {
+      const base  = Math.floor(total / rows);
+      const extra = total - base * rows;
+      return Array.from({ length: rows }, (_, i) =>
+        base + (i >= rows - extra ? 1 : 0)
+      );
+    };
 
-    // Place Aye voters on left side (π to 3π/2)
-    let ayeIndex = 0;
-    for (let row = 0; row < rows; row++) {
-      const radius = baseRadius + row * radiusIncrement;
-      const senatorsInRow = Math.min(Math.ceil(ayeVoters.length / rows) + Math.floor(row * 0.5), ayeVoters.length - ayeIndex);
-      const angleStart = Math.PI;
-      const angleEnd = Math.PI * 1.5;
-      const angleStep = (angleEnd - angleStart) / (senatorsInRow + 1.2); // Increased divisor for more spacing
-
-      for (let i = 0; i < senatorsInRow && ayeIndex < ayeVoters.length; i++) {
-        const angle = angleStart + angleStep * (i + 1.2);
-        const x = centerX + radius * Math.cos(angle);
-        const y = centerY + radius * Math.sin(angle);
-        positions.push({ senator: ayeVoters[ayeIndex], x, y });
-        ayeIndex++;
+    const placeGroup = (
+      voters: Senator[],
+      arcStart: number,
+      arcEnd: number,
+    ) => {
+      if (!voters.length) return;
+      const counts = distributeRows(voters.length);
+      let idx = 0;
+      for (let row = 0; row < rows; row++) {
+        const r     = baseRadius + row * radiusStep;
+        const count = counts[row];
+        for (let i = 0; i < count && idx < voters.length; i++) {
+          // t=0 → arcStart, t=1 → arcEnd (includes both endpoints)
+          const t     = count === 1 ? 0.5 : i / (count - 1);
+          const angle = arcStart + t * (arcEnd - arcStart);
+          positions.push({
+            senator: voters[idx],
+            x: centerX + r * Math.cos(angle),
+            y: centerY + r * Math.sin(angle),
+          });
+          idx++;
+        }
       }
-    }
+    };
 
-    // Place No voters on right side (3π/2 to 2π)
-    let noIndex = 0;
-    for (let row = 0; row < rows; row++) {
-      const radius = baseRadius + row * radiusIncrement;
-      const senatorsInRow = Math.min(Math.ceil(noVoters.length / rows) + Math.floor(row * 0.5), noVoters.length - noIndex);
-      const angleStart = Math.PI * 1.5;
-      const angleEnd = Math.PI * 2;
-      const angleStep = (angleEnd - angleStart) / (senatorsInRow + 1.2); // Increased divisor for more spacing
-
-      for (let i = 0; i < senatorsInRow && noIndex < noVoters.length; i++) {
-        const angle = angleStart + angleStep * (i + 1.2);
-        const x = centerX + radius * Math.cos(angle);
-        const y = centerY + radius * Math.sin(angle);
-        positions.push({ senator: noVoters[noIndex], x, y });
-        noIndex++;
-      }
-    }
+    // Aye: π (bottom-left, flush) → just-left-of-top-center
+    // No:  just-right-of-top-center → 2π (bottom-right, flush)
+    placeGroup(ayeVoters, Math.PI,       Math.PI * 1.5 - gapAngle / 2);
+    placeGroup(noVoters,  Math.PI * 1.5 + gapAngle / 2, Math.PI * 2);
 
     return positions;
   };
 
   const positions = generatePositions();
 
-  // Check if senator is a Democrat who voted No (crossover vote)
-  const isCrossoverVote = (senator: Senator) => {
-    return senator.party === "D" && senator.vote === "No";
-  };
+  const isCrossover = (s: Senator) => s.party === "D" && s.vote === "No";
 
-  const getDotColor = (senator: Senator) => {
-    if (senator.vote === "Aye") {
-      return senator.party === "R" ? "rgba(239,68,68,0.5)" : "rgba(96,165,250,0.5)";
-    } else if (senator.vote === "No") {
-      return senator.party === "R" ? "rgba(239,68,68,0.3)" : "rgba(96,165,250,0.3)";
-    }
+  const dotFill = (s: Senator) => {
+    if (s.vote === "Aye") return s.party === "R" ? "rgba(239,68,68,0.5)"  : "rgba(96,165,250,0.5)";
+    if (s.vote === "No")  return s.party === "R" ? "rgba(239,68,68,0.3)"  : "rgba(96,165,250,0.3)";
     return "rgba(150,150,150,0.3)";
   };
 
-  const getDotBorder = (senator: Senator) => {
-    if (senator.vote === "Aye") {
-      return senator.party === "R" ? "rgba(239,68,68,0.8)" : "rgba(96,165,250,0.8)";
-    } else if (senator.vote === "No") {
-      return senator.party === "R" ? "rgba(239,68,68,0.5)" : "rgba(96,165,250,0.5)";
-    }
+  const dotStroke = (s: Senator) => {
+    if (s.vote === "Aye") return s.party === "R" ? "rgba(239,68,68,0.8)"  : "rgba(96,165,250,0.8)";
+    if (s.vote === "No")  return s.party === "R" ? "rgba(239,68,68,0.5)"  : "rgba(96,165,250,0.5)";
     return "rgba(150,150,150,0.5)";
   };
 
-  const displayedSenator = lockedSenator || hoveredSenator;
+  const displayed = lockedSenator || hoveredSenator;
 
   return (
     <div
-      ref={containerRef}
       style={{
         position: "relative",
         width: 533,
@@ -118,172 +127,113 @@ export default function SenateVoteVisualization({
         backdropFilter: "blur(20px)",
         borderRadius: 12,
         border: "1px solid rgba(255,255,255,0.08)",
-        padding: "20px 16px 16px",
       }}
     >
-      {/* Title - moved down */}
-      <div
-        style={{
-          position: "absolute",
-          top: 20, // Moved down from 0
-          left: 0,
-          right: 0,
-          textAlign: "center",
-          fontSize: 14,
-          fontWeight: 700,
-          fontFamily: "monospace",
-          letterSpacing: "0.2em",
-          color: "rgba(255,255,255,0.7)",
-        }}
-      >
+      {/* ── Title ─────────────────────────────────────────────────────────── */}
+      <div style={{
+        position: "absolute",
+        top: 20, left: 0, right: 0,
+        textAlign: "center",
+        fontSize: 14, fontWeight: 700, fontFamily: "monospace",
+        letterSpacing: "0.2em", color: "rgba(255,255,255,0.7)",
+      }}>
         {title}
       </div>
 
-      {/* YEA label - left side */}
-      <div
-        style={{
-          position: "absolute",
-          left: 12,
-          bottom: 72,
-          fontSize: 9,
-          fontFamily: "monospace",
-          letterSpacing: "0.1em",
-          color: "rgba(255,255,255,0.25)",
-          textTransform: "uppercase",
-        }}
-      >
-        Yea
+      {/* ── YES label — flush with bottom-left end of arc ─────────────────── */}
+      <div style={{
+        position: "absolute", left: 16, bottom: 62,
+        fontSize: 9, fontFamily: "monospace", letterSpacing: "0.1em",
+        color: "rgba(255,255,255,0.25)", textTransform: "uppercase",
+      }}>
+        Yes
       </div>
 
-      {/* NAY label - right side */}
-      <div
-        style={{
-          position: "absolute",
-          right: 12,
-          bottom: 72,
-          fontSize: 9,
-          fontFamily: "monospace",
-          letterSpacing: "0.1em",
-          color: "rgba(255,255,255,0.25)",
-          textTransform: "uppercase",
-        }}
-      >
-        Nay
+      {/* ── NO label — flush with bottom-right end of arc ─────────────────── */}
+      <div style={{
+        position: "absolute", right: 16, bottom: 62,
+        fontSize: 9, fontFamily: "monospace", letterSpacing: "0.1em",
+        color: "rgba(255,255,255,0.25)", textTransform: "uppercase",
+      }}>
+        No
       </div>
 
-      {/* Vote count */}
-      <div
-        style={{
-          position: "absolute",
-          bottom: 47,
-          left: "50%",
-          transform: "translateX(-50%)",
-          fontSize: 16,
-          fontWeight: 300,
-          fontFamily: "inherit",
-          letterSpacing: "0.3em",
-          color: "rgba(255,255,255,0.9)",
-          whiteSpace: "nowrap",
-        }}
-      >
+      {/* ── Vote count ────────────────────────────────────────────────────── */}
+      <div style={{
+        position: "absolute", bottom: 38, left: "50%",
+        transform: "translateX(-50%)",
+        fontSize: 16, fontWeight: 300, fontFamily: "inherit",
+        letterSpacing: "0.3em", color: "rgba(255,255,255,0.9)",
+        whiteSpace: "nowrap",
+      }}>
         {totalAye}–{totalNo}
       </div>
 
-      {/* BLOCKED button */}
-      <div
-        style={{
-          position: "absolute",
-          bottom: 12,
-          left: "50%",
-          transform: "translateX(-50%)",
-          background: "rgba(239,68,68,0.15)",
-          border: "1px solid rgba(239,68,68,0.4)",
-          borderRadius: 6,
-          padding: "4px 12px",
-          fontSize: 10,
-          fontWeight: 700,
-          fontFamily: "monospace",
-          letterSpacing: "0.12em",
-          color: "rgba(239,68,68,0.9)",
-          textTransform: "uppercase",
-        }}
-      >
+      {/* ── BLOCKED badge ─────────────────────────────────────────────────── */}
+      <div style={{
+        position: "absolute", bottom: 12, left: "50%",
+        transform: "translateX(-50%)",
+        background: "rgba(239,68,68,0.15)",
+        border: "1px solid rgba(239,68,68,0.4)",
+        borderRadius: 6, padding: "4px 12px",
+        fontSize: 10, fontWeight: 700, fontFamily: "monospace",
+        letterSpacing: "0.12em", color: "rgba(239,68,68,0.9)",
+        textTransform: "uppercase", whiteSpace: "nowrap",
+      }}>
         Blocked
       </div>
 
-      {/* Senate floor dots */}
+      {/* ── Senate dots (SVG) ─────────────────────────────────────────────── */}
       <svg width="533" height="333" style={{ position: "absolute", top: 0, left: 0 }}>
-        {/* Pulsing animation for crossover Democrats */}
         <defs>
           <radialGradient id="crossoverPulse">
             <stop offset="0%" stopColor="rgba(96,165,250,0.6)">
-              <animate
-                attributeName="stop-color"
+              <animate attributeName="stop-color"
                 values="rgba(96,165,250,0.6);rgba(239,68,68,0.6);rgba(96,165,250,0.6)"
-                dur="2s"
-                repeatCount="indefinite"
-              />
+                dur="2s" repeatCount="indefinite" />
             </stop>
             <stop offset="100%" stopColor="rgba(96,165,250,0.2)">
-              <animate
-                attributeName="stop-color"
+              <animate attributeName="stop-color"
                 values="rgba(96,165,250,0.2);rgba(239,68,68,0.2);rgba(96,165,250,0.2)"
-                dur="2s"
-                repeatCount="indefinite"
-              />
+                dur="2s" repeatCount="indefinite" />
             </stop>
           </radialGradient>
         </defs>
 
-        {positions.map(({ senator, x, y }, i) => {
-          const isLeft = x < 266; // Left side of center
-          return (
-            <circle
-              key={i}
-              cx={x}
-              cy={y}
-              r={4}
-              fill={isCrossoverVote(senator) ? "url(#crossoverPulse)" : getDotColor(senator)}
-              stroke={getDotBorder(senator)}
-              strokeWidth={1}
-              style={{ cursor: "pointer", transition: "all 0.2s" }}
-              onMouseEnter={(e) => {
-                if (!lockedSenator) {
-                  setHoveredSenator(senator);
-                  setTooltipPos({ x, y, isLeft });
-                }
-              }}
-              onMouseLeave={() => {
-                if (!lockedSenator) {
-                  setHoveredSenator(null);
-                  setTooltipPos(null);
-                }
-              }}
-              onClick={(e) => {
-                e.stopPropagation();
-                if (lockedSenator?.name === senator.name) {
-                  setLockedSenator(null);
-                  setTooltipPos(null);
-                } else {
-                  setLockedSenator(senator);
-                  setTooltipPos({ x, y, isLeft });
-                }
-              }}
-            />
-          );
-        })}
+        {positions.map(({ senator, x, y }, i) => (
+          <circle
+            key={i}
+            cx={x} cy={y} r={4}
+            fill={isCrossover(senator) ? "url(#crossoverPulse)" : dotFill(senator)}
+            stroke={dotStroke(senator)}
+            strokeWidth={1}
+            style={{ cursor: "pointer", transition: "all 0.2s" }}
+            onMouseEnter={() => {
+              if (!lockedSenator) {
+                setHoveredSenator(senator);
+                setTooltipPos({ x, y, isLeft: senator.vote === "Aye" });
+              }
+            }}
+            onMouseLeave={() => {
+              if (!lockedSenator) { setHoveredSenator(null); setTooltipPos(null); }
+            }}
+            onClick={e => {
+              e.stopPropagation();
+              if (lockedSenator?.name === senator.name) {
+                setLockedSenator(null); setTooltipPos(null);
+              } else {
+                setLockedSenator(senator);
+                setTooltipPos({ x, y, isLeft: senator.vote === "Aye" });
+              }
+            }}
+          />
+        ))}
       </svg>
 
-      {/* Tooltip - positioned in top-left or top-right of box */}
-      {displayedSenator && tooltipPos && (
+      {/* ── Senator tooltip ───────────────────────────────────────────────── */}
+      {displayed && tooltipPos && (
         <div
-          onClick={(e) => {
-            e.stopPropagation();
-            if (lockedSenator) {
-              setLockedSenator(null);
-              setTooltipPos(null);
-            }
-          }}
+          onClick={e => { e.stopPropagation(); if (lockedSenator) { setLockedSenator(null); setTooltipPos(null); } }}
           style={{
             position: "absolute",
             [tooltipPos.isLeft ? "left" : "right"]: 12,
@@ -291,10 +241,8 @@ export default function SenateVoteVisualization({
             background: "rgba(10,13,26,0.95)",
             backdropFilter: "blur(12px)",
             border: "1px solid rgba(100,100,100,0.4)",
-            borderRadius: 8,
-            padding: "8px 12px",
-            fontSize: 12,
-            fontFamily: "monospace",
+            borderRadius: 8, padding: "8px 12px",
+            fontSize: 12, fontFamily: "monospace",
             color: "rgba(255,255,255,0.9)",
             pointerEvents: lockedSenator ? "auto" : "none",
             zIndex: 100,
@@ -303,12 +251,11 @@ export default function SenateVoteVisualization({
             cursor: lockedSenator ? "pointer" : "default",
           }}
         >
-          <div style={{ fontWeight: 700, marginBottom: 4 }}>{displayedSenator.name}</div>
+          <div style={{ fontWeight: 700, marginBottom: 4 }}>{displayed.name}</div>
           <div style={{ color: "rgba(255,255,255,0.6)", fontSize: 11 }}>
-            {displayedSenator.party === "R" ? "Republican" : displayedSenator.party === "D" ? "Democrat" : "Independent"} • {displayedSenator.state}
-          </div>
-          <div style={{ marginTop: 4, fontSize: 11, color: "rgba(255,255,255,0.5)" }}>
-            Vote: {displayedSenator.vote}
+            {displayed.party === "R" ? "Republican" : displayed.party === "D" ? "Democrat" : "Independent"}
+            {" · "}
+            {STATE_NAMES[displayed.state] ?? displayed.state}
           </div>
         </div>
       )}
