@@ -159,7 +159,7 @@ export default function SenateVoteVisualization({
       {/* ── Title ─────────────────────────────────────────────────────────── */}
       <div style={{
         position: "absolute",
-        top: 14, left: 0, right: 0,
+        top: 8, left: 0, right: 0,
         textAlign: "center",
         fontSize: 14, fontWeight: 700, fontFamily: "monospace",
         letterSpacing: "0.2em", color: "rgba(255,255,255,0.7)",
@@ -167,22 +167,22 @@ export default function SenateVoteVisualization({
         {title}
       </div>
 
-      {/* ── YES label — flush with bottom-left end of arc ─────────────────── */}
+      {/* ── yes label — flush with bottom-left end of arc ─────────────────── */}
       <div style={{
         position: "absolute", left: 16, bottom: 58,
         fontSize: 12, fontFamily: "monospace", letterSpacing: "0.1em",
-        color: "rgba(255,255,255,0.25)", textTransform: "uppercase",
+        color: "rgba(255,255,255,0.25)",
       }}>
-        Yes
+        yes
       </div>
 
-      {/* ── NO label — flush with bottom-right end of arc ─────────────────── */}
+      {/* ── no label — flush with bottom-right end of arc ─────────────────── */}
       <div style={{
         position: "absolute", right: 16, bottom: 58,
         fontSize: 12, fontFamily: "monospace", letterSpacing: "0.1em",
-        color: "rgba(255,255,255,0.25)", textTransform: "uppercase",
+        color: "rgba(255,255,255,0.25)",
       }}>
-        No
+        no
       </div>
 
       {/* ── Vote count ────────────────────────────────────────────────────── */}
