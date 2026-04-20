@@ -457,7 +457,7 @@ export default function Home() {
 
       {/* Header */}
       <div className="absolute top-0 left-0 right-0 z-10 flex items-center justify-between px-6 py-4 pointer-events-none">
-        <div className="flex items-center gap-3 pointer-events-auto">
+        <div className="flex flex-col items-center pointer-events-auto" style={{ gap: 2 }}>
           <button
             onClick={() => {
               if (showRadar) {
