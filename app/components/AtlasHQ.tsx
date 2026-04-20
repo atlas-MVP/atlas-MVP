@@ -488,9 +488,20 @@ export default function AtlasHQ({ onClose, onNavigate, onHeadlinesToggle, onSour
                         onMouseLeave={() => { if (!editMode && isSenateVote && senateVoteVisible === 'hover') setSenateVoteVisible(null); }}
                         onClick={() => {
                           if (editMode) return;
-                          if (isSenateVote) {
+                          // Gun violence alerts → open GunViolencePanel
+                          if (item.slug === "gun-violence" && item.incidentId) {
+                            onViolenceTap?.(item.incidentId, item.flyTo?.center ?? [0,0] as [number,number], item.flyTo?.zoom ?? 10);
+                          }
+                          // Senate vote → Israel/US widget
+                          else if (isSenateVote) {
                             onNavigate?.("israel-iran", item.flyTo?.center ?? [-77.0, 38.9] as [number,number], item.flyTo?.zoom ?? 11, item, undefined);
-                          } else {
+                          }
+                          // Lebanon alerts (ceasefire, etc.) → Israel/US widget
+                          else if (item.code === "LBN") {
+                            onNavigate?.("israel-iran", item.flyTo?.center ?? [35.5, 33.9] as [number,number], item.flyTo?.zoom ?? 8, item, undefined);
+                          }
+                          // All other alerts → navigate by code
+                          else {
                             onNavigate?.(item.code, item.flyTo?.center ?? [0,0] as [number,number], item.flyTo?.zoom ?? 4, item, item.slug);
                           }
                         }}

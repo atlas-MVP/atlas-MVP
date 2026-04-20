@@ -26,7 +26,7 @@ const LIVE_ALERTS: LiveAlert[] = [
     confidence: 97,
     sources: ["AP", "Reuters", "Local PD"],
     pulse: true,
-    flyTo: { center: [-93.75, 32.52], zoom: 12 },
+    flyTo: { center: [-93.7502, 32.5252], zoom: 10 },
   },
   {
     id: "iowa-city-2026-04-19",
