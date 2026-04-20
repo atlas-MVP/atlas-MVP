@@ -1296,7 +1296,7 @@ export default function CountryPanel({ countryCode, onClose, onViewFeed, onConfl
           </div>
         </td>
         {hasDisplacedCol && (
-          <td style={{ textAlign: "right", fontSize: 13, fontFamily: "Arial, sans-serif", color: "rgba(255,255,255,0.55)", paddingRight: 16, paddingTop: 4, paddingBottom: 4 }}>
+          <td style={{ textAlign: "right", fontSize: 13, fontFamily: "Arial, sans-serif", color: "rgba(255,255,255,0.88)", paddingRight: 16, paddingTop: 4, paddingBottom: 4 }}>
             {c.displaced ?? ""}
           </td>
         )}
@@ -1306,7 +1306,7 @@ export default function CountryPanel({ countryCode, onClose, onViewFeed, onConfl
           </td>
         )}
         {hasMissingCol && (
-          <td style={{ textAlign: "right", fontSize: 13, fontFamily: "Arial, sans-serif", color: "rgba(255,255,255,0.55)", paddingRight: 16 }}>
+          <td style={{ textAlign: "right", fontSize: 13, fontFamily: "Arial, sans-serif", color: "rgba(255,255,255,0.88)", paddingRight: 16 }}>
             {c.missing ?? ""}
           </td>
         )}
@@ -1453,12 +1453,12 @@ export default function CountryPanel({ countryCode, onClose, onViewFeed, onConfl
               </colgroup>
               <thead>
                 <tr>
-                  <th style={{ textAlign: "left", fontSize: 11, fontFamily: "monospace", color: "rgba(255,255,255,0.35)", fontWeight: "normal", paddingBottom: 4 }}></th>
-                  {hasDisplacedCol && <th style={{ textAlign: "right", fontSize: 11, fontFamily: "monospace", color: "rgba(255,255,255,0.35)", fontWeight: "normal", paddingBottom: 4, paddingRight: 16 }}>Displaced</th>}
-                  {!hasMissingCol && <th style={{ textAlign: "right", fontSize: 11, fontFamily: "monospace", color: "rgba(255,255,255,0.35)", fontWeight: "normal", paddingBottom: 4, paddingRight: 16 }}>Injured</th>}
-                  {hasMissingCol && <th style={{ textAlign: "right", fontSize: 11, fontFamily: "monospace", color: "rgba(255,255,255,0.35)", fontWeight: "normal", paddingBottom: 4, paddingRight: 16 }}>Missing</th>}
-                  <th style={{ textAlign: "right", fontSize: 11, fontFamily: "monospace", color: "rgba(255,255,255,0.35)", fontWeight: "normal", paddingBottom: 4, paddingRight: 16 }}>Killed</th>
-                  {hasCivCol && !hasMissingCol && <th style={{ textAlign: "right", fontSize: 11, fontFamily: "monospace", color: "rgba(255,255,255,0.35)", fontWeight: "normal", paddingBottom: 4 }}>Civ %</th>}
+                  <th style={{ textAlign: "left", fontSize: 11, fontFamily: "monospace", color: "rgba(255,255,255,0.88)", fontWeight: "normal", paddingBottom: 4 }}></th>
+                  {hasDisplacedCol && <th style={{ textAlign: "right", fontSize: 11, fontFamily: "monospace", color: "rgba(255,255,255,0.88)", fontWeight: "normal", paddingBottom: 4, paddingRight: 16 }}>Displaced</th>}
+                  {!hasMissingCol && <th style={{ textAlign: "right", fontSize: 11, fontFamily: "monospace", color: "rgba(255,255,255,0.88)", fontWeight: "normal", paddingBottom: 4, paddingRight: 16 }}>Injured</th>}
+                  {hasMissingCol && <th style={{ textAlign: "right", fontSize: 11, fontFamily: "monospace", color: "rgba(255,255,255,0.88)", fontWeight: "normal", paddingBottom: 4, paddingRight: 16 }}>Missing</th>}
+                  <th style={{ textAlign: "right", fontSize: 11, fontFamily: "monospace", color: "rgba(255,255,255,0.88)", fontWeight: "normal", paddingBottom: 4, paddingRight: 16 }}>Killed</th>
+                  {hasCivCol && !hasMissingCol && <th style={{ textAlign: "right", fontSize: 11, fontFamily: "monospace", color: "rgba(255,255,255,0.88)", fontWeight: "normal", paddingBottom: 4 }}>Civ %</th>}
                 </tr>
               </thead>
               <tbody>
