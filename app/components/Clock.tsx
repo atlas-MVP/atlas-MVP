@@ -82,27 +82,8 @@ export default function Clock({ onYearClick, displayYear, historyDate }: Props) 
     <div style={{
       textAlign: "right",
       pointerEvents: "none",
-      display: "flex",
-      flexDirection: "column",
-      alignItems: "flex-end",
-      gap: 3,
     }}>
-      {/* Date — monospace, right-aligned */}
-      <div style={{
-        color: isHistorical ? "rgba(255,255,255,0.40)" : "rgba(255,255,255,0.22)",
-        fontSize: 12,
-        fontFamily: "monospace",
-        fontWeight: 400,
-        letterSpacing: "0.14em",
-        textTransform: "uppercase" as const,
-        textShadow: "0 0 12px rgba(0,0,0,0.9)",
-        textAlign: "right",
-        width: "100%",
-        transition: "color 0.3s ease",
-      }}>
-        {dateLine}
-      </div>
-      {/* Year */}
+      {/* Year only */}
       <div
         onClick={onYearClick}
         style={{

@@ -510,7 +510,7 @@ export default function Home() {
         const isHistoryDate = !!historyDate && !/2026/.test(historyDate);
         const isLive = mapReady && !historicalYear && !isHistoryDate;
         return (
-      <div style={{ position: "absolute", bottom: 16, right: 28, zIndex: 10, display: "flex", alignItems: "flex-end", gap: 20, pointerEvents: "none" }}>
+      <div style={{ position: "absolute", bottom: 16, right: 28, zIndex: 10, display: "flex", alignItems: "center", gap: 12, pointerEvents: "none" }}>
         <button
           onClick={() => { setHistoricalYear(null); setPreviewYear(null); setLiveReset(v => v + 1); if (!timelineOpen) setTimelineOpen(false); }}
           style={{
@@ -520,7 +520,6 @@ export default function Home() {
             background: isLive ? "rgba(34,197,94,0.18)" : "rgba(255,255,255,0.06)",
             border: `1px solid ${isLive ? "rgba(34,197,94,0.35)" : "rgba(255,255,255,0.14)"}`,
             color:      isLive ? "#22c55e" : "rgba(255,255,255,0.35)",
-            marginBottom: 7,
           }}
         >live</button>
         <Clock
