@@ -47,11 +47,11 @@ export default function SenateVoteVisualization({
   // A gapAngle splits the two halves at the top so there is visible air.
   const generatePositions = () => {
     const positions: Array<{ senator: Senator; x: number; y: number }> = [];
-    const centerX       = 255;
-    const centerY       = 230;
+    const centerX       = 286;
+    const centerY       = 258;
     const rows          = 7;
-    const baseRadius    = 86;
-    const radiusStep    = 24;  // rows closer together
+    const baseRadius    = 65;
+    const radiusStep    = 18;  // rows closer together
     const gapAngle      = 0.22 * Math.PI; // ~40° gap between halves at the top
 
     const ayeVoters = senators.filter(s => s.vote === "Aye");
@@ -121,8 +121,8 @@ export default function SenateVoteVisualization({
     <div
       style={{
         position: "relative",
-        width: 510,
-        height: 290,
+        width: 571,
+        height: 325,
         background: "rgba(4,6,18,0.75)",
         backdropFilter: "blur(20px)",
         borderRadius: 12,
@@ -184,7 +184,7 @@ export default function SenateVoteVisualization({
       </div>
 
       {/* ── Senate dots (SVG) ─────────────────────────────────────────────── */}
-      <svg width="510" height="290" style={{ position: "absolute", top: 0, left: 0 }}>
+      <svg width="571" height="325" style={{ position: "absolute", top: 0, left: 0 }}>
         <defs>
           <radialGradient id="crossoverPulse">
             <stop offset="0%" stopColor="rgba(96,165,250,0.6)">
@@ -203,7 +203,7 @@ export default function SenateVoteVisualization({
         {positions.map(({ senator, x, y }, i) => (
           <circle
             key={i}
-            cx={x} cy={y} r={6}
+            cx={x} cy={y} r={4.5}
             fill={isCrossover(senator) ? "url(#crossoverPulse)" : dotFill(senator)}
             stroke={dotStroke(senator)}
             strokeWidth={1}
