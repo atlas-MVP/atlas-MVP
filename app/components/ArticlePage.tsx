@@ -149,7 +149,7 @@ export default function ArticlePage({
   return (
     <div style={{
       position: "fixed",
-      top: 72,
+      top: 44,
       left: 20,
       right: 20,
       bottom: 20,
@@ -172,22 +172,25 @@ export default function ArticlePage({
           onClick={() => router.push("/")}
           style={{
             position: "absolute",
-            top: 16,
-            left: 16,
+            top: 12,
+            left: 12,
             background: "rgba(255,255,255,0.07)",
             border: "1px solid rgba(255,255,255,0.14)",
             borderRadius: 6,
-            padding: "4px 10px",
+            padding: "6px 8px",
             color: "rgba(255,255,255,0.7)",
-            fontSize: 11,
-            fontFamily: "monospace",
+            fontSize: 16,
             cursor: "pointer",
             zIndex: 10,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            lineHeight: 1,
           }}
           onMouseEnter={e => (e.currentTarget.style.background = "rgba(255,255,255,0.12)")}
           onMouseLeave={e => (e.currentTarget.style.background = "rgba(255,255,255,0.07)")}
         >
-          Back
+          ←
         </button>
 
         <div style={{
