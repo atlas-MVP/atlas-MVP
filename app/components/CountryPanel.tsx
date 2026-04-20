@@ -1436,7 +1436,7 @@ export default function CountryPanel({ countryCode, onClose, onViewFeed, onConfl
           {!timelineExpanded && (<>
           {/* Casualties table */}
           <div style={{ padding: "8px 14px 8px", borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
-            <table style={{ width: "auto", borderCollapse: "collapse" }}>
+            <table style={{ width: "100%", borderCollapse: "collapse" }}>
               <thead>
                 <tr>
                   <th style={{ textAlign: "left", fontSize: 10, fontFamily: "monospace", color: "rgba(255,255,255,0.35)", fontWeight: "normal", paddingBottom: 4 }}></th>
@@ -1597,10 +1597,10 @@ export default function CountryPanel({ countryCode, onClose, onViewFeed, onConfl
                       style={{ cursor: "pointer", padding: "14px 16px 10px", borderBottom: "1px solid rgba(255,255,255,0.05)" }}
                       onClick={(e) => { e.stopPropagation(); enterHistory(); }}
                     >
-                      <div style={{ fontSize: 11, fontFamily: "monospace", fontWeight: 700, color: "rgba(255,255,255,0.75)", letterSpacing: "0.06em", marginBottom: 8, textTransform: "uppercase" }}>
+                      <div style={{ fontSize: 15, fontFamily: "Arial, sans-serif", fontWeight: 700, color: "rgba(255,255,255,0.95)", marginBottom: 8 }}>
                         {(() => { const d = latest.date; if (/^(19|20)\d\d/.test(d)) return d; return d.replace(/,?\s*(19|20)\d\d/, ""); })()}
                       </div>
-                      <p style={{ margin: 0, fontSize: 14, color: "rgba(255,255,255,0.72)", lineHeight: 1.65 }}>
+                      <p style={{ margin: 0, fontSize: 14, color: "rgba(255,255,255,0.90)", lineHeight: 1.65 }}>
                         {latest.text}
                       </p>
                     </div>
