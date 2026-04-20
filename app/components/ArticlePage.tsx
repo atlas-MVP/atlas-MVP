@@ -342,12 +342,6 @@ export default function ArticlePage({
 
       {senateExpanded && (
         <div
-          onMouseLeave={() => {
-            if (!lockedSenator) {
-              setSenateExpanded(false);
-              setHoveredSenator(null);
-            }
-          }}
           onClick={() => {
             setSenateExpanded(false);
             setLockedSenator(null);
@@ -366,9 +360,16 @@ export default function ArticlePage({
           }}
         >
           <div
+            onMouseLeave={() => {
+              if (!lockedSenator) {
+                setSenateExpanded(false);
+                setHoveredSenator(null);
+              }
+            }}
             style={{
               position: "relative",
               transform: "scale(1.5)",
+              padding: "40px",
             }}
           >
             <SenateVoteVisualization
