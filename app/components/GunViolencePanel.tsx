@@ -76,6 +76,7 @@ interface Props {
 export default function GunViolencePanel({ onClose, onFlyTo, highlightId }: Props) {
   const [lockedAlertIdx, setLockedAlertIdx] = useState<number | null>(null);
   const [hoveredAlert, setHoveredAlert] = useState<number | null>(null);
+  const [showAllAlerts, setShowAllAlerts] = useState(false);
 
   return (
     <div
@@ -162,10 +163,24 @@ export default function GunViolencePanel({ onClose, onFlyTo, highlightId }: Prop
 
           {/* ── Live alerts ── */}
           <div style={{ padding: "14px 6px 6px", borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
-            <p style={{ margin: "0 0 6px 12px", fontSize: 11, fontFamily: "monospace", letterSpacing: "0.18em", color: "rgba(255,255,255,0.42)", textTransform: "uppercase", fontWeight: 500 }}>
+            <p
+              onClick={() => LIVE_ALERTS.length > 4 && setShowAllAlerts(v => !v)}
+              style={{
+                margin: "0 0 6px 12px",
+                fontSize: 11,
+                fontFamily: "monospace",
+                letterSpacing: "0.18em",
+                color: "rgba(255,255,255,0.42)",
+                textTransform: "uppercase",
+                fontWeight: 500,
+                cursor: LIVE_ALERTS.length > 4 ? "pointer" : "default",
+              }}
+              onMouseEnter={e => LIVE_ALERTS.length > 4 && (e.currentTarget.style.color = "rgba(255,255,255,0.58)")}
+              onMouseLeave={e => (e.currentTarget.style.color = "rgba(255,255,255,0.42)")}
+            >
               live alerts
             </p>
-            {LIVE_ALERTS.slice(0, 4).map((alert, i, arr) => {
+            {(showAllAlerts ? LIVE_ALERTS : LIVE_ALERTS.slice(0, 4)).map((alert, i, arr) => {
               const isLocked = lockedAlertIdx === i;
               return (
                 <div key={alert.id}>
@@ -188,6 +203,22 @@ export default function GunViolencePanel({ onClose, onFlyTo, highlightId }: Prop
                 </div>
               );
             })}
+            {showAllAlerts && LIVE_ALERTS.length > 4 && (
+              <div style={{ padding: "8px 12px", textAlign: "center" }}>
+                <button
+                  onClick={(e) => { e.stopPropagation(); setShowAllAlerts(false); }}
+                  style={{
+                    fontSize: 10, fontFamily: "monospace", letterSpacing: "0.08em",
+                    color: "rgba(255,255,255,0.35)", background: "none", border: "none",
+                    cursor: "pointer", padding: "2px 0", textTransform: "uppercase",
+                  }}
+                  onMouseEnter={e => (e.currentTarget.style.color = "rgba(255,255,255,0.58)")}
+                  onMouseLeave={e => (e.currentTarget.style.color = "rgba(255,255,255,0.35)")}
+                >
+                  see less
+                </button>
+              </div>
+            )}
           </div>
 
           {/* ── Timeline ── */}

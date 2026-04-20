@@ -999,6 +999,7 @@ export default function CountryPanel({ countryCode, onClose, onViewFeed, onConfl
   const slideContainerRef = useRef<HTMLDivElement>(null);
   const [hoveredAlert,  setHoveredAlert]  = useState<number | null>(null);
   const [lockedAlertIdx, setLockedAlertIdx] = useState<number | null>(null);
+  const [showAllAlerts, setShowAllAlerts] = useState(false);
   const [hoverMidY,     setHoverMidY]     = useState(0);
   const [sourcesOpen,   setSourcesOpen]   = useState(false);
   const leaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -1552,10 +1553,25 @@ export default function CountryPanel({ countryCode, onClose, onViewFeed, onConfl
           {(() => {
             const conflictAlerts = CONFLICT_ALERTS[conflict.id] ?? [];
             if (conflictAlerts.length === 0) return null;
+            const visibleAlerts = showAllAlerts ? conflictAlerts : conflictAlerts.slice(0, 4);
             return (
               <div style={{ padding: "14px 6px 6px", borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
-                <p style={{ margin: "0 0 6px 12px", fontSize: 11, fontFamily: "monospace", letterSpacing: "0.18em", color: "rgba(255,255,255,0.42)", textTransform: "uppercase", fontWeight: 500 }}>live alerts</p>
-                {conflictAlerts.slice(0, 4).map((a, i, arr) => {
+                <p
+                  onClick={() => conflictAlerts.length > 4 && setShowAllAlerts(v => !v)}
+                  style={{
+                    margin: "0 0 6px 12px",
+                    fontSize: 11,
+                    fontFamily: "monospace",
+                    letterSpacing: "0.18em",
+                    color: "rgba(255,255,255,0.42)",
+                    textTransform: "uppercase",
+                    fontWeight: 500,
+                    cursor: conflictAlerts.length > 4 ? "pointer" : "default",
+                  }}
+                  onMouseEnter={e => conflictAlerts.length > 4 && (e.currentTarget.style.color = "rgba(255,255,255,0.58)")}
+                  onMouseLeave={e => (e.currentTarget.style.color = "rgba(255,255,255,0.42)")}
+                >live alerts</p>
+                {visibleAlerts.map((a, i, arr) => {
                   const alertId = `${conflict.id}-alert-${i}`;
                   const isLocked = lockedAlertIdx === i;
                   return (
@@ -1577,6 +1593,22 @@ export default function CountryPanel({ countryCode, onClose, onViewFeed, onConfl
                     </div>
                   );
                 })}
+                {showAllAlerts && conflictAlerts.length > 4 && (
+                  <div style={{ padding: "8px 12px", textAlign: "center" }}>
+                    <button
+                      onClick={(e) => { e.stopPropagation(); setShowAllAlerts(false); }}
+                      style={{
+                        fontSize: 10, fontFamily: "monospace", letterSpacing: "0.08em",
+                        color: "rgba(255,255,255,0.35)", background: "none", border: "none",
+                        cursor: "pointer", padding: "2px 0", textTransform: "uppercase",
+                      }}
+                      onMouseEnter={e => (e.currentTarget.style.color = "rgba(255,255,255,0.58)")}
+                      onMouseLeave={e => (e.currentTarget.style.color = "rgba(255,255,255,0.35)")}
+                    >
+                      see less
+                    </button>
+                  </div>
+                )}
               </div>
             );
           })()}

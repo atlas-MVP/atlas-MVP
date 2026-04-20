@@ -221,6 +221,7 @@ function Reveal({ minStage, stage, children }: { minStage: number; stage: number
 export default function AtlasHQ({ onClose, onNavigate, onHeadlinesToggle, onSourceClick, onReelsTap, onFinanceTap, onViolenceTap, onSenateVoteLocked }: Props) {
   const [showMore, setShowMore] = useState(false);
   const [showAllDisasters, setShowAllDisasters] = useState(false);
+  const [showAllAlerts, setShowAllAlerts] = useState(false);
   const [loadStage, setLoadStage] = useState(0);
   const [senateVoteVisible, setSenateVoteVisible] = useState<'hover' | 'locked' | null>(null);
   const senateAlertRef = useRef<HTMLDivElement>(null);
@@ -444,10 +445,12 @@ export default function AtlasHQ({ onClose, onNavigate, onHeadlinesToggle, onSour
 
           if (section === "alerts") return (
             <React.Fragment key="alerts">
-              <SectionLabel label="live alerts" />
+              <div onClick={editMode ? undefined : () => setShowAllAlerts(v => !v)} style={{ cursor: editMode ? "default" : "pointer" }}>
+                <SectionLabel label="live alerts" />
+              </div>
               <Reveal minStage={3} stage={loadStage}>
                 <div style={{ padding: "0 6px", position: "relative" }}>
-                  {(displayConfig.liveAlerts as FeedItem[]).slice(0, 3).map((item, i) => {
+                  {(displayConfig.liveAlerts as FeedItem[]).slice(0, showAllAlerts ? undefined : 3).map((item, i, arr) => {
                     const isSenateVote = item.text.includes("Senate vote fails");
                     return (
                       <div key={`${item.code}-${item.time}`}
@@ -456,15 +459,35 @@ export default function AtlasHQ({ onClose, onNavigate, onHeadlinesToggle, onSour
                         onMouseLeave={() => { if (!editMode && isSenateVote && senateVoteVisible === 'hover') setSenateVoteVisible(null); }}
                         onClick={() => {
                           if (editMode) return;
-                          if (isSenateVote) { const s = senateVoteVisible === 'locked' ? null : 'locked'; setSenateVoteVisible(s); onSenateVoteLocked?.(s === 'locked'); }
-                          else onNavigate?.(item.code, item.flyTo?.center ?? [0,0] as [number,number], item.flyTo?.zoom ?? 4, item, item.slug);
+                          // All alerts navigate to their widget
+                          if (isSenateVote) {
+                            // Senate vote navigates to Israel/US widget
+                            onNavigate?.("israel-iran", item.flyTo?.center ?? [-77.0, 38.9] as [number,number], item.flyTo?.zoom ?? 11, item, undefined);
+                          } else {
+                            onNavigate?.(item.code, item.flyTo?.center ?? [0,0] as [number,number], item.flyTo?.zoom ?? 4, item, item.slug);
+                          }
                         }}>
                         <LiveAlertRow item={item} onSourceClick={editMode ? undefined : onSourceClick}
-                          onClick={editMode ? undefined : () => !isSenateVote && onNavigate?.(item.code, item.flyTo?.center ?? [0,0] as [number,number], item.flyTo?.zoom ?? 4, item, item.slug)}
-                          bottomBorder={i < 2} showConfidenceInline={false} expandOnHover={false} />
+                          bottomBorder={i < arr.length - 1} showConfidenceInline={false} expandOnHover={true} />
                       </div>
                     );
                   })}
+                  {showAllAlerts && (displayConfig.liveAlerts as FeedItem[]).length > 3 && (
+                    <div style={{ padding: "8px 12px", textAlign: "center" }}>
+                      <button
+                        onClick={(e) => { e.stopPropagation(); setShowAllAlerts(false); }}
+                        style={{
+                          fontSize: 10, fontFamily: "monospace", letterSpacing: "0.08em",
+                          color: "rgba(255,255,255,0.35)", background: "none", border: "none",
+                          cursor: "pointer", padding: "2px 0", textTransform: "uppercase",
+                        }}
+                        onMouseEnter={e => (e.currentTarget.style.color = "rgba(255,255,255,0.58)")}
+                        onMouseLeave={e => (e.currentTarget.style.color = "rgba(255,255,255,0.35)")}
+                      >
+                        see less
+                      </button>
+                    </div>
+                  )}
                 </div>
               </Reveal>
             </React.Fragment>
