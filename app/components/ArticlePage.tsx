@@ -34,6 +34,7 @@ export default function ArticlePage({
 }: ArticlePageProps) {
   const router = useRouter();
   const [hoveredSenator, setHoveredSenator] = useState<Senator | null>(null);
+  const [senateExpanded, setSenateExpanded] = useState(false);
 
   const senators: Senator[] = [
     { name: "Bernie Sanders", party: "I" as const, state: "VT", vote: "Aye" as const },
@@ -184,7 +185,11 @@ export default function ArticlePage({
               justifyContent: "center",
               marginTop: 16,
             }}>
-              <div onMouseLeave={() => setHoveredSenator(null)}>
+              <div
+                onMouseLeave={() => setHoveredSenator(null)}
+                onClick={() => setSenateExpanded(true)}
+                style={{ cursor: "pointer" }}
+              >
                 <SenateVoteVisualization
                   title="SENATE"
                   senators={senators}
@@ -196,7 +201,7 @@ export default function ArticlePage({
         </div>
       </div>
 
-      {hoveredSenator && hoveredSenator.name === SCHUMER_DATA.name && (
+      {hoveredSenator && hoveredSenator.name === SCHUMER_DATA.name && !senateExpanded && (
         <div style={{
           position: "fixed",
           right: 30,
@@ -251,6 +256,33 @@ export default function ArticlePage({
               <div>In office: {SCHUMER_DATA.yearsInOffice} years</div>
               <div>Up for re-election: {SCHUMER_DATA.nextElection}</div>
             </div>
+          </div>
+        </div>
+      )}
+
+      {senateExpanded && (
+        <div
+          onClick={() => setSenateExpanded(false)}
+          style={{
+            position: "fixed",
+            inset: "60px",
+            zIndex: 200,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            pointerEvents: "auto",
+          }}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              transform: "scale(1.4)",
+            }}
+          >
+            <SenateVoteVisualization
+              title="SENATE"
+              senators={senators}
+            />
           </div>
         </div>
       )}
