@@ -1,7 +1,7 @@
 "use client";
 
 import { useParams } from "next/navigation";
-import ArticlePage from "../components/ArticlePage";
+import ArticlePage from "../../components/ArticlePage";
 
 const SENATE_VOTES = {
   "israel-arms-2026": {
