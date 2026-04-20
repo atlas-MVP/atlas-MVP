@@ -23,7 +23,7 @@ import type { MapEvent } from "./lib/mapEvents";
 // ATLAS appears instantly; clock fades in shortly after as one unit
 function AtlasWordmark() {
   return (
-    <span className="font-light tracking-[0.3em] text-sm" style={{ color: "rgba(255,255,255,0.85)" }}>atlas</span>
+    <span className="font-light tracking-[0.3em] text-sm" style={{ color: "rgba(255,255,255,0.85)", fontFamily: "var(--font-exo), sans-serif" }}>atlas</span>
   );
 }
 
