@@ -503,12 +503,16 @@ export default function AtlasHQ({ onClose, onNavigate, onHeadlinesToggle, onSour
                         }}
                       >
                         {editMode ? (
-                          <div style={{ padding: "10px 10px 12px", borderBottom: i < arr.length - 1 ? "1px solid rgba(255,255,255,0.05)" : "none" }}>
+                          <div
+                            style={{ padding: "10px 12px 14px", borderBottom: i < arr.length - 1 ? "1px solid rgba(255,255,255,0.05)" : "none" }}
+                            onClick={e => e.stopPropagation()}
+                          >
+                            <div style={{ fontSize: 9, fontFamily: "monospace", letterSpacing: "0.14em", color: "rgba(255,255,255,0.28)", textTransform: "uppercase", marginBottom: 6 }}>click to edit</div>
                             <EText
                               value={item.text}
                               onChange={v => patchDraft(d => ({ ...d, liveAlerts: (d.liveAlerts as RadarAlertItem[]).map((x, j) => j === i ? { ...x, text: v } : x) }))}
                               as="div"
-                              style={{ fontSize: 15, lineHeight: 1.6, color: "rgba(255,255,255,0.88)", marginBottom: 6 }}
+                              style={{ fontSize: 15, lineHeight: 1.6, color: "rgba(255,255,255,0.88)", marginBottom: 10 }}
                             />
                             <EText
                               value={item.description}

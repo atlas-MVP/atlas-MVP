@@ -58,19 +58,28 @@ export function EText({ value, onChange, style, as: Tag = "span" }: ETextProps) 
     ...(fontSize ? { fontSize } : {}),
     ...(color    ? { color }    : {}),
     outline:     "none",
-    borderBottom: focused
-      ? "1px solid rgba(100,160,255,0.8)"
-      : "1px dashed rgba(255,255,255,0.22)",
+    border: focused
+      ? "1px solid rgba(100,160,255,0.7)"
+      : "1px dashed rgba(255,255,255,0.30)",
+    borderRadius: 4,
+    padding: "2px 4px",
+    margin: "-2px -4px",
+    background: focused ? "rgba(100,160,255,0.08)" : "transparent",
     cursor: "text",
     minWidth: 20,
     display: Tag === "span" ? "inline-block" : "block",
+    transition: "background 0.12s, border-color 0.12s",
   };
 
   const handleFocus = () => {
     setFocused(true);
     if (ref.current) {
       const r = ref.current.getBoundingClientRect();
-      setTbPos({ top: r.top - 42, left: Math.max(8, r.left) });
+      // Clamp toolbar position so it stays inside the viewport
+      setTbPos({
+        top:  Math.max(8, r.top - 44),
+        left: Math.max(8, Math.min(r.left, window.innerWidth - 320)),
+      });
     }
   };
 
