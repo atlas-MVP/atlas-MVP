@@ -1559,37 +1559,21 @@ export default function CountryPanel({ countryCode, onClose, onViewFeed, onConfl
                   const alertId = `${conflict.id}-alert-${i}`;
                   const isLocked = lockedAlertIdx === i;
                   return (
-                    <div key={i} style={{ display: "flex", alignItems: "flex-start", gap: 4 }}>
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <LiveAlertRow
-                          item={a}
-                          bottomBorder={i < arr.length - 1}
-                          showConfidenceInline={false}
-                          expandOnHover={true}
-                          defaultExpanded={!!initialAlertText && a.text === initialAlertText}
-                          isActive={isLocked || hoveredAlert === i}
-                          onClick={() => setLockedAlertIdx(prev => prev === i ? null : i)}
-                          onHoverChange={(active, anchorY) => {
-                            cancelLeave();
-                            if (active) { setHoveredAlert(i); setHoverMidY(anchorY); }
-                            else scheduleLeave();
-                          }}
-                        />
-                      </div>
-                      {/* × close button only shown inline when locked. The
-                          upload chip was moved out of the alert row into the
-                          floating confidence panel to the right, matching the
-                          hover-on-the-outside pattern of the confidence UI. */}
-                      {isLocked && (
-                        <div style={{ flexShrink: 0, paddingTop: 6 }}>
-                          <button
-                            onClick={() => setLockedAlertIdx(null)}
-                            style={{ color: "rgba(255,255,255,0.4)", fontSize: 13, background: "none", border: "none", cursor: "pointer", lineHeight: 1, padding: "4px 6px" }}
-                            onMouseEnter={e => (e.currentTarget.style.color = "rgba(255,255,255,0.85)")}
-                            onMouseLeave={e => (e.currentTarget.style.color = "rgba(255,255,255,0.4)")}
-                          >×</button>
-                        </div>
-                      )}
+                    <div key={i}>
+                      <LiveAlertRow
+                        item={a}
+                        bottomBorder={i < arr.length - 1}
+                        showConfidenceInline={false}
+                        expandOnHover={true}
+                        defaultExpanded={!!initialAlertText && a.text === initialAlertText}
+                        isActive={isLocked || hoveredAlert === i}
+                        onClick={() => setLockedAlertIdx(prev => prev === i ? null : i)}
+                        onHoverChange={(active, anchorY) => {
+                          cancelLeave();
+                          if (active) { setHoveredAlert(i); setHoverMidY(anchorY); }
+                          else scheduleLeave();
+                        }}
+                      />
                     </div>
                   );
                 })}

@@ -168,43 +168,23 @@ export default function GunViolencePanel({ onClose, onFlyTo, highlightId }: Prop
             {LIVE_ALERTS.slice(0, 4).map((alert, i, arr) => {
               const isLocked = lockedAlertIdx === i;
               return (
-                <div key={alert.id} style={{ display: "flex", alignItems: "flex-start", gap: 4 }}>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <LiveAlertRow
-                      item={alert}
-                      bottomBorder={i < arr.length - 1}
-                      showConfidenceInline={false}
-                      expandOnHover={true}
-                      defaultExpanded={highlightId === alert.id}
-                      isActive={isLocked || hoveredAlert === i}
-                      onClick={() => {
-                        setLockedAlertIdx(prev => prev === i ? null : i);
-                        onFlyTo?.(alert.flyTo.center, alert.flyTo.zoom);
-                      }}
-                      onHoverChange={(active) => {
-                        if (active) setHoveredAlert(i);
-                        else setHoveredAlert(null);
-                      }}
-                    />
-                  </div>
-                  {isLocked && (
-                    <div style={{ flexShrink: 0, paddingTop: 6 }}>
-                      <button
-                        onClick={() => setLockedAlertIdx(null)}
-                        style={{
-                          color: "rgba(255,255,255,0.4)",
-                          fontSize: 13,
-                          background: "none",
-                          border: "none",
-                          cursor: "pointer",
-                          lineHeight: 1,
-                          padding: "4px 6px",
-                        }}
-                        onMouseEnter={e => (e.currentTarget.style.color = "rgba(255,255,255,0.85)")}
-                        onMouseLeave={e => (e.currentTarget.style.color = "rgba(255,255,255,0.4)")}
-                      >×</button>
-                    </div>
-                  )}
+                <div key={alert.id}>
+                  <LiveAlertRow
+                    item={alert}
+                    bottomBorder={i < arr.length - 1}
+                    showConfidenceInline={false}
+                    expandOnHover={true}
+                    defaultExpanded={highlightId === alert.id}
+                    isActive={isLocked || hoveredAlert === i}
+                    onClick={() => {
+                      setLockedAlertIdx(prev => prev === i ? null : i);
+                      onFlyTo?.(alert.flyTo.center, alert.flyTo.zoom);
+                    }}
+                    onHoverChange={(active) => {
+                      if (active) setHoveredAlert(i);
+                      else setHoveredAlert(null);
+                    }}
+                  />
                 </div>
               );
             })}
