@@ -212,7 +212,7 @@ const CONFLICTS: Record<string, Conflict> = {
   "israel-iran": {
     id: "israel-iran",
     title: "Israel / US in the Middle East",
-    date: "March 2026 – Present",
+    date: "February 2026 – Present",
     feedKey: "IRN",
     sides: {
       blue: ["Israel", "USA", "UAE", "Kuwait", "Qatar", "Jordan", "UK", "France"],
@@ -270,7 +270,7 @@ const CONFLICTS: Record<string, Conflict> = {
     },
     timeline: [
       {
-        date: "March 2026 — Present",
+        date: "February 2026 — Present",
         era: "war",
         text: "The war becomes the largest Middle East military engagement since 2003. Iran, now led by Mojtaba Khamenei, continues to resist. Iran establishes a toll system on the Strait of Hormuz — $2–4M per tanker in Chinese yuan or stablecoin. Oil tops $110/barrel. Hezbollah re-enters the conflict. The 82nd Airborne is put on alert. Peace talks underway in Islamabad. No ceasefire reached.",
         mapView: { center: [47.0, 30.5], zoom: 3.8 },
@@ -1388,7 +1388,7 @@ export default function CountryPanel({ countryCode, onClose, onViewFeed, onConfl
       }}>
 
         {/* ── STICKY HEADER ── */}
-        <div style={{ flexShrink: 0, padding: "10px 18px 8px" }}>
+        <div style={{ flexShrink: 0, padding: "6px 18px 6px" }}>
           <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 8 }}>
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ display: "flex", alignItems: "center", gap: 7, flexWrap: "wrap" }}>
@@ -1548,6 +1548,41 @@ export default function CountryPanel({ countryCode, onClose, onViewFeed, onConfl
             )}
           </div>
 
+
+          {/* ── Article cards ── */}
+          <div style={{ padding: "8px 14px 10px", borderBottom: "1px solid rgba(255,255,255,0.05)", display: "flex", gap: 8 }}>
+            {([
+              { headline: "Who's funded and gained from the Middle East wars?", source: "Atlas Analysis" },
+              { headline: "The government's use of AI in war.", source: "Atlas Analysis" },
+            ] as const).map((art, i) => (
+              <div
+                key={i}
+                style={{
+                  flex: 1, height: 90, borderRadius: 8,
+                  border: "1px solid rgba(255,255,255,0.08)",
+                  background: "rgba(255,255,255,0.02)",
+                  padding: "10px 11px",
+                  display: "flex", flexDirection: "column", justifyContent: "space-between",
+                  cursor: "pointer", transition: "background 0.12s",
+                }}
+                onMouseEnter={e => (e.currentTarget.style.background = "rgba(255,255,255,0.05)")}
+                onMouseLeave={e => (e.currentTarget.style.background = "rgba(255,255,255,0.02)")}
+              >
+                <div style={{
+                  fontSize: 11, lineHeight: 1.42, color: "rgba(255,255,255,0.78)",
+                  display: "-webkit-box", WebkitLineClamp: 3, WebkitBoxOrient: "vertical", overflow: "hidden",
+                }}>
+                  {art.headline}
+                </div>
+                <div style={{
+                  fontSize: 8, fontFamily: "monospace", letterSpacing: "0.12em",
+                  color: "rgba(255,255,255,0.28)", textTransform: "uppercase",
+                }}>
+                  Atlas Analysis
+                </div>
+              </div>
+            ))}
+          </div>
 
           {/* Live alerts */}
           {(() => {
