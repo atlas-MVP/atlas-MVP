@@ -149,24 +149,23 @@ export default function ArticlePage({
   return (
     <div style={{
       position: "fixed",
-      inset: "10px",
-      zIndex: 50,
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-      pointerEvents: "none",
+      top: 72,
+      left: 20,
+      right: 20,
+      bottom: 20,
+      zIndex: 20,
+      pointerEvents: "auto",
     }}>
       <div style={{
         width: "100%",
         height: "100%",
-        background: "rgba(4,6,18,0.85)",
+        background: "rgba(4,6,18,0.62)",
         backdropFilter: "blur(40px)",
         border: "1px solid rgba(255,255,255,0.06)",
         borderRadius: 16,
         overflow: "hidden",
         display: "flex",
         flexDirection: "column",
-        pointerEvents: "auto",
         boxShadow: "0 24px 80px rgba(0,0,0,0.38)",
       }}>
         <button
