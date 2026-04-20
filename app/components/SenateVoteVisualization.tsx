@@ -53,7 +53,7 @@ export default function SenateVoteVisualization({
   // A gapAngle splits the two halves at the top so there is visible air.
   const generatePositions = () => {
     const positions: Array<{ senator: Senator; x: number; y: number }> = [];
-    const centerX       = 286;
+    const centerX       = 325;
     const centerY       = 258;
     const rows          = 7;
     const baseRadius    = 91;   // 40% more space
@@ -154,7 +154,7 @@ export default function SenateVoteVisualization({
     <div
       style={{
         position: "relative",
-        width: 571,
+        width: 650,
         height: 325,
         background: "rgba(4,6,18,0.75)",
         backdropFilter: "blur(20px)",
@@ -177,7 +177,7 @@ export default function SenateVoteVisualization({
       <div style={{
         position: "absolute", left: 16, bottom: 58,
         fontSize: 12, fontFamily: "monospace", letterSpacing: "0.1em",
-        color: "rgba(255,255,255,0.25)",
+        color: "rgba(100,200,100,0.7)",
       }}>
         yes
       </div>
@@ -186,7 +186,7 @@ export default function SenateVoteVisualization({
       <div style={{
         position: "absolute", right: 16, bottom: 58,
         fontSize: 12, fontFamily: "monospace", letterSpacing: "0.1em",
-        color: "rgba(255,255,255,0.25)",
+        color: "rgba(239,68,68,0.7)",
       }}>
         no
       </div>
@@ -217,7 +217,7 @@ export default function SenateVoteVisualization({
       </div>
 
       {/* ── Senate dots (SVG) ─────────────────────────────────────────────── */}
-      <svg width="571" height="325" style={{ position: "absolute", top: 0, left: 0 }}>
+      <svg width="650" height="325" style={{ position: "absolute", top: 0, left: 0 }}>
         <defs>
           <radialGradient id="crossoverPulse">
             <stop offset="0%" stopColor="rgba(239,68,68,0.6)">
