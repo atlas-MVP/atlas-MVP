@@ -50,8 +50,8 @@ export default function SenateVoteVisualization({
     const centerX       = 255;
     const centerY       = 230;
     const rows          = 7;
-    const baseRadius    = 58;
-    const radiusStep    = 16;  // rows closer together
+    const baseRadius    = 86;
+    const radiusStep    = 24;  // rows closer together
     const gapAngle      = 0.22 * Math.PI; // ~40° gap between halves at the top
 
     const ayeVoters = senators.filter(s => s.vote === "Aye");
@@ -203,7 +203,7 @@ export default function SenateVoteVisualization({
         {positions.map(({ senator, x, y }, i) => (
           <circle
             key={i}
-            cx={x} cy={y} r={4}
+            cx={x} cy={y} r={6}
             fill={isCrossover(senator) ? "url(#crossoverPulse)" : dotFill(senator)}
             stroke={dotStroke(senator)}
             strokeWidth={1}

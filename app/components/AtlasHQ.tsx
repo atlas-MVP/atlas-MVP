@@ -528,7 +528,7 @@ export default function AtlasHQ({ onClose, onNavigate, onHeadlinesToggle, onSour
                           if (item.slug === "gun-violence" && item.incidentId) {
                             onViolenceTap?.(item.incidentId, item.flyTo?.center ?? [0,0] as [number,number], item.flyTo?.zoom ?? 10);
                           }
-                          // Senate vote → lock/unlock the graphic
+                          // Senate graphic → lock/unlock
                           else if (isSenateVote) {
                             cancelSenateLeave();
                             setSenateVoteVisible(v => {
@@ -708,7 +708,7 @@ export default function AtlasHQ({ onClose, onNavigate, onHeadlinesToggle, onSour
       />
     )}
 
-    {/* Senate vote visualization — appears to the right on hover/click */}
+    {/* Senate graphic — appears to the right on hover/click */}
     {senateVoteVisible && senateAlertRef.current && senateAlertY !== null && (() => {
       const vizHeight = 290;
       const topRaw = senateAlertY - vizHeight / 2;
