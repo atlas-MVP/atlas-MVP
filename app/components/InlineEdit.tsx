@@ -1,6 +1,6 @@
 "use client";
 import React, {
-  createContext, useContext, useRef, useEffect, useLayoutEffect, useState, useCallback,
+  createContext, useContext, useRef, useLayoutEffect, useState,
 } from "react";
 import { createPortal } from "react-dom";
 
@@ -8,8 +8,7 @@ import { createPortal } from "react-dom";
 export const EditModeCtx = createContext(false);
 export const useEditMode  = () => useContext(EditModeCtx);
 
-// ── EText ─────────────────────────────────────────────────────────────────────
-const FONT_SIZES = [9, 10, 11, 12, 13, 14, 16, 18, 20, 24];
+// ── Shared toolbar constants ───────────────────────────────────────────────────
 const TEXT_COLORS = [
   { value: "rgba(255,255,255,0.92)" },
   { value: "rgba(255,255,255,0.55)" },
@@ -20,6 +19,56 @@ const TEXT_COLORS = [
   { value: "#4ade80" },
 ];
 
+const FONT_FAMILIES = [
+  { label: "Mono",  value: "monospace"  },
+  { label: "Sans",  value: "sans-serif" },
+  { label: "Serif", value: "serif"      },
+];
+
+const miniBtn: React.CSSProperties = {
+  background: "rgba(255,255,255,0.07)",
+  border: "1px solid rgba(255,255,255,0.14)",
+  color: "rgba(255,255,255,0.85)",
+  borderRadius: 3,
+  padding: "0 5px",
+  cursor: "pointer",
+  fontSize: 11,
+  lineHeight: "16px",
+  height: 18,
+  flexShrink: 0,
+};
+
+// ── Style wrapper helpers ──────────────────────────────────────────────────────
+// Styles (font-size, font-family, color) are encoded as a <span data-s="...">
+// wrapper around the HTML content. This keeps them self-contained in the value
+// string so they persist across saves without changing the data model.
+
+type StyleMeta = { fontSize?: number; fontFamily?: string; color?: string };
+
+function parseWrapper(v: string): { meta: StyleMeta; inner: string } {
+  if (typeof document === "undefined") return { meta: {}, inner: v };
+  const div = document.createElement("div");
+  div.innerHTML = v;
+  const first = div.firstElementChild;
+  if (first instanceof HTMLElement && first.tagName === "SPAN" && first.dataset.s) {
+    try {
+      const meta = JSON.parse(decodeURIComponent(first.dataset.s)) as StyleMeta;
+      return { meta, inner: first.innerHTML };
+    } catch {}
+  }
+  return { meta: {}, inner: v };
+}
+
+function buildWrapper(inner: string, meta: StyleMeta): string {
+  const parts: string[] = [];
+  if (meta.fontSize)   parts.push(`font-size:${meta.fontSize}px`);
+  if (meta.fontFamily) parts.push(`font-family:${meta.fontFamily}`);
+  if (meta.color)      parts.push(`color:${meta.color}`);
+  if (!parts.length)   return inner;
+  return `<span data-s="${encodeURIComponent(JSON.stringify(meta))}" style="${parts.join(";")}">${inner}</span>`;
+}
+
+// ── EText ─────────────────────────────────────────────────────────────────────
 interface ETextProps {
   value: string;
   onChange: (v: string) => void;
@@ -28,35 +77,47 @@ interface ETextProps {
 }
 
 export function EText({ value, onChange, style, as: Tag = "span" }: ETextProps) {
-  const editMode   = useEditMode();
-  const ref        = useRef<HTMLElement>(null);
-  const [focused,  setFocused]  = useState(false);
-  const [fontSize, setFontSize] = useState<number | null>(null);
-  const [color,    setColor]    = useState<string | null>(null);
-  const [tbPos,    setTbPos]    = useState<{ top: number; left: number } | null>(null);
+  const editMode    = useEditMode();
+  const ref         = useRef<HTMLElement>(null);
+  const toolbarRef  = useRef<HTMLDivElement>(null);
+  const [focused,    setFocused]    = useState(false);
+  const [fontSize,   setFontSize]   = useState<number | null>(null);
+  const [fontFamily, setFontFamily] = useState<string | null>(null);
+  const [color,      setColor]      = useState<string | null>(null);
+  const [tbPos,      setTbPos]      = useState<{ top: number; left: number } | null>(null);
 
-  // Sync inner HTML from parent. useLayoutEffect avoids blank flash when edit mode turns on.
+  const baseFontSize   = typeof style?.fontSize   === "number" ? style.fontSize   : 13;
+  const baseFontFamily = typeof style?.fontFamily  === "string" ? style.fontFamily : "monospace";
+
+  // Sync innerHTML from parent, stripping the style wrapper so computedStyle governs.
   useLayoutEffect(() => {
     if (ref.current && !focused) {
-      ref.current.innerHTML = value;
+      const { meta, inner } = parseWrapper(value);
+      ref.current.innerHTML = inner;
+      setFontSize(meta.fontSize   ?? null);
+      setFontFamily(meta.fontFamily ?? null);
+      setColor(meta.color         ?? null);
     }
   }, [value, focused, editMode]);
 
-  // Read mode — render HTML so any saved bold/italic/underline is visible
+  // Read mode — render the full HTML including any style wrapper span.
   if (!editMode) {
     return <Tag style={style} dangerouslySetInnerHTML={{ __html: value }} />;
   }
 
-  // Apply execCommand so the formatting hits the current text selection
   const fmt = (cmd: string) => {
     ref.current?.focus();
     document.execCommand(cmd, false, undefined);
   };
 
+  const effectiveSize   = fontSize   ?? baseFontSize;
+  const effectiveFamily = fontFamily ?? baseFontFamily;
+
   const computedStyle: React.CSSProperties = {
     ...style,
-    ...(fontSize ? { fontSize } : {}),
-    ...(color    ? { color }    : {}),
+    fontSize:   effectiveSize,
+    fontFamily: effectiveFamily,
+    ...(color ? { color } : {}),
     outline:     "none",
     border: focused
       ? "1px solid rgba(100,160,255,0.7)"
@@ -75,27 +136,39 @@ export function EText({ value, onChange, style, as: Tag = "span" }: ETextProps) 
     setFocused(true);
     if (ref.current) {
       const r = ref.current.getBoundingClientRect();
-      // Clamp toolbar position so it stays inside the viewport
       setTbPos({
-        top:  Math.max(8, r.top - 44),
-        left: Math.max(8, Math.min(r.left, window.innerWidth - 320)),
+        top:  Math.max(8, r.top - 52),
+        left: Math.max(8, Math.min(r.left, window.innerWidth - 440)),
       });
     }
   };
 
   const handleBlur = (e: React.FocusEvent<HTMLElement>) => {
+    // If focus moved into the toolbar, keep the editing session alive.
+    if (toolbarRef.current?.contains(e.relatedTarget as Node)) return;
     setFocused(false);
     setTbPos(null);
-    const html = e.currentTarget.innerHTML ?? "";
-    if (html !== value) onChange(html);
+
+    let html = (e.currentTarget.innerHTML ?? "").replace(/&nbsp;/g, " ").trimEnd();
+
+    // Build style metadata for non-default overrides.
+    const meta: StyleMeta = {};
+    if (fontSize   !== null && fontSize   !== baseFontSize)   meta.fontSize   = fontSize;
+    if (fontFamily !== null && fontFamily !== baseFontFamily)  meta.fontFamily = fontFamily;
+    if (color      !== null)                                   meta.color      = color;
+
+    const final = buildWrapper(html, meta);
+    if (final !== value) onChange(final);
   };
 
-  const DIVIDER = <div style={{ width: 1, height: 12, background: "rgba(255,255,255,0.15)", flexShrink: 0 }} />;
+  const DIVIDER = (
+    <div style={{ width: 1, height: 12, background: "rgba(255,255,255,0.15)", flexShrink: 0 }} />
+  );
 
   const toolbar = focused && tbPos && typeof document !== "undefined"
     ? createPortal(
         <div
-          onMouseDown={e => e.preventDefault()}
+          ref={toolbarRef}
           style={{
             position: "fixed",
             top: tbPos.top,
@@ -112,22 +185,42 @@ export function EText({ value, onChange, style, as: Tag = "span" }: ETextProps) 
             whiteSpace: "nowrap",
           }}
         >
-          {/* Font size */}
-          <select
-            value={fontSize ?? (typeof style?.fontSize === "number" ? style.fontSize : 13)}
-            onChange={e => setFontSize(Number(e.target.value))}
-            style={{
-              background: "transparent", border: "none",
-              color: "rgba(255,255,255,0.75)", fontFamily: "monospace",
-              fontSize: 10, cursor: "pointer",
-            }}
-          >
-            {FONT_SIZES.map(s => (
-              <option key={s} value={s} style={{ background: "#0a0c18" }}>{s}px</option>
-            ))}
-          </select>
+          {/* ── Font size: − N + ──────────────────────────────────────────── */}
+          <button
+            onMouseDown={e => { e.preventDefault(); setFontSize(s => Math.max(9, (s ?? baseFontSize) - 1)); }}
+            style={miniBtn}
+          >−</button>
+          <span style={{
+            color: "rgba(255,255,255,0.75)", fontFamily: "monospace", fontSize: 10,
+            minWidth: 24, textAlign: "center", flexShrink: 0,
+          }}>
+            {effectiveSize}
+          </span>
+          <button
+            onMouseDown={e => { e.preventDefault(); setFontSize(s => Math.min(36, (s ?? baseFontSize) + 1)); }}
+            style={miniBtn}
+          >+</button>
+
           {DIVIDER}
-          {/* Bold / Italic / Underline */}
+
+          {/* ── Font family pills ─────────────────────────────────────────── */}
+          {FONT_FAMILIES.map(ff => (
+            <button
+              key={ff.value}
+              onMouseDown={e => { e.preventDefault(); setFontFamily(ff.value); }}
+              style={{
+                ...miniBtn,
+                fontFamily: ff.value,
+                background: effectiveFamily === ff.value ? "rgba(100,160,255,0.22)" : "rgba(255,255,255,0.07)",
+                border:     effectiveFamily === ff.value ? "1px solid rgba(100,160,255,0.55)" : "1px solid rgba(255,255,255,0.14)",
+                color:      effectiveFamily === ff.value ? "rgba(160,200,255,0.95)" : "rgba(255,255,255,0.75)",
+              }}
+            >{ff.label}</button>
+          ))}
+
+          {DIVIDER}
+
+          {/* ── Bold / Italic / Underline ─────────────────────────────────── */}
           {([
             { label: "B", cmd: "bold",      s: { fontWeight: 700 as const } },
             { label: "I", cmd: "italic",    s: { fontStyle: "italic" as const } },
@@ -136,23 +229,13 @@ export function EText({ value, onChange, style, as: Tag = "span" }: ETextProps) 
             <button
               key={cmd}
               onMouseDown={e => { e.preventDefault(); fmt(cmd); }}
-              style={{
-                ...s,
-                background: "rgba(255,255,255,0.07)",
-                border: "1px solid rgba(255,255,255,0.14)",
-                color: "rgba(255,255,255,0.85)",
-                borderRadius: 3,
-                padding: "0 5px",
-                cursor: "pointer",
-                fontSize: 11,
-                lineHeight: "16px",
-                height: 18,
-                flexShrink: 0,
-              }}
+              style={{ ...s, ...miniBtn }}
             >{label}</button>
           ))}
+
           {DIVIDER}
-          {/* Color swatches */}
+
+          {/* ── Color swatches ────────────────────────────────────────────── */}
           {TEXT_COLORS.map(c => (
             <button
               key={c.value}
@@ -179,7 +262,6 @@ export function EText({ value, onChange, style, as: Tag = "span" }: ETextProps) 
         style: computedStyle,
         onFocus: handleFocus,
         onBlur: handleBlur,
-        // Allow Enter for block elements (div/p); prevent for inline (span)
         onKeyDown: (e: React.KeyboardEvent) => {
           if (e.key === "Enter" && Tag === "span") e.preventDefault();
         },
@@ -203,7 +285,7 @@ export function EImg({ src, alt, style, onUploaded }: EImgProps) {
   const [hovering,  setHovering]  = useState(false);
   const [dragging,  setDragging]  = useState(false);
 
-  const upload = useCallback(async (file: File) => {
+  const upload = async (file: File) => {
     setUploading(true);
     try {
       const form = new FormData();
@@ -214,7 +296,7 @@ export function EImg({ src, alt, style, onUploaded }: EImgProps) {
     } finally {
       setUploading(false);
     }
-  }, [onUploaded]);
+  };
 
   const imgEl = (
     <img
@@ -252,9 +334,7 @@ export function EImg({ src, alt, style, onUploaded }: EImgProps) {
           onClick={() => !uploading && inputRef.current?.click()}
           style={{
             position: "absolute", inset: 0,
-            background: dragging
-              ? "rgba(60,130,255,0.40)"
-              : "rgba(0,0,0,0.48)",
+            background: dragging ? "rgba(60,130,255,0.40)" : "rgba(0,0,0,0.48)",
             display: "flex", alignItems: "center", justifyContent: "center",
             cursor: uploading ? "wait" : "pointer",
             transition: "background 0.15s",
