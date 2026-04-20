@@ -228,9 +228,10 @@ export default function AtlasHQ({ onClose, onNavigate, onHeadlinesToggle, onSour
   const [overSection, setOverSection] = useState<number | null>(null);
   const saveTimerRef        = useRef<ReturnType<typeof setTimeout> | null>(null);
   const senateLeaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  // Captured once when hover starts (before the alert expands), so the graphic
-  // doesn't shift as the row grows. Reset when the graphic is dismissed.
-  const senateAlertYRef     = useRef<number | null>(null);
+  // Measured AFTER the alert row finishes expanding (~350ms), so the center is
+  // always the fully-expanded row center regardless of hover direction.
+  const [senateAlertY, setSenateAlertY] = useState<number | null>(null);
+  const senateYCaptureRef   = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Senate arms sale vote data: 40-59 (40 Aye, 59 No)
   const senatorsVoteData = [
@@ -339,12 +340,13 @@ export default function AtlasHQ({ onClose, onNavigate, onHeadlinesToggle, onSour
 
   const cancelSenateLeave = () => {
     if (senateLeaveTimerRef.current) { clearTimeout(senateLeaveTimerRef.current); senateLeaveTimerRef.current = null; }
+    if (senateYCaptureRef.current)   { clearTimeout(senateYCaptureRef.current);   senateYCaptureRef.current = null; }
   };
   const scheduleSenateLeave = () => {
     if (senateVoteVisible === 'locked') return;
     cancelSenateLeave();
     senateLeaveTimerRef.current = setTimeout(() => {
-      senateAlertYRef.current = null;
+      setSenateAlertY(null);
       setSenateVoteVisible(null);
     }, 250);
   };
@@ -503,12 +505,19 @@ export default function AtlasHQ({ onClose, onNavigate, onHeadlinesToggle, onSour
                           if (!editMode && isSenateVote) {
                             cancelSenateLeave();
                             if (senateVoteVisible !== 'locked') {
-                              // Capture Y before the row expands — this is the stable anchor point
-                              if (senateVoteVisible === null && senateAlertRef.current) {
-                                const r = senateAlertRef.current.getBoundingClientRect();
-                                senateAlertYRef.current = r.top + r.height / 2;
-                              }
                               setSenateVoteVisible('hover');
+                              // Schedule Y capture AFTER the row finishes expanding (~350ms).
+                              // This ensures the center is always the expanded row center
+                              // regardless of which direction the mouse approached from.
+                              if (senateAlertY === null) {
+                                senateYCaptureRef.current = setTimeout(() => {
+                                  senateYCaptureRef.current = null;
+                                  if (senateAlertRef.current) {
+                                    const r = senateAlertRef.current.getBoundingClientRect();
+                                    setSenateAlertY(r.top + r.height / 2);
+                                  }
+                                }, 350);
+                              }
                             }
                           }
                         }}
@@ -523,7 +532,7 @@ export default function AtlasHQ({ onClose, onNavigate, onHeadlinesToggle, onSour
                           else if (isSenateVote) {
                             cancelSenateLeave();
                             setSenateVoteVisible(v => {
-                              if (v === 'locked') { senateAlertYRef.current = null; return null; }
+                              if (v === 'locked') { setSenateAlertY(null); return null; }
                               return 'locked';
                             });
                           }
@@ -700,16 +709,15 @@ export default function AtlasHQ({ onClose, onNavigate, onHeadlinesToggle, onSour
     )}
 
     {/* Senate vote visualization — appears to the right on hover/click */}
-    {senateVoteVisible && senateAlertRef.current && senateAlertYRef.current !== null && (() => {
-      const alertCenterY = senateAlertYRef.current!;
+    {senateVoteVisible && senateAlertRef.current && senateAlertY !== null && (() => {
       const vizHeight = 290;
-      const topRaw = alertCenterY - vizHeight / 2;
+      const topRaw = senateAlertY - vizHeight / 2;
       const topClamped = Math.max(8, Math.min(topRaw, (typeof window !== "undefined" ? window.innerHeight : 900) - vizHeight - 8));
       return (
         <div
           onMouseEnter={() => { cancelSenateLeave(); if (senateVoteVisible !== 'locked') setSenateVoteVisible('hover'); }}
           onMouseLeave={scheduleSenateLeave}
-          onClick={() => { cancelSenateLeave(); setSenateVoteVisible(v => { if (v === 'locked') { senateAlertYRef.current = null; return null; } return 'locked'; }); }}
+          onClick={() => { cancelSenateLeave(); setSenateVoteVisible(v => { if (v === 'locked') { setSenateAlertY(null); return null; } return 'locked'; }); }}
           style={{
             position: "fixed",
             left: 516, // 20px (left) + 488px (panel width) + 8px gap
