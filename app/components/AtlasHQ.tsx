@@ -532,7 +532,7 @@ export default function AtlasHQ({ onClose, onNavigate, onHeadlinesToggle, onSour
                           }
                           // Senate graphic → navigate to article page
                           else if (isSenateVote) {
-                            router.push('/senatebill-israel-arms-2026');
+                            router.push('/senatebill/israel-arms-2026');
                           }
                           // All other alerts → navigate by their code
                           else {
