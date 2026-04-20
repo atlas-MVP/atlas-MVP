@@ -149,7 +149,7 @@ export default function ArticlePage({
   return (
     <div style={{
       position: "fixed",
-      top: 44,
+      top: 20,
       left: 20,
       right: 20,
       bottom: 20,
