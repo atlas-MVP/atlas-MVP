@@ -12,6 +12,7 @@ import RadarEditor, {
   type FinanceItem as RadarFinanceItem,
   type DisasterItem as RadarDisasterItem,
 } from "./RadarEditor";
+import { EditModeCtx, EText, EImg } from "./InlineEdit";
 
 // ── Reels preview ─────────────────────────────────────────────────────────────
 // Autoplays the most recent "Atlas You" reel (muted, since browsers block
@@ -225,6 +226,9 @@ export default function AtlasHQ({ onClose, onNavigate, onHeadlinesToggle, onSour
   const senateAlertRef = useRef<HTMLDivElement>(null);
   const [editorOpen, setEditorOpen] = useState(false);
   const [liveConfig, setLiveConfig] = useState<RadarConfig | null>(null);
+  const [editMode,   setEditMode]   = useState(false);
+  const [editDraft,  setEditDraft]  = useState<RadarConfig | null>(null);
+  const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Senate arms sale vote data: 40-59 (40 Aye, 59 No)
   const senatorsVoteData = [
@@ -325,6 +329,25 @@ export default function AtlasHQ({ onClose, onNavigate, onHeadlinesToggle, onSour
     sectionOrder:  liveConfig?.sectionOrder, // undefined = default order
   };
 
+  const displayConfig = editMode && editDraft ? editDraft : currentConfig;
+
+  const patchDraft = (updater: (d: RadarConfig) => RadarConfig) => {
+    setEditDraft(prev => {
+      const base = prev ?? currentConfig;
+      const next = updater(base);
+      if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
+      saveTimerRef.current = setTimeout(async () => {
+        await fetch("/api/radar-config", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ config: next }),
+        });
+        setLiveConfig(next);
+      }, 1500);
+      return next;
+    });
+  };
+
   return (
     <>
     <div style={{
@@ -346,43 +369,62 @@ export default function AtlasHQ({ onClose, onNavigate, onHeadlinesToggle, onSour
       {/* Scrollable body */}
       <div className="radar-scroll" style={{ flex: 1, overflowY: "auto", overflowX: "hidden", position: "relative" }}>
 
-        {/* Edit button */}
+        {/* Edit / Done toggle */}
         <button
-          onClick={() => setEditorOpen(true)}
+          onClick={() => {
+            if (editMode) { setEditMode(false); }
+            else { setEditDraft({ ...currentConfig }); setEditMode(true); }
+          }}
           style={{
             position: "absolute", top: 10, right: 10, zIndex: 30,
-            background: "rgba(255,255,255,0.07)",
-            border: "1px solid rgba(255,255,255,0.14)",
-            borderRadius: 6, color: "rgba(255,255,255,0.55)",
+            background: editMode ? "rgba(100,160,255,0.14)" : "rgba(255,255,255,0.07)",
+            border: editMode ? "1px solid rgba(100,160,255,0.40)" : "1px solid rgba(255,255,255,0.14)",
+            borderRadius: 6,
+            color: editMode ? "rgba(140,185,255,0.95)" : "rgba(255,255,255,0.55)",
             fontFamily: "monospace", fontSize: 11, letterSpacing: "0.10em",
             padding: "3px 9px", cursor: "pointer",
           }}
-          onMouseEnter={e => (e.currentTarget.style.background = "rgba(255,255,255,0.12)")}
-          onMouseLeave={e => (e.currentTarget.style.background = "rgba(255,255,255,0.07)")}
-        >✎</button>
+          onMouseEnter={e => (e.currentTarget.style.background = editMode ? "rgba(100,160,255,0.22)" : "rgba(255,255,255,0.12)")}
+          onMouseLeave={e => (e.currentTarget.style.background = editMode ? "rgba(100,160,255,0.14)" : "rgba(255,255,255,0.07)")}
+        >{editMode ? "✓ done" : "✎"}</button>
 
+        <EditModeCtx.Provider value={editMode}>
         {/* Sections rendered in saved drag order */}
-        {(currentConfig.sectionOrder ?? ["geo", "alerts", "violence", "finance", "disasters"]).map(section => {
+        {(displayConfig.sectionOrder ?? ["geo", "alerts", "violence", "finance", "disasters"]).map(section => {
           if (section === "geo") return (
             <React.Fragment key="geo">
-              <SectionLabel label="geopolitics" onClick={() => setShowMore(v => !v)} />
+              <SectionLabel label="geopolitics" onClick={editMode ? undefined : () => setShowMore(v => !v)} />
               <div style={{ padding: "0 14px", display: "flex", flexDirection: "column", gap: 6 }}>
-                {currentConfig.topConflicts.map((c, idx) => (
+                {displayConfig.topConflicts.map((c, idx) => (
                   <Reveal key={c.label} minStage={1 + idx} stage={loadStage}>
-                    <div onClick={() => onNavigate?.(c.code, c.flyTo?.center ?? [0,0], c.flyTo?.zoom ?? 4, undefined, c.slug)}
-                      style={{ height: 196, borderRadius: 14, overflow: "hidden", position: "relative", cursor: "pointer", border: "1px solid rgba(255,255,255,0.09)", background: "#0a0c18" }}>
-                      {(c.imageUrl || c.image) && <img src={c.imageUrl || c.image} alt={c.label} style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} onError={e => { (e.currentTarget as HTMLImageElement).style.opacity = "0"; }} />}
-                      <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom, transparent 35%, rgba(0,0,0,0.88) 100%)" }} />
+                    <div
+                      onClick={editMode ? undefined : () => onNavigate?.(c.code, c.flyTo?.center ?? [0,0], c.flyTo?.zoom ?? 4, undefined, c.slug)}
+                      style={{ height: 196, borderRadius: 14, overflow: "hidden", position: "relative", cursor: editMode ? "default" : "pointer", border: "1px solid rgba(255,255,255,0.09)", background: "#0a0c18" }}
+                    >
+                      {(c.imageUrl || c.image) && (
+                        <EImg
+                          src={c.imageUrl || c.image || ""}
+                          alt={c.label}
+                          style={{ width: "100%", height: "100%" }}
+                          onUploaded={(_, url) => patchDraft(d => ({ ...d, topConflicts: d.topConflicts.map((x, j) => j === idx ? { ...x, imageUrl: url } : x) }))}
+                        />
+                      )}
+                      <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom, transparent 35%, rgba(0,0,0,0.88) 100%)", pointerEvents: "none" }} />
                       <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, padding: "8px 10px 10px" }}>
-                        <div style={{ fontSize: 12, fontFamily: "monospace", letterSpacing: "0.06em", color: "rgba(255,255,255,0.92)", fontWeight: 700, lineHeight: 1.3 }}>{c.label}</div>
+                        <EText
+                          value={c.label}
+                          onChange={v => patchDraft(d => ({ ...d, topConflicts: d.topConflicts.map((x, j) => j === idx ? { ...x, label: v } : x) }))}
+                          style={{ fontSize: 12, fontFamily: "monospace", letterSpacing: "0.06em", color: "rgba(255,255,255,0.92)", fontWeight: 700, lineHeight: 1.3 }}
+                        />
                       </div>
                     </div>
                   </Reveal>
                 ))}
-                {showMore && (
+                {showMore && !editMode && (
                   <>
-                    {currentConfig.moreConflicts.map((c) => (
-                      <div key={c.label} onClick={() => onNavigate?.(c.code, c.flyTo?.center ?? [0,0], c.flyTo?.zoom ?? 4, undefined, c.slug)}
+                    {displayConfig.moreConflicts.map((c) => (
+                      <div key={c.label}
+                        onClick={() => onNavigate?.(c.code, c.flyTo?.center ?? [0,0], c.flyTo?.zoom ?? 4, undefined, c.slug)}
                         style={{ padding: "12px 13px", borderRadius: 10, background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.09)", cursor: "pointer" }}
                         onMouseEnter={e => (e.currentTarget.style.background = "rgba(255,255,255,0.04)")}
                         onMouseLeave={e => (e.currentTarget.style.background = "rgba(255,255,255,0.02)")}>
@@ -405,19 +447,20 @@ export default function AtlasHQ({ onClose, onNavigate, onHeadlinesToggle, onSour
               <SectionLabel label="live alerts" />
               <Reveal minStage={3} stage={loadStage}>
                 <div style={{ padding: "0 6px", position: "relative" }}>
-                  {activeFeed.slice(0, 3).map((item, i) => {
+                  {(displayConfig.liveAlerts as FeedItem[]).slice(0, 3).map((item, i) => {
                     const isSenateVote = item.text.includes("Senate vote fails");
                     return (
                       <div key={`${item.code}-${item.time}`}
                         ref={isSenateVote ? senateAlertRef : null}
-                        onMouseEnter={() => { if (isSenateVote && senateVoteVisible !== 'locked') setSenateVoteVisible('hover'); }}
-                        onMouseLeave={() => { if (isSenateVote && senateVoteVisible === 'hover') setSenateVoteVisible(null); }}
+                        onMouseEnter={() => { if (!editMode && isSenateVote && senateVoteVisible !== 'locked') setSenateVoteVisible('hover'); }}
+                        onMouseLeave={() => { if (!editMode && isSenateVote && senateVoteVisible === 'hover') setSenateVoteVisible(null); }}
                         onClick={() => {
+                          if (editMode) return;
                           if (isSenateVote) { const s = senateVoteVisible === 'locked' ? null : 'locked'; setSenateVoteVisible(s); onSenateVoteLocked?.(s === 'locked'); }
                           else onNavigate?.(item.code, item.flyTo?.center ?? [0,0] as [number,number], item.flyTo?.zoom ?? 4, item, item.slug);
                         }}>
-                        <LiveAlertRow item={item} onSourceClick={onSourceClick}
-                          onClick={() => !isSenateVote && onNavigate?.(item.code, item.flyTo?.center ?? [0,0] as [number,number], item.flyTo?.zoom ?? 4, item, item.slug)}
+                        <LiveAlertRow item={item} onSourceClick={editMode ? undefined : onSourceClick}
+                          onClick={editMode ? undefined : () => !isSenateVote && onNavigate?.(item.code, item.flyTo?.center ?? [0,0] as [number,number], item.flyTo?.zoom ?? 4, item, item.slug)}
                           bottomBorder={i < 2} showConfidenceInline={false} expandOnHover={false} />
                       </div>
                     );
@@ -432,14 +475,23 @@ export default function AtlasHQ({ onClose, onNavigate, onHeadlinesToggle, onSour
               <SectionLabel label="violence" />
               <Reveal minStage={5} stage={loadStage}>
                 <div style={{ padding: "0 14px 6px" }}>
-                  {activeViolence.map((item) => (
+                  {displayConfig.violenceItems.map((item, idx) => (
                     <div key={item.headline}
-                      onClick={() => onViolenceTap?.(item.incidentId ?? "", item.flyTo?.center ?? [0,0] as [number,number], item.flyTo?.zoom ?? 4)}
-                      style={{ height: 196, borderRadius: 14, overflow: "hidden", position: "relative", cursor: "pointer", border: "1px solid rgba(255,255,255,0.09)", background: "#0a0c18" }}>
-                      <img src={item.imageUrl || item.image} style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} onError={e => { (e.currentTarget as HTMLImageElement).style.opacity = "0"; }} />
-                      <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom, transparent 30%, rgba(0,0,0,0.90) 100%)" }} />
+                      onClick={editMode ? undefined : () => onViolenceTap?.(item.incidentId ?? "", item.flyTo?.center ?? [0,0] as [number,number], item.flyTo?.zoom ?? 4)}
+                      style={{ height: 196, borderRadius: 14, overflow: "hidden", position: "relative", cursor: editMode ? "default" : "pointer", border: "1px solid rgba(255,255,255,0.09)", background: "#0a0c18" }}>
+                      <EImg
+                        src={item.imageUrl || item.image || ""}
+                        alt={item.headline}
+                        style={{ width: "100%", height: "100%" }}
+                        onUploaded={(_, url) => patchDraft(d => ({ ...d, violenceItems: d.violenceItems.map((x, j) => j === idx ? { ...x, imageUrl: url } : x) }))}
+                      />
+                      <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom, transparent 30%, rgba(0,0,0,0.90) 100%)", pointerEvents: "none" }} />
                       <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, padding: "8px 10px 10px" }}>
-                        <div style={{ fontSize: 12, fontFamily: "monospace", letterSpacing: "0.03em", color: "rgba(255,255,255,0.88)", lineHeight: 1.4, display: "-webkit-box", WebkitLineClamp: 3, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{item.headline}</div>
+                        <EText
+                          value={item.headline}
+                          onChange={v => patchDraft(d => ({ ...d, violenceItems: d.violenceItems.map((x, j) => j === idx ? { ...x, headline: v } : x) }))}
+                          style={{ fontSize: 12, fontFamily: "monospace", letterSpacing: "0.03em", color: "rgba(255,255,255,0.88)", lineHeight: 1.4 }}
+                        />
                         <div style={{ fontSize: 9, color: "rgba(255,255,255,0.48)", marginTop: 4, letterSpacing: "0.12em", textTransform: "uppercase" }}>{item.source}</div>
                       </div>
                     </div>
@@ -454,13 +506,23 @@ export default function AtlasHQ({ onClose, onNavigate, onHeadlinesToggle, onSour
               <SectionLabel label="finance" />
               <Reveal minStage={5} stage={loadStage}>
                 <div style={{ padding: "0 14px 6px", display: "flex", gap: 8 }}>
-                  {activeFinance.map((item) => (
-                    <div key={item.headline} onClick={() => onFinanceTap?.(item.slug)}
-                      style={{ flex: 1, height: 196, borderRadius: 14, overflow: "hidden", position: "relative", cursor: "pointer", border: "1px solid rgba(255,255,255,0.09)", background: "#0a0c18", minWidth: 0 }}>
-                      <img src={item.imageUrl || item.image} alt={item.headline} style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} onError={e => { (e.currentTarget as HTMLImageElement).style.opacity = "0"; }} />
-                      <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom, transparent 35%, rgba(0,0,0,0.88) 100%)" }} />
+                  {displayConfig.financeItems.map((item, idx) => (
+                    <div key={item.headline}
+                      onClick={editMode ? undefined : () => onFinanceTap?.(item.slug)}
+                      style={{ flex: 1, height: 196, borderRadius: 14, overflow: "hidden", position: "relative", cursor: editMode ? "default" : "pointer", border: "1px solid rgba(255,255,255,0.09)", background: "#0a0c18", minWidth: 0 }}>
+                      <EImg
+                        src={item.imageUrl || item.image || ""}
+                        alt={item.headline}
+                        style={{ width: "100%", height: "100%" }}
+                        onUploaded={(_, url) => patchDraft(d => ({ ...d, financeItems: d.financeItems.map((x, j) => j === idx ? { ...x, imageUrl: url } : x) }))}
+                      />
+                      <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom, transparent 35%, rgba(0,0,0,0.88) 100%)", pointerEvents: "none" }} />
                       <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, padding: "8px 10px 10px" }}>
-                        <div style={{ fontSize: 12, fontFamily: "monospace", letterSpacing: "0.03em", color: "rgba(255,255,255,0.88)", lineHeight: 1.4, display: "-webkit-box", WebkitLineClamp: 3, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{item.headline}</div>
+                        <EText
+                          value={item.headline}
+                          onChange={v => patchDraft(d => ({ ...d, financeItems: d.financeItems.map((x, j) => j === idx ? { ...x, headline: v } : x) }))}
+                          style={{ fontSize: 12, fontFamily: "monospace", letterSpacing: "0.03em", color: "rgba(255,255,255,0.88)", lineHeight: 1.4 }}
+                        />
                         <div style={{ fontSize: 9, color: "rgba(255,255,255,0.48)", marginTop: 4, letterSpacing: "0.12em", textTransform: "uppercase" }}>{item.source}</div>
                       </div>
                     </div>
@@ -475,14 +537,26 @@ export default function AtlasHQ({ onClose, onNavigate, onHeadlinesToggle, onSour
               <SectionLabel label="disasters" />
               <Reveal minStage={5} stage={loadStage}>
                 <div style={{ padding: "0 14px 20px" }}>
-                  {activeDisasters.map((d) => (
-                    <div key={d.label} onClick={() => onNavigate?.(null, d.flyTo?.center ?? [0,0], d.flyTo?.zoom ?? 4, undefined, d.slug)}
-                      style={{ height: 196, borderRadius: 14, overflow: "hidden", position: "relative", cursor: "pointer", border: "1px solid rgba(255,255,255,0.09)", background: "#0a0c18" }}>
-                      {(d.imageUrl || d.image) && <img src={d.imageUrl || d.image} alt={d.label} style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} onError={e => { (e.currentTarget as HTMLImageElement).style.opacity = "0"; }} />}
-                      <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom, transparent 35%, rgba(0,0,0,0.88) 100%)" }} />
+                  {displayConfig.disasters.map((dis, idx) => (
+                    <div key={dis.label}
+                      onClick={editMode ? undefined : () => onNavigate?.(null, dis.flyTo?.center ?? [0,0], dis.flyTo?.zoom ?? 4, undefined, dis.slug)}
+                      style={{ height: 196, borderRadius: 14, overflow: "hidden", position: "relative", cursor: editMode ? "default" : "pointer", border: "1px solid rgba(255,255,255,0.09)", background: "#0a0c18" }}>
+                      {(dis.imageUrl || dis.image) && (
+                        <EImg
+                          src={dis.imageUrl || dis.image || ""}
+                          alt={dis.label}
+                          style={{ width: "100%", height: "100%" }}
+                          onUploaded={(_, url) => patchDraft(d => ({ ...d, disasters: d.disasters.map((x, j) => j === idx ? { ...x, imageUrl: url } : x) }))}
+                        />
+                      )}
+                      <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom, transparent 35%, rgba(0,0,0,0.88) 100%)", pointerEvents: "none" }} />
                       <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, padding: "8px 10px 10px" }}>
-                        <div style={{ fontSize: 12, fontFamily: "monospace", letterSpacing: "0.06em", color: "rgba(255,255,255,0.92)", fontWeight: 700 }}>{d.label}</div>
-                        <div style={{ fontSize: 10, color: "rgba(255,255,255,0.62)", marginTop: 4 }}>{d.sub}</div>
+                        <EText
+                          value={dis.label}
+                          onChange={v => patchDraft(d => ({ ...d, disasters: d.disasters.map((x, j) => j === idx ? { ...x, label: v } : x) }))}
+                          style={{ fontSize: 12, fontFamily: "monospace", letterSpacing: "0.06em", color: "rgba(255,255,255,0.92)", fontWeight: 700 }}
+                        />
+                        <div style={{ fontSize: 10, color: "rgba(255,255,255,0.62)", marginTop: 4 }}>{dis.sub}</div>
                       </div>
                     </div>
                   ))}
@@ -493,6 +567,25 @@ export default function AtlasHQ({ onClose, onNavigate, onHeadlinesToggle, onSour
 
           return null;
         })}
+
+        {/* + Add section — only visible in edit mode */}
+        {editMode && (
+          <div style={{ padding: "4px 18px 28px", display: "flex", justifyContent: "center" }}>
+            <button
+              style={{
+                background: "rgba(255,255,255,0.03)",
+                border: "1px dashed rgba(255,255,255,0.16)",
+                borderRadius: 10, color: "rgba(255,255,255,0.42)",
+                fontFamily: "monospace", fontSize: 12, letterSpacing: "0.10em",
+                padding: "10px 0", cursor: "pointer", width: "100%",
+              }}
+              onMouseEnter={e => { e.currentTarget.style.background = "rgba(255,255,255,0.06)"; e.currentTarget.style.color = "rgba(255,255,255,0.72)"; }}
+              onMouseLeave={e => { e.currentTarget.style.background = "rgba(255,255,255,0.03)"; e.currentTarget.style.color = "rgba(255,255,255,0.42)"; }}
+            >+ add section</button>
+          </div>
+        )}
+
+        </EditModeCtx.Provider>
       </div>
     </div>
 
