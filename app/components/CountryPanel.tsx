@@ -1436,7 +1436,13 @@ export default function CountryPanel({ countryCode, onClose, onViewFeed, onConfl
           {!timelineExpanded && (<>
           {/* Casualties table */}
           <div style={{ padding: "8px 14px 8px", borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
-            <table style={{ width: "100%", borderCollapse: "collapse" }}>
+            <table style={{ width: "100%", borderCollapse: "collapse", tableLayout: "fixed" }}>
+              <colgroup>
+                <col style={{ width: "auto" }} />
+                <col style={{ width: 72 }} />
+                <col style={{ width: 72 }} />
+                {hasCivCol && !hasMissingCol && <col style={{ width: 52 }} />}
+              </colgroup>
               <thead>
                 <tr>
                   <th style={{ textAlign: "left", fontSize: 11, fontFamily: "monospace", color: "rgba(255,255,255,0.35)", fontWeight: "normal", paddingBottom: 4 }}></th>
