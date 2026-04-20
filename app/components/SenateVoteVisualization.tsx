@@ -71,6 +71,7 @@ export default function SenateVoteVisualization({
       voters: Senator[],
       arcStart: number,
       arcEnd: number,
+      startRow: number = 0,
     ) => {
       if (!voters.length) return;
 
@@ -87,7 +88,7 @@ export default function SenateVoteVisualization({
       // Place senators along radial lines (spokes)
       for (let idx = 0; idx < voters.length; idx++) {
         const spokeIdx = idx % spokes;
-        const row = Math.floor(idx / spokes);
+        const row = Math.floor(idx / spokes) + startRow;
         const angle = angles[spokeIdx];
         const r = baseRadius + row * radiusStep;
 
@@ -120,8 +121,8 @@ export default function SenateVoteVisualization({
     // Crossover Dems: innermost row on No side
     placeCrossovers(crossoverDems, Math.PI * 1.5 + gapAngle / 2, Math.PI * 2);
 
-    // Republicans who voted No: outer rows
-    placeGroup(republicansNo, Math.PI * 1.5 + gapAngle / 2, Math.PI * 2);
+    // Republicans who voted No: outer rows (start at row 1 to not overlap crossover Dems)
+    placeGroup(republicansNo, Math.PI * 1.5 + gapAngle / 2, Math.PI * 2, 1);
 
     return positions;
   };
