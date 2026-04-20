@@ -30,8 +30,8 @@ export default function SenateVoteVisualization({
   // Generate hemicycle positions - organized by vote (Aye left, No right)
   const generatePositions = () => {
     const positions: Array<{ senator: Senator; x: number; y: number }> = [];
-    const centerX = 200; // Reduced from 266 to fit narrower box
-    const centerY = 200; // Adjusted
+    const centerX = 266;
+    const centerY = 233;
 
     // Separate senators by vote
     const ayeVoters = senators.filter(s => s.vote === "Aye");
@@ -112,13 +112,13 @@ export default function SenateVoteVisualization({
       ref={containerRef}
       style={{
         position: "relative",
-        width: 400, // Reduced from 533
-        height: 300,
+        width: 533,
+        height: 333,
         background: "rgba(4,6,18,0.75)",
         backdropFilter: "blur(20px)",
         borderRadius: 12,
         border: "1px solid rgba(255,255,255,0.08)",
-        padding: "12px 8px 8px",
+        padding: "20px 16px 16px",
       }}
     >
       {/* Title - moved down */}
@@ -211,7 +211,7 @@ export default function SenateVoteVisualization({
       </div>
 
       {/* Senate floor dots */}
-      <svg width="400" height="300" style={{ position: "absolute", top: 0, left: 0 }}>
+      <svg width="533" height="333" style={{ position: "absolute", top: 0, left: 0 }}>
         {/* Pulsing animation for crossover Democrats */}
         <defs>
           <radialGradient id="crossoverPulse">
@@ -235,7 +235,7 @@ export default function SenateVoteVisualization({
         </defs>
 
         {positions.map(({ senator, x, y }, i) => {
-          const isLeft = x < 200; // Left side of center
+          const isLeft = x < 266; // Left side of center
           return (
             <circle
               key={i}
