@@ -25,8 +25,8 @@ export async function POST(request: Request): Promise<NextResponse> {
       ContentType: file.type || "image/jpeg",
     }));
 
-    // 7-day signed URL (R2 max for presigned URLs is 7 days)
-    const url = await signedGetUrl(key, 604800);
+    // 6-day signed URL (R2 hard cap is < 7 days / 604800s)
+    const url = await signedGetUrl(key, 518400);
 
     return NextResponse.json({ key, url });
   } catch (err) {
