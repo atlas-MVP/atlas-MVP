@@ -220,14 +220,14 @@ export default function SenateVoteVisualization({
       <svg width="571" height="325" style={{ position: "absolute", top: 0, left: 0 }}>
         <defs>
           <radialGradient id="crossoverPulse">
-            <stop offset="0%" stopColor="rgba(96,165,250,0.6)">
+            <stop offset="0%" stopColor="rgba(239,68,68,0.6)">
               <animate attributeName="stop-color"
-                values="rgba(96,165,250,0.6);rgba(239,68,68,0.6);rgba(96,165,250,0.6)"
+                values="rgba(239,68,68,0.6);rgba(239,68,68,0.8);rgba(239,68,68,0.6)"
                 dur="2s" repeatCount="indefinite" />
             </stop>
-            <stop offset="100%" stopColor="rgba(96,165,250,0.2)">
+            <stop offset="100%" stopColor="rgba(239,68,68,0.2)">
               <animate attributeName="stop-color"
-                values="rgba(96,165,250,0.2);rgba(239,68,68,0.2);rgba(96,165,250,0.2)"
+                values="rgba(239,68,68,0.2);rgba(239,68,68,0.4);rgba(239,68,68,0.2)"
                 dur="2s" repeatCount="indefinite" />
             </stop>
           </radialGradient>
