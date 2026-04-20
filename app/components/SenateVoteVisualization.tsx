@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 
 interface Senator {
   name: string;
@@ -19,7 +19,9 @@ export default function SenateVoteVisualization({
   senators,
 }: SenateVoteVisualizationProps) {
   const [hoveredSenator, setHoveredSenator] = useState<Senator | null>(null);
-  const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
+  const [lockedSenator, setLockedSenator] = useState<Senator | null>(null);
+  const [tooltipPos, setTooltipPos] = useState<{ x: number; y: number; isLeft: boolean } | null>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   // Calculate vote counts (including all parties)
   const totalAye = senators.filter(s => s.vote === "Aye").length;
@@ -28,16 +30,16 @@ export default function SenateVoteVisualization({
   // Generate hemicycle positions - organized by vote (Aye left, No right)
   const generatePositions = () => {
     const positions: Array<{ senator: Senator; x: number; y: number }> = [];
-    const centerX = 266;
-    const centerY = 233;
+    const centerX = 200; // Reduced from 266 to fit narrower box
+    const centerY = 200; // Adjusted
 
     // Separate senators by vote
     const ayeVoters = senators.filter(s => s.vote === "Aye");
     const noVoters = senators.filter(s => s.vote === "No");
 
     const rows = 7;
-    const baseRadius = 67;
-    const radiusIncrement = 23;
+    const baseRadius = 70; // Increased from 67 for more spacing
+    const radiusIncrement = 26; // Increased from 23 for more spacing
 
     // Place Aye voters on left side (π to 3π/2)
     let ayeIndex = 0;
@@ -46,10 +48,10 @@ export default function SenateVoteVisualization({
       const senatorsInRow = Math.min(Math.ceil(ayeVoters.length / rows) + Math.floor(row * 0.5), ayeVoters.length - ayeIndex);
       const angleStart = Math.PI;
       const angleEnd = Math.PI * 1.5;
-      const angleStep = (angleEnd - angleStart) / (senatorsInRow + 1);
+      const angleStep = (angleEnd - angleStart) / (senatorsInRow + 1.2); // Increased divisor for more spacing
 
       for (let i = 0; i < senatorsInRow && ayeIndex < ayeVoters.length; i++) {
-        const angle = angleStart + angleStep * (i + 1);
+        const angle = angleStart + angleStep * (i + 1.2);
         const x = centerX + radius * Math.cos(angle);
         const y = centerY + radius * Math.sin(angle);
         positions.push({ senator: ayeVoters[ayeIndex], x, y });
@@ -64,10 +66,10 @@ export default function SenateVoteVisualization({
       const senatorsInRow = Math.min(Math.ceil(noVoters.length / rows) + Math.floor(row * 0.5), noVoters.length - noIndex);
       const angleStart = Math.PI * 1.5;
       const angleEnd = Math.PI * 2;
-      const angleStep = (angleEnd - angleStart) / (senatorsInRow + 1);
+      const angleStep = (angleEnd - angleStart) / (senatorsInRow + 1.2); // Increased divisor for more spacing
 
       for (let i = 0; i < senatorsInRow && noIndex < noVoters.length; i++) {
-        const angle = angleStart + angleStep * (i + 1);
+        const angle = angleStart + angleStep * (i + 1.2);
         const x = centerX + radius * Math.cos(angle);
         const y = centerY + radius * Math.sin(angle);
         positions.push({ senator: noVoters[noIndex], x, y });
@@ -79,6 +81,11 @@ export default function SenateVoteVisualization({
   };
 
   const positions = generatePositions();
+
+  // Check if senator is a Democrat who voted No (crossover vote)
+  const isCrossoverVote = (senator: Senator) => {
+    return senator.party === "D" && senator.vote === "No";
+  };
 
   const getDotColor = (senator: Senator) => {
     if (senator.vote === "Aye") {
@@ -98,11 +105,14 @@ export default function SenateVoteVisualization({
     return "rgba(150,150,150,0.5)";
   };
 
+  const displayedSenator = lockedSenator || hoveredSenator;
+
   return (
     <div
+      ref={containerRef}
       style={{
         position: "relative",
-        width: 533,
+        width: 400, // Reduced from 533
         height: 300,
         background: "rgba(4,6,18,0.75)",
         backdropFilter: "blur(20px)",
@@ -111,15 +121,15 @@ export default function SenateVoteVisualization({
         padding: "12px 8px 8px",
       }}
     >
-      {/* Title */}
+      {/* Title - moved down */}
       <div
         style={{
           position: "absolute",
-          top: 0,
+          top: 20, // Moved down from 0
           left: 0,
           right: 0,
           textAlign: "center",
-          fontSize: 16,
+          fontSize: 14,
           fontWeight: 700,
           fontFamily: "monospace",
           letterSpacing: "0.2em",
@@ -129,11 +139,43 @@ export default function SenateVoteVisualization({
         {title}
       </div>
 
-      {/* Vote count - below floor */}
+      {/* YEA label - left side */}
       <div
         style={{
           position: "absolute",
-          bottom: 10,
+          left: 12,
+          bottom: 85,
+          fontSize: 9,
+          fontFamily: "monospace",
+          letterSpacing: "0.1em",
+          color: "rgba(255,255,255,0.25)",
+          textTransform: "uppercase",
+        }}
+      >
+        Yea
+      </div>
+
+      {/* NAY label - right side */}
+      <div
+        style={{
+          position: "absolute",
+          right: 12,
+          bottom: 85,
+          fontSize: 9,
+          fontFamily: "monospace",
+          letterSpacing: "0.1em",
+          color: "rgba(255,255,255,0.25)",
+          textTransform: "uppercase",
+        }}
+      >
+        Nay
+      </div>
+
+      {/* Vote count - moved up into semicircle */}
+      <div
+        style={{
+          position: "absolute",
+          bottom: 60, // Moved up from 10
           left: "50%",
           transform: "translateX(-50%)",
           fontSize: 16,
@@ -146,37 +188,105 @@ export default function SenateVoteVisualization({
         {totalAye}–{totalNo}
       </div>
 
+      {/* BLOCKED button */}
+      <div
+        style={{
+          position: "absolute",
+          bottom: 12,
+          left: "50%",
+          transform: "translateX(-50%)",
+          background: "rgba(239,68,68,0.15)",
+          border: "1px solid rgba(239,68,68,0.4)",
+          borderRadius: 6,
+          padding: "4px 12px",
+          fontSize: 10,
+          fontWeight: 700,
+          fontFamily: "monospace",
+          letterSpacing: "0.12em",
+          color: "rgba(239,68,68,0.9)",
+          textTransform: "uppercase",
+        }}
+      >
+        Blocked
+      </div>
+
       {/* Senate floor dots */}
-      <svg width="533" height="333" style={{ position: "absolute", top: 0, left: 0 }}>
-        {positions.map(({ senator, x, y }, i) => (
-          <circle
-            key={i}
-            cx={x}
-            cy={y}
-            r={4}
-            fill={getDotColor(senator)}
-            stroke={getDotBorder(senator)}
-            strokeWidth={1}
-            style={{ cursor: "pointer", transition: "all 0.2s" }}
-            onMouseEnter={(e) => {
-              setHoveredSenator(senator);
-              setMousePos({ x: e.clientX, y: e.clientY });
-            }}
-            onMouseMove={(e) => {
-              setMousePos({ x: e.clientX, y: e.clientY });
-            }}
-            onMouseLeave={() => setHoveredSenator(null)}
-          />
-        ))}
+      <svg width="400" height="300" style={{ position: "absolute", top: 0, left: 0 }}>
+        {/* Pulsing animation for crossover Democrats */}
+        <defs>
+          <radialGradient id="crossoverPulse">
+            <stop offset="0%" stopColor="rgba(96,165,250,0.6)">
+              <animate
+                attributeName="stop-color"
+                values="rgba(96,165,250,0.6);rgba(239,68,68,0.6);rgba(96,165,250,0.6)"
+                dur="2s"
+                repeatCount="indefinite"
+              />
+            </stop>
+            <stop offset="100%" stopColor="rgba(96,165,250,0.2)">
+              <animate
+                attributeName="stop-color"
+                values="rgba(96,165,250,0.2);rgba(239,68,68,0.2);rgba(96,165,250,0.2)"
+                dur="2s"
+                repeatCount="indefinite"
+              />
+            </stop>
+          </radialGradient>
+        </defs>
+
+        {positions.map(({ senator, x, y }, i) => {
+          const isLeft = x < 200; // Left side of center
+          return (
+            <circle
+              key={i}
+              cx={x}
+              cy={y}
+              r={4}
+              fill={isCrossoverVote(senator) ? "url(#crossoverPulse)" : getDotColor(senator)}
+              stroke={getDotBorder(senator)}
+              strokeWidth={1}
+              style={{ cursor: "pointer", transition: "all 0.2s" }}
+              onMouseEnter={(e) => {
+                if (!lockedSenator) {
+                  setHoveredSenator(senator);
+                  setTooltipPos({ x, y, isLeft });
+                }
+              }}
+              onMouseLeave={() => {
+                if (!lockedSenator) {
+                  setHoveredSenator(null);
+                  setTooltipPos(null);
+                }
+              }}
+              onClick={(e) => {
+                e.stopPropagation();
+                if (lockedSenator?.name === senator.name) {
+                  setLockedSenator(null);
+                  setTooltipPos(null);
+                } else {
+                  setLockedSenator(senator);
+                  setTooltipPos({ x, y, isLeft });
+                }
+              }}
+            />
+          );
+        })}
       </svg>
 
-      {/* Tooltip */}
-      {hoveredSenator && (
+      {/* Tooltip - positioned in top-left or top-right of box */}
+      {displayedSenator && tooltipPos && (
         <div
+          onClick={(e) => {
+            e.stopPropagation();
+            if (lockedSenator) {
+              setLockedSenator(null);
+              setTooltipPos(null);
+            }
+          }}
           style={{
-            position: "fixed",
-            left: mousePos.x + 12,
-            top: mousePos.y + 12,
+            position: "absolute",
+            [tooltipPos.isLeft ? "left" : "right"]: 12,
+            top: 12,
             background: "rgba(10,13,26,0.95)",
             backdropFilter: "blur(12px)",
             border: "1px solid rgba(100,100,100,0.4)",
@@ -185,18 +295,19 @@ export default function SenateVoteVisualization({
             fontSize: 12,
             fontFamily: "monospace",
             color: "rgba(255,255,255,0.9)",
-            pointerEvents: "none",
-            zIndex: 10000,
+            pointerEvents: lockedSenator ? "auto" : "none",
+            zIndex: 100,
             boxShadow: "0 4px 16px rgba(0,0,0,0.5)",
-            minWidth: 180,
+            minWidth: 160,
+            cursor: lockedSenator ? "pointer" : "default",
           }}
         >
-          <div style={{ fontWeight: 700, marginBottom: 4 }}>{hoveredSenator.name}</div>
+          <div style={{ fontWeight: 700, marginBottom: 4 }}>{displayedSenator.name}</div>
           <div style={{ color: "rgba(255,255,255,0.6)", fontSize: 11 }}>
-            {hoveredSenator.party === "R" ? "Republican" : hoveredSenator.party === "D" ? "Democrat" : "Independent"} • {hoveredSenator.state}
+            {displayedSenator.party === "R" ? "Republican" : displayedSenator.party === "D" ? "Democrat" : "Independent"} • {displayedSenator.state}
           </div>
           <div style={{ marginTop: 4, fontSize: 11, color: "rgba(255,255,255,0.5)" }}>
-            Vote: {hoveredSenator.vote}
+            Vote: {displayedSenator.vote}
           </div>
         </div>
       )}
