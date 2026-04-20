@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
+import { useRouter } from "next/navigation";
 import LiveAlertRow from "./LiveAlertRow";
 import { setReelResume } from "../lib/reelResume";
 import SenateVoteVisualization from "./SenateVoteVisualization";
@@ -215,6 +216,7 @@ function Reveal({ minStage, stage, children }: { minStage: number; stage: number
 }
 
 export default function AtlasHQ({ onClose, onNavigate, onHeadlinesToggle, onSourceClick, onReelsTap, onFinanceTap, onViolenceTap, onSenateVoteLocked }: Props) {
+  const router = useRouter();
   const [showMore, setShowMore] = useState(false);
   const [showAllDisasters, setShowAllDisasters] = useState(false);
   const [loadStage, setLoadStage] = useState(0);
@@ -528,13 +530,9 @@ export default function AtlasHQ({ onClose, onNavigate, onHeadlinesToggle, onSour
                           if (item.slug === "gun-violence" && item.incidentId) {
                             onViolenceTap?.(item.incidentId, item.flyTo?.center ?? [0,0] as [number,number], item.flyTo?.zoom ?? 10);
                           }
-                          // Senate graphic → lock/unlock
+                          // Senate graphic → navigate to article page
                           else if (isSenateVote) {
-                            cancelSenateLeave();
-                            setSenateVoteVisible(v => {
-                              if (v === 'locked') { setSenateAlertY(null); return null; }
-                              return 'locked';
-                            });
+                            router.push('/senatebill-israel-arms-2026');
                           }
                           // All other alerts → navigate by their code
                           else {
