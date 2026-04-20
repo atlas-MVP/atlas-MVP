@@ -164,7 +164,7 @@ export default function GunViolencePanel({ onClose, onFlyTo, highlightId }: Prop
           {/* ── Live alerts ── */}
           <div style={{ padding: "14px 6px 6px", borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
             <p
-              onClick={() => LIVE_ALERTS.length > 4 && setShowAllAlerts(v => !v)}
+              onClick={() => LIVE_ALERTS.length > 3 && setShowAllAlerts(v => !v)}
               style={{
                 margin: "0 0 6px 12px",
                 fontSize: 11,
@@ -173,14 +173,14 @@ export default function GunViolencePanel({ onClose, onFlyTo, highlightId }: Prop
                 color: "rgba(255,255,255,0.42)",
                 textTransform: "uppercase",
                 fontWeight: 500,
-                cursor: LIVE_ALERTS.length > 4 ? "pointer" : "default",
+                cursor: LIVE_ALERTS.length > 3 ? "pointer" : "default",
               }}
-              onMouseEnter={e => LIVE_ALERTS.length > 4 && (e.currentTarget.style.color = "rgba(255,255,255,0.58)")}
+              onMouseEnter={e => LIVE_ALERTS.length > 3 && (e.currentTarget.style.color = "rgba(255,255,255,0.58)")}
               onMouseLeave={e => (e.currentTarget.style.color = "rgba(255,255,255,0.42)")}
             >
               live alerts
             </p>
-            {(showAllAlerts ? LIVE_ALERTS : LIVE_ALERTS.slice(0, 4)).map((alert, i, arr) => {
+            {(showAllAlerts ? LIVE_ALERTS : LIVE_ALERTS.slice(0, 3)).map((alert, i, arr) => {
               const isLocked = lockedAlertIdx === i;
               return (
                 <div key={alert.id}>
@@ -203,7 +203,7 @@ export default function GunViolencePanel({ onClose, onFlyTo, highlightId }: Prop
                 </div>
               );
             })}
-            {showAllAlerts && LIVE_ALERTS.length > 4 && (
+            {showAllAlerts && LIVE_ALERTS.length > 3 && (
               <div style={{ padding: "8px 12px", textAlign: "center" }}>
                 <button
                   onClick={(e) => { e.stopPropagation(); setShowAllAlerts(false); }}

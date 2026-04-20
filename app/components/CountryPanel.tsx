@@ -1588,11 +1588,11 @@ export default function CountryPanel({ countryCode, onClose, onViewFeed, onConfl
           {(() => {
             const conflictAlerts = CONFLICT_ALERTS[conflict.id] ?? [];
             if (conflictAlerts.length === 0) return null;
-            const visibleAlerts = showAllAlerts ? conflictAlerts : conflictAlerts.slice(0, 4);
+            const visibleAlerts = showAllAlerts ? conflictAlerts : conflictAlerts.slice(0, 3);
             return (
               <div style={{ padding: "14px 6px 6px", borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
                 <p
-                  onClick={() => conflictAlerts.length > 4 && setShowAllAlerts(v => !v)}
+                  onClick={() => conflictAlerts.length > 3 && setShowAllAlerts(v => !v)}
                   style={{
                     margin: "0 0 6px 12px",
                     fontSize: 11,
@@ -1601,9 +1601,9 @@ export default function CountryPanel({ countryCode, onClose, onViewFeed, onConfl
                     color: "rgba(255,255,255,0.42)",
                     textTransform: "uppercase",
                     fontWeight: 500,
-                    cursor: conflictAlerts.length > 4 ? "pointer" : "default",
+                    cursor: conflictAlerts.length > 3 ? "pointer" : "default",
                   }}
-                  onMouseEnter={e => conflictAlerts.length > 4 && (e.currentTarget.style.color = "rgba(255,255,255,0.58)")}
+                  onMouseEnter={e => conflictAlerts.length > 3 && (e.currentTarget.style.color = "rgba(255,255,255,0.58)")}
                   onMouseLeave={e => (e.currentTarget.style.color = "rgba(255,255,255,0.42)")}
                 >live alerts</p>
                 {visibleAlerts.map((a, i, arr) => {
@@ -1628,7 +1628,7 @@ export default function CountryPanel({ countryCode, onClose, onViewFeed, onConfl
                     </div>
                   );
                 })}
-                {showAllAlerts && conflictAlerts.length > 4 && (
+                {showAllAlerts && conflictAlerts.length > 3 && (
                   <div style={{ padding: "8px 12px", textAlign: "center" }}>
                     <button
                       onClick={(e) => { e.stopPropagation(); setShowAllAlerts(false); }}
