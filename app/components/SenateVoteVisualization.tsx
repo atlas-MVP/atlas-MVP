@@ -48,10 +48,10 @@ export default function SenateVoteVisualization({
   const generatePositions = () => {
     const positions: Array<{ senator: Senator; x: number; y: number }> = [];
     const centerX       = 266;
-    const centerY       = 262; // pushed down so SENATE title has breathing room
+    const centerY       = 270; // pushed down so SENATE title has breathing room
     const rows          = 7;
     const baseRadius    = 62;
-    const radiusStep    = 25;  // 25 px between concentric rows
+    const radiusStep    = 19;  // tighter rows — less vertical spread
     const gapAngle      = 0.09 * Math.PI; // gap between halves at the top
 
     const ayeVoters = senators.filter(s => s.vote === "Aye");
@@ -143,7 +143,7 @@ export default function SenateVoteVisualization({
       {/* ── YES label — flush with bottom-left end of arc ─────────────────── */}
       <div style={{
         position: "absolute", left: 16, bottom: 62,
-        fontSize: 9, fontFamily: "monospace", letterSpacing: "0.1em",
+        fontSize: 12, fontFamily: "monospace", letterSpacing: "0.1em",
         color: "rgba(255,255,255,0.25)", textTransform: "uppercase",
       }}>
         Yes
@@ -152,7 +152,7 @@ export default function SenateVoteVisualization({
       {/* ── NO label — flush with bottom-right end of arc ─────────────────── */}
       <div style={{
         position: "absolute", right: 16, bottom: 62,
-        fontSize: 9, fontFamily: "monospace", letterSpacing: "0.1em",
+        fontSize: 12, fontFamily: "monospace", letterSpacing: "0.1em",
         color: "rgba(255,255,255,0.25)", textTransform: "uppercase",
       }}>
         No
