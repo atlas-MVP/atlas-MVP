@@ -152,15 +152,22 @@ export default function SenateVoteVisualization({
   const displayed = lockedSenator || hoveredSenator;
 
   return (
-    <div
-      style={{
-        position: "relative",
-        width: 650,
-        height: 325,
-        background: "transparent",
-        borderRadius: 12,
-      }}
-    >
+    <>
+      <style>{`
+        @keyframes pulseBorder {
+          0%, 100% { border-color: rgba(96,165,250,0.8); }
+          50% { border-color: rgba(239,68,68,0.8); }
+        }
+      `}</style>
+      <div
+        style={{
+          position: "relative",
+          width: 650,
+          height: 325,
+          background: "transparent",
+          borderRadius: 12,
+        }}
+      >
       {/* ── Title ─────────────────────────────────────────────────────────── */}
       <div style={{
         position: "absolute",
@@ -219,15 +226,15 @@ export default function SenateVoteVisualization({
       <svg width="650" height="325" style={{ position: "absolute", top: 0, left: 0 }}>
         <defs>
           <radialGradient id="crossoverPulse">
-            <stop offset="0%" stopColor="rgba(239,68,68,0.9)">
+            <stop offset="0%" stopColor="rgba(96,165,250,0.9)">
               <animate attributeName="stop-color"
-                values="rgba(239,68,68,0.9);rgba(255,100,100,1);rgba(239,68,68,0.9)"
-                dur="1.5s" repeatCount="indefinite" />
+                values="rgba(96,165,250,0.9);rgba(239,68,68,0.9);rgba(96,165,250,0.9)"
+                dur="2s" repeatCount="indefinite" />
             </stop>
-            <stop offset="100%" stopColor="rgba(239,68,68,0.4)">
+            <stop offset="100%" stopColor="rgba(96,165,250,0.3)">
               <animate attributeName="stop-color"
-                values="rgba(239,68,68,0.4);rgba(239,68,68,0.7);rgba(239,68,68,0.4)"
-                dur="1.5s" repeatCount="indefinite" />
+                values="rgba(96,165,250,0.3);rgba(239,68,68,0.3);rgba(96,165,250,0.3)"
+                dur="2s" repeatCount="indefinite" />
             </stop>
           </radialGradient>
         </defs>
@@ -281,7 +288,11 @@ export default function SenateVoteVisualization({
             top: 12,
             background: "rgba(10,13,26,0.95)",
             backdropFilter: "blur(12px)",
-            border: "1px solid rgba(100,100,100,0.4)",
+            border: `1px solid ${
+              displayed.party === "D" ? "rgba(96,165,250,0.8)" :
+              displayed.party === "R" ? "rgba(239,68,68,0.8)" :
+              "rgba(150,150,150,0.8)"
+            }`,
             borderRadius: 8, padding: "8px 12px",
             fontSize: 12, fontFamily: "monospace",
             color: "rgba(255,255,255,0.9)",
@@ -290,6 +301,7 @@ export default function SenateVoteVisualization({
             boxShadow: "0 4px 16px rgba(0,0,0,0.5)",
             minWidth: 160,
             cursor: lockedSenator ? "pointer" : "default",
+            animation: isCrossover(displayed) ? "pulseBorder 2s infinite" : "none",
           }}
         >
           <div style={{ fontWeight: 700, marginBottom: 4 }}>{displayed.name}</div>
@@ -301,5 +313,6 @@ export default function SenateVoteVisualization({
         </div>
       )}
     </div>
+    </>
   );
 }
