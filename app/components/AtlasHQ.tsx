@@ -126,7 +126,40 @@ const MORE_CONFLICTS: Conflict[] = [
 ];
 
 const DISASTERS = [
-  { label: "Kenya floods", slug: "kenya-floods", sub: "110+ dead · 34,765+ displaced · 30 counties affected", flyTo: { center: [36.9, 0.0] as [number,number], zoom: 5.5 }, image: "/kenya-floods-debris.webp" },
+  { label: "Kenya floods", slug: "kenya-floods", sub: "", flyTo: { center: [36.9, 0.0] as [number,number], zoom: 5.5 }, image: "/kenya-floods-debris.webp" },
+];
+
+const GEO_ALERTS: FeedItem[] = [
+  { time: "2026-04-19T13:15:00", danger: 4, code: "USA",
+    text: "Trump warns Iran of 'serious consequences' if Strait of Hormuz attacks continue",
+    flyTo: { center: [-77.0, 38.9] as [number,number], zoom: 5 }, sources: ["Reuters", "AP", "WH"], confidence: 94,
+    description: "President Trump issued a stark warning to Tehran following the latest Houthi missile attack on a US destroyer, stating that Iran would face 'serious consequences' if proxy attacks on American vessels continued. The White House confirmed Trump spoke directly with Saudi Arabia's Crown Prince MBS." },
+  { time: "2026-04-17T15:30:00", danger: 3, code: "ISR",
+    text: "Senate vote fails 40-59 to block arms sales to Israel — Sanders resolution draws 85% of Democrats",
+    flyTo: { center: [-77.0, 38.9] as [number,number], zoom: 11 }, sources: ["Senate", "AP", "Reuters"], confidence: 97,
+    description: "The US Senate defeated a resolution introduced by Sen. Bernie Sanders to halt new arms transfers to Israel, 40 in favor to 59 opposed. Despite the failure, the tally marked the highest level of Democratic support to date: 85% of Senate Democrats voted yes. The resolution targeted a pending $8.1B package covering tank rounds, mortar shells, and guidance kits." },
+];
+
+const VIOLENCE_ALERTS: FeedItem[] = [
+  { time: "2026-04-19T12:14:00", danger: 5, code: "USA", slug: "gun-violence", incidentId: "shreveport-2026-04-19", pulse: true,
+    text: "8 children killed in Shreveport mass shooting — gunman kills children ages 1 to 14 across two homes before fleeing",
+    flyTo: { center: [-93.7502, 32.5252] as [number,number], zoom: 10 }, sources: ["AP", "Reuters", "CNN"], confidence: 98,
+    description: "Eight children and juveniles ages 1–14 were killed in a mass shooting in Shreveport, Louisiana. The shooter targeted two homes on the same block before fleeing, carjacked a vehicle, and was killed by police during pursuit." },
+  { time: "2026-04-19T09:45:00", danger: 3, code: "USA", slug: "gun-violence", incidentId: "iowa-city-2026-04-19",
+    text: "5 shot near University of Iowa campus — suspect in custody after fleeing on foot",
+    flyTo: { center: [-91.5302, 41.6611] as [number,number], zoom: 13 }, sources: ["AP", "Iowa City PD"], confidence: 95,
+    description: "Five people were shot near the University of Iowa campus in Iowa City. Police apprehended the suspect after a brief foot pursuit. Two victims remain in critical condition at University of Iowa Hospitals." },
+];
+
+const DISASTER_ALERTS: FeedItem[] = [
+  { time: "2026-04-18T11:00:00", danger: 4, code: "KEN", pulse: true,
+    text: "Kenya floods death toll rises to 110+ — 34,765 displaced across 30 counties as rains intensify",
+    flyTo: { center: [36.9, 0.0] as [number,number], zoom: 6 }, sources: ["OCHA", "Reuters", "Kenya Red Cross"], confidence: 91,
+    description: "Flash floods across Kenya have killed at least 110 people and displaced more than 34,765 across 30 counties. The Kenya Meteorological Department warns of continued heavy rainfall through the week. Roads and bridges washed out across the Rift Valley." },
+  { time: "2026-04-17T08:30:00", danger: 3, code: "USA",
+    text: "Tornado outbreak across Tennessee and Alabama — 4 confirmed dead, dozens of homes destroyed",
+    flyTo: { center: [-86.8, 35.5] as [number,number], zoom: 7 }, sources: ["NWS", "AP", "Reuters"], confidence: 88,
+    description: "A tornado outbreak across Tennessee and Alabama left at least four dead and dozens of homes destroyed. The National Weather Service confirmed multiple EF2 and EF3 tornadoes. Emergency declarations issued in Rutherford and Marshall counties." },
 ];
 
 
@@ -287,6 +320,29 @@ export default function AtlasHQ({ onClose, onNavigate, onHeadlinesToggle, onSour
 
   const displayConfig = editMode && editDraft ? editDraft : currentConfig;
 
+  const renderAlertRows = (alerts: FeedItem[]) => (
+    <div style={{ padding: "0 6px 2px" }}>
+      {alerts.slice(0, 2).map((item, i, arr) => (
+        <div key={`${item.code}-${item.time}`}
+          onClick={() => {
+            if (editMode) return;
+            if (item.slug === "gun-violence" && item.incidentId) {
+              onViolenceTap?.(item.incidentId, item.flyTo?.center ?? [0,0] as [number,number], item.flyTo?.zoom ?? 10);
+            } else if (item.text.includes("Senate vote fails")) {
+              router.push('/senatebill/israel-arms-2026');
+            } else {
+              onNavigate?.(item.code, item.flyTo?.center ?? [0,0] as [number,number], item.flyTo?.zoom ?? 4, item, item.slug);
+            }
+          }}
+        >
+          <LiveAlertRow item={item} onSourceClick={onSourceClick}
+            isActive={false}
+            bottomBorder={i < arr.length - 1} showConfidenceInline={false} expandOnHover={false} />
+        </div>
+      ))}
+    </div>
+  );
+
   const patchDraft = (updater: (d: RadarConfig) => RadarConfig) => {
     setEditDraft(prev => {
       const base = prev ?? currentConfig;
@@ -345,8 +401,8 @@ export default function AtlasHQ({ onClose, onNavigate, onHeadlinesToggle, onSour
 
         <EditModeCtx.Provider value={editMode}>
         {/* Sections rendered in saved drag order */}
-        {(displayConfig.sectionOrder ?? ["geo", "alerts", "violence", "finance", "disasters"]).map((section, i) => {
-          const DEFAULT_ORDER = ["geo", "alerts", "violence", "finance", "disasters"];
+        {(displayConfig.sectionOrder ?? ["geo", "violence", "disasters", "finance"]).map((section, i) => {
+          const DEFAULT_ORDER = ["geo", "violence", "disasters", "finance"];
           const sectionDragHandle = editMode ? {
             onDragStart: (e: React.DragEvent<HTMLDivElement>) => {
               setDragSection(i);
@@ -423,6 +479,10 @@ export default function AtlasHQ({ onClose, onNavigate, onHeadlinesToggle, onSour
                   </>
                 )}
               </div>
+              {/* Geo-specific live alerts */}
+              <Reveal minStage={3} stage={loadStage}>
+                {renderAlertRows(GEO_ALERTS)}
+              </Reveal>
             </div>
           );
 
@@ -485,7 +545,7 @@ export default function AtlasHQ({ onClose, onNavigate, onHeadlinesToggle, onSour
           if (section === "violence") return (
             <div key="violence" {...dropHandlers} style={wrapStyle}>
               <SectionLabel label={displayConfig.sectionLabels?.violence ?? "violence"} dragHandle={sectionDragHandle} onLabelChange={v => patchDraft(d => ({ ...d, sectionLabels: { ...d.sectionLabels, violence: v } }))} />
-              <Reveal minStage={5} stage={loadStage}>
+              <Reveal minStage={4} stage={loadStage}>
                 <div style={{ padding: "0 14px 6px" }}>
                   {displayConfig.violenceItems.map((item, idx) => (
                     <div key={item.headline}
@@ -509,6 +569,8 @@ export default function AtlasHQ({ onClose, onNavigate, onHeadlinesToggle, onSour
                     </div>
                   ))}
                 </div>
+                {/* Violence-specific live alerts */}
+                {!editMode && renderAlertRows(VIOLENCE_ALERTS)}
               </Reveal>
             </div>
           );
@@ -517,7 +579,7 @@ export default function AtlasHQ({ onClose, onNavigate, onHeadlinesToggle, onSour
             <div key="finance" {...dropHandlers} style={wrapStyle}>
               <SectionLabel label={displayConfig.sectionLabels?.finance ?? "finance"} dragHandle={sectionDragHandle} onLabelChange={v => patchDraft(d => ({ ...d, sectionLabels: { ...d.sectionLabels, finance: v } }))} />
               <Reveal minStage={5} stage={loadStage}>
-                <div style={{ padding: "0 14px 6px", display: "flex", gap: 8 }}>
+                <div style={{ padding: "0 14px 24px", display: "flex", gap: 8 }}>
                   {displayConfig.financeItems.map((item, idx) => (
                     <div key={item.headline}
                       onClick={editMode ? undefined : () => onFinanceTap?.(item.slug)}
@@ -549,7 +611,7 @@ export default function AtlasHQ({ onClose, onNavigate, onHeadlinesToggle, onSour
             <div key="disasters" {...dropHandlers} style={wrapStyle}>
               <SectionLabel label={displayConfig.sectionLabels?.disasters ?? "disasters"} dragHandle={sectionDragHandle} onLabelChange={v => patchDraft(d => ({ ...d, sectionLabels: { ...d.sectionLabels, disasters: v } }))} />
               <Reveal minStage={5} stage={loadStage}>
-                <div style={{ padding: "0 14px 20px" }}>
+                <div style={{ padding: "0 14px 6px" }}>
                   {displayConfig.disasters.map((dis, idx) => (
                     <div key={dis.label}
                       onClick={editMode ? undefined : () => onNavigate?.(null, dis.flyTo?.center ?? [0,0], dis.flyTo?.zoom ?? 4, undefined, dis.slug)}
@@ -569,11 +631,12 @@ export default function AtlasHQ({ onClose, onNavigate, onHeadlinesToggle, onSour
                           onChange={v => patchDraft(d => ({ ...d, disasters: d.disasters.map((x, j) => j === idx ? { ...x, label: v } : x) }))}
                           style={{ fontSize: 14, fontFamily: "monospace", letterSpacing: "0.06em", color: "rgba(255,255,255,0.92)", fontWeight: 700 }}
                         />
-                        <div style={{ fontSize: 10, color: "rgba(255,255,255,0.62)", marginTop: 4 }}>{dis.sub}</div>
                       </div>
                     </div>
                   ))}
                 </div>
+                {/* Disaster-specific live alerts */}
+                {!editMode && renderAlertRows(DISASTER_ALERTS)}
               </Reveal>
             </div>
           );
