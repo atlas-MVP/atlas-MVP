@@ -78,8 +78,9 @@ export default function ArticlePage({
     { name: "John Hickenlooper", party: "D" as const, state: "CO", vote: "Aye" as const },
     { name: "Michael Bennet", party: "D" as const, state: "CO", vote: "Aye" as const },
     { name: "Angela Alsobrooks", party: "D" as const, state: "MD", vote: "Aye" as const },
+    { name: "Jon Tester", party: "D" as const, state: "MT", vote: "Aye" as const },
 
-    // NO voters - Democrats who crossed over (8)
+    // NO voters - Democrats who crossed over (7)
     { name: SCHUMER_DATA.name, party: SCHUMER_DATA.party, state: SCHUMER_DATA.state, vote: SCHUMER_DATA.vote },
     { name: "John Fetterman", party: "D" as const, state: "PA", vote: "No" as const },
     { name: "Joe Manchin", party: "D" as const, state: "WV", vote: "No" as const },
