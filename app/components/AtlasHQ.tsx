@@ -4,7 +4,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import LiveAlertRow from "./LiveAlertRow";
 import { setReelResume } from "../lib/reelResume";
-import SenateVoteVisualization from "./SenateVoteVisualization";
+
 import RadarEditor, {
   type RadarConfig,
   type LiveAlertItem as RadarAlertItem,
@@ -220,83 +220,13 @@ export default function AtlasHQ({ onClose, onNavigate, onHeadlinesToggle, onSour
   const [showMore, setShowMore] = useState(false);
   const [showAllDisasters, setShowAllDisasters] = useState(false);
   const [loadStage, setLoadStage] = useState(0);
-  const [senateVoteVisible, setSenateVoteVisible] = useState<'hover' | 'locked' | null>(null);
-  const senateAlertRef = useRef<HTMLDivElement>(null);
   const [editorOpen, setEditorOpen] = useState(false);
   const [liveConfig, setLiveConfig] = useState<RadarConfig | null>(null);
   const [editMode,    setEditMode]    = useState(false);
   const [editDraft,   setEditDraft]   = useState<RadarConfig | null>(null);
   const [dragSection, setDragSection] = useState<number | null>(null);
   const [overSection, setOverSection] = useState<number | null>(null);
-  const saveTimerRef        = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const senateLeaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  // Measured AFTER the alert row finishes expanding (~350ms), so the center is
-  // always the fully-expanded row center regardless of hover direction.
-  const [senateAlertY, setSenateAlertY] = useState<number | null>(null);
-  const senateYCaptureRef   = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  // Senate arms sale vote data: 40-59 (40 Aye, 59 No)
-  const senatorsVoteData = [
-    // Independents who voted Aye (2)
-    { name: "Bernie Sanders", party: "I" as const, state: "VT", vote: "Aye" as const },
-    { name: "Angus King", party: "I" as const, state: "ME", vote: "Aye" as const },
-    // Democrats who voted Aye (39)
-    { name: "Elizabeth Warren", party: "D" as const, state: "MA", vote: "Aye" as const },
-    { name: "Jeff Merkley", party: "D" as const, state: "OR", vote: "Aye" as const },
-    { name: "Chris Van Hollen", party: "D" as const, state: "MD", vote: "Aye" as const },
-    { name: "Peter Welch", party: "D" as const, state: "VT", vote: "Aye" as const },
-    { name: "Ed Markey", party: "D" as const, state: "MA", vote: "Aye" as const },
-    { name: "Dick Durbin", party: "D" as const, state: "IL", vote: "Aye" as const },
-    { name: "Mazie Hirono", party: "D" as const, state: "HI", vote: "Aye" as const },
-    { name: "Tammy Baldwin", party: "D" as const, state: "WI", vote: "Aye" as const },
-    { name: "Cory Booker", party: "D" as const, state: "NJ", vote: "Aye" as const },
-    { name: "Sherrod Brown", party: "D" as const, state: "OH", vote: "Aye" as const },
-    { name: "Ben Ray Luján", party: "D" as const, state: "NM", vote: "Aye" as const },
-    { name: "Alex Padilla", party: "D" as const, state: "CA", vote: "Aye" as const },
-    { name: "Tina Smith", party: "D" as const, state: "MN", vote: "Aye" as const },
-    { name: "Brian Schatz", party: "D" as const, state: "HI", vote: "Aye" as const },
-    { name: "Ron Wyden", party: "D" as const, state: "OR", vote: "Aye" as const },
-    { name: "Raphael Warnock", party: "D" as const, state: "GA", vote: "Aye" as const },
-    { name: "Jon Ossoff", party: "D" as const, state: "GA", vote: "Aye" as const },
-    { name: "Amy Klobuchar", party: "D" as const, state: "MN", vote: "Aye" as const },
-    { name: "Kirsten Gillibrand", party: "D" as const, state: "NY", vote: "Aye" as const },
-    { name: "Martin Heinrich", party: "D" as const, state: "NM", vote: "Aye" as const },
-    { name: "Debbie Stabenow", party: "D" as const, state: "MI", vote: "Aye" as const },
-    { name: "Gary Peters", party: "D" as const, state: "MI", vote: "Aye" as const },
-    { name: "Tammy Duckworth", party: "D" as const, state: "IL", vote: "Aye" as const },
-    { name: "Patty Murray", party: "D" as const, state: "WA", vote: "Aye" as const },
-    { name: "Maria Cantwell", party: "D" as const, state: "WA", vote: "Aye" as const },
-    { name: "Mark Warner", party: "D" as const, state: "VA", vote: "Aye" as const },
-    { name: "Tim Kaine", party: "D" as const, state: "VA", vote: "Aye" as const },
-    { name: "Bob Casey", party: "D" as const, state: "PA", vote: "Aye" as const },
-    { name: "Jacky Rosen", party: "D" as const, state: "NV", vote: "Aye" as const },
-    { name: "Catherine Cortez Masto", party: "D" as const, state: "NV", vote: "Aye" as const },
-    { name: "Mark Kelly", party: "D" as const, state: "AZ", vote: "Aye" as const },
-    { name: "Ruben Gallego", party: "D" as const, state: "AZ", vote: "Aye" as const },
-    { name: "Adam Schiff", party: "D" as const, state: "CA", vote: "Aye" as const },
-    { name: "Andy Kim", party: "D" as const, state: "NJ", vote: "Aye" as const },
-    { name: "Chuck Schumer", party: "D" as const, state: "NY", vote: "Aye" as const },
-    { name: "John Hickenlooper", party: "D" as const, state: "CO", vote: "Aye" as const },
-    { name: "Michael Bennet", party: "D" as const, state: "CO", vote: "Aye" as const },
-    { name: "Angela Alsobrooks", party: "D" as const, state: "MD", vote: "Aye" as const },
-    // Republicans who voted No (49)
-    ...Array.from({ length: 50 }, (_, i) => ({
-      name: `Republican Senator ${i + 1}`,
-      party: "R" as const,
-      state: ["TX", "FL", "OH", "NC", "GA", "TN", "IN", "MO", "AL", "LA"][i % 10],
-      vote: "No" as const,
-    })),
-    // Democrats who voted No (8) + Independent Sinema (1)
-    { name: "John Fetterman", party: "D" as const, state: "PA", vote: "No" as const },
-    { name: "Joe Manchin", party: "D" as const, state: "WV", vote: "No" as const },
-    { name: "Jeanne Shaheen", party: "D" as const, state: "NH", vote: "No" as const },
-    { name: "Maggie Hassan", party: "D" as const, state: "NH", vote: "No" as const },
-    { name: "Chris Coons", party: "D" as const, state: "DE", vote: "No" as const },
-    { name: "Tom Carper", party: "D" as const, state: "DE", vote: "No" as const },
-    { name: "Elissa Slotkin", party: "D" as const, state: "MI", vote: "No" as const },
-    { name: "Jon Tester", party: "D" as const, state: "MT", vote: "No" as const },
-    { name: "Kyrsten Sinema", party: "I" as const, state: "AZ", vote: "No" as const },
-  ];
+  const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     const timers: ReturnType<typeof setTimeout>[] = [];
@@ -339,19 +269,6 @@ export default function AtlasHQ({ onClose, onNavigate, onHeadlinesToggle, onSour
   };
 
   const displayConfig = editMode && editDraft ? editDraft : currentConfig;
-
-  const cancelSenateLeave = () => {
-    if (senateLeaveTimerRef.current) { clearTimeout(senateLeaveTimerRef.current); senateLeaveTimerRef.current = null; }
-    if (senateYCaptureRef.current)   { clearTimeout(senateYCaptureRef.current);   senateYCaptureRef.current = null; }
-  };
-  const scheduleSenateLeave = () => {
-    if (senateVoteVisible === 'locked') return;
-    cancelSenateLeave();
-    senateLeaveTimerRef.current = setTimeout(() => {
-      setSenateAlertY(null);
-      setSenateVoteVisible(null);
-    }, 250);
-  };
 
   const patchDraft = (updater: (d: RadarConfig) => RadarConfig) => {
     setEditDraft(prev => {
@@ -502,40 +419,13 @@ export default function AtlasHQ({ onClose, onNavigate, onHeadlinesToggle, onSour
                     const isSenateVote = item.text.includes("Senate vote fails");
                     return (
                       <div key={`${item.code}-${item.time}`}
-                        ref={!editMode && isSenateVote ? senateAlertRef : null}
-                        onMouseEnter={() => {
-                          if (!editMode && isSenateVote) {
-                            cancelSenateLeave();
-                            if (senateVoteVisible !== 'locked') {
-                              setSenateVoteVisible('hover');
-                              // Schedule Y capture AFTER the row finishes expanding (~350ms).
-                              // This ensures the center is always the expanded row center
-                              // regardless of which direction the mouse approached from.
-                              if (senateAlertY === null) {
-                                senateYCaptureRef.current = setTimeout(() => {
-                                  senateYCaptureRef.current = null;
-                                  if (senateAlertRef.current) {
-                                    const r = senateAlertRef.current.getBoundingClientRect();
-                                    setSenateAlertY(r.top + r.height / 2);
-                                  }
-                                }, 350);
-                              }
-                            }
-                          }
-                        }}
-                        onMouseLeave={() => { if (!editMode && isSenateVote) scheduleSenateLeave(); }}
                         onClick={() => {
                           if (editMode) return;
-                          // Gun violence alerts → open GunViolencePanel
                           if (item.slug === "gun-violence" && item.incidentId) {
                             onViolenceTap?.(item.incidentId, item.flyTo?.center ?? [0,0] as [number,number], item.flyTo?.zoom ?? 10);
-                          }
-                          // Senate graphic → navigate to article page
-                          else if (isSenateVote) {
+                          } else if (isSenateVote) {
                             router.push('/senatebill/israel-arms-2026');
-                          }
-                          // All other alerts → navigate by their code
-                          else {
+                          } else {
                             onNavigate?.(item.code, item.flyTo?.center ?? [0,0] as [number,number], item.flyTo?.zoom ?? 4, item, item.slug);
                           }
                         }}
@@ -565,7 +455,7 @@ export default function AtlasHQ({ onClose, onNavigate, onHeadlinesToggle, onSour
                           </div>
                         ) : (
                           <LiveAlertRow item={item} onSourceClick={onSourceClick}
-                            isActive={isSenateVote && senateVoteVisible !== null}
+                            isActive={false}
                             bottomBorder={i < arr.length - 1} showConfidenceInline={false} expandOnHover={true} />
                         )}
                       </div>
@@ -711,32 +601,6 @@ export default function AtlasHQ({ onClose, onNavigate, onHeadlinesToggle, onSour
         onClose={() => setEditorOpen(false)}
       />
     )}
-
-    {/* Senate graphic — appears to the right on hover/click */}
-    {senateVoteVisible && senateAlertRef.current && senateAlertY !== null && (() => {
-      const vizHeight = 290;
-      const topRaw = senateAlertY - vizHeight / 2;
-      const topClamped = Math.max(8, Math.min(topRaw, (typeof window !== "undefined" ? window.innerHeight : 900) - vizHeight - 8));
-      return (
-        <div
-          onMouseEnter={() => { cancelSenateLeave(); if (senateVoteVisible !== 'locked') setSenateVoteVisible('hover'); }}
-          onMouseLeave={scheduleSenateLeave}
-          onClick={() => { cancelSenateLeave(); setSenateVoteVisible(v => { if (v === 'locked') { setSenateAlertY(null); return null; } return 'locked'; }); }}
-          style={{
-            position: "fixed",
-            left: 516, // 20px (left) + 488px (panel width) + 8px gap
-            top: topClamped,
-            zIndex: 100,
-            pointerEvents: "auto",
-          }}
-        >
-          <SenateVoteVisualization
-            title="SENATE"
-            senators={senatorsVoteData}
-          />
-        </div>
-      );
-    })()}
 
     </>
 
