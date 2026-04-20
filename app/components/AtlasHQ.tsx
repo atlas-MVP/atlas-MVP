@@ -12,7 +12,7 @@ import RadarEditor, {
   type FinanceItem as RadarFinanceItem,
   type DisasterItem as RadarDisasterItem,
 } from "./RadarEditor";
-import { EditModeCtx, EText, EImg } from "./InlineEdit";
+import { EditModeCtx, EText, EImg, useEditMode } from "./InlineEdit";
 
 // ── Reels preview ─────────────────────────────────────────────────────────────
 // Autoplays the most recent "Atlas You" reel (muted, since browsers block
@@ -315,8 +315,11 @@ export default function AtlasHQ({ onClose, onNavigate, onHeadlinesToggle, onSour
   // "Apr 19" passes Date.parse in Chrome, so we check the format explicitly.
   const hasIsoTimes = (alerts: RadarAlertItem[]) =>
     alerts.length > 0 && /^\d{4}-\d{2}-\d{2}/.test(alerts[0].time);
+  // Strip &nbsp; entities that browsers write into contentEditable on save
+  const cleanStr = (s: string) => s.replace(/&nbsp;/g, " ").trimEnd();
   const activeFeed      = (liveConfig?.liveAlerts?.length && hasIsoTimes(liveConfig.liveAlerts)
-    ? liveConfig.liveAlerts : LIVE_FEED) as FeedItem[];
+    ? liveConfig.liveAlerts.map(a => ({ ...a, text: cleanStr(a.text), description: cleanStr(a.description) }))
+    : LIVE_FEED) as FeedItem[];
   const activeViolence  = (liveConfig?.violenceItems?.length  ? liveConfig.violenceItems  : VIOLENCE_ITEMS) as RadarViolenceItem[];
   const activeFinance   = (liveConfig?.financeItems?.length   ? liveConfig.financeItems   : FINANCE_ITEMS) as RadarFinanceItem[];
   const activeDisasters = (liveConfig?.disasters?.length      ? liveConfig.disasters      : DISASTERS) as RadarDisasterItem[];
@@ -328,7 +331,8 @@ export default function AtlasHQ({ onClose, onNavigate, onHeadlinesToggle, onSour
     violenceItems: activeViolence as RadarViolenceItem[],
     financeItems:  activeFinance as RadarFinanceItem[],
     disasters:     activeDisasters as RadarDisasterItem[],
-    sectionOrder:  liveConfig?.sectionOrder, // undefined = default order
+    sectionOrder:   liveConfig?.sectionOrder,
+    sectionLabels:  liveConfig?.sectionLabels,
   };
 
   const displayConfig = editMode && editDraft ? editDraft : currentConfig;
@@ -436,7 +440,7 @@ export default function AtlasHQ({ onClose, onNavigate, onHeadlinesToggle, onSour
 
           if (section === "geo") return (
             <div key="geo" {...dropHandlers} style={wrapStyle}>
-              <SectionLabel label="geopolitics" onClick={editMode ? undefined : () => setShowMore(v => !v)} dragHandle={sectionDragHandle} />
+              <SectionLabel label={displayConfig.sectionLabels?.geo ?? "geopolitics"} onClick={editMode ? undefined : () => setShowMore(v => !v)} dragHandle={sectionDragHandle} onLabelChange={v => patchDraft(d => ({ ...d, sectionLabels: { ...d.sectionLabels, geo: v } }))} />
               <div style={{ padding: "0 14px", display: "flex", flexDirection: "column", gap: 6 }}>
                 {displayConfig.topConflicts.map((c, idx) => (
                   <Reveal key={c.label} minStage={1 + idx} stage={loadStage}>
@@ -487,7 +491,7 @@ export default function AtlasHQ({ onClose, onNavigate, onHeadlinesToggle, onSour
 
           if (section === "alerts") return (
             <div key="alerts" {...dropHandlers} style={wrapStyle}>
-              <SectionLabel label="live alerts" dragHandle={sectionDragHandle} />
+              <SectionLabel label={displayConfig.sectionLabels?.alerts ?? "live alerts"} dragHandle={sectionDragHandle} onLabelChange={v => patchDraft(d => ({ ...d, sectionLabels: { ...d.sectionLabels, alerts: v } }))} />
               <Reveal minStage={3} stage={loadStage}>
                 <div style={{ padding: "0 6px", position: "relative" }}>
                   {(displayConfig.liveAlerts as FeedItem[]).slice(0, 3).map((item, i, arr) => {
@@ -563,7 +567,7 @@ export default function AtlasHQ({ onClose, onNavigate, onHeadlinesToggle, onSour
 
           if (section === "violence") return (
             <div key="violence" {...dropHandlers} style={wrapStyle}>
-              <SectionLabel label="violence" dragHandle={sectionDragHandle} />
+              <SectionLabel label={displayConfig.sectionLabels?.violence ?? "violence"} dragHandle={sectionDragHandle} onLabelChange={v => patchDraft(d => ({ ...d, sectionLabels: { ...d.sectionLabels, violence: v } }))} />
               <Reveal minStage={5} stage={loadStage}>
                 <div style={{ padding: "0 14px 6px" }}>
                   {displayConfig.violenceItems.map((item, idx) => (
@@ -594,7 +598,7 @@ export default function AtlasHQ({ onClose, onNavigate, onHeadlinesToggle, onSour
 
           if (section === "finance") return (
             <div key="finance" {...dropHandlers} style={wrapStyle}>
-              <SectionLabel label="finance" dragHandle={sectionDragHandle} />
+              <SectionLabel label={displayConfig.sectionLabels?.finance ?? "finance"} dragHandle={sectionDragHandle} onLabelChange={v => patchDraft(d => ({ ...d, sectionLabels: { ...d.sectionLabels, finance: v } }))} />
               <Reveal minStage={5} stage={loadStage}>
                 <div style={{ padding: "0 14px 6px", display: "flex", gap: 8 }}>
                   {displayConfig.financeItems.map((item, idx) => (
@@ -624,7 +628,7 @@ export default function AtlasHQ({ onClose, onNavigate, onHeadlinesToggle, onSour
 
           if (section === "disasters") return (
             <div key="disasters" {...dropHandlers} style={wrapStyle}>
-              <SectionLabel label="disasters" dragHandle={sectionDragHandle} />
+              <SectionLabel label={displayConfig.sectionLabels?.disasters ?? "disasters"} dragHandle={sectionDragHandle} onLabelChange={v => patchDraft(d => ({ ...d, sectionLabels: { ...d.sectionLabels, disasters: v } }))} />
               <Reveal minStage={5} stage={loadStage}>
                 <div style={{ padding: "0 14px 20px" }}>
                   {displayConfig.disasters.map((dis, idx) => (
@@ -725,14 +729,21 @@ export default function AtlasHQ({ onClose, onNavigate, onHeadlinesToggle, onSour
   );
 }
 
-function SectionLabel({ label, onClick, dragHandle }: {
+function SectionLabel({ label, onClick, dragHandle, onLabelChange }: {
   label: string;
   onClick?: () => void;
+  onLabelChange?: (v: string) => void;
   dragHandle?: {
     onDragStart: React.DragEventHandler<HTMLDivElement>;
     onDragEnd: React.DragEventHandler<HTMLDivElement>;
   };
 }) {
+  const editMode = useEditMode();
+  const labelStyle: React.CSSProperties = {
+    fontSize: 13, fontFamily: "monospace", letterSpacing: "0.18em",
+    color: "rgba(255,255,255,0.42)", textTransform: "uppercase",
+    fontWeight: 500, userSelect: "none",
+  };
   return (
     <div
       draggable={!!dragHandle}
@@ -746,16 +757,16 @@ function SectionLabel({ label, onClick, dragHandle }: {
       {dragHandle && (
         <span style={{ color: "rgba(255,255,255,0.28)", fontSize: 13, lineHeight: 1, flexShrink: 0 }}>⠿</span>
       )}
-      <span
-        onClick={onClick}
-        style={{
-          fontSize: 13, fontFamily: "monospace", letterSpacing: "0.18em",
-          color: "rgba(255,255,255,0.42)", textTransform: "uppercase",
-          fontWeight: 500, cursor: onClick ? "pointer" : "default", userSelect: "none",
-        }}
-        onMouseEnter={e => { if (onClick) e.currentTarget.style.color = "rgba(255,255,255,0.7)"; }}
-        onMouseLeave={e => { if (onClick) e.currentTarget.style.color = "rgba(255,255,255,0.42)"; }}
-      >{label}</span>
+      {editMode && onLabelChange ? (
+        <EText value={label} onChange={onLabelChange} as="span" style={labelStyle} />
+      ) : (
+        <span
+          onClick={onClick}
+          style={{ ...labelStyle, cursor: onClick ? "pointer" : "default" }}
+          onMouseEnter={e => { if (onClick) e.currentTarget.style.color = "rgba(255,255,255,0.7)"; }}
+          onMouseLeave={e => { if (onClick) e.currentTarget.style.color = "rgba(255,255,255,0.42)"; }}
+        >{label}</span>
+      )}
     </div>
   );
 }

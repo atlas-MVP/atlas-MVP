@@ -47,12 +47,12 @@ export default function SenateVoteVisualization({
   // A gapAngle splits the two halves at the top so there is visible air.
   const generatePositions = () => {
     const positions: Array<{ senator: Senator; x: number; y: number }> = [];
-    const centerX       = 266;
-    const centerY       = 270; // pushed down so SENATE title has breathing room
+    const centerX       = 255;
+    const centerY       = 230;
     const rows          = 7;
-    const baseRadius    = 62;
-    const radiusStep    = 19;  // tighter rows — less vertical spread
-    const gapAngle      = 0.09 * Math.PI; // gap between halves at the top
+    const baseRadius    = 58;
+    const radiusStep    = 16;  // rows closer together
+    const gapAngle      = 0.22 * Math.PI; // ~40° gap between halves at the top
 
     const ayeVoters = senators.filter(s => s.vote === "Aye");
     const noVoters  = senators.filter(s => s.vote === "No");
@@ -121,8 +121,8 @@ export default function SenateVoteVisualization({
     <div
       style={{
         position: "relative",
-        width: 533,
-        height: 333,
+        width: 510,
+        height: 290,
         background: "rgba(4,6,18,0.75)",
         backdropFilter: "blur(20px)",
         borderRadius: 12,
@@ -132,7 +132,7 @@ export default function SenateVoteVisualization({
       {/* ── Title ─────────────────────────────────────────────────────────── */}
       <div style={{
         position: "absolute",
-        top: 20, left: 0, right: 0,
+        top: 14, left: 0, right: 0,
         textAlign: "center",
         fontSize: 14, fontWeight: 700, fontFamily: "monospace",
         letterSpacing: "0.2em", color: "rgba(255,255,255,0.7)",
@@ -142,7 +142,7 @@ export default function SenateVoteVisualization({
 
       {/* ── YES label — flush with bottom-left end of arc ─────────────────── */}
       <div style={{
-        position: "absolute", left: 16, bottom: 62,
+        position: "absolute", left: 16, bottom: 58,
         fontSize: 12, fontFamily: "monospace", letterSpacing: "0.1em",
         color: "rgba(255,255,255,0.25)", textTransform: "uppercase",
       }}>
@@ -151,7 +151,7 @@ export default function SenateVoteVisualization({
 
       {/* ── NO label — flush with bottom-right end of arc ─────────────────── */}
       <div style={{
-        position: "absolute", right: 16, bottom: 62,
+        position: "absolute", right: 16, bottom: 58,
         fontSize: 12, fontFamily: "monospace", letterSpacing: "0.1em",
         color: "rgba(255,255,255,0.25)", textTransform: "uppercase",
       }}>
@@ -160,7 +160,7 @@ export default function SenateVoteVisualization({
 
       {/* ── Vote count ────────────────────────────────────────────────────── */}
       <div style={{
-        position: "absolute", bottom: 38, left: "50%",
+        position: "absolute", bottom: 34, left: "50%",
         transform: "translateX(-50%)",
         fontSize: 16, fontWeight: 300, fontFamily: "inherit",
         letterSpacing: "0.3em", color: "rgba(255,255,255,0.9)",
@@ -171,7 +171,7 @@ export default function SenateVoteVisualization({
 
       {/* ── BLOCKED badge ─────────────────────────────────────────────────── */}
       <div style={{
-        position: "absolute", bottom: 12, left: "50%",
+        position: "absolute", bottom: 10, left: "50%",
         transform: "translateX(-50%)",
         background: "rgba(239,68,68,0.15)",
         border: "1px solid rgba(239,68,68,0.4)",
@@ -184,7 +184,7 @@ export default function SenateVoteVisualization({
       </div>
 
       {/* ── Senate dots (SVG) ─────────────────────────────────────────────── */}
-      <svg width="533" height="333" style={{ position: "absolute", top: 0, left: 0 }}>
+      <svg width="510" height="290" style={{ position: "absolute", top: 0, left: 0 }}>
         <defs>
           <radialGradient id="crossoverPulse">
             <stop offset="0%" stopColor="rgba(96,165,250,0.6)">
