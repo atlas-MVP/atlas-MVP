@@ -219,6 +219,7 @@ export default function AtlasHQ({ onClose, onNavigate, onHeadlinesToggle, onSour
   const router = useRouter();
   const [showMore, setShowMore] = useState(false);
   const [showAllDisasters, setShowAllDisasters] = useState(false);
+  const MAX_STAGE = STAGE_DELAYS.length - 1;
   const [loadStage, setLoadStage] = useState(0);
   const [editorOpen, setEditorOpen] = useState(false);
   const [liveConfig, setLiveConfig] = useState<RadarConfig | null>(null);
@@ -229,6 +230,22 @@ export default function AtlasHQ({ onClose, onNavigate, onHeadlinesToggle, onSour
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
+    // Only animate on a true page load (first visit or browser reload).
+    // SPA back-navigation reuses sessionStorage → skip straight to max stage.
+    const navType = (typeof performance !== "undefined")
+      ? (performance.getEntriesByType("navigation")[0] as PerformanceNavigationTiming | undefined)?.type
+      : undefined;
+    const isReload   = navType === "reload";
+    const isFirstHit = typeof sessionStorage !== "undefined" && !sessionStorage.getItem("atlasHQLoaded");
+
+    if (!isReload && !isFirstHit) {
+      // Already seen this session and not a reload — skip animation
+      setLoadStage(MAX_STAGE);
+      return;
+    }
+
+    if (typeof sessionStorage !== "undefined") sessionStorage.setItem("atlasHQLoaded", "1");
+
     const timers: ReturnType<typeof setTimeout>[] = [];
     STAGE_DELAYS.forEach((delay, i) => {
       if (i === 0) return; // stage 0 is immediate
