@@ -702,7 +702,9 @@ export default function AtlasHQ({ onClose, onNavigate, onHeadlinesToggle, onSour
     {/* Senate vote visualization — appears to the right on hover/click */}
     {senateVoteVisible && senateAlertRef.current && senateAlertYRef.current !== null && (() => {
       const alertCenterY = senateAlertYRef.current!;
-      const vizHeight = 333;
+      const vizHeight = 290;
+      const topRaw = alertCenterY - vizHeight / 2;
+      const topClamped = Math.max(8, Math.min(topRaw, (typeof window !== "undefined" ? window.innerHeight : 900) - vizHeight - 8));
       return (
         <div
           onMouseEnter={() => { cancelSenateLeave(); if (senateVoteVisible !== 'locked') setSenateVoteVisible('hover'); }}
@@ -711,7 +713,7 @@ export default function AtlasHQ({ onClose, onNavigate, onHeadlinesToggle, onSour
           style={{
             position: "fixed",
             left: 516, // 20px (left) + 488px (panel width) + 8px gap
-            top: alertCenterY - vizHeight / 2, // Center vertically with alert
+            top: topClamped,
             zIndex: 100,
             pointerEvents: "auto",
           }}
