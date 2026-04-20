@@ -176,7 +176,7 @@ export default function SenateVoteVisualization({
       {/* ── yes label — flush with bottom-left end of arc ─────────────────── */}
       <div style={{
         position: "absolute", left: 16, bottom: 58,
-        fontSize: 12, fontFamily: "monospace", letterSpacing: "0.1em",
+        fontSize: 15, fontFamily: "monospace", letterSpacing: "0.1em",
         color: "rgba(100,200,100,0.7)",
       }}>
         yes
@@ -185,7 +185,7 @@ export default function SenateVoteVisualization({
       {/* ── no label — flush with bottom-right end of arc ─────────────────── */}
       <div style={{
         position: "absolute", right: 16, bottom: 58,
-        fontSize: 12, fontFamily: "monospace", letterSpacing: "0.1em",
+        fontSize: 15, fontFamily: "monospace", letterSpacing: "0.1em",
         color: "rgba(239,68,68,0.7)",
       }}>
         no
