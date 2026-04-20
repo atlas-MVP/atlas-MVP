@@ -231,7 +231,8 @@ export default function AtlasHQ({ onClose, onNavigate, onHeadlinesToggle, onSour
   const [editDraft,   setEditDraft]   = useState<RadarConfig | null>(null);
   const [dragSection, setDragSection] = useState<number | null>(null);
   const [overSection, setOverSection] = useState<number | null>(null);
-  const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const saveTimerRef        = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const senateLeaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Senate arms sale vote data: 40-59 (40 Aye, 59 No)
   const senatorsVoteData = [
@@ -333,6 +334,15 @@ export default function AtlasHQ({ onClose, onNavigate, onHeadlinesToggle, onSour
   };
 
   const displayConfig = editMode && editDraft ? editDraft : currentConfig;
+
+  const cancelSenateLeave = () => {
+    if (senateLeaveTimerRef.current) { clearTimeout(senateLeaveTimerRef.current); senateLeaveTimerRef.current = null; }
+  };
+  const scheduleSenateLeave = () => {
+    if (senateVoteVisible === 'locked') return;
+    cancelSenateLeave();
+    senateLeaveTimerRef.current = setTimeout(() => setSenateVoteVisible(null), 250);
+  };
 
   const patchDraft = (updater: (d: RadarConfig) => RadarConfig) => {
     setEditDraft(prev => {
@@ -484,17 +494,18 @@ export default function AtlasHQ({ onClose, onNavigate, onHeadlinesToggle, onSour
                     return (
                       <div key={`${item.code}-${item.time}`}
                         ref={!editMode && isSenateVote ? senateAlertRef : null}
-                        onMouseEnter={() => { if (!editMode && isSenateVote && senateVoteVisible !== 'locked') setSenateVoteVisible('hover'); }}
-                        onMouseLeave={() => { if (!editMode && isSenateVote && senateVoteVisible === 'hover') setSenateVoteVisible(null); }}
+                        onMouseEnter={() => { if (!editMode && isSenateVote) { cancelSenateLeave(); if (senateVoteVisible !== 'locked') setSenateVoteVisible('hover'); } }}
+                        onMouseLeave={() => { if (!editMode && isSenateVote) scheduleSenateLeave(); }}
                         onClick={() => {
                           if (editMode) return;
                           // Gun violence alerts → open GunViolencePanel
                           if (item.slug === "gun-violence" && item.incidentId) {
                             onViolenceTap?.(item.incidentId, item.flyTo?.center ?? [0,0] as [number,number], item.flyTo?.zoom ?? 10);
                           }
-                          // Senate vote → Israel/US widget (use ISR code)
+                          // Senate vote → lock/unlock the graphic
                           else if (isSenateVote) {
-                            onNavigate?.("ISR", item.flyTo?.center ?? [-77.0, 38.9] as [number,number], item.flyTo?.zoom ?? 11, item, undefined);
+                            cancelSenateLeave();
+                            setSenateVoteVisible(v => v === 'locked' ? null : 'locked');
                           }
                           // All other alerts → navigate by their code
                           else {
@@ -523,6 +534,7 @@ export default function AtlasHQ({ onClose, onNavigate, onHeadlinesToggle, onSour
                           </div>
                         ) : (
                           <LiveAlertRow item={item} onSourceClick={onSourceClick}
+                            isActive={isSenateVote && senateVoteVisible !== null}
                             bottomBorder={i < arr.length - 1} showConfidenceInline={false} expandOnHover={true} />
                         )}
                       </div>
@@ -691,16 +703,9 @@ export default function AtlasHQ({ onClose, onNavigate, onHeadlinesToggle, onSour
       const vizHeight = 333;
       return (
         <div
-          onMouseEnter={() => {
-            if (senateVoteVisible !== 'locked') {
-              setSenateVoteVisible('hover');
-            }
-          }}
-          onMouseLeave={() => {
-            if (senateVoteVisible === 'hover') {
-              setSenateVoteVisible(null);
-            }
-          }}
+          onMouseEnter={() => { cancelSenateLeave(); if (senateVoteVisible !== 'locked') setSenateVoteVisible('hover'); }}
+          onMouseLeave={scheduleSenateLeave}
+          onClick={() => { cancelSenateLeave(); setSenateVoteVisible(v => v === 'locked' ? null : 'locked'); }}
           style={{
             position: "fixed",
             left: 516, // 20px (left) + 488px (panel width) + 8px gap
