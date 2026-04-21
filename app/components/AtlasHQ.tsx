@@ -604,7 +604,7 @@ export default function AtlasHQ({ onClose, onNavigate, onHeadlinesToggle, onSour
           );
 
           if (section === "violence") return (
-            <div key="violence" {...dropHandlers} style={wrapStyle}>
+            <div key="violence" {...dropHandlers} style={{ paddingBottom: 28, ...wrapStyle }}>
               <SectionLabel label={displayConfig.sectionLabels?.violence ?? "violence"} dragHandle={sectionDragHandle} onLabelChange={v => patchDraft(d => ({ ...d, sectionLabels: { ...d.sectionLabels, violence: v } }))} />
               <Reveal minStage={4} stage={loadStage}>
                 <div style={{ padding: "0 14px 6px" }}>
@@ -660,7 +660,7 @@ export default function AtlasHQ({ onClose, onNavigate, onHeadlinesToggle, onSour
           );
 
           if (section === "finance") return (
-            <div key="finance" {...dropHandlers} style={wrapStyle}>
+            <div key="finance" {...dropHandlers} style={{ paddingBottom: 28, ...wrapStyle }}>
               <SectionLabel label={displayConfig.sectionLabels?.finance ?? "finance"} dragHandle={sectionDragHandle} onLabelChange={v => patchDraft(d => ({ ...d, sectionLabels: { ...d.sectionLabels, finance: v } }))} />
               <Reveal minStage={5} stage={loadStage}>
                 <div style={{ padding: "0 14px 24px", display: "flex", gap: 8 }}>
@@ -717,7 +717,7 @@ export default function AtlasHQ({ onClose, onNavigate, onHeadlinesToggle, onSour
           );
 
           if (section === "disasters") return (
-            <div key="disasters" {...dropHandlers} style={wrapStyle}>
+            <div key="disasters" {...dropHandlers} style={{ paddingBottom: 28, ...wrapStyle }}>
               <SectionLabel label={displayConfig.sectionLabels?.disasters ?? "disasters"} dragHandle={sectionDragHandle} onLabelChange={v => patchDraft(d => ({ ...d, sectionLabels: { ...d.sectionLabels, disasters: v } }))} />
               <Reveal minStage={5} stage={loadStage}>
                 <div style={{ padding: "0 14px 6px" }}>
