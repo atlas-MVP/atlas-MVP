@@ -42,6 +42,23 @@ const SENATOR_DATA: Record<string, SenatorView> = Object.fromEntries(
 // Legacy alias — the small in-line hover card still references SCHUMER_DATA.
 const SCHUMER_DATA = SENATOR_DATA["Chuck Schumer"];
 
+// Current calendar year drives the "Left office" vs "Retiring" split.
+const CURRENT_YEAR = new Date().getFullYear();
+
+// Returns the one-line bio-card label for a senator's electoral status.
+// Three cases:
+//   • Left office:       runningAgain=false AND term already ended
+//   • Retiring:          runningAgain=false AND term ends in the future
+//   • Up for re-election runningAgain=true (default)
+function reelectionLabel(bio: SenatorBio): string {
+  if (!bio.runningAgain) {
+    return bio.nextElection < CURRENT_YEAR
+      ? `Left office: ${bio.nextElection}`
+      : `Retiring: ${bio.nextElection}`;
+  }
+  return `Up for re-election: ${bio.nextElection}`;
+}
+
 export default function ArticlePage({
   headline,
   description,
@@ -318,8 +335,18 @@ export default function ArticlePage({
                 </div>
 
                 <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: 22, fontWeight: 700, color: "rgba(255,255,255,0.95)", marginBottom: 8 }}>
-                    {bio.name}
+                  <div style={{ fontSize: 22, fontWeight: 700, marginBottom: 8 }}>
+                    <a
+                      href={bio.officialUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      style={{
+                        color: "rgba(255,255,255,0.95)",
+                        textDecoration: "underline",
+                      }}
+                    >
+                      {bio.name}
+                    </a>
                   </div>
                   <div style={{ fontSize: 14, color: "rgba(255,255,255,0.62)", marginBottom: 6 }}>
                     {bio.party === "R" ? "Republican" : bio.party === "D" ? "Democrat" : "Independent"} • {STATE_NAMES[bio.state] ?? bio.state}
@@ -341,8 +368,8 @@ export default function ArticlePage({
                 paddingTop: 18,
               }}>
                 <div>Age: {bio.age}</div>
-                <div>In office: {bio.yearsInOffice} years</div>
-                <div>Up for re-election: {bio.nextElection}</div>
+                <div>Years in office: {bio.yearsInOffice}</div>
+                <div>{reelectionLabel(bio)}</div>
               </div>
             </div>
           </div>
@@ -495,10 +522,24 @@ export default function ArticlePage({
                       <div style={{
                         fontSize: 22,
                         fontWeight: 700,
-                        color: "rgba(255,255,255,0.95)",
                         marginBottom: 8,
                       }}>
-                        {senator.name}
+                        {hasBio ? (
+                          <a
+                            href={bio.officialUrl}
+                            target="_blank"
+                            rel="noreferrer"
+                            onClick={e => e.stopPropagation()}
+                            style={{
+                              color: "rgba(255,255,255,0.95)",
+                              textDecoration: "underline",
+                            }}
+                          >
+                            {senator.name}
+                          </a>
+                        ) : (
+                          <span style={{ color: "rgba(255,255,255,0.95)" }}>{senator.name}</span>
+                        )}
                       </div>
 
                       <div style={{
@@ -530,20 +571,8 @@ export default function ArticlePage({
                       paddingTop: 14,
                     }}>
                       <div><span style={{ fontWeight: 700 }}>Age:</span> {bio.age}</div>
-                      <div><span style={{ fontWeight: 700 }}>In office:</span> {bio.yearsInOffice} years</div>
-                      <div><span style={{ fontWeight: 700 }}>Up for re-election:</span> {bio.nextElection}</div>
-                      <div>
-                        <span style={{ fontWeight: 700 }}>Official site:</span>{" "}
-                        <a
-                          href={bio.officialUrl}
-                          target="_blank"
-                          rel="noreferrer"
-                          onClick={e => e.stopPropagation()}
-                          style={{ color: "rgba(96,165,250,0.9)", textDecoration: "none" }}
-                        >
-                          {bio.officialUrl.replace(/^https?:\/\//, "")}
-                        </a>
-                      </div>
+                      <div><span style={{ fontWeight: 700 }}>Years in office:</span> {bio.yearsInOffice}</div>
+                      <div>{reelectionLabel(bio)}</div>
                     </div>
                   )}
                 </div>
