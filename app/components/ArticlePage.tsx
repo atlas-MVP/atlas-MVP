@@ -131,7 +131,6 @@ export default function ArticlePage({
     { name: "Marco Rubio",          party: "R" as const, state: "FL", vote: "No" as const },
     { name: "Rand Paul",            party: "R" as const, state: "KY", vote: "No" as const },
     { name: "Lindsey Graham",       party: "R" as const, state: "SC", vote: "No" as const },
-    { name: "J.D. Vance",           party: "R" as const, state: "OH", vote: "No" as const },
     { name: "Josh Hawley",          party: "R" as const, state: "MO", vote: "No" as const },
     { name: "Susan Collins",        party: "R" as const, state: "ME", vote: "No" as const },
     { name: "Mitt Romney",          party: "R" as const, state: "UT", vote: "No" as const },
