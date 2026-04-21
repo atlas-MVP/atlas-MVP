@@ -17,6 +17,10 @@ import HeadlinesPanel from "./components/HeadlinesPanel";
 import SourceInfoPanel from "./components/SourceInfoPanel";
 import AuthorBioPanel from "./components/AuthorBioPanel";
 import SettingsPanel from "./components/SettingsPanel";
+import SettingsSubPanel from "./components/SettingsSubPanel";
+import YouPanel from "./components/YouPanel";
+import UsPanel from "./components/UsPanel";
+import MethodologyPanel from "./components/MethodologyPanel";
 import MapEventPlayer from "./components/MapEventPlayer";
 import type { MapEvent } from "./lib/mapEvents";
 import { pickRandomNatureSite, NATURE_FLY_ZOOM, NATURE_CATEGORY_ZOOM, type NatureCategory } from "./lib/natureSites";
@@ -125,6 +129,7 @@ export default function Home() {
   const [showRadar, setShowRadar]             = useState(true);
   const [mapReady, setMapReady]                = useState(false);
   const [showSettings, setShowSettings]       = useState(false);
+  const [activeSubPanel, setActiveSubPanel]   = useState<"you" | "us" | "methodology" | "settings" | null>(null);
   const [activeSource, setActiveSource]       = useState<string | null>(null);
   const [radarAlertText, setRadarAlertText]   = useState<string | null>(null);
   const [activeMapEvent, setActiveMapEvent]   = useState<MapEvent | null>(null);
@@ -426,9 +431,24 @@ export default function Home() {
         />
       )}
 
-      {/* Settings panel — opens on second ATLAS tap */}
-      {showSettings && (
-        <SettingsPanel onClose={() => setShowSettings(false)} />
+      {/* Settings nav menu — opens on second ATLAS tap */}
+      {showSettings && !activeSubPanel && (
+        <SettingsPanel
+          onClose={() => setShowSettings(false)}
+          onOpen={(panel) => setActiveSubPanel(panel)}
+        />
+      )}
+      {showSettings && activeSubPanel === "you" && (
+        <YouPanel onClose={() => { setShowSettings(false); setActiveSubPanel(null); }} onBack={() => setActiveSubPanel(null)} />
+      )}
+      {showSettings && activeSubPanel === "us" && (
+        <UsPanel onClose={() => { setShowSettings(false); setActiveSubPanel(null); }} onBack={() => setActiveSubPanel(null)} />
+      )}
+      {showSettings && activeSubPanel === "methodology" && (
+        <MethodologyPanel onClose={() => { setShowSettings(false); setActiveSubPanel(null); }} onBack={() => setActiveSubPanel(null)} />
+      )}
+      {showSettings && activeSubPanel === "settings" && (
+        <SettingsSubPanel onClose={() => { setShowSettings(false); setActiveSubPanel(null); }} onBack={() => setActiveSubPanel(null)} />
       )}
 
       {/* Disaster panel — opens when a disaster card is tapped */}
@@ -537,9 +557,10 @@ export default function Home() {
           <button
             onClick={() => {
               if (showRadar) {
-                // Second tap → close radar, open settings
+                // Second tap → close radar, open settings nav menu
                 setShowRadar(false);
                 setShowSettings(true);
+                setActiveSubPanel(null);
                 return;
               }
               // First tap → full reset + open radar + globe camera
@@ -552,6 +573,7 @@ export default function Home() {
               setShowAuthorBio(false);
               setActiveSource(null);
               setShowSettings(false);
+              setActiveSubPanel(null);
               setActiveDisaster(null);
               setActiveFinance(null);
               setActiveGunViolence(null);

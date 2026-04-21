@@ -1,0 +1,146 @@
+"use client";
+import React, { useState } from "react";
+import { EText } from "./InlineEdit";
+
+const PANEL: React.CSSProperties = {
+  position: "absolute",
+  top: 52, left: 20, bottom: 28,
+  width: 488,
+  zIndex: 20,
+  display: "flex",
+  flexDirection: "column",
+  background: "rgba(4,6,18,0.62)",
+  border: "1px solid rgba(255,255,255,0.06)",
+  borderRadius: 16,
+  backdropFilter: "blur(40px)",
+  WebkitBackdropFilter: "blur(40px)",
+  boxShadow: "0 24px 80px rgba(0,0,0,0.38), 0 1px 3px rgba(0,0,0,0.18)",
+  overflow: "hidden",
+  pointerEvents: "auto",
+};
+
+function SLabel({ text }: { text: string }) {
+  return (
+    <div style={{ padding: "16px 18px 6px" }}>
+      <span style={{ fontSize: 9, fontFamily: "monospace", letterSpacing: "0.2em", color: "rgba(255,255,255,0.28)", textTransform: "uppercase" as const, fontWeight: 500 }}>
+        {text}
+      </span>
+    </div>
+  );
+}
+
+// Danger-level legend row
+function DangerRow({ level, label, color, desc }: { level: number; label: string; color: string; desc: string }) {
+  return (
+    <div style={{ display: "flex", alignItems: "flex-start", gap: 10, padding: "6px 0", borderBottom: "1px solid rgba(255,255,255,0.04)" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 6, minWidth: 60, flexShrink: 0 }}>
+        <span style={{ width: 6, height: 6, borderRadius: "50%", background: color, flexShrink: 0 }} />
+        <span style={{ fontSize: 12, fontFamily: "monospace", fontWeight: 700, color }}>{level}</span>
+      </div>
+      <div>
+        <div style={{ fontSize: 11, fontFamily: "monospace", color: "rgba(255,255,255,0.72)", fontWeight: 600 }}>{label}</div>
+        <div style={{ fontSize: 10, fontFamily: "monospace", color: "rgba(255,255,255,0.38)", marginTop: 1, lineHeight: 1.5 }}>{desc}</div>
+      </div>
+    </div>
+  );
+}
+
+function SourceBadge({ name }: { name: string }) {
+  return (
+    <span style={{ fontSize: 9, fontFamily: "monospace", letterSpacing: "0.1em", padding: "3px 8px", borderRadius: 4, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.5)" }}>{name}</span>
+  );
+}
+
+interface Props { onClose: () => void; onBack: () => void; }
+
+export default function MethodologyPanel({ onClose, onBack }: Props) {
+  const [verificationText, setVerificationText] = useState(
+    "Every alert requires confirmation from a minimum of two independent primary sources before publication. High-danger events (level 4–5) require three. Sources are weighted by historical accuracy, institutional authority, and proximity to the event."
+  );
+  const [dataText, setDataText] = useState(
+    "Atlas draws on structured feeds from ACLED, GDELT, and UN OCHA alongside real-time reporting from AP, Reuters, Al Jazeera, BBC, NYT, and regional outlets. Casualty figures are reconciled against government announcements, hospital records, and NGO field reports."
+  );
+  const [securityText, setSecurityText] = useState(
+    "Atlas does not track user location, store browsing history, or sell personal data. Account information is encrypted at rest. Intelligence sources and internal editorial communications use end-to-end encryption."
+  );
+
+  return (
+    <div style={PANEL}>
+      <button onClick={onClose} style={{ position: "absolute", top: 10, right: 12, zIndex: 10, background: "none", border: "none", cursor: "pointer", color: "rgba(255,255,255,0.25)", fontSize: 14, lineHeight: 1 }} onMouseEnter={e => (e.currentTarget.style.color = "rgba(255,255,255,0.7)")} onMouseLeave={e => (e.currentTarget.style.color = "rgba(255,255,255,0.25)")}>×</button>
+      <button onClick={onBack} style={{ position: "absolute", top: 11, left: 14, zIndex: 10, background: "none", border: "none", cursor: "pointer", color: "rgba(255,255,255,0.25)", fontSize: 10, fontFamily: "monospace", letterSpacing: "0.08em", textTransform: "uppercase", padding: 0 }} onMouseEnter={e => (e.currentTarget.style.color = "rgba(255,255,255,0.7)")} onMouseLeave={e => (e.currentTarget.style.color = "rgba(255,255,255,0.25)")}>← back</button>
+
+      <div style={{ flex: 1, overflowY: "auto", paddingTop: 38 }}>
+
+        {/* Header */}
+        <div style={{ padding: "0 18px 14px", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
+          <h2 style={{ margin: 0, fontSize: 15, fontWeight: 600, color: "rgba(255,255,255,0.9)", letterSpacing: "0.02em" }}>How Atlas Works</h2>
+          <p style={{ margin: "4px 0 0", fontSize: 11, fontFamily: "monospace", color: "rgba(255,255,255,0.32)", letterSpacing: "0.04em" }}>Scoring · Verification · Data · Security</p>
+        </div>
+
+        {/* ── SCORING ── */}
+        <SLabel text="Scoring" />
+        <div style={{ margin: "0 14px" }}>
+          <div style={{ padding: "10px 13px", borderRadius: 10, background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.07)" }}>
+            <p style={{ margin: "0 0 10px", fontSize: 11, fontFamily: "monospace", color: "rgba(255,255,255,0.42)", lineHeight: 1.6 }}>
+              Each alert carries two independent scores: <span style={{ color: "rgba(255,255,255,0.72)" }}>danger</span> (severity 1–5) and <span style={{ color: "rgba(255,255,255,0.72)" }}>confidence</span> (source certainty 0–100%).
+            </p>
+            <DangerRow level={5} color="#ef4444" label="Critical" desc="Mass casualty event, active military engagement, or imminent threat to civilian population." />
+            <DangerRow level={4} color="#f97316" label="High"     desc="Confirmed strikes, deployments, or large-scale humanitarian emergency." />
+            <DangerRow level={3} color="#eab308" label="Elevated" desc="Escalating tensions, limited strikes, or significant displacement." />
+            <DangerRow level={2} color="#84cc16" label="Moderate" desc="Political crisis, minor skirmish, or credible threat posturing." />
+            <DangerRow level={1} color="#22d3ee" label="Low"      desc="Background monitoring — ceasefire violations, diplomatic movement." />
+          </div>
+
+          {/* Confidence bar legend */}
+          <div style={{ marginTop: 8, padding: "10px 13px", borderRadius: 10, background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.07)" }}>
+            <p style={{ margin: "0 0 8px", fontSize: 10, fontFamily: "monospace", letterSpacing: "0.1em", color: "rgba(255,255,255,0.28)", textTransform: "uppercase" }}>Confidence scale</p>
+            <div style={{ display: "flex", gap: 0, height: 6, borderRadius: 4, overflow: "hidden" }}>
+              {[["#ef4444","<50%"], ["#f97316","50-70%"], ["#eab308","70-85%"], ["#22d3ee","85-95%"], ["#4ade80",">95%"]].map(([c, _]) => (
+                <div key={c} style={{ flex: 1, background: c, opacity: 0.6 }} />
+              ))}
+            </div>
+            <div style={{ display: "flex", justifyContent: "space-between", marginTop: 4 }}>
+              {["<50%","50-70%","70-85%","85-95%",">95%"].map(l => (
+                <span key={l} style={{ fontSize: 8, fontFamily: "monospace", color: "rgba(255,255,255,0.28)" }}>{l}</span>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* ── VERIFICATION ── */}
+        <SLabel text="Verification" />
+        <div style={{ margin: "0 14px", padding: "11px 13px", borderRadius: 10, background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.07)" }}>
+          <EText value={verificationText} onChange={setVerificationText} as="div" style={{ fontSize: 12, color: "rgba(255,255,255,0.55)", lineHeight: 1.7, fontFamily: "monospace" }} />
+          <div style={{ display: "flex", gap: 5, flexWrap: "wrap" as const, marginTop: 10 }}>
+            {["2-source minimum", "3-source for Danger 4–5", "48h review cycle", "Field cross-check"].map(t => (
+              <span key={t} style={{ fontSize: 9, fontFamily: "monospace", padding: "3px 8px", borderRadius: 4, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.42)" }}>{t}</span>
+            ))}
+          </div>
+        </div>
+
+        {/* ── DATA ── */}
+        <SLabel text="Data sources" />
+        <div style={{ margin: "0 14px", padding: "11px 13px", borderRadius: 10, background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.07)" }}>
+          <EText value={dataText} onChange={setDataText} as="div" style={{ fontSize: 12, color: "rgba(255,255,255,0.55)", lineHeight: 1.7, fontFamily: "monospace" }} />
+          <div style={{ display: "flex", gap: 5, flexWrap: "wrap" as const, marginTop: 10 }}>
+            {["ACLED", "GDELT", "UN OCHA", "AP", "Reuters", "Al Jazeera", "BBC", "NYT", "IAEA", "Pentagon", "IDF"].map(s => (
+              <SourceBadge key={s} name={s} />
+            ))}
+          </div>
+        </div>
+
+        {/* ── SECURITY ── */}
+        <SLabel text="Security & Privacy" />
+        <div style={{ margin: "0 14px 24px", padding: "11px 13px", borderRadius: 10, background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.07)" }}>
+          <EText value={securityText} onChange={setSecurityText} as="div" style={{ fontSize: 12, color: "rgba(255,255,255,0.55)", lineHeight: 1.7, fontFamily: "monospace" }} />
+          <div style={{ display: "flex", gap: 5, flexWrap: "wrap" as const, marginTop: 10 }}>
+            {["No location tracking", "Encrypted at rest", "No data sales", "E2E editorial comms"].map(t => (
+              <span key={t} style={{ fontSize: 9, fontFamily: "monospace", padding: "3px 8px", borderRadius: 4, background: "rgba(74,222,128,0.06)", border: "1px solid rgba(74,222,128,0.12)", color: "rgba(74,222,128,0.6)" }}>{t}</span>
+            ))}
+          </div>
+        </div>
+
+      </div>
+    </div>
+  );
+}

@@ -1,47 +1,94 @@
 "use client";
-import { useState, useEffect } from "react";
-import Link from "next/link";
+import React, { useState, useEffect } from "react";
 
-// Menu items surfaced when the user taps the Atlas logo.
-const ITEMS: { text: string; href: string }[] = [];
+type SubPanel = "you" | "us" | "methodology" | "settings";
 
-function TypeLine({ text, delay, href, onNavigate }: {
-  text: string; delay: number; href: string; onNavigate: () => void;
-}) {
+interface NavItem {
+  id: SubPanel;
+  label: string;
+  hint: string;
+}
+
+const ITEMS: NavItem[] = [
+  { id: "you",         label: "You",         hint: "Profile & account" },
+  { id: "us",          label: "Us",          hint: "About Atlas & team" },
+  { id: "methodology", label: "Methodology", hint: "Scoring · Verification · Data · Security" },
+  { id: "settings",    label: "Settings",    hint: "Preferences & display" },
+];
+
+function NavRow({ item, delay, onOpen }: { item: NavItem; delay: number; onOpen: (id: SubPanel) => void }) {
   const [lit, setLit] = useState(false);
+  const [hovered, setHovered] = useState(false);
+
   useEffect(() => {
     const t = setTimeout(() => setLit(true), delay);
     return () => clearTimeout(t);
   }, [delay]);
 
   return (
-    <Link
-      href={href}
-      onClick={onNavigate}
+    <button
+      onClick={() => onOpen(item.id)}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
       style={{
-        display: "block",
-        fontSize: 14, fontFamily: "monospace", letterSpacing: "0.08em",
-        color: lit ? "rgba(255,255,255,0.82)" : "rgba(255,255,255,0)",
-        filter: lit ? "blur(0)" : "blur(4px)",
-        transform: lit ? "translateY(0)" : "translateY(3px)",
-        transition: "color 0.5s cubic-bezier(0.22,1,0.36,1), filter 0.7s cubic-bezier(0.22,1,0.36,1), transform 0.7s cubic-bezier(0.22,1,0.36,1)",
-        lineHeight: 2, whiteSpace: "pre",
-        textDecoration: "none", cursor: "pointer",
-        padding: "4px 0",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "space-between",
+        width: "100%",
+        background: hovered ? "rgba(255,255,255,0.04)" : "transparent",
+        border: "none",
+        borderBottom: "1px solid rgba(255,255,255,0.05)",
+        cursor: "pointer",
+        padding: "11px 14px",
+        borderRadius: hovered ? 8 : 0,
+        transition: "background 0.15s",
+        opacity: lit ? 1 : 0,
+        transform: lit ? "translateX(0)" : "translateX(-6px)",
+        // transition handled separately
       }}
-      onMouseEnter={e => (e.currentTarget.style.color = "rgba(255,255,255,1)")}
-      onMouseLeave={e => (e.currentTarget.style.color = "rgba(255,255,255,0.82)")}
     >
-      {text} →
-    </Link>
+      <div style={{ display: "flex", alignItems: "baseline", gap: 12 }}>
+        <span style={{
+          fontSize: 14,
+          fontFamily: "monospace",
+          letterSpacing: "0.06em",
+          color: hovered ? "rgba(255,255,255,1)" : "rgba(255,255,255,0.82)",
+          fontWeight: 500,
+          transition: "color 0.12s",
+        }}>
+          {item.label}
+        </span>
+        <span style={{
+          fontSize: 10,
+          fontFamily: "monospace",
+          letterSpacing: "0.06em",
+          color: "rgba(255,255,255,0.28)",
+        }}>
+          {item.hint}
+        </span>
+      </div>
+      <span style={{
+        fontSize: 11,
+        fontFamily: "monospace",
+        color: hovered ? "rgba(255,255,255,0.6)" : "rgba(255,255,255,0.2)",
+        transition: "color 0.12s, transform 0.12s",
+        transform: hovered ? "translateX(2px)" : "translateX(0)",
+        display: "inline-block",
+      }}>→</span>
+    </button>
   );
 }
 
-export default function SettingsPanel({ onClose }: { onClose: () => void }) {
+interface Props {
+  onClose: () => void;
+  onOpen: (panel: SubPanel) => void;
+}
+
+export default function SettingsPanel({ onClose, onOpen }: Props) {
   return (
     <div style={{
       position: "absolute",
-      top: 72, left: 20,
+      top: 52, left: 20,
       zIndex: 20,
       width: 360,
       background: "rgba(4,6,18,0.62)",
@@ -50,24 +97,30 @@ export default function SettingsPanel({ onClose }: { onClose: () => void }) {
       backdropFilter: "blur(40px)",
       WebkitBackdropFilter: "blur(40px)",
       boxShadow: "0 24px 80px rgba(0,0,0,0.38), 0 1px 3px rgba(0,0,0,0.18)",
-      padding: "18px 22px 16px",
+      overflow: "hidden",
       pointerEvents: "auto",
     }}>
-      {ITEMS.map((item, i) => (
-        <TypeLine key={i} text={item.text} delay={i * 90} href={item.href} onNavigate={onClose} />
-      ))}
-      <button
-        onClick={onClose}
-        style={{
-          marginTop: 14,
-          fontSize: 9, fontFamily: "monospace", letterSpacing: "0.2em",
-          textTransform: "uppercase",
-          color: "rgba(255,255,255,0.28)",
-          background: "none", border: "none", cursor: "pointer", padding: 0,
-        }}
-        onMouseEnter={e => (e.currentTarget.style.color = "rgba(255,255,255,0.7)")}
-        onMouseLeave={e => (e.currentTarget.style.color = "rgba(255,255,255,0.28)")}
-      >close</button>
+
+      {/* Header */}
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 16px 10px", borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
+        <span style={{ fontSize: 9, fontFamily: "monospace", letterSpacing: "0.22em", color: "rgba(255,255,255,0.28)", textTransform: "uppercase" }}>
+          ATLAS
+        </span>
+        <button
+          onClick={onClose}
+          style={{ background: "none", border: "none", cursor: "pointer", color: "rgba(255,255,255,0.2)", fontSize: 14, lineHeight: 1, padding: "0 2px" }}
+          onMouseEnter={e => (e.currentTarget.style.color = "rgba(255,255,255,0.7)")}
+          onMouseLeave={e => (e.currentTarget.style.color = "rgba(255,255,255,0.2)")}
+        >×</button>
+      </div>
+
+      {/* Nav items */}
+      <div style={{ padding: "4px 6px 6px" }}>
+        {ITEMS.map((item, i) => (
+          <NavRow key={item.id} item={item} delay={i * 60} onOpen={onOpen} />
+        ))}
+      </div>
+
     </div>
   );
 }
