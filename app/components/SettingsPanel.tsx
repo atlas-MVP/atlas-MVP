@@ -47,26 +47,16 @@ function NavRow({ item, delay, onOpen }: { item: NavItem; delay: number; onOpen:
         // transition handled separately
       }}
     >
-      <div style={{ display: "flex", alignItems: "baseline", gap: 12 }}>
-        <span style={{
-          fontSize: 14,
-          fontFamily: "monospace",
-          letterSpacing: "0.06em",
-          color: hovered ? "rgba(255,255,255,1)" : "rgba(255,255,255,0.82)",
-          fontWeight: 500,
-          transition: "color 0.12s",
-        }}>
-          {item.label}
-        </span>
-        <span style={{
-          fontSize: 10,
-          fontFamily: "monospace",
-          letterSpacing: "0.06em",
-          color: "rgba(255,255,255,0.28)",
-        }}>
-          {item.hint}
-        </span>
-      </div>
+      <span style={{
+        fontSize: 14,
+        fontFamily: "monospace",
+        letterSpacing: "0.06em",
+        color: hovered ? "rgba(255,255,255,1)" : "rgba(255,255,255,0.82)",
+        fontWeight: 500,
+        transition: "color 0.12s",
+      }}>
+        {item.label}
+      </span>
       <span style={{
         fontSize: 11,
         fontFamily: "monospace",
