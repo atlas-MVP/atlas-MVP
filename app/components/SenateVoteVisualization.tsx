@@ -61,9 +61,8 @@ export default function SenateVoteVisualization({
     const rings      = 7;
     const baseRadius = 91;
     const ringStep   = 25;
-    // Big gap at the top so rows stay close to 90°/270° (E/W) and well
-    // clear of 0° (N). 0.5π ≈ 90° total → 45° wedge on each side of top-center.
-    const gapAngle   = 0.5 * Math.PI;
+    // Gap at the top - reduced from 0.5π to 0.35π for tighter spread
+    const gapAngle   = 0.35 * Math.PI;
 
     const ayeVoters     = senators.filter(s => s.vote === "Aye");
     const noVoters      = senators.filter(s => s.vote === "No");
@@ -136,12 +135,32 @@ export default function SenateVoteVisualization({
       }
     };
 
+    // Place crossover Dems on a horizontal line at the baseline (y = centerY)
+    // on the No (right) side, evenly spaced
+    const placeCrossoverLine = (voters: Senator[]) => {
+      if (!voters.length) return;
+      const lineStartX = centerX + baseRadius; // Start at innermost radius on right
+      const lineEndX = centerX + baseRadius + (rings - 1) * ringStep; // End at outermost
+      const spacing = voters.length > 1 ? (lineEndX - lineStartX) / (voters.length - 1) : 0;
+
+      for (let i = 0; i < voters.length; i++) {
+        const x = voters.length === 1 ? (lineStartX + lineEndX) / 2 : lineStartX + i * spacing;
+        positions.push({
+          senator: voters[i],
+          x,
+          y: centerY, // Horizontal line at baseline
+        });
+      }
+    };
+
     // Aye: from 270° compass (W, math π) rising to the top-center gap edge.
     placeHalf(ayeVoters, Math.PI, Math.PI * 1.5 - gapAngle / 2);
 
-    // No: from top-center gap edge down to 90° compass (E, math 2π).
-    // Crossover Dems claim the innermost ring as a visual pulse band.
-    placeHalf(republicansNo, Math.PI * 1.5 + gapAngle / 2, Math.PI * 2, crossoverDems);
+    // No: Republicans only (no innerOverride), crossover Dems get their own line
+    placeHalf(republicansNo, Math.PI * 1.5 + gapAngle / 2, Math.PI * 2);
+
+    // Crossover Dems on horizontal line
+    placeCrossoverLine(crossoverDems);
 
     return positions;
   };
@@ -179,12 +198,22 @@ export default function SenateVoteVisualization({
         }
       `}</style>
       <div
+        onClick={() => {
+          // Click anywhere on visualization to lock/unlock the hovered senator
+          if (lockedSenator) {
+            setLockedSenator(null);
+            setTooltipPos(null);
+          } else if (hoveredSenator) {
+            setLockedSenator(hoveredSenator);
+          }
+        }}
         style={{
           position: "relative",
           width: 650,
           height: 325,
           background: "transparent",
           borderRadius: 12,
+          cursor: hoveredSenator || lockedSenator ? "pointer" : "default",
         }}
       >
       {/* ── Title ─────────────────────────────────────────────────────────── */}
