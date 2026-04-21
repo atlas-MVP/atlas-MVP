@@ -71,6 +71,28 @@ export default function ArticlePage({
   const [senateExpanded, setSenateExpanded] = useState(false);
   const [lockedSenator, setLockedSenator] = useState<Senator | null>(null);
   const [photoEnlarged, setPhotoEnlarged] = useState(false);
+  const [editMode, setEditMode] = useState(false);
+  const [selectedElement, setSelectedElement] = useState<"headline" | "body" | "date">("headline");
+  const [textStyles, setTextStyles] = useState({
+    headline: {
+      fontFamily: "inherit",
+      fontSize: 36,
+      fontWeight: 700,
+      fontStyle: "normal" as const,
+    },
+    body: {
+      fontFamily: "inherit",
+      fontSize: 17,
+      fontWeight: 400,
+      fontStyle: "normal" as const,
+    },
+    date: {
+      fontFamily: "monospace",
+      fontSize: 13,
+      fontWeight: 400,
+      fontStyle: "normal" as const,
+    },
+  });
 
   const senators: Senator[] = [
     // AYE voters — sorted most to least prominent (most famous → innermost ring)
@@ -193,6 +215,8 @@ export default function ArticlePage({
       pointerEvents: "auto",
     }}>
       <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Exo:ital,wght@0,400;0,700;1,400;1,700&family=Exo+2:ital,wght@0,400;0,700;1,400;1,700&family=PT+Serif:ital,wght@0,400;0,700;1,400;1,700&family=Roboto:ital,wght@0,400;0,700;1,400;1,700&family=Open+Sans:ital,wght@0,400;0,700;1,400;1,700&family=Lato:ital,wght@0,400;0,700;1,400;1,700&family=Montserrat:ital,wght@0,400;0,700;1,400;1,700&family=Source+Code+Pro:ital,wght@0,400;0,700;1,400;1,700&display=swap');
+
         @keyframes crossoverPulse {
           0%, 100% { border-color: rgba(96,165,250,0.55); box-shadow: 0 0 0 0 rgba(96,165,250,0.0); }
           50%       { border-color: rgba(239,68,68,0.55);  box-shadow: 0 0 0 0 rgba(239,68,68,0.0); }
@@ -235,6 +259,249 @@ export default function ArticlePage({
           ←
         </button>
 
+        <button
+          onClick={() => setEditMode(!editMode)}
+          style={{
+            position: "absolute",
+            top: 12,
+            right: 12,
+            background: editMode ? "rgba(96,165,250,0.15)" : "rgba(255,255,255,0.07)",
+            border: editMode ? "1px solid rgba(96,165,250,0.4)" : "1px solid rgba(255,255,255,0.14)",
+            borderRadius: 6,
+            padding: "6px 12px",
+            color: editMode ? "rgba(96,165,250,0.95)" : "rgba(255,255,255,0.7)",
+            fontSize: 13,
+            fontFamily: "monospace",
+            letterSpacing: "0.05em",
+            cursor: "pointer",
+            zIndex: 10,
+            fontWeight: 600,
+          }}
+          onMouseEnter={e => (e.currentTarget.style.background = editMode ? "rgba(96,165,250,0.2)" : "rgba(255,255,255,0.12)")}
+          onMouseLeave={e => (e.currentTarget.style.background = editMode ? "rgba(96,165,250,0.15)" : "rgba(255,255,255,0.07)")}
+        >
+          EDIT
+        </button>
+
+        {/* Style Controls Panel */}
+        {editMode && (
+          <div style={{
+            position: "absolute",
+            top: 52,
+            right: 12,
+            background: "rgba(4,6,18,0.95)",
+            backdropFilter: "blur(30px)",
+            border: "1px solid rgba(96,165,250,0.3)",
+            borderRadius: 12,
+            padding: "16px",
+            width: 280,
+            zIndex: 10,
+            boxShadow: "0 20px 60px rgba(0,0,0,0.5)",
+          }}>
+            <div style={{
+              fontSize: 11,
+              fontFamily: "monospace",
+              letterSpacing: "0.1em",
+              color: "rgba(255,255,255,0.5)",
+              textTransform: "uppercase",
+              marginBottom: 12,
+            }}>
+              Style Controls
+            </div>
+
+            {/* Element Selector */}
+            <div style={{ marginBottom: 16 }}>
+              <label style={{
+                fontSize: 10,
+                fontFamily: "monospace",
+                letterSpacing: "0.08em",
+                color: "rgba(255,255,255,0.45)",
+                textTransform: "uppercase",
+                display: "block",
+                marginBottom: 6,
+              }}>
+                Element
+              </label>
+              <div style={{ display: "flex", gap: 6 }}>
+                {(["headline", "body", "date"] as const).map(el => (
+                  <button
+                    key={el}
+                    onClick={() => setSelectedElement(el)}
+                    style={{
+                      flex: 1,
+                      padding: "6px 8px",
+                      background: selectedElement === el ? "rgba(96,165,250,0.15)" : "rgba(255,255,255,0.05)",
+                      border: selectedElement === el ? "1px solid rgba(96,165,250,0.4)" : "1px solid rgba(255,255,255,0.1)",
+                      borderRadius: 6,
+                      color: selectedElement === el ? "rgba(96,165,250,0.95)" : "rgba(255,255,255,0.6)",
+                      fontSize: 11,
+                      fontFamily: "monospace",
+                      cursor: "pointer",
+                      textTransform: "capitalize",
+                    }}
+                  >
+                    {el}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Font Family */}
+            <div style={{ marginBottom: 16 }}>
+              <label style={{
+                fontSize: 10,
+                fontFamily: "monospace",
+                letterSpacing: "0.08em",
+                color: "rgba(255,255,255,0.45)",
+                textTransform: "uppercase",
+                display: "block",
+                marginBottom: 6,
+              }}>
+                Font Family
+              </label>
+              <select
+                value={textStyles[selectedElement].fontFamily}
+                onChange={(e) => setTextStyles({
+                  ...textStyles,
+                  [selectedElement]: {
+                    ...textStyles[selectedElement],
+                    fontFamily: e.target.value,
+                  },
+                })}
+                style={{
+                  width: "100%",
+                  padding: "8px",
+                  background: "rgba(255,255,255,0.05)",
+                  border: "1px solid rgba(255,255,255,0.1)",
+                  borderRadius: 6,
+                  color: "rgba(255,255,255,0.8)",
+                  fontSize: 12,
+                  cursor: "pointer",
+                }}
+              >
+                <option value="inherit">Default (Inter)</option>
+                <option value="'Exo', sans-serif">Exo</option>
+                <option value="'Exo 2', sans-serif">Exo 2</option>
+                <option value="'PT Serif', serif">PT Serif</option>
+                <option value="'Times New Roman', serif">Times New Roman</option>
+                <option value="'Georgia', serif">Georgia</option>
+                <option value="monospace">Monospace</option>
+                <option value="'Courier New', monospace">Courier New</option>
+                <option value="'Source Code Pro', monospace">Source Code Pro</option>
+                <option value="'Roboto', sans-serif">Roboto</option>
+                <option value="'Open Sans', sans-serif">Open Sans</option>
+                <option value="'Lato', sans-serif">Lato</option>
+                <option value="'Montserrat', sans-serif">Montserrat</option>
+              </select>
+            </div>
+
+            {/* Font Size */}
+            <div style={{ marginBottom: 16 }}>
+              <label style={{
+                fontSize: 10,
+                fontFamily: "monospace",
+                letterSpacing: "0.08em",
+                color: "rgba(255,255,255,0.45)",
+                textTransform: "uppercase",
+                display: "block",
+                marginBottom: 6,
+              }}>
+                Font Size
+              </label>
+              <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                <input
+                  type="number"
+                  value={textStyles[selectedElement].fontSize}
+                  onChange={(e) => setTextStyles({
+                    ...textStyles,
+                    [selectedElement]: {
+                      ...textStyles[selectedElement],
+                      fontSize: parseInt(e.target.value) || 12,
+                    },
+                  })}
+                  style={{
+                    flex: 1,
+                    padding: "8px",
+                    background: "rgba(255,255,255,0.05)",
+                    border: "1px solid rgba(255,255,255,0.1)",
+                    borderRadius: 6,
+                    color: "rgba(255,255,255,0.8)",
+                    fontSize: 12,
+                  }}
+                />
+                <span style={{
+                  fontSize: 11,
+                  color: "rgba(255,255,255,0.5)",
+                  fontFamily: "monospace",
+                }}>
+                  px
+                </span>
+              </div>
+            </div>
+
+            {/* Bold & Italic Toggles */}
+            <div style={{ marginBottom: 16 }}>
+              <label style={{
+                fontSize: 10,
+                fontFamily: "monospace",
+                letterSpacing: "0.08em",
+                color: "rgba(255,255,255,0.45)",
+                textTransform: "uppercase",
+                display: "block",
+                marginBottom: 6,
+              }}>
+                Style
+              </label>
+              <div style={{ display: "flex", gap: 6 }}>
+                <button
+                  onClick={() => setTextStyles({
+                    ...textStyles,
+                    [selectedElement]: {
+                      ...textStyles[selectedElement],
+                      fontWeight: textStyles[selectedElement].fontWeight === 700 ? 400 : 700,
+                    },
+                  })}
+                  style={{
+                    flex: 1,
+                    padding: "8px",
+                    background: textStyles[selectedElement].fontWeight === 700 ? "rgba(96,165,250,0.15)" : "rgba(255,255,255,0.05)",
+                    border: textStyles[selectedElement].fontWeight === 700 ? "1px solid rgba(96,165,250,0.4)" : "1px solid rgba(255,255,255,0.1)",
+                    borderRadius: 6,
+                    color: textStyles[selectedElement].fontWeight === 700 ? "rgba(96,165,250,0.95)" : "rgba(255,255,255,0.6)",
+                    fontSize: 12,
+                    fontWeight: 700,
+                    cursor: "pointer",
+                  }}
+                >
+                  B
+                </button>
+                <button
+                  onClick={() => setTextStyles({
+                    ...textStyles,
+                    [selectedElement]: {
+                      ...textStyles[selectedElement],
+                      fontStyle: textStyles[selectedElement].fontStyle === "italic" ? "normal" : "italic",
+                    },
+                  })}
+                  style={{
+                    flex: 1,
+                    padding: "8px",
+                    background: textStyles[selectedElement].fontStyle === "italic" ? "rgba(96,165,250,0.15)" : "rgba(255,255,255,0.05)",
+                    border: textStyles[selectedElement].fontStyle === "italic" ? "1px solid rgba(96,165,250,0.4)" : "1px solid rgba(255,255,255,0.1)",
+                    borderRadius: 6,
+                    color: textStyles[selectedElement].fontStyle === "italic" ? "rgba(96,165,250,0.95)" : "rgba(255,255,255,0.6)",
+                    fontSize: 12,
+                    fontStyle: "italic",
+                    cursor: "pointer",
+                  }}
+                >
+                  I
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
         <div style={{
           flex: 1,
           overflowY: "auto",
@@ -249,8 +516,10 @@ export default function ArticlePage({
             gap: 24,
           }}>
             <h1 style={{
-              fontSize: 36,
-              fontWeight: 700,
+              fontSize: textStyles.headline.fontSize,
+              fontWeight: textStyles.headline.fontWeight,
+              fontFamily: textStyles.headline.fontFamily,
+              fontStyle: textStyles.headline.fontStyle,
               lineHeight: 1.2,
               margin: 0,
               color: "rgba(255,255,255,0.95)",
@@ -260,8 +529,10 @@ export default function ArticlePage({
             </h1>
 
             <div style={{
-              fontSize: 13,
-              fontFamily: "monospace",
+              fontSize: textStyles.date.fontSize,
+              fontFamily: textStyles.date.fontFamily,
+              fontWeight: textStyles.date.fontWeight,
+              fontStyle: textStyles.date.fontStyle,
               color: "rgba(255,255,255,0.42)",
               letterSpacing: "0.08em",
               textTransform: "uppercase",
@@ -270,7 +541,10 @@ export default function ArticlePage({
             </div>
 
             <div style={{
-              fontSize: 17,
+              fontSize: textStyles.body.fontSize,
+              fontFamily: textStyles.body.fontFamily,
+              fontWeight: textStyles.body.fontWeight,
+              fontStyle: textStyles.body.fontStyle,
               lineHeight: 1.7,
               color: "rgba(255,255,255,0.82)",
             }}>
