@@ -73,24 +73,28 @@ export default function ArticlePage({
   const [photoEnlarged, setPhotoEnlarged] = useState(false);
   const [editMode, setEditMode] = useState(false);
   const [selectedElement, setSelectedElement] = useState<"headline" | "body" | "date">("headline");
-  const [textStyles, setTextStyles] = useState({
+  const [textStyles, setTextStyles] = useState<{
+    headline: { fontFamily: string; fontSize: number; fontWeight: number; fontStyle: "normal" | "italic" };
+    body: { fontFamily: string; fontSize: number; fontWeight: number; fontStyle: "normal" | "italic" };
+    date: { fontFamily: string; fontSize: number; fontWeight: number; fontStyle: "normal" | "italic" };
+  }>({
     headline: {
       fontFamily: "inherit",
       fontSize: 36,
       fontWeight: 700,
-      fontStyle: "normal" as const,
+      fontStyle: "normal",
     },
     body: {
       fontFamily: "inherit",
       fontSize: 17,
       fontWeight: 400,
-      fontStyle: "normal" as const,
+      fontStyle: "normal",
     },
     date: {
       fontFamily: "monospace",
       fontSize: 13,
       fontWeight: 400,
-      fontStyle: "normal" as const,
+      fontStyle: "normal",
     },
   });
 
