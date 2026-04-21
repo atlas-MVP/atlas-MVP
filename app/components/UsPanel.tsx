@@ -91,18 +91,7 @@ export default function UsPanel({ onClose, onBack }: Props) {
         {/* Contact */}
         <SLabel text="contact" />
         <div style={{ margin: "0 14px 24px", padding: "11px 13px", borderRadius: 10, background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.07)" }}>
-          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-            {[
-              { label: "Press", value: "press@atlas.boston" },
-              { label: "Intelligence tips", value: "tips@atlas.boston" },
-              { label: "General", value: "hello@atlas.boston" },
-            ].map(({ label, value }) => (
-              <div key={label} style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                <span style={{ fontSize: 10, fontFamily: "monospace", color: "rgba(255,255,255,0.32)", letterSpacing: "0.06em" }}>{label}</span>
-                <span style={{ fontSize: 11, fontFamily: "monospace", color: "rgba(96,165,250,0.75)" }}>{value}</span>
-              </div>
-            ))}
-          </div>
+          <span style={{ fontSize: 11, fontFamily: "monospace", color: "rgba(96,165,250,0.75)" }}>founders@atlas.boston</span>
         </div>
 
       </div>
