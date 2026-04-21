@@ -66,7 +66,7 @@ export default function YouPanel({ onClose, onBack }: Props) {
             </div>
             <div>
               <div style={{ fontSize: 16, fontWeight: 600, color: "rgba(255,255,255,0.92)", letterSpacing: "0.01em", marginBottom: 3 }}>
-                <EText value={name} onChange={setName} style={{ fontSize: 16, fontWeight: 600, color: "rgba(255,255,255,0.92)" }} />
+                <EText value={name} onChange={setName} style={{ fontSize: 16, fontWeight: 600, color: "rgba(255,255,255,0.92)", textTransform: "none" }} />
               </div>
               <div style={{ fontSize: 11, fontFamily: "monospace", color: "rgba(255,255,255,0.38)", marginBottom: 4 }}>
                 <EText value={email} onChange={setEmail} style={{ fontSize: 11, fontFamily: "monospace", color: "rgba(255,255,255,0.38)" }} />

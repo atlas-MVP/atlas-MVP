@@ -52,12 +52,7 @@ const TEAM = [
 interface Props { onClose: () => void; onBack: () => void; }
 
 export default function UsPanel({ onClose, onBack }: Props) {
-  const [mission, setMission] = useState(
-    "Atlas is a real-time intelligence platform built to make the most important news in the world legible. We track active conflicts, disasters, economic disruptions, and political crises — verifying every alert against multiple primary sources before it reaches you."
-  );
-  const [coverage, setCoverage] = useState(
-    "We cover geopolitical conflicts, humanitarian crises, gun violence, natural disasters, and financial market disruptions. Our focus is accuracy over speed — every item is source-weighted and confidence-scored."
-  );
+  const [mission, setMission] = useState("atlas brings global issues into view.");
   const [formName,    setFormName]    = useState("");
   const [formEmail,   setFormEmail]   = useState("");
   const [formMessage, setFormMessage] = useState("");
@@ -78,7 +73,7 @@ export default function UsPanel({ onClose, onBack }: Props) {
 
         {/* Wordmark + pre-mvp note */}
         <div style={{ padding: "0 18px 18px", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
-          <span style={{ fontSize: 22, fontWeight: 300, letterSpacing: "0.3em", color: "rgba(255,255,255,0.92)" }}>ATLAS</span>
+          <span style={{ fontSize: 22, fontWeight: 300, letterSpacing: "0.3em", color: "rgba(255,255,255,0.92)", textTransform: "none" }}>ATLAS</span>
           <p style={{ margin: "10px 0 0", fontSize: 12, fontFamily: "monospace", color: "rgba(255,255,255,0.42)", lineHeight: 1.7 }}>
             you accidentally found atlas. this site is under construction and is currently pre mvp. if you like what you see, send us an email.
           </p>
@@ -90,12 +85,6 @@ export default function UsPanel({ onClose, onBack }: Props) {
           <EText value={mission} onChange={setMission} as="div" style={{ fontSize: 12, color: "rgba(255,255,255,0.58)", lineHeight: 1.7, fontFamily: "monospace" }} />
         </div>
 
-        {/* What we cover */}
-        <SLabel text="what we cover" />
-        <div style={{ margin: "0 14px", padding: "11px 13px", borderRadius: 10, background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.07)" }}>
-          <EText value={coverage} onChange={setCoverage} as="div" style={{ fontSize: 12, color: "rgba(255,255,255,0.58)", lineHeight: 1.7, fontFamily: "monospace" }} />
-        </div>
-
         {/* Team */}
         <SLabel text="team" />
         <div style={{ margin: "0 14px", display: "flex", flexDirection: "column", gap: 6 }}>
@@ -105,7 +94,7 @@ export default function UsPanel({ onClose, onBack }: Props) {
                 <span style={{ fontSize: 11, fontFamily: "monospace", color: "rgba(255,255,255,0.65)", fontWeight: 600 }}>{m.initials}</span>
               </div>
               <div>
-                <div style={{ fontSize: 13, fontFamily: "monospace", color: "rgba(255,255,255,0.82)", fontWeight: 600, letterSpacing: "0.02em" }}>{m.name}</div>
+                <div style={{ fontSize: 13, fontFamily: "monospace", color: "rgba(255,255,255,0.82)", fontWeight: 600, letterSpacing: "0.02em", textTransform: "none" }}>{m.name}</div>
                 <div style={{ fontSize: 10, fontFamily: "monospace", color: "rgba(255,255,255,0.35)", letterSpacing: "0.04em", marginTop: 2 }}>{m.role}</div>
               </div>
             </div>

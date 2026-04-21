@@ -269,7 +269,7 @@ export default function CountryHome({ countryCode, onClose, onSourceTap }: Props
         <div style={{ flexShrink: 0, padding: "14px 18px 4px" }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10 }}>
             <h2 style={{ margin: 0, fontSize: 15, fontWeight: 600, color: "rgba(255,255,255,0.92)", letterSpacing: "0.01em" }}>
-              <EText value={fullName} onChange={setFullName} style={{ fontSize: 15, fontWeight: 600, color: "rgba(255,255,255,0.92)", letterSpacing: "0.01em" }} />
+              <EText value={fullName} onChange={setFullName} style={{ fontSize: 15, fontWeight: 600, color: "rgba(255,255,255,0.92)", letterSpacing: "0.01em", textTransform: "none" }} />
             </h2>
             <button
               onClick={onClose}

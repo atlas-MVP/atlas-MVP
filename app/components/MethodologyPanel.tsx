@@ -31,7 +31,7 @@ function SLabel({ text }: { text: string }) {
 
 function SourceBadge({ name }: { name: string }) {
   return (
-    <span style={{ fontSize: 9, fontFamily: "monospace", letterSpacing: "0.1em", padding: "3px 8px", borderRadius: 4, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.5)" }}>{name}</span>
+    <span style={{ fontSize: 9, fontFamily: "monospace", letterSpacing: "0.1em", padding: "3px 8px", borderRadius: 4, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.5)", textTransform: "none" }}>{name}</span>
   );
 }
 

@@ -29,7 +29,7 @@ import { EditModeCtx, EditModeSetCtx } from "./components/InlineEdit";
 // ATLAS appears instantly; clock fades in shortly after as one unit
 function AtlasWordmark() {
   return (
-    <span className="font-light tracking-[0.3em] text-sm" style={{ color: "rgba(255,255,255,0.85)" }}>ATLAS</span>
+    <span className="font-light tracking-[0.3em] text-sm" style={{ color: "rgba(255,255,255,0.85)", textTransform: "none" }}>ATLAS</span>
   );
 }
 

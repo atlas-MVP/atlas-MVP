@@ -71,6 +71,9 @@ body, html {
 .link-pulse-border { animation: link-border-pulse 2.8s ease-in-out infinite; }
 .link-pulse-dot    { animation: link-dot-pulse    2.8s ease-in-out infinite; }
 
+/* ── Global case token: everything lowercase unless overridden with textTransform:"none" ── */
+* { text-transform: lowercase; }
+
 /* Modern minimal scrollbar — floating silver on transparent */
 ::-webkit-scrollbar { width: 4px; }
 ::-webkit-scrollbar-track { background: transparent; }
