@@ -446,35 +446,47 @@ export default function ArticlePage({
                       <div
                         onMouseEnter={() => setPhotoEnlarged(true)}
                         onMouseLeave={() => setPhotoEnlarged(false)}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setPhotoEnlarged(!photoEnlarged);
-                        }}
                         style={{
-                          width: photoEnlarged ? 360 : 120,
-                          height: photoEnlarged ? 360 : 120,
+                          width: 120,
+                          height: 120,
                           borderRadius: 12,
                           overflow: "hidden",
                           background: "rgba(255,255,255,0.05)",
                           flexShrink: 0,
-                          transition: "all 0.3s ease",
-                          cursor: "pointer",
-                          position: photoEnlarged ? "fixed" : "relative",
-                          top: photoEnlarged ? "50%" : "auto",
-                          left: photoEnlarged ? "50%" : "auto",
-                          transform: photoEnlarged ? "translate(-50%, -50%)" : "none",
-                          zIndex: photoEnlarged ? 300 : "auto",
+                          cursor: "zoom-in",
+                          position: "relative",
                         }}
                       >
                         <img
                           src={SCHUMER_DATA.photo}
                           alt={SCHUMER_DATA.name}
-                          style={{
-                            width: "100%",
-                            height: "100%",
-                            objectFit: "cover",
-                          }}
+                          style={{ width: "100%", height: "100%", objectFit: "cover" }}
                         />
+                        {/* Enlarged overlay — separate element so the small photo never moves */}
+                        {photoEnlarged && (
+                          <div
+                            style={{
+                              position: "fixed",
+                              top: "50%",
+                              left: "50%",
+                              transform: "translate(-50%, -50%)",
+                              zIndex: 400,
+                              pointerEvents: "none",
+                              borderRadius: 16,
+                              overflow: "hidden",
+                              width: 360,
+                              height: 360,
+                              boxShadow: "0 24px 80px rgba(0,0,0,0.7)",
+                              transition: "opacity 0.18s",
+                            }}
+                          >
+                            <img
+                              src={SCHUMER_DATA.photo}
+                              alt={SCHUMER_DATA.name}
+                              style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                            />
+                          </div>
+                        )}
                       </div>
                     )}
 
