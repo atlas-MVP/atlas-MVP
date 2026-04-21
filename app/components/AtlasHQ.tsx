@@ -13,7 +13,7 @@ import RadarEditor, {
   type FinanceItem as RadarFinanceItem,
   type DisasterItem as RadarDisasterItem,
 } from "./RadarEditor";
-import { EditModeCtx, EText, EImg, useEditMode } from "./InlineEdit";
+import { EText, EImg, useEditMode } from "./InlineEdit";
 
 // ── Reels preview ─────────────────────────────────────────────────────────────
 // Autoplays the most recent "Atlas You" reel (muted, since browsers block
@@ -547,10 +547,29 @@ export default function AtlasHQ({ onClose, onNavigate, onHeadlinesToggle, onSour
               <SectionLabel label={displayConfig.sectionLabels?.violence ?? "violence"} dragHandle={sectionDragHandle} onLabelChange={v => patchDraft(d => ({ ...d, sectionLabels: { ...d.sectionLabels, violence: v } }))} />
               <Reveal minStage={4} stage={loadStage}>
                 <div style={{ padding: "0 14px 6px" }}>
-                  {displayConfig.violenceItems.map((item, idx) => (
+                  {displayConfig.violenceItems.map((item, idx) => {
+                    const [hovered, setHovered] = useState(false);
+                    return (
                     <div key={item.headline}
                       onClick={editMode ? undefined : () => onViolenceTap?.(item.incidentId ?? "", item.flyTo?.center ?? [0,0] as [number,number], item.flyTo?.zoom ?? 4)}
-                      style={{ height: 196, borderRadius: 14, overflow: "hidden", position: "relative", cursor: editMode ? "default" : "pointer", border: "1px solid rgba(255,255,255,0.09)", background: "#0a0c18" }}>
+                      onMouseEnter={() => setHovered(true)}
+                      onMouseLeave={() => setHovered(false)}
+                      style={{
+                        height: 196,
+                        borderRadius: 14,
+                        overflow: "hidden",
+                        position: "relative",
+                        cursor: editMode ? "default" : "pointer",
+                        border: "1px solid rgba(255,255,255,0.09)",
+                        background: "#0a0c18",
+                        transform: hovered ? "scale(1.05) translateY(-8px) rotateX(2deg)" : "scale(1) translateY(0) rotateX(0deg)",
+                        transformStyle: "preserve-3d",
+                        boxShadow: hovered
+                          ? "0 20px 40px rgba(0,0,0,0.5), 0 30px 60px rgba(0,0,0,0.4), 0 40px 80px rgba(0,0,0,0.3)"
+                          : "0 2px 8px rgba(0,0,0,0.2)",
+                        transition: "all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)",
+                        zIndex: hovered ? 10 : 1,
+                      }}>
                       <EImg
                           src={item.imageUrl || item.image || ""}
                           alt={item.headline}
@@ -567,7 +586,8 @@ export default function AtlasHQ({ onClose, onNavigate, onHeadlinesToggle, onSour
                         <div style={{ fontSize: 9, color: "rgba(255,255,255,0.48)", marginTop: 4, letterSpacing: "0.12em", textTransform: "uppercase" }}>{item.source}</div>
                       </div>
                     </div>
-                  ))}
+                    );
+                  })}
                 </div>
                 {/* Violence-specific live alerts */}
                 {!editMode && renderAlertRows(VIOLENCE_ALERTS)}
@@ -612,10 +632,29 @@ export default function AtlasHQ({ onClose, onNavigate, onHeadlinesToggle, onSour
               <SectionLabel label={displayConfig.sectionLabels?.disasters ?? "disasters"} dragHandle={sectionDragHandle} onLabelChange={v => patchDraft(d => ({ ...d, sectionLabels: { ...d.sectionLabels, disasters: v } }))} />
               <Reveal minStage={5} stage={loadStage}>
                 <div style={{ padding: "0 14px 6px" }}>
-                  {displayConfig.disasters.map((dis, idx) => (
+                  {displayConfig.disasters.map((dis, idx) => {
+                    const [hovered, setHovered] = useState(false);
+                    return (
                     <div key={dis.label}
                       onClick={editMode ? undefined : () => onNavigate?.(null, dis.flyTo?.center ?? [0,0], dis.flyTo?.zoom ?? 4, undefined, dis.slug)}
-                      style={{ height: 196, borderRadius: 14, overflow: "hidden", position: "relative", cursor: editMode ? "default" : "pointer", border: "1px solid rgba(255,255,255,0.09)", background: "#0a0c18" }}>
+                      onMouseEnter={() => setHovered(true)}
+                      onMouseLeave={() => setHovered(false)}
+                      style={{
+                        height: 196,
+                        borderRadius: 14,
+                        overflow: "hidden",
+                        position: "relative",
+                        cursor: editMode ? "default" : "pointer",
+                        border: "1px solid rgba(255,255,255,0.09)",
+                        background: "#0a0c18",
+                        transform: hovered ? "scale(1.05) translateY(-8px) rotateX(2deg)" : "scale(1) translateY(0) rotateX(0deg)",
+                        transformStyle: "preserve-3d",
+                        boxShadow: hovered
+                          ? "0 20px 40px rgba(0,0,0,0.5), 0 30px 60px rgba(0,0,0,0.4), 0 40px 80px rgba(0,0,0,0.3)"
+                          : "0 2px 8px rgba(0,0,0,0.2)",
+                        transition: "all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)",
+                        zIndex: hovered ? 10 : 1,
+                      }}>
                       {(dis.imageUrl || dis.image) && (
                         <EImg
                           src={dis.imageUrl || dis.image || ""}
@@ -633,7 +672,8 @@ export default function AtlasHQ({ onClose, onNavigate, onHeadlinesToggle, onSour
                         />
                       </div>
                     </div>
-                  ))}
+                    );
+                  })}
                 </div>
                 {/* Disaster-specific live alerts */}
                 {!editMode && renderAlertRows(DISASTER_ALERTS)}
