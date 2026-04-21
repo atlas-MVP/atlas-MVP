@@ -397,7 +397,7 @@ export default function AtlasHQ({ onClose, onNavigate, onHeadlinesToggle, onSour
     }}>
 
       {/* Scrollable body */}
-      <div className="radar-scroll" style={{ flex: 1, overflowY: "auto", overflowX: "hidden", position: "relative" }}>
+      <div className="radar-scroll" style={{ flex: 1, overflowY: "auto", overflowX: "hidden", position: "relative", paddingTop: 10 }}>
 
         <EditModeCtx.Provider value={editMode}>
         {/* Sections rendered in saved drag order */}
@@ -707,7 +707,7 @@ function SectionLabel({ label, onClick, dragHandle, onLabelChange }: {
       onDragStart={dragHandle?.onDragStart}
       onDragEnd={dragHandle?.onDragEnd}
       style={{
-        display: "flex", alignItems: "center", gap: 6, padding: "20px 18px 6px",
+        display: "flex", alignItems: "center", gap: 6, padding: "28px 18px 6px",
         cursor: dragHandle ? "grab" : "default", userSelect: "none",
       }}
     >
