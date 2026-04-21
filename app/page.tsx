@@ -130,6 +130,7 @@ export default function Home() {
   const [mapReady, setMapReady]                = useState(false);
   const [showSettings, setShowSettings]       = useState(false);
   const [activeSubPanel, setActiveSubPanel]   = useState<"you" | "us" | "methodology" | "settings" | null>(null);
+  const [spinEnabled,    setSpinEnabled]      = useState(true);
   const [activeSource, setActiveSource]       = useState<string | null>(null);
   const [radarAlertText, setRadarAlertText]   = useState<string | null>(null);
   const [activeMapEvent, setActiveMapEvent]   = useState<MapEvent | null>(null);
@@ -370,6 +371,7 @@ export default function Home() {
           activeStrikes={activeStrikes}
           homeView={showRadar && !selectedCountry && !homeCountry && !feedCountry}
           spinKey={spinKey}
+          spinDisabled={!spinEnabled}
           isIdle={!selectedCountry && !homeCountry && !feedCountry && !activeGunViolence && !activeDisaster && !activeFinance}
           onReady={() => setMapReady(true)}
         />
@@ -448,7 +450,12 @@ export default function Home() {
         <MethodologyPanel onClose={() => { setShowSettings(false); setActiveSubPanel(null); }} onBack={() => setActiveSubPanel(null)} />
       )}
       {showSettings && activeSubPanel === "settings" && (
-        <SettingsSubPanel onClose={() => { setShowSettings(false); setActiveSubPanel(null); }} onBack={() => setActiveSubPanel(null)} />
+        <SettingsSubPanel
+          onClose={() => { setShowSettings(false); setActiveSubPanel(null); }}
+          onBack={() => setActiveSubPanel(null)}
+          spinEnabled={spinEnabled}
+          onSpinChange={setSpinEnabled}
+        />
       )}
 
       {/* Disaster panel — opens when a disaster card is tapped */}

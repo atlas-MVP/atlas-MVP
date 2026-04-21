@@ -131,8 +131,9 @@ interface Props {
   focusCountries?: string[]; // when set, ONLY these countries are active — everything else dims
   homeView?: boolean; // radar is open, no country selected — suppress auto-highlight
   onReady?: () => void; // fires once when first idle event lands (all tiles rendered)
-  spinKey?: number;  // increment to resume spin after a permanent stop
-  isIdle?: boolean;  // true when nothing is selected — enables slow globe spin
+  spinKey?: number;       // increment to resume spin after a permanent stop
+  isIdle?: boolean;       // true when nothing is selected — enables slow globe spin
+  spinDisabled?: boolean; // user explicitly turned off globe rotation in settings
 }
 
 // Zoom fade range — used for global layers (hover, secondary); per-country uses COUNTRY_FADE_RANGES
@@ -155,7 +156,7 @@ const EARTH_DEG_PER_SEC = 360 / 86400;
 // freely beyond it, spin just pauses until you zoom back out.
 const SPIN_STOP_ZOOM = 13;
 
-export default function Map({ onCountryClick, flyToCode, flyToPosition, selectedCountry, secondaryCountries = [], activeStrikes, casualtyCountries = [], focusCountries, homeView = false, onReady, spinKey = 0, isIdle = false }: Props) {
+export default function Map({ onCountryClick, flyToCode, flyToPosition, selectedCountry, secondaryCountries = [], activeStrikes, casualtyCountries = [], focusCountries, homeView = false, onReady, spinKey = 0, isIdle = false, spinDisabled = false }: Props) {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
   const [mapReady, setMapReady] = useState(false);
@@ -318,7 +319,7 @@ export default function Map({ onCountryClick, flyToCode, flyToPosition, selected
       // Stop permanently once the user clicks/drags (hasInteracted).
       // Also pause (not permanently) when zoomed in past SPIN_STOP_ZOOM —
       // resumes automatically when the user zooms back out.
-      if (!isIdle || hasInteracted.current || m.getZoom() > SPIN_STOP_ZOOM) {
+      if (!isIdle || hasInteracted.current || m.getZoom() > SPIN_STOP_ZOOM || spinDisabled) {
         spinLastTs.current = null;
         return;
       }
