@@ -222,14 +222,14 @@ interface Props {
 // ─── Sequential load stages ──────────────────────────────────────────────────
 // Edit STAGE_DELAYS to tune timing, or add new stages here.
 // Items with minStage > current loadStage are invisible (opacity 0).
-// Stages spaced ~600ms apart — each settles meaningfully before the next begins, but flow stays continuous
+// Rhythmic timing: first one super quick (half note), then eighth notes at 150ms intervals
 const STAGE_DELAYS = [
-  0,    // stage 0 – instant (video + all labels)
-  360,  // stage 1 – conflict card 1
-  620,  // stage 2 – conflict card 2
-  980,  // stage 3 – live alert rows
-  1290, // stage 4 – news cards
-  1600, // stage 5 – disaster cards
+  0,   // stage 0 – instant (video + all labels)
+  50,  // stage 1 – conflict card 1 (half note - super quick)
+  200, // stage 2 – conflict card 2 (eighth note - 150ms gap)
+  350, // stage 3 – live alert rows (eighth note - 150ms gap)
+  500, // stage 4 – news cards (eighth note - 150ms gap)
+  650, // stage 5 – disaster cards (eighth note - 150ms gap)
 ];
 
 function Reveal({ minStage, stage, children }: { minStage: number; stage: number; children: React.ReactNode }) {
