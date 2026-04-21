@@ -287,6 +287,13 @@ export default function Map({ onCountryClick, flyToCode, flyToPosition, selected
         spinLastTs.current = null;
         return;
       }
+      // setCenter internally calls jumpTo which cancels any ongoing Mapbox
+      // animation (scroll zoom, flyTo). Skip the setCenter call while Mapbox
+      // is animating — the timer still advances so the spin resumes cleanly.
+      if (m.isMoving()) {
+        spinLastTs.current = ts; // keep clock ticking, don't reset
+        return;
+      }
       if (spinLastTs.current === null) { spinLastTs.current = ts; return; }
       const dtSec = (ts - spinLastTs.current) / 1000;
       spinLastTs.current = ts;
@@ -303,20 +310,45 @@ export default function Map({ onCountryClick, flyToCode, flyToPosition, selected
   }, [isIdle, mapReady]);
 
   // ── Naked earth: hide all overlays when idle, restore when active ──────────
+  // Uses paint opacity (not layout visibility) — more reliable, survives
+  // Mapbox style reloads and doesn't interfere with tile rendering.
+  const isIdleRef = useRef(isIdle);
+  isIdleRef.current = isIdle;
+
   useEffect(() => {
     const m = map.current;
     if (!m || !mapReady) return;
-    const vis = isIdle ? "none" : "visible";
-    // Custom overlay layers
-    OVERLAY_LAYER_IDS.forEach(id => {
-      if (m.getLayer(id)) try { m.setLayoutProperty(id, "visibility", vis); } catch {}
-    });
-    // Admin border lines (country + state borders) from Mapbox style
-    m.getStyle().layers.forEach(l => {
-      if (l.id.includes("admin") && l.type === "line") {
-        try { m.setLayoutProperty(l.id, "visibility", vis); } catch {}
-      }
-    });
+
+    const apply = (idle: boolean) => {
+      // Custom fill layers → fill-opacity
+      ["highlighted-fill-LBN","highlighted-fill-IRN","highlighted-fill-UKR",
+       "highlighted-fill-RUS","highlighted-fill-PSE","highlighted-fill-ISR",
+       "casualty-fill-blue","casualty-fill-red",
+       "idle-pulse-blue","idle-pulse-red","hover-fill","world-hit",
+      ].forEach(id => {
+        if (m.getLayer(id)) try { m.setPaintProperty(id, "fill-opacity", idle ? 0 : undefined); } catch {}
+      });
+      // Custom line layers → line-opacity
+      ["hover-border","secondary-border"].forEach(id => {
+        if (m.getLayer(id)) try { m.setPaintProperty(id, "line-opacity", idle ? 0 : undefined); } catch {}
+      });
+      // Event + strike circle layers → circle-opacity
+      ["events-halo","events-glow","events-dot",
+       "strike-outer-halo","strike-halo","strike-glow","strike-core","strike-dot",
+      ].forEach(id => {
+        if (m.getLayer(id)) try { m.setPaintProperty(id, "circle-opacity", idle ? 0 : undefined); } catch {}
+      });
+      // Mapbox style admin border lines
+      try {
+        m.getStyle().layers.forEach(l => {
+          if (l.id.includes("admin") && l.type === "line") {
+            try { m.setLayoutProperty(l.id, "visibility", idle ? "none" : "visible"); } catch {}
+          }
+        });
+      } catch {}
+    };
+
+    apply(isIdle);
   }, [isIdle, mapReady]);
 
   // Secondary (conflict partner) border — turquoise
