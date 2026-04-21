@@ -58,7 +58,7 @@ async function get(url, asBuffer = false, depth = 0) {
     const res = await fetch(url, {
       method:   "GET",
       redirect: "follow",
-      headers:  { "User-Agent": "Mozilla/5.0 (compatible; AtlasRadar/1.0)" },
+      headers:  { "User-Agent": "AtlasRadar/1.0 (https://atlas-bostons-projects.vercel.app; wgraham2@berklee.edu)" },
       signal:   AbortSignal.timeout(30000),
     });
     if (res.status >= 400) return { status: res.status };
@@ -119,7 +119,9 @@ function bioguideUrls(id) {
 const WIKI_OVERRIDE = {
   "tim-scott":              "Tim_Scott",
   "rick-scott":             "Rick_Scott",
-  "jim-banks":              "Jim_Banks_(politician)",
+  "jim-banks":              "Jim_Banks",
+  "jack-reed":              "Jack_Reed_(Rhode_Island_politician)",
+  "dan-sullivan":           "Dan_Sullivan_(U.S._senator)",
   "jim-justice":            "Jim_Justice",
   "lindsey-graham":         "Lindsey_Graham",
   "mike-lee":               "Mike_Lee_(American_politician)",
@@ -204,11 +206,24 @@ for (const row of filtered) {
   const wikiTitle = wikiTitleFor(row);
   const wikiUrl   = await wikiPhotoUrl(wikiTitle);
   if (wikiUrl) {
-    const r = await get(wikiUrl, true);
+    // Retry up to 3 times with exponential back-off on 429
+    let r, tries = 0;
+    while (tries < 3) {
+      r = await get(wikiUrl, true);
+      if (r.status !== 429) break;
+      tries++;
+      await new Promise(res => setTimeout(res, 1000 * tries));
+    }
     if (r.status < 400 && r.body && r.body.length > 3000) {
       picked = { url: wikiUrl, buf: r.body, size: r.body.length, tag: "WIKI" };
+    } else if (r.status) {
+      console.log(`  ⓘ wiki returned ${r.status} for ${row.slug} (${wikiUrl})`);
     }
+  } else {
+    console.log(`  ⓘ no wiki page for ${row.slug} (${wikiTitle})`);
   }
+  // Small delay so Wikimedia doesn't rate-limit
+  await new Promise(res => setTimeout(res, 150));
   // 2. Bioguide (180×225 tiny fallback).
   if (!picked) {
     for (const pUrl of bioguideUrls(row.bioguide)) {

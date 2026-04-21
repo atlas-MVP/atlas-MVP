@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import SenateVoteVisualization from "./SenateVoteVisualization";
 import { Senator } from "./SenateVoteVisualization";
-import { SENATOR_BIOS, photoFor } from "./senatorBios";
+import { SENATOR_BIOS, RAW_BIOS, photoFor } from "./senatorBios";
 
 interface ArticlePageProps {
   headline: string;
@@ -38,9 +38,6 @@ type SenatorView = SenatorBio & { photo: string };
 const SENATOR_DATA: Record<string, SenatorView> = Object.fromEntries(
   Object.entries(SENATOR_BIOS).map(([name, bio]) => [name, { ...bio, photo: photoFor(bio) }])
 );
-
-// Legacy alias — the small in-line hover card still references SCHUMER_DATA.
-const SCHUMER_DATA = SENATOR_DATA["Chuck Schumer"];
 
 // Current calendar year drives the "Left office" vs "Retiring" split.
 const CURRENT_YEAR = new Date().getFullYear();
@@ -98,111 +95,15 @@ export default function ArticlePage({
     },
   });
 
-  const senators: Senator[] = [
-    // AYE voters — sorted most to least prominent (most famous → innermost ring)
-    { name: "Bernie Sanders",          party: "I" as const, state: "VT", vote: "Aye" as const }, // bill introducer
-    { name: "Elizabeth Warren",        party: "D" as const, state: "MA", vote: "Aye" as const },
-    { name: "Amy Klobuchar",           party: "D" as const, state: "MN", vote: "Aye" as const },
-    { name: "Cory Booker",             party: "D" as const, state: "NJ", vote: "Aye" as const },
-    { name: "Adam Schiff",             party: "D" as const, state: "CA", vote: "Aye" as const },
-    { name: "Dick Durbin",             party: "D" as const, state: "IL", vote: "Aye" as const },
-    { name: "Kirsten Gillibrand",      party: "D" as const, state: "NY", vote: "Aye" as const },
-    { name: "Ron Wyden",               party: "D" as const, state: "OR", vote: "Aye" as const },
-    { name: "Tammy Duckworth",         party: "D" as const, state: "IL", vote: "Aye" as const },
-    { name: "Raphael Warnock",         party: "D" as const, state: "GA", vote: "Aye" as const },
-    { name: "Mark Kelly",              party: "D" as const, state: "AZ", vote: "Aye" as const },
-    { name: "Alex Padilla",            party: "D" as const, state: "CA", vote: "Aye" as const },
-    { name: "Angus King",              party: "I" as const, state: "ME", vote: "Aye" as const },
-    { name: "Jon Ossoff",              party: "D" as const, state: "GA", vote: "Aye" as const },
-    { name: "Sherrod Brown",           party: "D" as const, state: "OH", vote: "Aye" as const },
-    { name: "Patty Murray",            party: "D" as const, state: "WA", vote: "Aye" as const },
-    { name: "Maria Cantwell",          party: "D" as const, state: "WA", vote: "Aye" as const },
-    { name: "Bob Casey",               party: "D" as const, state: "PA", vote: "Aye" as const },
-    { name: "Jeff Merkley",            party: "D" as const, state: "OR", vote: "Aye" as const },
-    { name: "Ed Markey",               party: "D" as const, state: "MA", vote: "Aye" as const },
-    { name: "Tim Kaine",               party: "D" as const, state: "VA", vote: "Aye" as const },
-    { name: "Mark Warner",             party: "D" as const, state: "VA", vote: "Aye" as const },
-    { name: "Mazie Hirono",            party: "D" as const, state: "HI", vote: "Aye" as const },
-    { name: "Tammy Baldwin",           party: "D" as const, state: "WI", vote: "Aye" as const },
-    { name: "Catherine Cortez Masto", party: "D" as const, state: "NV", vote: "Aye" as const },
-    { name: "Debbie Stabenow",         party: "D" as const, state: "MI", vote: "Aye" as const },
-    { name: "Gary Peters",             party: "D" as const, state: "MI", vote: "Aye" as const },
-    { name: "Michael Bennet",          party: "D" as const, state: "CO", vote: "Aye" as const },
-    { name: "John Hickenlooper",       party: "D" as const, state: "CO", vote: "Aye" as const },
-    { name: "Brian Schatz",            party: "D" as const, state: "HI", vote: "Aye" as const },
-    { name: "Jacky Rosen",             party: "D" as const, state: "NV", vote: "Aye" as const },
-    { name: "Ruben Gallego",           party: "D" as const, state: "AZ", vote: "Aye" as const },
-    { name: "Martin Heinrich",         party: "D" as const, state: "NM", vote: "Aye" as const },
-    { name: "Tina Smith",              party: "D" as const, state: "MN", vote: "Aye" as const },
-    { name: "Chris Van Hollen",        party: "D" as const, state: "MD", vote: "Aye" as const },
-    { name: "Ben Ray Luján",           party: "D" as const, state: "NM", vote: "Aye" as const },
-    { name: "Jon Tester",              party: "D" as const, state: "MT", vote: "Aye" as const },
-    { name: "Angela Alsobrooks",       party: "D" as const, state: "MD", vote: "Aye" as const },
-    { name: "Peter Welch",             party: "D" as const, state: "VT", vote: "Aye" as const },
-    { name: "Andy Kim",                party: "D" as const, state: "NJ", vote: "Aye" as const },
-
-    // NO voters - Democrats who crossed over — sorted most to least prominent
-    { name: SCHUMER_DATA.name, party: SCHUMER_DATA.party, state: SCHUMER_DATA.state, vote: SCHUMER_DATA.vote },
-    { name: "John Fetterman",  party: "D" as const, state: "PA", vote: "No" as const },
-    { name: "Joe Manchin",     party: "D" as const, state: "WV", vote: "No" as const },
-    { name: "Jeanne Shaheen",  party: "D" as const, state: "NH", vote: "No" as const },
-    { name: "Maggie Hassan",   party: "D" as const, state: "NH", vote: "No" as const },
-    { name: "Chris Coons",     party: "D" as const, state: "DE", vote: "No" as const },
-    { name: "Elissa Slotkin",  party: "D" as const, state: "MI", vote: "No" as const },
-    { name: "Tom Carper",      party: "D" as const, state: "DE", vote: "No" as const },
-
-    // NO voters — sorted most to least prominent (most famous → innermost row)
-    { name: "Mitch McConnell",      party: "R" as const, state: "KY", vote: "No" as const },
-    { name: "Ted Cruz",             party: "R" as const, state: "TX", vote: "No" as const },
-    { name: "Marco Rubio",          party: "R" as const, state: "FL", vote: "No" as const },
-    { name: "Rand Paul",            party: "R" as const, state: "KY", vote: "No" as const },
-    { name: "Lindsey Graham",       party: "R" as const, state: "SC", vote: "No" as const },
-    { name: "Josh Hawley",          party: "R" as const, state: "MO", vote: "No" as const },
-    { name: "Susan Collins",        party: "R" as const, state: "ME", vote: "No" as const },
-    { name: "Mitt Romney",          party: "R" as const, state: "UT", vote: "No" as const },
-    { name: "John Thune",           party: "R" as const, state: "SD", vote: "No" as const },
-    { name: "Lisa Murkowski",       party: "R" as const, state: "AK", vote: "No" as const },
-    { name: "John Cornyn",          party: "R" as const, state: "TX", vote: "No" as const },
-    { name: "Chuck Grassley",       party: "R" as const, state: "IA", vote: "No" as const },
-    { name: "Rick Scott",           party: "R" as const, state: "FL", vote: "No" as const },
-    { name: "Tim Scott",            party: "R" as const, state: "SC", vote: "No" as const },
-    { name: "Kyrsten Sinema",       party: "I" as const, state: "AZ", vote: "No" as const },
-    { name: "Ron Johnson",          party: "R" as const, state: "WI", vote: "No" as const },
-    { name: "Marsha Blackburn",     party: "R" as const, state: "TN", vote: "No" as const },
-    { name: "Bill Cassidy",         party: "R" as const, state: "LA", vote: "No" as const },
-    { name: "Mike Lee",             party: "R" as const, state: "UT", vote: "No" as const },
-    { name: "Joni Ernst",           party: "R" as const, state: "IA", vote: "No" as const },
-    { name: "John Kennedy",         party: "R" as const, state: "LA", vote: "No" as const },
-    { name: "Bill Hagerty",         party: "R" as const, state: "TN", vote: "No" as const },
-    { name: "Roger Wicker",         party: "R" as const, state: "MS", vote: "No" as const },
-    { name: "John Barrasso",        party: "R" as const, state: "WY", vote: "No" as const },
-    { name: "Katie Britt",          party: "R" as const, state: "AL", vote: "No" as const },
-    { name: "Steve Daines",         party: "R" as const, state: "MT", vote: "No" as const },
-    { name: "Jim Risch",            party: "R" as const, state: "ID", vote: "No" as const },
-    { name: "Dan Sullivan",         party: "R" as const, state: "AK", vote: "No" as const },
-    { name: "Mike Crapo",           party: "R" as const, state: "ID", vote: "No" as const },
-    { name: "Mike Rounds",          party: "R" as const, state: "SD", vote: "No" as const },
-    { name: "Tommy Tuberville",     party: "R" as const, state: "AL", vote: "No" as const },
-    { name: "Thom Tillis",          party: "R" as const, state: "NC", vote: "No" as const },
-    { name: "Ted Budd",             party: "R" as const, state: "NC", vote: "No" as const },
-    { name: "Pete Ricketts",        party: "R" as const, state: "NE", vote: "No" as const },
-    { name: "Mike Braun",           party: "R" as const, state: "IN", vote: "No" as const },
-    { name: "Deb Fischer",          party: "R" as const, state: "NE", vote: "No" as const },
-    { name: "Todd Young",           party: "R" as const, state: "IN", vote: "No" as const },
-    { name: "Eric Schmitt",         party: "R" as const, state: "MO", vote: "No" as const },
-    { name: "Jerry Moran",          party: "R" as const, state: "KS", vote: "No" as const },
-    { name: "James Lankford",       party: "R" as const, state: "OK", vote: "No" as const },
-    { name: "Cynthia Lummis",       party: "R" as const, state: "WY", vote: "No" as const },
-    { name: "Cindy Hyde-Smith",     party: "R" as const, state: "MS", vote: "No" as const },
-    { name: "Markwayne Mullin",     party: "R" as const, state: "OK", vote: "No" as const },
-    { name: "Kevin Cramer",         party: "R" as const, state: "ND", vote: "No" as const },
-    { name: "John Hoeven",          party: "R" as const, state: "ND", vote: "No" as const },
-    { name: "Roger Marshall",       party: "R" as const, state: "KS", vote: "No" as const },
-    { name: "Shelley Moore Capito", party: "R" as const, state: "WV", vote: "No" as const },
-    { name: "James Risch",          party: "R" as const, state: "ID", vote: "No" as const },
-    { name: "Markwayne Mullin",     party: "R" as const, state: "OK", vote: "No" as const },
-    { name: "Lindsey Graham",       party: "R" as const, state: "SC", vote: "No" as const },
-  ];
+  // Roster is derived from senatorBios.ts so the hemicycle dots, the bios, and
+  // the S.J.Res. 32 roll-call sheet all come from a single source of truth.
+  // Ordering in RAW_BIOS (most-prominent → innermost) drives ring placement.
+  const senators: Senator[] = RAW_BIOS.map(b => ({
+    name:  b.name,
+    party: b.party,
+    state: b.state,
+    vote:  b.vote,
+  }));
 
   // A senator "crosses over" when they vote against their party's majority bloc
   const isCrossoverSenator = (s: { party: string; vote: string }) =>
@@ -601,12 +502,20 @@ export default function ArticlePage({
               width: 420,
               boxShadow: "0 20px 60px rgba(0,0,0,0.5)",
               animation: crossover ? "crossoverPulse 2s ease-in-out infinite" : "none",
+              position: "relative",
             }}>
               <div style={{ display: "flex", gap: 20, marginBottom: 20 }}>
-                <div style={{
-                  width: 100, height: 100, borderRadius: 12,
-                  overflow: "hidden", background: "rgba(255,255,255,0.05)", flexShrink: 0,
-                }}>
+                <div
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setPhotoEnlarged(v => !v);
+                  }}
+                  style={{
+                    width: 100, height: 100, borderRadius: 12,
+                    overflow: "hidden", background: "rgba(255,255,255,0.05)", flexShrink: 0,
+                    cursor: photoEnlarged ? "zoom-out" : "zoom-in",
+                    pointerEvents: "auto",
+                  }}>
                   <img src={bio.photo} alt={bio.name}
                     style={{ width: "100%", height: "100%", objectFit: "cover" }} />
                 </div>
@@ -620,6 +529,7 @@ export default function ArticlePage({
                       style={{
                         color: "rgba(255,255,255,0.95)",
                         textDecoration: "underline",
+                        pointerEvents: "auto",
                       }}
                     >
                       {bio.name}
@@ -648,6 +558,63 @@ export default function ArticlePage({
                 <div>Years in office: {bio.yearsInOffice}</div>
                 <div>{reelectionLabel(bio)}</div>
               </div>
+
+              {bio.isSponsor && (
+                <div style={{
+                  position: "absolute",
+                  bottom: 12,
+                  right: 12,
+                  padding: "4px 10px",
+                  borderRadius: 999,
+                  background: "rgba(250,204,21,0.15)",
+                  border: "1px solid rgba(250,204,21,0.55)",
+                  color: "rgba(250,204,21,0.95)",
+                  fontSize: 10,
+                  fontFamily: "monospace",
+                  letterSpacing: "0.12em",
+                  fontWeight: 700,
+                  textTransform: "uppercase",
+                }}>
+                  Bill Sponsor
+                </div>
+              )}
+            </div>
+          </div>
+        );
+      })()}
+
+      {/* Small-card enlarged photo overlay — same dim-behind treatment as
+          expanded-mode. Shown only when expanded mode is OFF. */}
+      {photoEnlarged && !senateExpanded && hoveredSenator && SENATOR_DATA[hoveredSenator.name] && (() => {
+        const bio = SENATOR_DATA[hoveredSenator.name];
+        return (
+          <div
+            onClick={() => setPhotoEnlarged(false)}
+            style={{
+              position: "fixed",
+              inset: 0,
+              zIndex: 400,
+              background: "rgba(0,0,0,0.75)",
+              backdropFilter: "blur(6px)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              cursor: "zoom-out",
+              pointerEvents: "auto",
+            }}
+          >
+            <div style={{
+              width: 520,
+              height: 520,
+              borderRadius: 16,
+              overflow: "hidden",
+              boxShadow: "0 24px 80px rgba(0,0,0,0.7)",
+            }}>
+              <img
+                src={bio.photo}
+                alt={bio.name}
+                style={{ width: "100%", height: "100%", objectFit: "cover" }}
+              />
             </div>
           </div>
         );
@@ -724,6 +691,40 @@ export default function ArticlePage({
                     }}
                   />
                 )}
+                {/* Enlarged photo overlay — dims everything behind, click anywhere to dismiss. */}
+                {photoEnlarged && bio && (
+                  <div
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setPhotoEnlarged(false);
+                    }}
+                    style={{
+                      position: "fixed",
+                      inset: 0,
+                      zIndex: 400,
+                      background: "rgba(0,0,0,0.75)",
+                      backdropFilter: "blur(6px)",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      cursor: "zoom-out",
+                    }}
+                  >
+                    <div style={{
+                      width: 520,
+                      height: 520,
+                      borderRadius: 16,
+                      overflow: "hidden",
+                      boxShadow: "0 24px 80px rgba(0,0,0,0.7)",
+                    }}>
+                      <img
+                        src={bio.photo}
+                        alt={bio.name}
+                        style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                      />
+                    </div>
+                  </div>
+                )}
                 <div style={{
                   position: "fixed",
                   [isAye ? "left" : "right"]: 80,
@@ -744,13 +745,16 @@ export default function ArticlePage({
                     boxShadow: "0 20px 60px rgba(0,0,0,0.5)",
                     cursor: "default",
                     animation: crossover ? "crossoverPulse 2s ease-in-out infinite" : "none",
+                    position: "relative",
                   }}
                 >
                   <div style={{ display: "flex", gap: 14, marginBottom: hasBio ? 14 : 0 }}>
                     {hasBio && (
                       <div
-                        onMouseEnter={() => setPhotoEnlarged(true)}
-                        onMouseLeave={() => setPhotoEnlarged(false)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setPhotoEnlarged(v => !v);
+                        }}
                         style={{
                           width: 120,
                           height: 120,
@@ -758,7 +762,7 @@ export default function ArticlePage({
                           overflow: "hidden",
                           background: "rgba(255,255,255,0.05)",
                           flexShrink: 0,
-                          cursor: "zoom-in",
+                          cursor: photoEnlarged ? "zoom-out" : "zoom-in",
                           position: "relative",
                         }}
                       >
@@ -767,31 +771,6 @@ export default function ArticlePage({
                           alt={bio.name}
                           style={{ width: "100%", height: "100%", objectFit: "cover" }}
                         />
-                        {/* Enlarged overlay — separate element so the small photo never moves */}
-                        {photoEnlarged && (
-                          <div
-                            style={{
-                              position: "fixed",
-                              top: "50%",
-                              left: "50%",
-                              transform: "translate(-50%, -50%)",
-                              zIndex: 400,
-                              pointerEvents: "none",
-                              borderRadius: 16,
-                              overflow: "hidden",
-                              width: 520,
-                              height: 520,
-                              boxShadow: "0 24px 80px rgba(0,0,0,0.7)",
-                              transition: "opacity 0.18s",
-                            }}
-                          >
-                            <img
-                              src={bio.photo}
-                              alt={bio.name}
-                              style={{ width: "100%", height: "100%", objectFit: "cover" }}
-                            />
-                          </div>
-                        )}
                       </div>
                     )}
 
@@ -850,6 +829,26 @@ export default function ArticlePage({
                       <div><span style={{ fontWeight: 700 }}>Age:</span> {bio.age}</div>
                       <div><span style={{ fontWeight: 700 }}>Years in office:</span> {bio.yearsInOffice}</div>
                       <div>{reelectionLabel(bio)}</div>
+                    </div>
+                  )}
+
+                  {hasBio && bio.isSponsor && (
+                    <div style={{
+                      position: "absolute",
+                      bottom: 12,
+                      right: 12,
+                      padding: "4px 10px",
+                      borderRadius: 999,
+                      background: "rgba(250,204,21,0.15)",
+                      border: "1px solid rgba(250,204,21,0.55)",
+                      color: "rgba(250,204,21,0.95)",
+                      fontSize: 10,
+                      fontFamily: "monospace",
+                      letterSpacing: "0.12em",
+                      fontWeight: 700,
+                      textTransform: "uppercase",
+                    }}>
+                      Bill Sponsor
                     </div>
                   )}
                 </div>
