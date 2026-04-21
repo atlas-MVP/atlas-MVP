@@ -138,6 +138,16 @@ interface Props {
 const FADE_START = 3.5;
 const FADE_END = 5.5;
 
+// Every custom overlay layer that must vanish on the naked-earth idle screen.
+const OVERLAY_LAYER_IDS = [
+  ...["LBN","IRN","UKR","RUS","PSE","ISR"].map(iso => `highlighted-fill-${iso}`),
+  "casualty-fill-blue", "casualty-fill-red",
+  "idle-pulse-blue", "idle-pulse-red",
+  "world-hit", "hover-fill", "hover-border", "secondary-border",
+  "events-halo", "events-glow", "events-dot",
+  "strike-outer-halo", "strike-halo", "strike-glow", "strike-core", "strike-dot",
+];
+
 // Earth rotates 360° in 86 400 seconds → 0.004167 °/s
 const EARTH_DEG_PER_SEC = 360 / 86400;
 
@@ -290,6 +300,23 @@ export default function Map({ onCountryClick, flyToCode, flyToPosition, selected
       spinFrameRef.current = null;
       spinLastTs.current = null;
     };
+  }, [isIdle, mapReady]);
+
+  // ── Naked earth: hide all overlays when idle, restore when active ──────────
+  useEffect(() => {
+    const m = map.current;
+    if (!m || !mapReady) return;
+    const vis = isIdle ? "none" : "visible";
+    // Custom overlay layers
+    OVERLAY_LAYER_IDS.forEach(id => {
+      if (m.getLayer(id)) try { m.setLayoutProperty(id, "visibility", vis); } catch {}
+    });
+    // Admin border lines (country + state borders) from Mapbox style
+    m.getStyle().layers.forEach(l => {
+      if (l.id.includes("admin") && l.type === "line") {
+        try { m.setLayoutProperty(l.id, "visibility", vis); } catch {}
+      }
+    });
   }, [isIdle, mapReady]);
 
   // Secondary (conflict partner) border — turquoise
