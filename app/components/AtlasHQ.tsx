@@ -423,6 +423,18 @@ export default function AtlasHQ({ onClose, onNavigate, onHeadlinesToggle, onSour
       pointerEvents: "auto",
     }}>
 
+      {/* Close button — top-right corner */}
+      <button
+        onClick={onClose}
+        style={{
+          position: "absolute", top: 10, right: 12, zIndex: 10,
+          background: "none", border: "none", cursor: "pointer", padding: "2px 4px",
+          color: "rgba(255,255,255,0.25)", fontSize: 14, lineHeight: 1,
+        }}
+        onMouseEnter={e => (e.currentTarget.style.color = "rgba(255,255,255,0.7)")}
+        onMouseLeave={e => (e.currentTarget.style.color = "rgba(255,255,255,0.25)")}
+      >×</button>
+
       {/* Scrollable body */}
       <div className="radar-scroll" style={{ flex: 1, overflowY: "auto", overflowX: "hidden", position: "relative", paddingTop: 10 }}>
 
