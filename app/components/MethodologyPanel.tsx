@@ -29,17 +29,6 @@ function SLabel({ text }: { text: string }) {
   );
 }
 
-// Danger-level legend row
-function DangerRow({ level, label, color }: { level: number; label: string; color: string }) {
-  return (
-    <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "5px 0", borderBottom: "1px solid rgba(255,255,255,0.04)" }}>
-      <span style={{ width: 6, height: 6, borderRadius: "50%", background: color, flexShrink: 0 }} />
-      <span style={{ fontSize: 12, fontFamily: "monospace", fontWeight: 700, color, minWidth: 16 }}>{level}</span>
-      <span style={{ fontSize: 11, fontFamily: "monospace", color: "rgba(255,255,255,0.65)" }}>{label}</span>
-    </div>
-  );
-}
-
 function SourceBadge({ name }: { name: string }) {
   return (
     <span style={{ fontSize: 9, fontFamily: "monospace", letterSpacing: "0.1em", padding: "3px 8px", borderRadius: 4, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.5)" }}>{name}</span>
@@ -49,8 +38,11 @@ function SourceBadge({ name }: { name: string }) {
 interface Props { onClose: () => void; onBack: () => void; }
 
 export default function MethodologyPanel({ onClose, onBack }: Props) {
+  const [confidenceText, setConfidenceText] = useState(
+    "Each event is scored 0–100% using Claude AI against corroboration across independent feeds. User access to intelligence is tiered by security level (sectors 0–10) — higher sectors unlock deeper event data, raw source citations, and historical threat timelines."
+  );
   const [verificationText, setVerificationText] = useState(
-    "Every alert requires confirmation from a minimum of two independent primary sources before publication. High-danger events (level 4–5) require three. Sources are weighted by historical accuracy, institutional authority, and proximity to the event."
+    "Every alert requires confirmation from a minimum of two independent sources before publication. Sources are weighted by historical accuracy, institutional authority, and proximity to the event."
   );
   const [dataText, setDataText] = useState(
     "Casualty figures are cross-referenced against government announcements, hospital records, and NGO field reports."
@@ -71,34 +63,10 @@ export default function MethodologyPanel({ onClose, onBack }: Props) {
           <h2 style={{ margin: 0, fontSize: 15, fontWeight: 600, color: "rgba(255,255,255,0.9)", letterSpacing: "0.02em" }}>how atlas works</h2>
         </div>
 
-        {/* ── SCORING ── */}
-        <SLabel text="scoring" />
-        <div style={{ margin: "0 14px" }}>
-          <div style={{ padding: "10px 13px", borderRadius: 10, background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.07)" }}>
-            <p style={{ margin: "0 0 10px", fontSize: 11, fontFamily: "monospace", color: "rgba(255,255,255,0.42)", lineHeight: 1.6 }}>
-              Each alert carries two independent scores: <span style={{ color: "rgba(255,255,255,0.72)" }}>danger</span> (severity 1–5) and <span style={{ color: "rgba(255,255,255,0.72)" }}>confidence</span> (source certainty 0–100%).
-            </p>
-            <DangerRow level={5} color="#ef4444" label="Critical" />
-            <DangerRow level={4} color="#f97316" label="High" />
-            <DangerRow level={3} color="#eab308" label="Elevated" />
-            <DangerRow level={2} color="#84cc16" label="Moderate" />
-            <DangerRow level={1} color="#22d3ee" label="Low" />
-          </div>
-
-          {/* Confidence bar legend */}
-          <div style={{ marginTop: 8, padding: "10px 13px", borderRadius: 10, background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.07)" }}>
-            <p style={{ margin: "0 0 8px", fontSize: 10, fontFamily: "monospace", letterSpacing: "0.1em", color: "rgba(255,255,255,0.28)", textTransform: "uppercase" }}>Confidence scale</p>
-            <div style={{ display: "flex", gap: 0, height: 6, borderRadius: 4, overflow: "hidden" }}>
-              {[["#ef4444","<50%"], ["#f97316","50-70%"], ["#eab308","70-85%"], ["#22d3ee","85-95%"], ["#4ade80",">95%"]].map(([c, _]) => (
-                <div key={c} style={{ flex: 1, background: c, opacity: 0.6 }} />
-              ))}
-            </div>
-            <div style={{ display: "flex", justifyContent: "space-between", marginTop: 4 }}>
-              {["<50%","50-70%","70-85%","85-95%",">95%"].map(l => (
-                <span key={l} style={{ fontSize: 8, fontFamily: "monospace", color: "rgba(255,255,255,0.28)" }}>{l}</span>
-              ))}
-            </div>
-          </div>
+        {/* ── CONFIDENCE SCORING ── */}
+        <SLabel text="confidence scoring" />
+        <div style={{ margin: "0 14px", padding: "11px 13px", borderRadius: 10, background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.07)" }}>
+          <EText value={confidenceText} onChange={setConfidenceText} as="div" style={{ fontSize: 12, color: "rgba(255,255,255,0.55)", lineHeight: 1.7, fontFamily: "monospace" }} />
         </div>
 
         {/* ── VERIFICATION ── */}
@@ -112,7 +80,7 @@ export default function MethodologyPanel({ onClose, onBack }: Props) {
         <div style={{ margin: "0 14px", padding: "11px 13px", borderRadius: 10, background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.07)" }}>
           <EText value={dataText} onChange={setDataText} as="div" style={{ fontSize: 12, color: "rgba(255,255,255,0.55)", lineHeight: 1.7, fontFamily: "monospace" }} />
           <div style={{ display: "flex", gap: 5, flexWrap: "wrap" as const, marginTop: 10 }}>
-            {["ACLED", "GDELT", "UN OCHA", "AP", "Reuters", "Al Jazeera", "BBC", "NYT", "IAEA", "Pentagon", "IDF"].map(s => (
+            {["ACLED", "FIRMS", "GDELT", "RSS", "Telegram", "Google Trends", "AP", "Reuters", "Al Jazeera", "BBC"].map(s => (
               <SourceBadge key={s} name={s} />
             ))}
           </div>

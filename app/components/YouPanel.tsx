@@ -103,7 +103,7 @@ export default function YouPanel({ onClose, onBack }: Props) {
         <SLabel text="activity" />
         <div style={{ margin: "0 14px", display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 6, paddingBottom: 20 }}>
           {[
-            { value: "2",   label: "security level" },
+            { value: "3",   label: "security level" },
             { value: "23",  label: "events tracked" },
             { value: "147", label: "events" },
           ].map(({ value, label }) => (
