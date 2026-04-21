@@ -348,89 +348,68 @@ export default function ArticlePage({
         </div>
       </div>
 
-      {hoveredSenator && hoveredSenator.name === SCHUMER_DATA.name && !senateExpanded && (
-        <div style={{
-          position: "fixed",
-          right: 30,
-          top: "50%",
-          transform: "translateY(-50%)",
-          zIndex: 100,
-          pointerEvents: "none",
-        }}>
+      {hoveredSenator && SENATOR_DATA[hoveredSenator.name] && !senateExpanded && (() => {
+        const bio = SENATOR_DATA[hoveredSenator.name];
+        const crossover = isCrossoverSenator(hoveredSenator);
+        return (
           <div style={{
-            background: "rgba(4,6,18,0.95)",
-            backdropFilter: "blur(30px)",
-            borderRadius: 16,
-            border: "1px solid rgba(96,165,250,0.55)",
-            padding: "28px",
-            width: 420,
-            boxShadow: "0 20px 60px rgba(0,0,0,0.5)",
-            animation: "crossoverPulse 2s ease-in-out infinite",
+            position: "fixed",
+            right: 30,
+            top: "50%",
+            transform: "translateY(-50%)",
+            zIndex: 100,
+            pointerEvents: "none",
           }}>
-            <div style={{ display: "flex", gap: 20, marginBottom: 20 }}>
-              <div style={{
-                width: 100,
-                height: 100,
-                borderRadius: 12,
-                overflow: "hidden",
-                background: "rgba(255,255,255,0.05)",
-                flexShrink: 0,
-              }}>
-                <img
-                  src={SCHUMER_DATA.photo}
-                  alt={SCHUMER_DATA.name}
-                  style={{
-                    width: "100%",
-                    height: "100%",
-                    objectFit: "cover",
-                  }}
-                />
-              </div>
-
-              <div style={{ flex: 1 }}>
-                <div style={{
-                  fontSize: 22,
-                  fontWeight: 700,
-                  color: "rgba(255,255,255,0.95)",
-                  marginBottom: 8,
-                }}>
-                  {SCHUMER_DATA.name}
-                </div>
-
-                <div style={{
-                  fontSize: 14,
-                  color: "rgba(255,255,255,0.62)",
-                  marginBottom: 6,
-                }}>
-                  Democrat • {SCHUMER_DATA.state}
-                </div>
-
-                <div style={{
-                  fontSize: 13,
-                  color: "rgba(100,200,100,0.85)",
-                  fontFamily: "monospace",
-                }}>
-                  Vote: {SCHUMER_DATA.vote}
-                </div>
-              </div>
-            </div>
-
             <div style={{
-              display: "flex",
-              flexDirection: "column",
-              gap: 10,
-              fontSize: 13,
-              color: "rgba(255,255,255,0.68)",
-              borderTop: "1px solid rgba(255,255,255,0.08)",
-              paddingTop: 18,
+              background: "rgba(4,6,18,0.95)",
+              backdropFilter: "blur(30px)",
+              borderRadius: 16,
+              border: `1px solid rgba(${bio.party === "R" ? "239,68,68" : "96,165,250"},0.55)`,
+              padding: "28px",
+              width: 420,
+              boxShadow: "0 20px 60px rgba(0,0,0,0.5)",
+              animation: crossover ? "crossoverPulse 2s ease-in-out infinite" : "none",
             }}>
-              <div>Age: {SCHUMER_DATA.age}</div>
-              <div>In office: {SCHUMER_DATA.yearsInOffice} years</div>
-              <div>Up for re-election: {SCHUMER_DATA.nextElection}</div>
+              <div style={{ display: "flex", gap: 20, marginBottom: 20 }}>
+                <div style={{
+                  width: 100, height: 100, borderRadius: 12,
+                  overflow: "hidden", background: "rgba(255,255,255,0.05)", flexShrink: 0,
+                }}>
+                  <img src={bio.photo} alt={bio.name}
+                    style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                </div>
+
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: 22, fontWeight: 700, color: "rgba(255,255,255,0.95)", marginBottom: 8 }}>
+                    {bio.name}
+                  </div>
+                  <div style={{ fontSize: 14, color: "rgba(255,255,255,0.62)", marginBottom: 6 }}>
+                    {bio.party === "R" ? "Republican" : bio.party === "D" ? "Democrat" : "Independent"} • {STATE_NAMES[bio.state] ?? bio.state}
+                  </div>
+                  <div style={{
+                    fontSize: 13,
+                    color: bio.vote === "Aye" ? "rgba(100,200,100,0.85)" : "rgba(239,68,68,0.85)",
+                    fontFamily: "monospace",
+                  }}>
+                    Vote: {bio.vote}
+                  </div>
+                </div>
+              </div>
+
+              <div style={{
+                display: "flex", flexDirection: "column", gap: 10,
+                fontSize: 13, color: "rgba(255,255,255,0.68)",
+                borderTop: "1px solid rgba(255,255,255,0.08)",
+                paddingTop: 18,
+              }}>
+                <div>Age: {bio.age}</div>
+                <div>In office: {bio.yearsInOffice} years</div>
+                <div>Up for re-election: {bio.nextElection}</div>
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        );
+      })()}
 
       {senateExpanded && (
         <div
