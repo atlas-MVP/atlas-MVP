@@ -176,6 +176,14 @@ export default function Map({ onCountryClick, flyToCode, flyToPosition, selected
   // or when isIdle transitions false→true (panel X button closes last widget).
   const hasInteracted = useRef(false);
   const prevIsIdle = useRef(isIdle);
+  // Reveal animation: layer IDs per phase, populated in the load callback
+  const revealLayersRef = useRef<{
+    borders: Array<{ id: string; targetOpacity: number }>;
+    ocean: string[];
+    countries: string[];
+    cities: string[];
+  } | null>(null);
+  const revealDoneRef = useRef(false);
 
   // Focus mode: when a conflict is active, only involved countries are visible.
   // When no conflict, all highlighted countries show normally.
@@ -352,11 +360,14 @@ export default function Map({ onCountryClick, flyToCode, flyToPosition, selected
     if (!m || !mapReady) return;
 
     const apply = (idle: boolean) => {
-      // Custom fill layers → fill-opacity
+      // world-hit needs an explicit value — passing `undefined` falls back to the
+      // Mapbox spec default of 1.0, turning it into a solid black overlay.
+      if (m.getLayer("world-hit")) try { m.setPaintProperty("world-hit", "fill-opacity", idle ? 0 : 0.001); } catch {}
+      // Other custom fill layers
       ["highlighted-fill-LBN","highlighted-fill-IRN","highlighted-fill-UKR",
        "highlighted-fill-RUS","highlighted-fill-PSE","highlighted-fill-ISR",
        "casualty-fill-blue","casualty-fill-red",
-       "idle-pulse-blue","idle-pulse-red","hover-fill","world-hit",
+       "idle-pulse-blue","idle-pulse-red","hover-fill",
       ].forEach(id => {
         if (m.getLayer(id)) try { m.setPaintProperty(id, "fill-opacity", idle ? 0 : undefined); } catch {}
       });
@@ -370,38 +381,86 @@ export default function Map({ onCountryClick, flyToCode, flyToPosition, selected
       ].forEach(id => {
         if (m.getLayer(id)) try { m.setPaintProperty(id, "circle-opacity", idle ? 0 : undefined); } catch {}
       });
-      // Mapbox style layers — paint opacity so layout visibility="none" on roads
-      // set at init time is never disturbed.
-      try {
-        m.getStyle()?.layers?.forEach(l => {
-          if (l.type === "symbol") {
-            // All text labels: country, state, city, ocean, road, etc.
-            try { m.setPaintProperty(l.id, "text-opacity", idle ? 0 : undefined); } catch {}
-            try { m.setPaintProperty(l.id, "icon-opacity", idle ? 0 : undefined); } catch {}
-          }
-          if (l.type === "line" && l.id.includes("admin")) {
-            // Admin borders: hidden on idle, restored to our custom values on active
-            if (idle) {
-              try { m.setPaintProperty(l.id, "line-opacity", 0); } catch {}
-            } else {
-              const op = l.id.includes("admin-0") ? 0.6
-                       : l.id.includes("admin-1") ? 0.55
-                       : 0;
-              try { m.setPaintProperty(l.id, "line-opacity", op); } catch {}
-            }
-          }
-        });
-      } catch {}
+      // Mapbox style symbol / admin layers are handled by the 8-second reveal
+      // animation on load — they stay at their revealed opacity permanently and
+      // are NOT toggled by idle state.
     };
 
     apply(isIdle);
-
-    // Re-apply when Mapbox reloads style data (sprite / glyph refresh can
-    // reset paint properties to style defaults, un-hiding labels).
-    const onStyleData = () => { if (isIdleRef.current) { try { apply(true); } catch {} } };
-    m.on("styledata", onStyleData);
-    return () => { m.off("styledata", onStyleData); };
   }, [isIdle, mapReady]);
+
+  // ── 8-second sequential reveal: naked → borders → ocean → countries → cities ──
+  useEffect(() => {
+    const m = map.current;
+    if (!m || !mapReady) return;
+    const phases = revealLayersRef.current;
+    if (!phases) return;
+
+    const timers: ReturnType<typeof setTimeout>[] = [];
+    const frames: number[] = [];
+
+    // Animate a set of layers from 0 → target opacity over 2 000 ms (smoothstep)
+    const animateIn = (
+      ids: string[],
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      prop: any,
+      getTarget: (id: string) => number,
+      delay: number,
+      onDone?: () => void,
+    ) => {
+      timers.push(setTimeout(() => {
+        const start = performance.now();
+        const step = () => {
+          const cur = map.current;
+          if (!cur) return;
+          const t = Math.min(1, (performance.now() - start) / 2000);
+          const ease = t * t * (3 - 2 * t); // smoothstep
+          ids.forEach(id => {
+            try { cur.setPaintProperty(id, prop, getTarget(id) * ease); } catch {}
+          });
+          if (t < 1) frames.push(requestAnimationFrame(step));
+          else onDone?.();
+        };
+        frames.push(requestAnimationFrame(step));
+      }, delay));
+    };
+
+    const borderMap: Record<string, number> = {};
+    phases.borders.forEach(b => { borderMap[b.id] = b.targetOpacity; });
+
+    // Phase 1 (0–2 s): admin borders
+    animateIn(phases.borders.map(b => b.id), "line-opacity", id => borderMap[id] ?? 0, 0);
+    // Phase 2 (2–4 s): water / ocean / natural feature labels
+    animateIn(phases.ocean, "text-opacity", () => 1, 2000);
+    animateIn(phases.ocean, "icon-opacity", () => 1, 2000);
+    // Phase 3 (4–6 s): country and state labels
+    animateIn(phases.countries, "text-opacity", () => 1, 4000);
+    animateIn(phases.countries, "icon-opacity", () => 1, 4000);
+    // Phase 4 (6–8 s): city / settlement labels — mark done when complete
+    animateIn(phases.cities, "text-opacity", () => 1, 6000, () => { revealDoneRef.current = true; });
+    animateIn(phases.cities, "icon-opacity", () => 1, 6000);
+
+    // After reveal completes, re-apply full opacity if Mapbox reloads style data
+    const onStyleData = () => {
+      if (!revealDoneRef.current || !map.current) return;
+      const cur = map.current;
+      phases.borders.forEach(({ id, targetOpacity }) => {
+        try { cur.setPaintProperty(id, "line-opacity", targetOpacity); } catch {}
+      });
+      [...phases.ocean, ...phases.countries, ...phases.cities].forEach(id => {
+        try { cur.setPaintProperty(id, "text-opacity", 1); } catch {}
+        try { cur.setPaintProperty(id, "icon-opacity", 1); } catch {}
+      });
+    };
+    m.on("styledata", onStyleData);
+
+    return () => {
+      timers.forEach(clearTimeout);
+      frames.forEach(cancelAnimationFrame);
+      m.off("styledata", onStyleData);
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mapReady]);
 
   // Secondary (conflict partner) border — turquoise
   useEffect(() => {
@@ -1014,6 +1073,46 @@ export default function Map({ onCountryClick, flyToCode, flyToPosition, selected
           .setHTML(html)
           .addTo(m);
       });
+
+      // ── Collect layer phases for the 8-second reveal animation ─────────────
+      {
+        const borders: Array<{ id: string; targetOpacity: number }> = [];
+        const ocean: string[] = [];
+        const countries: string[] = [];
+        const cities: string[] = [];
+
+        m.getStyle().layers.forEach(l => {
+          // Admin border lines — already styled above, now set to 0 for reveal
+          if (l.type === "line" && l.id.includes("admin")) {
+            const target = l.id.includes("admin-0") ? 0.6
+                         : l.id.includes("admin-1") ? 0.55 : 0;
+            if (target > 0) {
+              borders.push({ id: l.id, targetOpacity: target });
+              try { m.setPaintProperty(l.id, "line-opacity", 0); } catch {}
+            }
+            return;
+          }
+          if (l.type !== "symbol") return;
+          // Skip layers already permanently hidden (roads, continents, etc.)
+          try { if (m.getLayoutProperty(l.id, "visibility") === "none") return; } catch {}
+          // Set to 0 — reveal animation will bring them in
+          try { m.setPaintProperty(l.id, "text-opacity", 0); } catch {}
+          try { m.setPaintProperty(l.id, "icon-opacity", 0); } catch {}
+          const id = l.id;
+          if (id.includes("water") || id.includes("ocean") || id.includes("sea") ||
+              id.includes("bay") || id.includes("glacier") || id.includes("natural") ||
+              id.includes("waterway") || id.includes("lake") || id.includes("landuse")) {
+            ocean.push(id);
+          } else if (id.includes("country") || id.includes("state") ||
+                     id.includes("continent") || id.includes("region") || id.includes("province")) {
+            countries.push(id);
+          } else {
+            cities.push(id); // settlements, places, POIs, road labels, etc.
+          }
+        });
+
+        revealLayersRef.current = { borders, ocean, countries, cities };
+      }
 
       // No intro auto-scroll — user navigates manually
     });
