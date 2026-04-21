@@ -163,6 +163,10 @@ export default function ArticlePage({
     { name: "Lindsey Graham", party: "R" as const, state: "SC", vote: "No" as const },
   ];
 
+  // A senator "crosses over" when they vote against their party's majority bloc
+  const isCrossoverSenator = (s: { party: string; vote: string }) =>
+    (s.party === "D" && s.vote === "No") || (s.party === "R" && s.vote === "Aye");
+
   return (
     <div style={{
       position: "fixed",
@@ -173,6 +177,12 @@ export default function ArticlePage({
       zIndex: 20,
       pointerEvents: "auto",
     }}>
+      <style>{`
+        @keyframes crossoverPulse {
+          0%, 100% { border-color: rgba(96,165,250,0.55); box-shadow: 0 0 0 0 rgba(96,165,250,0.0); }
+          50%       { border-color: rgba(239,68,68,0.55);  box-shadow: 0 0 0 0 rgba(239,68,68,0.0); }
+        }
+      `}</style>
       <div style={{
         width: "100%",
         height: "100%",
@@ -290,10 +300,11 @@ export default function ArticlePage({
             background: "rgba(4,6,18,0.95)",
             backdropFilter: "blur(30px)",
             borderRadius: 16,
-            border: "1px solid rgba(255,255,255,0.15)",
+            border: "1px solid rgba(96,165,250,0.55)",
             padding: "28px",
             width: 420,
             boxShadow: "0 20px 60px rgba(0,0,0,0.5)",
+            animation: "crossoverPulse 2s ease-in-out infinite",
           }}>
             <div style={{ display: "flex", gap: 20, marginBottom: 20 }}>
               <div style={{
@@ -414,6 +425,7 @@ export default function ArticlePage({
 
             const isAye = senator.vote === "Aye";
             const isSchumer = senator.name === SCHUMER_DATA.name;
+            const crossover = isCrossoverSenator(senator);
 
             return (
               <div style={{
@@ -439,6 +451,7 @@ export default function ArticlePage({
                     width: 420,
                     boxShadow: "0 20px 60px rgba(0,0,0,0.5)",
                     cursor: lockedSenator ? "pointer" : "default",
+                    animation: crossover ? "crossoverPulse 2s ease-in-out infinite" : "none",
                   }}
                 >
                   <div style={{ display: "flex", gap: 14, marginBottom: isSchumer ? 14 : 0 }}>
