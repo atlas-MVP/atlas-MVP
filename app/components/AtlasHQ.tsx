@@ -276,10 +276,27 @@ export default function AtlasHQ({ onClose, onNavigate, onHeadlinesToggle, onSour
     return () => timers.forEach(clearTimeout);
   }, []);
 
+  const LAYOUT_KEY = "atlas-hq-layout";
+
+  // Load persisted layout (section order + labels) from localStorage immediately
   useEffect(() => {
+    try {
+      const saved = localStorage.getItem(LAYOUT_KEY);
+      if (saved) {
+        const { sectionOrder, sectionLabels } = JSON.parse(saved);
+        setLiveConfig(prev => ({ ...(prev ?? ({} as RadarConfig)), sectionOrder, sectionLabels }));
+      }
+    } catch {}
     fetch("/api/radar-config", { cache: "no-store" })
       .then(r => r.json())
-      .then((data: RadarConfig) => setLiveConfig(data))
+      .then((data: RadarConfig) => {
+        // API wins for content, but keep localStorage layout if API has none
+        setLiveConfig(prev => ({
+          ...data,
+          sectionOrder: data.sectionOrder ?? prev?.sectionOrder,
+          sectionLabels: data.sectionLabels ?? prev?.sectionLabels,
+        }));
+      })
       .catch(() => {});
   }, []);
 
@@ -308,7 +325,8 @@ export default function AtlasHQ({ onClose, onNavigate, onHeadlinesToggle, onSour
     disasterAlerts: (liveConfig?.disasterAlerts?.length  ? liveConfig.disasterAlerts  : DISASTER_ALERTS) as RadarAlertItem[],
   };
 
-  const displayConfig = editMode && editDraft ? editDraft : currentConfig;
+  // Always use editDraft when available (preserves layout even after exiting edit mode until reload)
+  const displayConfig = editDraft ?? currentConfig;
 
   // Initialise draft when global edit mode is switched on; clear on exit.
   const currentConfigRef = useRef(currentConfig);
@@ -381,6 +399,13 @@ export default function AtlasHQ({ onClose, onNavigate, onHeadlinesToggle, onSour
     setEditDraft(prev => {
       const base = prev ?? currentConfig;
       const next = updater(base);
+      // Persist layout preferences instantly to localStorage
+      try {
+        localStorage.setItem(LAYOUT_KEY, JSON.stringify({
+          sectionOrder: next.sectionOrder,
+          sectionLabels: next.sectionLabels,
+        }));
+      } catch {}
       if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
       saveTimerRef.current = setTimeout(async () => {
         await fetch("/api/radar-config", {
