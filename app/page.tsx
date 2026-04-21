@@ -137,6 +137,8 @@ export default function Home() {
   const [activeGunViolence,  setActiveGunViolence]  = useState<string | null>(null); // incident id
   // Track placed nature site names so we don't repeat within a session.
   const [placedNatureNames, setPlacedNatureNames] = useState<string[]>([]);
+  // Increment to resume globe spin after a permanent stop (ATLAS tap).
+  const [spinKey, setSpinKey] = useState(0);
 
   // Deep link: /?reel=<id> → redirect to the dedicated /you page so shared
   // links land on the full reels experience, not the HQ widget.
@@ -362,6 +364,7 @@ export default function Home() {
           focusCountries={focusCountries}
           activeStrikes={activeStrikes}
           homeView={showRadar && !selectedCountry && !homeCountry && !feedCountry}
+          spinKey={spinKey}
           isIdle={!selectedCountry && !homeCountry && !feedCountry && !activeGunViolence && !activeDisaster && !activeFinance}
           onReady={() => setMapReady(true)}
         />
@@ -558,6 +561,7 @@ export default function Home() {
               setHistoryDate(null);
               setLiveReset(v => v + 1);
               setShowRadar(true);
+              setSpinKey(k => k + 1);
               setFlyToPosition({ center: [-98.5, 39.5], zoom: 1.8, key: "atlas-globe-" + Date.now() });
               if (typeof window !== "undefined") window.history.replaceState(null, "", "/");
             }}

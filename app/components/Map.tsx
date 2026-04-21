@@ -131,6 +131,7 @@ interface Props {
   focusCountries?: string[]; // when set, ONLY these countries are active — everything else dims
   homeView?: boolean; // radar is open, no country selected — suppress auto-highlight
   onReady?: () => void; // fires once when first idle event lands (all tiles rendered)
+  spinKey?: number;  // increment to resume spin after a permanent stop
   isIdle?: boolean;  // true when nothing is selected — enables slow globe spin
 }
 
@@ -151,7 +152,7 @@ const OVERLAY_LAYER_IDS = [
 // Earth rotates 360° in 86 400 seconds → 0.004167 °/s
 const EARTH_DEG_PER_SEC = 360 / 86400;
 
-export default function Map({ onCountryClick, flyToCode, flyToPosition, selectedCountry, secondaryCountries = [], activeStrikes, casualtyCountries = [], focusCountries, homeView = false, onReady, isIdle = false }: Props) {
+export default function Map({ onCountryClick, flyToCode, flyToPosition, selectedCountry, secondaryCountries = [], activeStrikes, casualtyCountries = [], focusCountries, homeView = false, onReady, spinKey = 0, isIdle = false }: Props) {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
   const [mapReady, setMapReady] = useState(false);
@@ -168,6 +169,10 @@ export default function Map({ onCountryClick, flyToCode, flyToPosition, selected
   const spinFrameRef = useRef<number | null>(null);
   const spinLastTs = useRef<number | null>(null);
   const userInteracting = useRef(false);
+  // hasInteracted: set on any mousedown/touchstart; cleared only by spinKey change
+  // or when isIdle transitions false→true (panel X button closes last widget).
+  const hasInteracted = useRef(false);
+  const prevIsIdle = useRef(isIdle);
 
   // Focus mode: when a conflict is active, only involved countries are visible.
   // When no conflict, all highlighted countries show normally.
@@ -261,7 +266,7 @@ export default function Map({ onCountryClick, flyToCode, flyToPosition, selected
     const m = map.current;
     if (!m || !mapReady) return;
 
-    const onDown = () => { userInteracting.current = true;  spinLastTs.current = null; };
+    const onDown = () => { hasInteracted.current = true; userInteracting.current = true; spinLastTs.current = null; };
     const onUp   = () => { userInteracting.current = false; };
     m.getCanvas().addEventListener("mousedown",  onDown);
     m.getCanvas().addEventListener("mouseup",    onUp);
@@ -277,28 +282,50 @@ export default function Map({ onCountryClick, flyToCode, flyToPosition, selected
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mapReady]);
 
+  // ATLAS tap / X button reset: increment spinKey from the parent to resume spin.
+  useEffect(() => {
+    hasInteracted.current = false;
+    spinLastTs.current = null;
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [spinKey]);
+
+  // Panel close: when isIdle flips false → true (last widget closed), resume spin.
+  useEffect(() => {
+    if (isIdle && !prevIsIdle.current) {
+      hasInteracted.current = false;
+      spinLastTs.current = null;
+    }
+    prevIsIdle.current = isIdle;
+  }, [isIdle]);
+
   useEffect(() => {
     const m = map.current;
     if (!m || !mapReady) return;
 
     const tick = (ts: number) => {
       spinFrameRef.current = requestAnimationFrame(tick);
-      if (!isIdle || userInteracting.current) {
+      // Stop permanently once the user clicks/drags (hasInteracted).
+      // Only cleared by ATLAS tap (spinKey change) or closing the last panel.
+      if (!isIdle || hasInteracted.current) {
         spinLastTs.current = null;
-        return;
-      }
-      // setCenter internally calls jumpTo which cancels any ongoing Mapbox
-      // animation (scroll zoom, flyTo). Skip the setCenter call while Mapbox
-      // is animating — the timer still advances so the spin resumes cleanly.
-      if (m.isMoving()) {
-        spinLastTs.current = ts; // keep clock ticking, don't reset
         return;
       }
       if (spinLastTs.current === null) { spinLastTs.current = ts; return; }
       const dtSec = (ts - spinLastTs.current) / 1000;
       spinLastTs.current = ts;
       const c = m.getCenter();
-      m.setCenter([c.lng - EARTH_DEG_PER_SEC * dtSec, c.lat]);
+      const newLng = c.lng - EARTH_DEG_PER_SEC * dtSec;
+      // Write directly to Mapbox's internal transform instead of setCenter().
+      // setCenter → jumpTo → camera.stop() which cancels scroll-zoom animations.
+      // Direct transform write + triggerRepaint() advances the globe without
+      // interrupting any concurrent zoom/flyTo animation.
+      const tr = (m as any).transform;
+      if (tr?.center !== undefined) {
+        tr.center = new mapboxgl.LngLat(newLng, c.lat);
+        m.triggerRepaint();
+      } else {
+        m.setCenter([newLng, c.lat]);
+      }
     };
 
     spinFrameRef.current = requestAnimationFrame(tick);
@@ -310,8 +337,9 @@ export default function Map({ onCountryClick, flyToCode, flyToPosition, selected
   }, [isIdle, mapReady]);
 
   // ── Naked earth: hide all overlays when idle, restore when active ──────────
-  // Uses paint opacity (not layout visibility) — more reliable, survives
-  // Mapbox style reloads and doesn't interfere with tile rendering.
+  // Uses paint opacity throughout — more reliable than layout visibility because
+  // it survives Mapbox style reloads and doesn't undo permanent load-time hides
+  // (road layers etc. that were set to visibility="none" at init stay hidden).
   const isIdleRef = useRef(isIdle);
   isIdleRef.current = isIdle;
 
@@ -338,21 +366,37 @@ export default function Map({ onCountryClick, flyToCode, flyToPosition, selected
       ].forEach(id => {
         if (m.getLayer(id)) try { m.setPaintProperty(id, "circle-opacity", idle ? 0 : undefined); } catch {}
       });
-      // All Mapbox style layers: borders, labels, symbols — everything
+      // Mapbox style layers — paint opacity so layout visibility="none" on roads
+      // set at init time is never disturbed.
       try {
-        m.getStyle().layers.forEach(l => {
-          if (
-            l.id.includes("admin") ||   // country + state borders
-            l.type === "symbol" ||       // all text labels (countries, cities, oceans, etc.)
-            l.id.includes("road") || l.id.includes("water-label")
-          ) {
-            try { m.setLayoutProperty(l.id, "visibility", idle ? "none" : "visible"); } catch {}
+        m.getStyle()?.layers?.forEach(l => {
+          if (l.type === "symbol") {
+            // All text labels: country, state, city, ocean, road, etc.
+            try { m.setPaintProperty(l.id, "text-opacity", idle ? 0 : undefined); } catch {}
+            try { m.setPaintProperty(l.id, "icon-opacity", idle ? 0 : undefined); } catch {}
+          }
+          if (l.type === "line" && l.id.includes("admin")) {
+            // Admin borders: hidden on idle, restored to our custom values on active
+            if (idle) {
+              try { m.setPaintProperty(l.id, "line-opacity", 0); } catch {}
+            } else {
+              const op = l.id.includes("admin-0") ? 0.6
+                       : l.id.includes("admin-1") ? 0.55
+                       : 0;
+              try { m.setPaintProperty(l.id, "line-opacity", op); } catch {}
+            }
           }
         });
       } catch {}
     };
 
     apply(isIdle);
+
+    // Re-apply when Mapbox reloads style data (sprite / glyph refresh can
+    // reset paint properties to style defaults, un-hiding labels).
+    const onStyleData = () => { if (isIdleRef.current) { try { apply(true); } catch {} } };
+    m.on("styledata", onStyleData);
+    return () => { m.off("styledata", onStyleData); };
   }, [isIdle, mapReady]);
 
   // Secondary (conflict partner) border — turquoise
@@ -481,6 +525,7 @@ export default function Map({ onCountryClick, flyToCode, flyToPosition, selected
       doubleClickZoom: false,
       minPitch: 0,
       maxPitch: 0,
+      maxZoom: 14,
     });
 
     // Lock bearing and pitch — prevent any rotation or tilt
@@ -797,12 +842,12 @@ export default function Map({ onCountryClick, flyToCode, flyToPosition, selected
         paint: { "circle-radius": 2, "circle-color": "#ffffff", "circle-opacity": 0.70, "circle-blur": 0, "circle-stroke-width": 0 },
       });
 
-      // --- Idle pulse: 5fps, paused during zoom (setPaintProperty competes with tile rendering) ---
+      // --- Idle pulse: 5fps, paused during zoom and during naked-earth idle state ---
       let isZooming = false;
       let lastPulseTs = 0;
       const animateIdle = (ts: number) => {
         if (!pulseStart.current) pulseStart.current = ts;
-        if (!isZooming && ts - lastPulseTs >= 200) {
+        if (!isZooming && ts - lastPulseTs >= 200 && !isIdleRef.current) {
           lastPulseTs = ts;
           const t = (ts - pulseStart.current) / 2800;
           const base = 0.06 + 0.12 * Math.abs(Math.sin(t * Math.PI));
