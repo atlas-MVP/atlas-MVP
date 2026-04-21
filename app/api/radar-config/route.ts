@@ -11,7 +11,6 @@ const EMPTY_CONFIG = {
   topConflicts: [],
   moreConflicts: [],
   violenceItems: [],
-  financeItems: [],
   disasters: [],
 };
 
@@ -36,17 +35,16 @@ export async function GET(): Promise<NextResponse> {
 
     const config = JSON.parse(text) as Record<string, unknown[]>;
 
-    const [liveAlerts, topConflicts, moreConflicts, violenceItems, financeItems, disasters] =
+    const [liveAlerts, topConflicts, moreConflicts, violenceItems, disasters] =
       await Promise.all([
         signItems((config.liveAlerts as Record<string, unknown>[]) ?? []),
         signItems((config.topConflicts as Record<string, unknown>[]) ?? []),
         signItems((config.moreConflicts as Record<string, unknown>[]) ?? []),
         signItems((config.violenceItems as Record<string, unknown>[]) ?? []),
-        signItems((config.financeItems as Record<string, unknown>[]) ?? []),
         signItems((config.disasters as Record<string, unknown>[]) ?? []),
       ]);
 
-    return NextResponse.json({ liveAlerts, topConflicts, moreConflicts, violenceItems, financeItems, disasters });
+    return NextResponse.json({ liveAlerts, topConflicts, moreConflicts, violenceItems, disasters });
   } catch (err: unknown) {
     const code = (err as { Code?: string; name?: string }).Code ?? (err as { name?: string }).name;
     if (code === "NoSuchKey" || code === "NotFound") {

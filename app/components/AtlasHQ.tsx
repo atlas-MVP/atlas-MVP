@@ -10,7 +10,6 @@ import RadarEditor, {
   type LiveAlertItem as RadarAlertItem,
   type ConflictItem as RadarConflictItem,
   type ViolenceItem as RadarViolenceItem,
-  type FinanceItem as RadarFinanceItem,
   type DisasterItem as RadarDisasterItem,
 } from "./RadarEditor";
 import { EText, EImg, useEditMode } from "./InlineEdit";
@@ -199,14 +198,6 @@ const VIOLENCE_ITEMS = [
   },
 ];
 
-const FINANCE_ITEMS = [
-  {
-    slug: "oil-hormuz",
-    headline: "Oil surges past $87 as Strait of Hormuz tensions escalate",
-    image: "/finance-card.avif",
-    source: "Bloomberg",
-  },
-];
 
 interface Props {
   onClose: () => void;
@@ -215,7 +206,6 @@ interface Props {
   onSourceClick?: (source: string) => void;
   onReelsTap?: () => void;
   onSenateVoteLocked?: (locked: boolean) => void;
-  onFinanceTap?: (slug: string) => void;
   onViolenceTap?: (incidentId: string, center: [number, number], zoom: number) => void;
 }
 
@@ -248,7 +238,7 @@ function Reveal({ minStage, stage, children }: { minStage: number; stage: number
   );
 }
 
-export default function AtlasHQ({ onClose, onNavigate, onHeadlinesToggle, onSourceClick, onReelsTap, onFinanceTap, onViolenceTap, onSenateVoteLocked }: Props) {
+export default function AtlasHQ({ onClose, onNavigate, onHeadlinesToggle, onSourceClick, onReelsTap, onViolenceTap, onSenateVoteLocked }: Props) {
   const router = useRouter();
   const [showMore, setShowMore] = useState(false);
   const [showAllDisasters, setShowAllDisasters] = useState(false);
@@ -303,7 +293,6 @@ export default function AtlasHQ({ onClose, onNavigate, onHeadlinesToggle, onSour
     ? liveConfig.liveAlerts.map(a => ({ ...a, text: cleanStr(a.text), description: cleanStr(a.description) }))
     : LIVE_FEED) as FeedItem[];
   const activeViolence  = (liveConfig?.violenceItems?.length  ? liveConfig.violenceItems  : VIOLENCE_ITEMS) as RadarViolenceItem[];
-  const activeFinance   = (liveConfig?.financeItems?.length   ? liveConfig.financeItems   : FINANCE_ITEMS) as RadarFinanceItem[];
   const activeDisasters = (liveConfig?.disasters?.length      ? liveConfig.disasters      : DISASTERS) as RadarDisasterItem[];
 
   const currentConfig: RadarConfig = {
@@ -311,7 +300,6 @@ export default function AtlasHQ({ onClose, onNavigate, onHeadlinesToggle, onSour
     topConflicts:  (liveConfig?.topConflicts?.length ? liveConfig.topConflicts : TOP_CONFLICTS) as RadarConflictItem[],
     moreConflicts: (liveConfig?.moreConflicts?.length ? liveConfig.moreConflicts : MORE_CONFLICTS) as RadarConflictItem[],
     violenceItems: activeViolence as RadarViolenceItem[],
-    financeItems:  activeFinance as RadarFinanceItem[],
     disasters:     activeDisasters as RadarDisasterItem[],
     sectionOrder:  liveConfig?.sectionOrder,
     sectionLabels: liveConfig?.sectionLabels,
@@ -439,8 +427,8 @@ export default function AtlasHQ({ onClose, onNavigate, onHeadlinesToggle, onSour
       <div className="radar-scroll" style={{ flex: 1, overflowY: "auto", overflowX: "hidden", position: "relative", paddingTop: 10 }}>
 
         {/* Sections rendered in saved drag order */}
-        {(displayConfig.sectionOrder ?? ["geo", "violence", "disasters", "finance"]).map((section, i) => {
-          const DEFAULT_ORDER = ["geo", "violence", "disasters", "finance"];
+        {(displayConfig.sectionOrder ?? ["geo", "violence", "disasters"]).map((section, i) => {
+          const DEFAULT_ORDER = ["geo", "violence", "disasters"];
           const sectionDragHandle = editMode ? {
             onDragStart: (e: React.DragEvent<HTMLDivElement>) => {
               setDragSection(i);
@@ -655,63 +643,6 @@ export default function AtlasHQ({ onClose, onNavigate, onHeadlinesToggle, onSour
                 </div>
                 {/* Violence-specific live alerts */}
                 {renderAlertRows((displayConfig.violenceAlerts ?? VIOLENCE_ALERTS) as FeedItem[], "violenceAlerts")}
-              </Reveal>
-            </div>
-          );
-
-          if (section === "finance") return (
-            <div key="finance" {...dropHandlers} style={{ paddingBottom: 28, ...wrapStyle }}>
-              <SectionLabel label={displayConfig.sectionLabels?.finance ?? "finance"} dragHandle={sectionDragHandle} onLabelChange={v => patchDraft(d => ({ ...d, sectionLabels: { ...d.sectionLabels, finance: v } }))} />
-              <Reveal minStage={5} stage={loadStage}>
-                <div style={{ padding: "0 14px 24px", display: "flex", gap: 8 }}>
-                  {displayConfig.financeItems.map((item, idx) => (
-                    <div key={item.headline}
-                      onClick={editMode ? undefined : () => onFinanceTap?.(item.slug)}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.transform = "scale(1.05) translateY(-8px) rotateX(2deg)";
-                        e.currentTarget.style.boxShadow = "0 20px 40px rgba(0,0,0,0.5), 0 30px 60px rgba(0,0,0,0.4), 0 40px 80px rgba(0,0,0,0.3)";
-                        e.currentTarget.style.zIndex = "10";
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.transform = "scale(1) translateY(0) rotateX(0deg)";
-                        e.currentTarget.style.boxShadow = "0 2px 8px rgba(0,0,0,0.2)";
-                        e.currentTarget.style.zIndex = "1";
-                      }}
-                      style={{
-                        flex: 1,
-                        height: 196,
-                        borderRadius: 14,
-                        overflow: "hidden",
-                        position: "relative",
-                        cursor: editMode ? "default" : "pointer",
-                        border: "1px solid rgba(255,255,255,0.09)",
-                        background: "#0a0c18",
-                        minWidth: 0,
-                        transform: "scale(1) translateY(0) rotateX(0deg)",
-                        transformStyle: "preserve-3d",
-                        boxShadow: "0 2px 8px rgba(0,0,0,0.2)",
-                        transition: "all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)",
-                        zIndex: 1,
-                      }}>
-                      {(item.imageUrl || item.image) && (
-                        <EImg
-                          src={item.imageUrl || item.image || ""}
-                          alt={item.headline}
-                          style={{ width: "100%", height: "100%" }}
-                          onUploaded={(key, url) => patchDraft(d => ({ ...d, financeItems: d.financeItems.map((x, j) => j === idx ? { ...x, imageKey: key, imageUrl: url } : x) }))}
-                        />
-                      )}
-                      <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom, transparent 35%, rgba(0,0,0,0.88) 100%)", pointerEvents: "none" }} />
-                      <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, padding: "8px 10px 14px" }}>
-                        <EText
-                          value={item.headline}
-                          onChange={v => patchDraft(d => ({ ...d, financeItems: d.financeItems.map((x, j) => j === idx ? { ...x, headline: v } : x) }))}
-                          style={{ fontSize: 14, fontFamily: "monospace", letterSpacing: "0.06em", color: "rgba(255,255,255,1)", fontWeight: 800, lineHeight: 1.3 }}
-                        />
-                      </div>
-                    </div>
-                  ))}
-                </div>
               </Reveal>
             </div>
           );

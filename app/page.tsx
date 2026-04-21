@@ -11,7 +11,6 @@ import Clock from "./components/Clock";
 import TimeScrubber from "./components/TimeScrubber";
 import AtlasHQ from "./components/AtlasHQ";
 import DisasterPanel from "./components/DisasterPanel";
-import FinancePanel      from "./components/FinancePanel";
 import GunViolencePanel  from "./components/GunViolencePanel";
 import HeadlinesPanel from "./components/HeadlinesPanel";
 import SourceInfoPanel from "./components/SourceInfoPanel";
@@ -139,7 +138,6 @@ export default function Home() {
   const [currentConflictSlug, setCurrentConflictSlug] = useState<string | null>(null);
   const [openWithHistory, setOpenWithHistory] = useState(false);
   const [activeDisaster,     setActiveDisaster]     = useState<string | null>(null);
-  const [activeFinance,      setActiveFinance]      = useState<string | null>(null);
   const [activeGunViolence,  setActiveGunViolence]  = useState<string | null>(null); // incident id
   // Track placed nature site names so we don't repeat within a session.
   const [placedNatureNames, setPlacedNatureNames] = useState<string[]>([]);
@@ -372,7 +370,7 @@ export default function Home() {
           homeView={showRadar && !selectedCountry && !homeCountry && !feedCountry}
           spinKey={spinKey}
           spinDisabled={!spinEnabled}
-          isIdle={!selectedCountry && !homeCountry && !feedCountry && !activeGunViolence && !activeDisaster && !activeFinance}
+          isIdle={!selectedCountry && !homeCountry && !feedCountry && !activeGunViolence && !activeDisaster}
           onReady={() => setMapReady(true)}
         />
       </div>
@@ -475,14 +473,6 @@ export default function Home() {
         />
       )}
 
-      {/* Finance panel — opens when a finance card is tapped */}
-      {!historicalYear && activeFinance && (
-        <FinancePanel
-          slug={activeFinance}
-          onClose={() => setActiveFinance(null)}
-        />
-      )}
-
       {/* Radar — only visible when explicitly opened via ATLAS button */}
       {mapReady && !historicalYear && showRadar && !selectedCountry && !homeCountry && !feedCountry && (
         <AtlasHQ
@@ -525,7 +515,6 @@ export default function Home() {
           onHeadlinesToggle={() => setShowHeadlines(v => !v)}
           onSourceClick={(s) => setActiveSource(s)}
           onReelsTap={() => router.push("/you")}
-          onFinanceTap={(slug) => { setShowRadar(false); setActiveFinance(slug); }}
           onViolenceTap={(incidentId, center, zoom) => {
             setShowRadar(false);
             setFlyToPosition({ center, zoom, key: String(Date.now()) });
@@ -582,7 +571,6 @@ export default function Home() {
               setShowSettings(false);
               setActiveSubPanel(null);
               setActiveDisaster(null);
-              setActiveFinance(null);
               setActiveGunViolence(null);
               setHistoricalYear(null);
               setPreviewYear(null);

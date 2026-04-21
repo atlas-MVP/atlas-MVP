@@ -52,24 +52,15 @@ export interface ViolenceItem {
   incidentId?: string;
 }
 
-export interface FinanceItem {
-  slug: string;
-  headline: string;
-  image?: string;
-  imageKey?: string;
-  imageUrl?: string;
-  source: string;
-}
 
 export interface RadarConfig {
   liveAlerts:    LiveAlertItem[];
   topConflicts:  ConflictItem[];
   moreConflicts: ConflictItem[];
   violenceItems: ViolenceItem[];
-  financeItems:  FinanceItem[];
   disasters:     DisasterItem[];
   sectionOrder?:  string[]; // persisted drag order of radar sections
-  sectionLabels?: { geo?: string; alerts?: string; violence?: string; finance?: string; disasters?: string };
+  sectionLabels?: { geo?: string; alerts?: string; violence?: string; disasters?: string };
   geoAlerts?:      LiveAlertItem[];
   violenceAlerts?: LiveAlertItem[];
   disasterAlerts?: LiveAlertItem[];
@@ -77,13 +68,12 @@ export interface RadarConfig {
 
 // ── Nav ────────────────────────────────────────────────────────────────────────
 
-type Tab = "geo" | "alerts" | "violence" | "finance" | "disasters";
+type Tab = "geo" | "alerts" | "violence" | "disasters";
 
 const NAV: { id: Tab; label: string }[] = [
   { id: "geo",       label: "Geopolitics" },
   { id: "alerts",    label: "Live Alerts" },
   { id: "violence",  label: "Violence"    },
-  { id: "finance",   label: "Finance"     },
   { id: "disasters", label: "Disasters"   },
 ];
 
@@ -354,33 +344,6 @@ function ViolenceSection({ items, onChange }: { items: ViolenceItem[]; onChange:
   );
 }
 
-function FinanceSection({ items, onChange }: { items: FinanceItem[]; onChange: (items: FinanceItem[]) => void }) {
-  const { dragging, over, props } = useDrag(items, onChange);
-  const set = (i: number, p: Partial<FinanceItem>) =>
-    onChange(items.map((x, idx) => (idx === i ? { ...x, ...p } : x)));
-  const blank = (): FinanceItem => ({ slug: "", headline: "", source: "" });
-
-  return (
-    <>
-      {items.map((item, i) => (
-        <Bubble key={i} title={item.headline}
-          isDragging={dragging === i} isOver={over === i} dragProps={props(i)}
-          onDelete={() => onChange(items.filter((_, idx) => idx !== i))}>
-          <Field label="Headline" value={item.headline} onChange={v => set(i, { headline: v })} multi placeholder="Market headline…" />
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
-            <Field label="Slug" value={item.slug} onChange={v => set(i, { slug: v })} placeholder="oil-hormuz" />
-            <Field label="Source" value={item.source} onChange={v => set(i, { source: v })} placeholder="Bloomberg" />
-          </div>
-          <PhotoField imageUrl={item.imageUrl} image={item.image} onUploaded={(key, url) => set(i, { imageKey: key, imageUrl: url })} />
-        </Bubble>
-      ))}
-      <button style={ADD_BTN} onClick={() => onChange([...items, blank()])}
-        onMouseEnter={e => { e.currentTarget.style.background = "rgba(255,255,255,0.06)"; e.currentTarget.style.color = "rgba(255,255,255,0.65)"; }}
-        onMouseLeave={e => { e.currentTarget.style.background = "rgba(255,255,255,0.03)"; e.currentTarget.style.color = "rgba(255,255,255,0.38)"; }}
-      >+ Add item</button>
-    </>
-  );
-}
 
 function DisastersSection({ items, onChange }: { items: DisasterItem[]; onChange: (items: DisasterItem[]) => void }) {
   const { dragging, over, props } = useDrag(items, onChange);
@@ -470,7 +433,7 @@ export interface RadarEditorProps {
   onClose: () => void;
 }
 
-const DEFAULT_ORDER: Tab[] = ["geo", "alerts", "violence", "finance", "disasters"];
+const DEFAULT_ORDER: Tab[] = ["geo", "alerts", "violence", "disasters"];
 
 export default function RadarEditor({ config, onSave, onClose }: RadarEditorProps) {
   const [tab,    setTab]    = useState<Tab>("geo");
@@ -524,7 +487,6 @@ export default function RadarEditor({ config, onSave, onClose }: RadarEditorProp
     geo:       draft.topConflicts.length + draft.moreConflicts.length,
     alerts:    draft.liveAlerts.length,
     violence:  draft.violenceItems.length,
-    finance:   draft.financeItems.length,
     disasters: draft.disasters.length,
   };
 
@@ -655,7 +617,6 @@ export default function RadarEditor({ config, onSave, onClose }: RadarEditorProp
             {tab === "geo"       && <GeoSection top={draft.topConflicts} more={draft.moreConflicts} onTop={v => patch("topConflicts", v)} onMore={v => patch("moreConflicts", v)} />}
             {tab === "alerts"    && <AlertsSection items={draft.liveAlerts} onChange={v => patch("liveAlerts", v)} />}
             {tab === "violence"  && <ViolenceSection items={draft.violenceItems} onChange={v => patch("violenceItems", v)} />}
-            {tab === "finance"   && <FinanceSection items={draft.financeItems} onChange={v => patch("financeItems", v)} />}
             {tab === "disasters" && <DisastersSection items={draft.disasters} onChange={v => patch("disasters", v)} />}
           </div>
         </div>
