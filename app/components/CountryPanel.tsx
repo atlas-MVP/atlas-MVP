@@ -10,6 +10,7 @@ import EventMediaEditor from "./EventMediaEditor";
 import EventVideoBubble from "./EventVideoBubble";
 import { playTts, type TtsHandle } from "../lib/tts";
 import { T, clr, confColor } from "../lib/tokens";
+import { EText } from "./InlineEdit";
 
 // Stable per-event R2 folder id: "<conflictId>-<slug-of-date>"
 // e.g. ("israel-gaza", "October 7, 2023") → "israel-gaza-october-7-2023"
@@ -1698,225 +1699,400 @@ export default function CountryPanel({ countryCode, onClose, onViewFeed, onConfl
                     paddingBottom: "calc(100vh - 260px)",
                   }}
                 >
-                  {chronological.map((event, i) => {
-                    const palette = event.highlight ? HIGHLIGHT : NEUTRAL;
-                    const isActive = activeTile === i;
-                    const currentYear = extractYear(event.date);
-                    const prevEvent = chronological[i - 1];
-                    const nextEvent = chronological[i + 1];
-                    const prevYear = prevEvent ? extractYear(prevEvent.date) : null;
-                    const showYearBefore = i === 0 || (prevYear !== null && prevYear !== currentYear);
+                  {(() => {
+                    // Pre-process: group consecutive same-era events together.
+                    // Non-era events become solo groups (era: null).
+                    type EraColor = { border: string; fg: string; text: string };
+                    type Group = { era: string | null; eraColor: EraColor | null; events: typeof chronological; startIndex: number };
 
-                    // Era bracket — detect era boundaries for bracket label
-                    const eraColor = event.era === "genocide"
-                      ? { border: "rgba(220,38,38,0.40)",  fg: "rgba(252,165,165,0.9)",  text: "Gaza Genocide" }
-                      : event.era === "occupation"
-                      ? { border: "rgba(251,191,36,0.38)", fg: "rgba(253,224,71,0.85)",  text: "Israeli Occupation" }
-                      : event.era === "treaty"
-                      ? { border: "rgba(22,163,74,0.42)",  fg: "rgba(74,222,128,0.95)",  text: "JCPOA Treaty" }
-                      : event.era === "withdrawal"
-                      ? { border: "rgba(220,38,38,0.42)",  fg: "rgba(252,165,165,0.95)", text: "US Withdrawal" }
-                      : event.era === "proxy"
-                      ? { border: "rgba(76,29,149,0.55)",  fg: "rgba(216,180,254,0.95)", text: "Shadow War" }
-                      : event.era === "war"
-                      ? { border: "rgba(234,88,12,0.45)",  fg: "rgba(253,186,116,0.95)", text: "War" }
-                      : null;
-                    const isEraStart = event.era && prevEvent?.era !== event.era;
-                    const isEraEnd   = event.era && nextEvent?.era !== event.era;
+                    const getEraColor = (era: string | null | undefined): EraColor | null => {
+                      if (!era) return null;
+                      switch (era) {
+                        case "genocide":   return { border: "rgba(220,38,38,0.18)",  fg: "rgba(252,165,165,0.6)",  text: "Gaza Genocide" };
+                        case "occupation": return { border: "rgba(251,191,36,0.18)", fg: "rgba(253,224,71,0.55)",  text: "Israeli Occupation" };
+                        case "treaty":     return { border: "rgba(22,163,74,0.18)",  fg: "rgba(74,222,128,0.6)",   text: "JCPOA Treaty" };
+                        case "withdrawal": return { border: "rgba(220,38,38,0.18)",  fg: "rgba(252,165,165,0.6)",  text: "US Withdrawal" };
+                        case "proxy":      return { border: "rgba(76,29,149,0.22)",  fg: "rgba(216,180,254,0.6)",  text: "Shadow War" };
+                        case "war":        return { border: "rgba(234,88,12,0.20)",  fg: "rgba(253,186,116,0.6)",  text: "War" };
+                        default:           return null;
+                      }
+                    };
 
-                    // Bullet popup: pull slide.info, drop the @blue/@red
-                    // signatory lines (they live in the video caption), keep
-                    // only • bullet lines so the popup stays a tight
-                    // requirements list rather than a wall of prose.
-                    const rawBullets = (event.slides?.[0]?.info ?? "")
-                      .split("\n")
-                      .map(l => l.trim())
-                      .filter(l => l.startsWith("•"))
-                      .map(l => l.replace(/^•\s*/, ""));
-                    const showBullets =
-                      rawBullets.length > 0 &&
-                      (hoveredTile === i || pinnedBulletsTile === i);
+                    const groups: Group[] = [];
+                    chronological.forEach((event, i) => {
+                      const era = event.era ?? null;
+                      const last = groups[groups.length - 1];
+                      if (era && last && last.era === era) {
+                        last.events.push(event);
+                      } else {
+                        groups.push({ era, eraColor: getEraColor(era), events: [event], startIndex: i });
+                      }
+                    });
 
-                    return (
-                      <div
-                        key={i}
-                        data-tile={i}
-                        {...(event.strikeEvent ? { "data-strike": JSON.stringify(event.strikeEvent) } : {})}
-                        onMouseEnter={() => setHoveredTile(i)}
-                        onMouseLeave={() => setHoveredTile(prev => (prev === i ? null : prev))}
-                        onClick={(e) => {
-                          activeTileRef.current = i;
-                          setActiveTile(i);
-                          // Toggle the pinned bullets on click so a second
-                          // click dismisses the popup.
-                          setPinnedBulletsTile(prev => (prev === i ? null : i));
-                          navigateToTile(i);
-                          // Pin the clicked tile to the top of the history
-                          // scroller so the selected event is always the first
-                          // thing the user sees (map + bubble line up with it).
-                          const tile = e.currentTarget as HTMLElement;
-                          tile.scrollIntoView({ block: "start", behavior: "smooth" });
-                        }}
-                        style={{
-                          scrollSnapAlign: "start",
-                          padding: "14px 16px 16px 14px",
-                          margin: "2px 10px",
-                          borderRadius: 14,
-                          borderLeft: eraColor ? `2px solid ${eraColor.border}` : "1px solid rgba(255,255,255,0.04)",
-                          borderTop: "1px solid rgba(255,255,255,0.04)",
-                          borderRight: "1px solid rgba(255,255,255,0.04)",
-                          borderBottom: "1px solid rgba(255,255,255,0.04)",
-                          background: isActive ? "rgba(255,255,255,0.03)" : "rgba(255,255,255,0.012)",
-                          minHeight: 100,
-                          cursor: "pointer",
-                          opacity: isActive || activeTile < 0 ? 1 : 0.35,
-                          transition: "opacity 0.4s ease, background 0.3s ease",
-                        }}
-                      >
-                        {showYearBefore && currentYear && (
-                          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
-                            <span style={{ fontSize: 11, fontWeight: 700, fontFamily: "monospace", color: "rgba(255,255,255,0.35)", letterSpacing: "0.14em" }}>{currentYear}</span>
-                            <div style={{ flex: 1, height: 1, background: "rgba(255,255,255,0.06)" }} />
-                          </div>
-                        )}
-                        <div style={{ display: "flex", gap: 12, paddingLeft: 4, alignItems: "flex-start" }}>
-                          <div style={{ flexShrink: 0, marginTop: 4 }}>
-                            <div style={{
-                              width: 7, height: 7, borderRadius: "50%",
-                              background: isActive ? "rgba(239,68,68,0.8)" : palette.solid,
-                              border: `1px solid ${isActive ? "rgba(239,68,68,0.4)" : palette.border}`,
-                              boxShadow: isActive ? "0 0 8px rgba(239,68,68,0.4)" : palette.glow,
-                              transition: "all 0.3s ease",
-                            }} />
-                          </div>
-                          <div style={{ flex: 1, minWidth: 0 }}>
-                            <div style={{ display: "flex", alignItems: "center", gap: 8, margin: "0 0 5px" }}>
-                              <span style={{ fontSize: 11, fontFamily: "monospace", fontWeight: 600, color: palette.date, letterSpacing: "0.03em" }}>
-                                {(() => { const d = event.date; if (/^(19|20)\d\d/.test(d)) return d; return d.replace(/,?\s*(19|20)\d\d/, ""); })()}
-                              </span>
-                              {/* Category tag — inline beside date */}
-                              {event.tag && (
-                                <span style={{
-                                  fontSize: 8, fontFamily: "monospace", letterSpacing: "0.14em", textTransform: "uppercase",
-                                  padding: "2px 7px", borderRadius: 3, flexShrink: 0,
-                                  background: event.tag === "terrorist attack" ? "rgba(239,68,68,0.12)" : event.tag === "genocide" ? "rgba(239,68,68,0.08)" : event.tag === "withdrawal" ? "rgba(239,68,68,0.12)" : event.tag === "treaty" ? "rgba(34,197,94,0.12)" : "rgba(255,255,255,0.05)",
-                                  color: event.tag === "terrorist attack" ? "rgba(239,68,68,0.7)" : event.tag === "genocide" ? "rgba(239,68,68,0.5)" : event.tag === "withdrawal" ? "rgba(239,68,68,0.7)" : event.tag === "treaty" ? "rgba(34,197,94,0.8)" : "rgba(255,255,255,0.3)",
-                                  border: `1px solid ${event.tag === "terrorist attack" ? "rgba(239,68,68,0.2)" : event.tag === "genocide" ? "rgba(239,68,68,0.1)" : event.tag === "withdrawal" ? "rgba(239,68,68,0.2)" : event.tag === "treaty" ? "rgba(34,197,94,0.25)" : "rgba(255,255,255,0.08)"}`,
-                                }}>
-                                  {event.tag}
-                                </span>
-                              )}
+                    return groups.map((group, gi) => {
+                      const { era, eraColor, events, startIndex } = group;
+
+                      if (!era || !eraColor) {
+                        // Solo non-era event
+                        const event = events[0];
+                        const i = startIndex;
+                        const palette = event.highlight ? HIGHLIGHT : NEUTRAL;
+                        const isActive = activeTile === i;
+                        const currentYear = extractYear(event.date);
+                        const prevEvent = chronological[i - 1];
+                        const prevYear = prevEvent ? extractYear(prevEvent.date) : null;
+                        const showYearBefore = i === 0 || (prevYear !== null && prevYear !== currentYear);
+
+                        const rawBullets = (event.slides?.[0]?.info ?? "")
+                          .split("\n")
+                          .map(l => l.trim())
+                          .filter(l => l.startsWith("•"))
+                          .map(l => l.replace(/^•\s*/, ""));
+                        const showBullets =
+                          rawBullets.length > 0 &&
+                          (hoveredTile === i || pinnedBulletsTile === i);
+
+                        return (
+                          <div
+                            key={`solo-${gi}`}
+                            data-tile={i}
+                            {...(event.strikeEvent ? { "data-strike": JSON.stringify(event.strikeEvent) } : {})}
+                            onMouseEnter={() => setHoveredTile(i)}
+                            onMouseLeave={() => setHoveredTile(prev => (prev === i ? null : prev))}
+                            onClick={(e) => {
+                              activeTileRef.current = i;
+                              setActiveTile(i);
+                              setPinnedBulletsTile(prev => (prev === i ? null : i));
+                              navigateToTile(i);
+                              const tile = e.currentTarget as HTMLElement;
+                              tile.scrollIntoView({ block: "start", behavior: "smooth" });
+                            }}
+                            style={{
+                              scrollSnapAlign: "start",
+                              padding: "14px 16px 16px 14px",
+                              margin: "2px 10px",
+                              borderRadius: 14,
+                              border: "1px solid rgba(255,255,255,0.04)",
+                              background: isActive ? "rgba(255,255,255,0.03)" : "rgba(255,255,255,0.012)",
+                              minHeight: 100,
+                              cursor: "pointer",
+                              opacity: isActive || activeTile < 0 ? 1 : 0.35,
+                              transition: "opacity 0.4s ease, background 0.3s ease",
+                            }}
+                          >
+                            {showYearBefore && currentYear && (
+                              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
+                                <span style={{ fontSize: 11, fontWeight: 700, fontFamily: "monospace", color: "rgba(255,255,255,0.35)", letterSpacing: "0.14em" }}>{currentYear}</span>
+                                <div style={{ flex: 1, height: 1, background: "rgba(255,255,255,0.06)" }} />
+                              </div>
+                            )}
+                            <div style={{ display: "flex", gap: 12, paddingLeft: 4, alignItems: "flex-start" }}>
+                              <div style={{ flexShrink: 0, marginTop: 4 }}>
+                                <div style={{
+                                  width: 7, height: 7, borderRadius: "50%",
+                                  background: isActive ? "rgba(239,68,68,0.8)" : palette.solid,
+                                  border: `1px solid ${isActive ? "rgba(239,68,68,0.4)" : palette.border}`,
+                                  boxShadow: isActive ? "0 0 8px rgba(239,68,68,0.4)" : palette.glow,
+                                  transition: "all 0.3s ease",
+                                }} />
+                              </div>
+                              <div style={{ flex: 1, minWidth: 0 }}>
+                                <div style={{ display: "flex", alignItems: "center", gap: 8, margin: "0 0 5px" }}>
+                                  <span style={{ fontSize: 11, fontFamily: "monospace", fontWeight: 600, color: palette.date, letterSpacing: "0.03em" }}>
+                                    {(() => {
+                                      const d = event.date;
+                                      const withoutYearPrefix = d.replace(/^\d{4}\s*[—–-]\s*/, "");
+                                      return withoutYearPrefix || d;
+                                    })()}
+                                  </span>
+                                  {event.tag && (
+                                    <span style={{
+                                      fontSize: 8, fontFamily: "monospace", letterSpacing: "0.14em", textTransform: "uppercase",
+                                      padding: "2px 7px", borderRadius: 3, flexShrink: 0,
+                                      background: event.tag === "terrorist attack" ? "rgba(239,68,68,0.12)" : event.tag === "genocide" ? "rgba(239,68,68,0.08)" : event.tag === "withdrawal" ? "rgba(239,68,68,0.12)" : "rgba(255,255,255,0.05)",
+                                      color: event.tag === "terrorist attack" ? "rgba(239,68,68,0.7)" : event.tag === "genocide" ? "rgba(239,68,68,0.5)" : event.tag === "withdrawal" ? "rgba(239,68,68,0.7)" : "rgba(255,255,255,0.3)",
+                                      border: `1px solid ${event.tag === "terrorist attack" ? "rgba(239,68,68,0.2)" : event.tag === "genocide" ? "rgba(239,68,68,0.1)" : event.tag === "withdrawal" ? "rgba(239,68,68,0.2)" : "rgba(255,255,255,0.08)"}`,
+                                    }}>
+                                      {event.tag}
+                                    </span>
+                                  )}
+                                </div>
+                                {event.link ? (
+                                  <a
+                                    href={event.link}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    style={{
+                                      margin: 0, fontSize: 14,
+                                      color: isActive ? "rgba(255,255,255,0.85)" : palette.text,
+                                      lineHeight: 1.65, transition: "color 0.3s ease",
+                                      textDecoration: "none", display: "block", cursor: "pointer",
+                                    }}
+                                    onMouseEnter={(e) => { e.currentTarget.style.color = "rgba(34,197,94,0.9)"; }}
+                                    onMouseLeave={(e) => { e.currentTarget.style.color = isActive ? "rgba(255,255,255,0.85)" : palette.text; }}
+                                  >
+                                    {event.text}
+                                  </a>
+                                ) : (
+                                  <p style={{ margin: 0, fontSize: 14, color: isActive ? "rgba(255,255,255,0.85)" : palette.text, lineHeight: 1.65, transition: "color 0.3s ease" }}>
+                                    {event.text}
+                                  </p>
+                                )}
+                                {showBullets && (
+                                  <div
+                                    onMouseEnter={() => setHoveredTile(i)}
+                                    onMouseLeave={() => setHoveredTile(prev => (prev === i ? null : prev))}
+                                    style={{
+                                      marginTop: 10, padding: "10px 12px", borderRadius: 10,
+                                      background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)",
+                                      boxShadow: pinnedBulletsTile === i ? "0 4px 18px rgba(0,0,0,0.35)" : "none",
+                                      transition: "box-shadow 0.2s",
+                                    }}
+                                  >
+                                    <ul style={{ margin: 0, padding: 0, listStyle: "none", display: "flex", flexDirection: "column", gap: 5 }}>
+                                      {rawBullets.map((b, bi) => (
+                                        <li key={bi} style={{ display: "flex", gap: 8, alignItems: "flex-start", fontSize: 12, lineHeight: 1.55 }}>
+                                          <span style={{ color: "rgba(251,191,36,0.75)", flexShrink: 0, fontWeight: 700, marginTop: 1 }}>•</span>
+                                          <span style={{ color: "rgba(253,224,171,0.78)" }}>{b}</span>
+                                        </li>
+                                      ))}
+                                    </ul>
+                                  </div>
+                                )}
+                                {event.linkedConflicts && event.linkedConflicts.length > 0 && (
+                                  <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginTop: 10 }}>
+                                    {event.linkedConflicts.map((lc, lci) => {
+                                      const isAttack = lc.type === "attack";
+                                      const baseColor = isAttack ? "239,68,68" : "96,165,250";
+                                      return (
+                                        <button
+                                          key={lci}
+                                          className={isAttack ? "tooltip-pulse-border" : "link-pulse-border"}
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            setSelectedConflictId(lc.id);
+                                            onConflictSelect?.(lc.id);
+                                            setTimelineExpanded(false);
+                                            setActiveTile(-1);
+                                            activeTileRef.current = -1;
+                                          }}
+                                          style={{
+                                            fontSize: 9, fontFamily: "monospace", letterSpacing: "0.1em",
+                                            color: `rgba(${baseColor},0.7)`, background: `rgba(${baseColor},0.06)`,
+                                            border: `1px solid rgba(${baseColor},0.2)`, borderRadius: 10,
+                                            cursor: "pointer", padding: "4px 10px", display: "inline-flex", alignItems: "center", gap: 6,
+                                          }}
+                                          onMouseEnter={e => { e.currentTarget.style.background = `rgba(${baseColor},0.12)`; e.currentTarget.style.color = `rgba(${baseColor},0.9)`; }}
+                                          onMouseLeave={e => { e.currentTarget.style.background = `rgba(${baseColor},0.06)`; e.currentTarget.style.color = `rgba(${baseColor},0.7)`; }}
+                                        >
+                                          <span style={{ width: 5, height: 5, borderRadius: "50%", background: `rgba(${baseColor},0.6)` }} className={isAttack ? "tooltip-pulse-dot" : "link-pulse-dot"} />
+                                          {lc.label} →
+                                        </button>
+                                      );
+                                    })}
+                                  </div>
+                                )}
+                              </div>
                             </div>
-                            {event.link ? (
-                              <a
-                                href={event.link}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                style={{
-                                  margin: 0,
-                                  fontSize: 14,
-                                  color: isActive ? "rgba(255,255,255,0.85)" : palette.text,
-                                  lineHeight: 1.65,
-                                  transition: "color 0.3s ease",
-                                  textDecoration: "none",
-                                  display: "block",
-                                  cursor: "pointer",
-                                }}
-                                onMouseEnter={(e) => { e.currentTarget.style.color = "rgba(34,197,94,0.9)"; }}
-                                onMouseLeave={(e) => { e.currentTarget.style.color = isActive ? "rgba(255,255,255,0.85)" : palette.text; }}
-                              >
-                                {event.text}
-                              </a>
-                            ) : (
-                              <p style={{ margin: 0, fontSize: 14, color: isActive ? "rgba(255,255,255,0.85)" : palette.text, lineHeight: 1.65, transition: "color 0.3s ease" }}>
-                                {event.text}
-                              </p>
-                            )}
-                            {/* No provenance tag here — the timeline tiles are
-                                written by jeni kim and william, not the model. */}
-                            {/* Bullet-point popup: fed from slide.info's
-                                "• …" lines. Appears on hover, pinned on click
-                                (click again to dismiss). Bullets use a warm
-                                tinted color so they read as supplemental
-                                context rather than primary body text. */}
-                            {showBullets && (
-                              <div
-                                onMouseEnter={() => setHoveredTile(i)}
-                                onMouseLeave={() => setHoveredTile(prev => (prev === i ? null : prev))}
-                                style={{
-                                  marginTop: 10,
-                                  padding: "10px 12px",
-                                  borderRadius: 10,
-                                  background: "rgba(255,255,255,0.03)",
-                                  border: "1px solid rgba(255,255,255,0.08)",
-                                  boxShadow: pinnedBulletsTile === i ? "0 4px 18px rgba(0,0,0,0.35)" : "none",
-                                  transition: "box-shadow 0.2s",
-                                }}
-                              >
-                                <ul style={{ margin: 0, padding: 0, listStyle: "none", display: "flex", flexDirection: "column", gap: 5 }}>
-                                  {rawBullets.map((b, bi) => (
-                                    <li key={bi} style={{ display: "flex", gap: 8, alignItems: "flex-start", fontSize: 12, lineHeight: 1.55 }}>
-                                      <span style={{ color: "rgba(251,191,36,0.75)", flexShrink: 0, fontWeight: 700, marginTop: 1 }}>•</span>
-                                      <span style={{ color: "rgba(253,224,171,0.78)" }}>{b}</span>
-                                    </li>
-                                  ))}
-                                </ul>
-                              </div>
-                            )}
-                            {/* Linked conflict/attack pills — pulsing cross-timeline bridges */}
-                            {event.linkedConflicts && event.linkedConflicts.length > 0 && (
-                              <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginTop: 10 }}>
-                                {event.linkedConflicts.map((lc, lci) => {
-                                  const isAttack = lc.type === "attack";
-                                  const baseColor = isAttack ? "239,68,68" : "96,165,250";
-                                  return (
-                                    <button
-                                      key={lci}
-                                      className={isAttack ? "tooltip-pulse-border" : "link-pulse-border"}
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        setSelectedConflictId(lc.id);
-                                        onConflictSelect?.(lc.id);
-                                        setTimelineExpanded(false);
-                                        setActiveTile(-1);
-                                        activeTileRef.current = -1;
-                                      }}
-                                      style={{
-                                        fontSize: 9, fontFamily: "monospace", letterSpacing: "0.1em",
-                                        color: `rgba(${baseColor},0.7)`, background: `rgba(${baseColor},0.06)`,
-                                        border: `1px solid rgba(${baseColor},0.2)`, borderRadius: 10,
-                                        cursor: "pointer", padding: "4px 10px", display: "inline-flex", alignItems: "center", gap: 6,
-                                      }}
-                                      onMouseEnter={e => { e.currentTarget.style.background = `rgba(${baseColor},0.12)`; e.currentTarget.style.color = `rgba(${baseColor},0.9)`; }}
-                                      onMouseLeave={e => { e.currentTarget.style.background = `rgba(${baseColor},0.06)`; e.currentTarget.style.color = `rgba(${baseColor},0.7)`; }}
-                                    >
-                                      <span style={{ width: 5, height: 5, borderRadius: "50%", background: `rgba(${baseColor},0.6)` }} className={isAttack ? "tooltip-pulse-dot" : "link-pulse-dot"} />
-                                      {lc.label} →
-                                    </button>
-                                  );
-                                })}
-                              </div>
-                            )}
+                          </div>
+                        );
+                      }
+
+                      // Era group: render era label header + all events inside a bordered container
+                      return (
+                        <div key={`era-${gi}`} style={{ margin: "4px 10px 4px 10px" }}>
+                          {/* Era label header — ABOVE all events */}
+                          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8, paddingLeft: 22 }}>
+                            <span style={{
+                              fontSize: 10, fontFamily: "monospace", letterSpacing: "0.14em",
+                              textTransform: "uppercase", color: eraColor.fg, flexShrink: 0,
+                            }}>
+                              {eraColor.text}
+                            </span>
+                            <div style={{ flex: 1, height: 1, background: eraColor.border }} />
+                          </div>
+
+                          {/* Vertical line container wrapping all era events */}
+                          <div style={{
+                            borderLeft: `2px solid ${eraColor.border}`,
+                            borderTopLeftRadius: 8,
+                            borderBottomLeftRadius: 8,
+                            paddingLeft: 12,
+                            marginLeft: 10,
+                          }}>
+                            {events.map((event, ei) => {
+                              const i = startIndex + ei;
+                              const palette = event.highlight ? HIGHLIGHT : NEUTRAL;
+                              const isActive = activeTile === i;
+                              const currentYear = extractYear(event.date);
+                              const prevEvent = chronological[i - 1];
+                              const prevYear = prevEvent ? extractYear(prevEvent.date) : null;
+                              const showYearBefore = i === 0 || (prevYear !== null && prevYear !== currentYear);
+
+                              const rawBullets = (event.slides?.[0]?.info ?? "")
+                                .split("\n")
+                                .map(l => l.trim())
+                                .filter(l => l.startsWith("•"))
+                                .map(l => l.replace(/^•\s*/, ""));
+                              const showBullets =
+                                rawBullets.length > 0 &&
+                                (hoveredTile === i || pinnedBulletsTile === i);
+
+                              return (
+                                <div
+                                  key={ei}
+                                  data-tile={i}
+                                  {...(event.strikeEvent ? { "data-strike": JSON.stringify(event.strikeEvent) } : {})}
+                                  onMouseEnter={() => setHoveredTile(i)}
+                                  onMouseLeave={() => setHoveredTile(prev => (prev === i ? null : prev))}
+                                  onClick={(e) => {
+                                    activeTileRef.current = i;
+                                    setActiveTile(i);
+                                    setPinnedBulletsTile(prev => (prev === i ? null : i));
+                                    navigateToTile(i);
+                                    const tile = e.currentTarget as HTMLElement;
+                                    tile.scrollIntoView({ block: "start", behavior: "smooth" });
+                                  }}
+                                  style={{
+                                    scrollSnapAlign: "start",
+                                    padding: "14px 16px 16px 14px",
+                                    margin: "2px 0",
+                                    borderRadius: 14,
+                                    border: "1px solid rgba(255,255,255,0.04)",
+                                    background: isActive ? "rgba(255,255,255,0.03)" : "rgba(255,255,255,0.012)",
+                                    minHeight: 100,
+                                    cursor: "pointer",
+                                    opacity: isActive || activeTile < 0 ? 1 : 0.35,
+                                    transition: "opacity 0.4s ease, background 0.3s ease",
+                                  }}
+                                >
+                                  {showYearBefore && currentYear && (
+                                    <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
+                                      <span style={{ fontSize: 11, fontWeight: 700, fontFamily: "monospace", color: "rgba(255,255,255,0.35)", letterSpacing: "0.14em" }}>{currentYear}</span>
+                                      <div style={{ flex: 1, height: 1, background: "rgba(255,255,255,0.06)" }} />
+                                    </div>
+                                  )}
+                                  <div style={{ display: "flex", gap: 12, paddingLeft: 4, alignItems: "flex-start" }}>
+                                    <div style={{ flexShrink: 0, marginTop: 4 }}>
+                                      <div style={{
+                                        width: 7, height: 7, borderRadius: "50%",
+                                        background: isActive ? "rgba(239,68,68,0.8)" : palette.solid,
+                                        border: `1px solid ${isActive ? "rgba(239,68,68,0.4)" : palette.border}`,
+                                        boxShadow: isActive ? "0 0 8px rgba(239,68,68,0.4)" : palette.glow,
+                                        transition: "all 0.3s ease",
+                                      }} />
+                                    </div>
+                                    <div style={{ flex: 1, minWidth: 0 }}>
+                                      <div style={{ display: "flex", alignItems: "center", gap: 8, margin: "0 0 5px" }}>
+                                        <span style={{ fontSize: 11, fontFamily: "monospace", fontWeight: 600, color: palette.date, letterSpacing: "0.03em" }}>
+                                          {(() => {
+                                            const d = event.date;
+                                            const withoutYearPrefix = d.replace(/^\d{4}\s*[—–-]\s*/, "");
+                                            return withoutYearPrefix || d;
+                                          })()}
+                                        </span>
+                                        {/* Category tag — inline beside date */}
+                                        {event.tag && (
+                                          <span style={{
+                                            fontSize: 8, fontFamily: "monospace", letterSpacing: "0.14em", textTransform: "uppercase",
+                                            padding: "2px 7px", borderRadius: 3, flexShrink: 0,
+                                            background: event.tag === "terrorist attack" ? "rgba(239,68,68,0.12)" : event.tag === "genocide" ? "rgba(239,68,68,0.08)" : event.tag === "withdrawal" ? "rgba(239,68,68,0.12)" : "rgba(255,255,255,0.05)",
+                                            color: event.tag === "terrorist attack" ? "rgba(239,68,68,0.7)" : event.tag === "genocide" ? "rgba(239,68,68,0.5)" : event.tag === "withdrawal" ? "rgba(239,68,68,0.7)" : "rgba(255,255,255,0.3)",
+                                            border: `1px solid ${event.tag === "terrorist attack" ? "rgba(239,68,68,0.2)" : event.tag === "genocide" ? "rgba(239,68,68,0.1)" : event.tag === "withdrawal" ? "rgba(239,68,68,0.2)" : "rgba(255,255,255,0.08)"}`,
+                                          }}>
+                                            {event.tag}
+                                          </span>
+                                        )}
+                                      </div>
+                                      {event.link ? (
+                                        <a
+                                          href={event.link}
+                                          target="_blank"
+                                          rel="noopener noreferrer"
+                                          style={{
+                                            margin: 0, fontSize: 14,
+                                            color: isActive ? "rgba(255,255,255,0.85)" : palette.text,
+                                            lineHeight: 1.65, transition: "color 0.3s ease",
+                                            textDecoration: "none", display: "block", cursor: "pointer",
+                                          }}
+                                          onMouseEnter={(e) => { e.currentTarget.style.color = "rgba(34,197,94,0.9)"; }}
+                                          onMouseLeave={(e) => { e.currentTarget.style.color = isActive ? "rgba(255,255,255,0.85)" : palette.text; }}
+                                        >
+                                          {event.text}
+                                        </a>
+                                      ) : (
+                                        <p style={{ margin: 0, fontSize: 14, color: isActive ? "rgba(255,255,255,0.85)" : palette.text, lineHeight: 1.65, transition: "color 0.3s ease" }}>
+                                          {event.text}
+                                        </p>
+                                      )}
+                                      {/* No provenance tag here — the timeline tiles are
+                                          written by jeni kim and william, not the model. */}
+                                      {/* Bullet-point popup */}
+                                      {showBullets && (
+                                        <div
+                                          onMouseEnter={() => setHoveredTile(i)}
+                                          onMouseLeave={() => setHoveredTile(prev => (prev === i ? null : prev))}
+                                          style={{
+                                            marginTop: 10, padding: "10px 12px", borderRadius: 10,
+                                            background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)",
+                                            boxShadow: pinnedBulletsTile === i ? "0 4px 18px rgba(0,0,0,0.35)" : "none",
+                                            transition: "box-shadow 0.2s",
+                                          }}
+                                        >
+                                          <ul style={{ margin: 0, padding: 0, listStyle: "none", display: "flex", flexDirection: "column", gap: 5 }}>
+                                            {rawBullets.map((b, bi) => (
+                                              <li key={bi} style={{ display: "flex", gap: 8, alignItems: "flex-start", fontSize: 12, lineHeight: 1.55 }}>
+                                                <span style={{ color: "rgba(251,191,36,0.75)", flexShrink: 0, fontWeight: 700, marginTop: 1 }}>•</span>
+                                                <span style={{ color: "rgba(253,224,171,0.78)" }}>{b}</span>
+                                              </li>
+                                            ))}
+                                          </ul>
+                                        </div>
+                                      )}
+                                      {/* Linked conflict/attack pills */}
+                                      {event.linkedConflicts && event.linkedConflicts.length > 0 && (
+                                        <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginTop: 10 }}>
+                                          {event.linkedConflicts.map((lc, lci) => {
+                                            const isAttack = lc.type === "attack";
+                                            const baseColor = isAttack ? "239,68,68" : "96,165,250";
+                                            return (
+                                              <button
+                                                key={lci}
+                                                className={isAttack ? "tooltip-pulse-border" : "link-pulse-border"}
+                                                onClick={(e) => {
+                                                  e.stopPropagation();
+                                                  setSelectedConflictId(lc.id);
+                                                  onConflictSelect?.(lc.id);
+                                                  setTimelineExpanded(false);
+                                                  setActiveTile(-1);
+                                                  activeTileRef.current = -1;
+                                                }}
+                                                style={{
+                                                  fontSize: 9, fontFamily: "monospace", letterSpacing: "0.1em",
+                                                  color: `rgba(${baseColor},0.7)`, background: `rgba(${baseColor},0.06)`,
+                                                  border: `1px solid rgba(${baseColor},0.2)`, borderRadius: 10,
+                                                  cursor: "pointer", padding: "4px 10px", display: "inline-flex", alignItems: "center", gap: 6,
+                                                }}
+                                                onMouseEnter={e => { e.currentTarget.style.background = `rgba(${baseColor},0.12)`; e.currentTarget.style.color = `rgba(${baseColor},0.9)`; }}
+                                                onMouseLeave={e => { e.currentTarget.style.background = `rgba(${baseColor},0.06)`; e.currentTarget.style.color = `rgba(${baseColor},0.7)`; }}
+                                              >
+                                                <span style={{ width: 5, height: 5, borderRadius: "50%", background: `rgba(${baseColor},0.6)` }} className={isAttack ? "tooltip-pulse-dot" : "link-pulse-dot"} />
+                                                {lc.label} →
+                                              </button>
+                                            );
+                                          })}
+                                        </div>
+                                      )}
+                                    </div>
+                                  </div>
+                                </div>
+                              );
+                            })}
                           </div>
                         </div>
-                        {/* Era label — outlined oval at bottom of last tile in each era */}
-                        {isEraEnd && eraColor && !event.tag && (
-                          <div style={{
-                            display: "inline-block",
-                            background: "transparent",
-                            border: `1px solid ${eraColor.border}`,
-                            borderRadius: 99,
-                            padding: "2px 9px",
-                            fontSize: 8, fontFamily: "monospace", letterSpacing: "0.14em",
-                            color: eraColor.fg, textTransform: "uppercase",
-                            marginTop: 10,
-                          }}>
-                            {eraColor.text}
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })}
+                      );
+                    });
+                  })()}
 
                   {/* Back to top — exits history mode */}
                   <div style={{ padding: "16px", scrollSnapAlign: "start", textAlign: "center" }}>
