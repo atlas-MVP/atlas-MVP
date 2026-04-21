@@ -53,14 +53,24 @@ export interface ViolenceItem {
 }
 
 
+export interface FinanceItem {
+  slug: string;
+  headline: string;
+  image?: string;
+  imageKey?: string;
+  imageUrl?: string;
+  source: string;
+}
+
 export interface RadarConfig {
   liveAlerts:    LiveAlertItem[];
   topConflicts:  ConflictItem[];
   moreConflicts: ConflictItem[];
   violenceItems: ViolenceItem[];
   disasters:     DisasterItem[];
-  sectionOrder?:  string[]; // persisted drag order of radar sections
-  sectionLabels?: { geo?: string; alerts?: string; violence?: string; disasters?: string };
+  financeItems?: FinanceItem[];
+  sectionOrder?:  string[];
+  sectionLabels?: { geo?: string; alerts?: string; violence?: string; finance?: string; disasters?: string };
   geoAlerts?:      LiveAlertItem[];
   violenceAlerts?: LiveAlertItem[];
   disasterAlerts?: LiveAlertItem[];
