@@ -102,7 +102,7 @@ export default function LiveAlertRow({
       <div style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
         <span style={{
           fontSize: 12, fontFamily: "monospace", color: "rgba(255,255,255,0.32)",
-          flexShrink: 0, width: 72, textAlign: "right", paddingTop: 1,
+          flexShrink: 0, width: 95, textAlign: "right", paddingTop: 1,
         }}>{relativeTime(item.time)}</span>
 
         <div
