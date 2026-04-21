@@ -151,6 +151,9 @@ const OVERLAY_LAYER_IDS = [
 
 // Earth rotates 360° in 86 400 seconds → 0.004167 °/s
 const EARTH_DEG_PER_SEC = 360 / 86400;
+// Globe stops rotating when zoomed in past this level — tiles still load
+// freely beyond it, spin just pauses until you zoom back out.
+const SPIN_STOP_ZOOM = 13;
 
 export default function Map({ onCountryClick, flyToCode, flyToPosition, selectedCountry, secondaryCountries = [], activeStrikes, casualtyCountries = [], focusCountries, homeView = false, onReady, spinKey = 0, isIdle = false }: Props) {
   const mapContainer = useRef<HTMLDivElement>(null);
@@ -305,8 +308,9 @@ export default function Map({ onCountryClick, flyToCode, flyToPosition, selected
     const tick = (ts: number) => {
       spinFrameRef.current = requestAnimationFrame(tick);
       // Stop permanently once the user clicks/drags (hasInteracted).
-      // Only cleared by ATLAS tap (spinKey change) or closing the last panel.
-      if (!isIdle || hasInteracted.current) {
+      // Also pause (not permanently) when zoomed in past SPIN_STOP_ZOOM —
+      // resumes automatically when the user zooms back out.
+      if (!isIdle || hasInteracted.current || m.getZoom() > SPIN_STOP_ZOOM) {
         spinLastTs.current = null;
         return;
       }
@@ -525,7 +529,6 @@ export default function Map({ onCountryClick, flyToCode, flyToPosition, selected
       doubleClickZoom: false,
       minPitch: 0,
       maxPitch: 0,
-      maxZoom: 14,
     });
 
     // Lock bearing and pitch — prevent any rotation or tilt
