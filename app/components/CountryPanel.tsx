@@ -1721,7 +1721,7 @@ export default function CountryPanel({ countryCode, onClose, onViewFeed, onConfl
                   onScroll={handleHistoryScroll}
                   style={{
                     flex: 1, overflowY: "auto", minHeight: 0,
-                    scrollSnapType: "y mandatory",
+                    scrollSnapType: "none",
                     paddingBottom: "calc(100vh - 260px)",
                   }}
                 >
@@ -1794,7 +1794,7 @@ export default function CountryPanel({ countryCode, onClose, onViewFeed, onConfl
                               tile.scrollIntoView({ block: "start", behavior: "smooth" });
                             }}
                             style={{
-                              scrollSnapAlign: "start",
+                              scrollSnapAlign: "none",
                               padding: "14px 16px 16px 14px",
                               margin: "2px 10px",
                               borderRadius: 14,
@@ -1988,7 +1988,7 @@ export default function CountryPanel({ countryCode, onClose, onViewFeed, onConfl
                                     tile.scrollIntoView({ block: "start", behavior: "smooth" });
                                   }}
                                   style={{
-                                    scrollSnapAlign: "start",
+                                    scrollSnapAlign: "none",
                                     padding: "14px 16px 16px 14px",
                                     margin: "2px 0",
                                     borderRadius: 14,
