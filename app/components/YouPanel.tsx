@@ -83,7 +83,7 @@ export default function YouPanel({ onClose, onBack }: Props) {
         </div>
 
         {/* Role */}
-        <SLabel text="Role" />
+        <SLabel text="role" />
         <div style={{ margin: "0 14px" }}>
           <div style={{ padding: "9px 13px", borderRadius: 10, background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.07)" }}>
             <EText value={role} onChange={setRole} style={{ fontSize: 13, fontFamily: "monospace", color: "rgba(255,255,255,0.75)" }} />
@@ -91,7 +91,7 @@ export default function YouPanel({ onClose, onBack }: Props) {
         </div>
 
         {/* Account */}
-        <SLabel text="Account" />
+        <SLabel text="account" />
         <div style={{ margin: "0 14px" }}>
           <div style={{ padding: "6px 13px", borderRadius: 10, background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.07)" }}>
             <Row label="Joined"       value="April 2026" />
@@ -102,7 +102,7 @@ export default function YouPanel({ onClose, onBack }: Props) {
         </div>
 
         {/* Activity */}
-        <SLabel text="Activity" />
+        <SLabel text="activity" />
         <div style={{ margin: "0 14px", display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 6, paddingBottom: 20 }}>
           {[
             { value: "147", label: "Alerts read" },

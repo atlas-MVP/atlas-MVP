@@ -266,7 +266,7 @@ export default function GunViolencePanel({ onClose, onFlyTo, highlightId }: Prop
             textAlign: "center",
             textTransform: "uppercase",
           }}>
-            Gun Violence Archive · Atlas Intelligence
+            gun violence archive · atlas intelligence
           </p>
         </div>
       </div>

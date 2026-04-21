@@ -73,12 +73,12 @@ export default function MethodologyPanel({ onClose, onBack }: Props) {
 
         {/* Header */}
         <div style={{ padding: "0 18px 14px", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
-          <h2 style={{ margin: 0, fontSize: 15, fontWeight: 600, color: "rgba(255,255,255,0.9)", letterSpacing: "0.02em" }}>How Atlas Works</h2>
-          <p style={{ margin: "4px 0 0", fontSize: 11, fontFamily: "monospace", color: "rgba(255,255,255,0.32)", letterSpacing: "0.04em" }}>Scoring · Verification · Data · Security</p>
+          <h2 style={{ margin: 0, fontSize: 15, fontWeight: 600, color: "rgba(255,255,255,0.9)", letterSpacing: "0.02em" }}>how atlas works</h2>
+          <p style={{ margin: "4px 0 0", fontSize: 11, fontFamily: "monospace", color: "rgba(255,255,255,0.32)", letterSpacing: "0.04em" }}>scoring · verification · data · security</p>
         </div>
 
         {/* ── SCORING ── */}
-        <SLabel text="Scoring" />
+        <SLabel text="scoring" />
         <div style={{ margin: "0 14px" }}>
           <div style={{ padding: "10px 13px", borderRadius: 10, background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.07)" }}>
             <p style={{ margin: "0 0 10px", fontSize: 11, fontFamily: "monospace", color: "rgba(255,255,255,0.42)", lineHeight: 1.6 }}>
@@ -108,7 +108,7 @@ export default function MethodologyPanel({ onClose, onBack }: Props) {
         </div>
 
         {/* ── VERIFICATION ── */}
-        <SLabel text="Verification" />
+        <SLabel text="verification" />
         <div style={{ margin: "0 14px", padding: "11px 13px", borderRadius: 10, background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.07)" }}>
           <EText value={verificationText} onChange={setVerificationText} as="div" style={{ fontSize: 12, color: "rgba(255,255,255,0.55)", lineHeight: 1.7, fontFamily: "monospace" }} />
           <div style={{ display: "flex", gap: 5, flexWrap: "wrap" as const, marginTop: 10 }}>
@@ -119,7 +119,7 @@ export default function MethodologyPanel({ onClose, onBack }: Props) {
         </div>
 
         {/* ── DATA ── */}
-        <SLabel text="Data sources" />
+        <SLabel text="data sources" />
         <div style={{ margin: "0 14px", padding: "11px 13px", borderRadius: 10, background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.07)" }}>
           <EText value={dataText} onChange={setDataText} as="div" style={{ fontSize: 12, color: "rgba(255,255,255,0.55)", lineHeight: 1.7, fontFamily: "monospace" }} />
           <div style={{ display: "flex", gap: 5, flexWrap: "wrap" as const, marginTop: 10 }}>
@@ -130,7 +130,7 @@ export default function MethodologyPanel({ onClose, onBack }: Props) {
         </div>
 
         {/* ── SECURITY ── */}
-        <SLabel text="Security & Privacy" />
+        <SLabel text="security & privacy" />
         <div style={{ margin: "0 14px 24px", padding: "11px 13px", borderRadius: 10, background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.07)" }}>
           <EText value={securityText} onChange={setSecurityText} as="div" style={{ fontSize: 12, color: "rgba(255,255,255,0.55)", lineHeight: 1.7, fontFamily: "monospace" }} />
           <div style={{ display: "flex", gap: 5, flexWrap: "wrap" as const, marginTop: 10 }}>

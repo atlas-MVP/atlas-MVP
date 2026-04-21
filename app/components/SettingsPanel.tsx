@@ -6,14 +6,13 @@ type SubPanel = "you" | "us" | "methodology" | "settings";
 interface NavItem {
   id: SubPanel;
   label: string;
-  hint: string;
 }
 
 const ITEMS: NavItem[] = [
-  { id: "you",         label: "You",         hint: "Profile & account" },
-  { id: "us",          label: "Us",          hint: "About Atlas & team" },
-  { id: "methodology", label: "Methodology", hint: "Scoring · Verification · Data · Security" },
-  { id: "settings",    label: "Settings",    hint: "Preferences & display" },
+  { id: "you",         label: "you"         },
+  { id: "us",          label: "us"          },
+  { id: "methodology", label: "methodology" },
+  { id: "settings",    label: "settings"    },
 ];
 
 function NavRow({ item, delay, onOpen }: { item: NavItem; delay: number; onOpen: (id: SubPanel) => void }) {
@@ -44,7 +43,6 @@ function NavRow({ item, delay, onOpen }: { item: NavItem; delay: number; onOpen:
         transition: "background 0.15s",
         opacity: lit ? 1 : 0,
         transform: lit ? "translateX(0)" : "translateX(-6px)",
-        // transition handled separately
       }}
     >
       <span style={{
@@ -80,7 +78,7 @@ export default function SettingsPanel({ onClose, onOpen }: Props) {
       position: "absolute",
       top: 52, left: 20,
       zIndex: 20,
-      width: 360,
+      width: 280,
       background: "rgba(4,6,18,0.62)",
       border: "1px solid rgba(255,255,255,0.06)",
       borderRadius: 16,
@@ -90,27 +88,11 @@ export default function SettingsPanel({ onClose, onOpen }: Props) {
       overflow: "hidden",
       pointerEvents: "auto",
     }}>
-
-      {/* Header */}
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 16px 10px", borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
-        <span style={{ fontSize: 9, fontFamily: "monospace", letterSpacing: "0.22em", color: "rgba(255,255,255,0.28)", textTransform: "uppercase" }}>
-          ATLAS
-        </span>
-        <button
-          onClick={onClose}
-          style={{ background: "none", border: "none", cursor: "pointer", color: "rgba(255,255,255,0.2)", fontSize: 14, lineHeight: 1, padding: "0 2px" }}
-          onMouseEnter={e => (e.currentTarget.style.color = "rgba(255,255,255,0.7)")}
-          onMouseLeave={e => (e.currentTarget.style.color = "rgba(255,255,255,0.2)")}
-        >×</button>
-      </div>
-
-      {/* Nav items */}
-      <div style={{ padding: "4px 6px 6px" }}>
+      <div style={{ padding: "6px 6px 6px" }}>
         {ITEMS.map((item, i) => (
           <NavRow key={item.id} item={item} delay={i * 60} onOpen={onOpen} />
         ))}
       </div>
-
     </div>
   );
 }

@@ -9,7 +9,7 @@ const FINANCE_DATA: Record<string, {
 }> = {
   "oil-hormuz": {
     title: "Oil Markets",
-    tag: "MARKET ALERT",
+    tag: "market alert",
     article: {
       headline:
         "Oil surges past $87 as Strait of Hormuz tensions escalate following US-Iran clashes",

@@ -80,12 +80,12 @@ export default function SettingsSubPanel({ onClose, onBack }: Props) {
 
         {/* Header */}
         <div style={{ padding: "0 18px 14px", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
-          <h2 style={{ margin: 0, fontSize: 15, fontWeight: 600, color: "rgba(255,255,255,0.9)", letterSpacing: "0.02em" }}>Settings</h2>
-          <p style={{ margin: "4px 0 0", fontSize: 11, fontFamily: "monospace", color: "rgba(255,255,255,0.32)", letterSpacing: "0.04em" }}>Preferences · Display · Editing</p>
+          <h2 style={{ margin: 0, fontSize: 15, fontWeight: 600, color: "rgba(255,255,255,0.9)", letterSpacing: "0.02em" }}>settings</h2>
+          <p style={{ margin: "4px 0 0", fontSize: 11, fontFamily: "monospace", color: "rgba(255,255,255,0.32)", letterSpacing: "0.04em" }}>preferences · display · editing</p>
         </div>
 
         {/* Edit mode */}
-        <SLabel text="Editing" />
+        <SLabel text="editing" />
         <div style={{ margin: "0 14px", borderRadius: 10, background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.07)", overflow: "hidden" }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 13px" }}>
             <div>
@@ -107,21 +107,21 @@ export default function SettingsSubPanel({ onClose, onBack }: Props) {
         </div>
 
         {/* Alerts */}
-        <SLabel text="Alerts" />
+        <SLabel text="alerts" />
         <div style={{ margin: "0 14px", borderRadius: 10, background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.07)", overflow: "hidden" }}>
           <Toggle label="Live alerts"  hint="Real-time conflict & event updates"  value={liveAlerts}  onChange={setLiveAlerts} />
           <Toggle label="Sound alerts" hint="Audio ping on Danger 5 events"       value={soundAlerts} onChange={setSoundAlerts} />
         </div>
 
         {/* Display */}
-        <SLabel text="Display" />
+        <SLabel text="display" />
         <div style={{ margin: "0 14px", borderRadius: 10, background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.07)", overflow: "hidden" }}>
           <Toggle label="Dark mode"    hint="High-contrast dark interface"       value={darkMode}    onChange={setDarkMode} />
           <Toggle label="Compact view" hint="Reduce panel padding and font size" value={compactView} onChange={setCompactView} />
         </div>
 
         {/* Map */}
-        <SLabel text="Map" />
+        <SLabel text="map" />
         <div style={{ margin: "0 14px 24px", borderRadius: 10, background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.07)", overflow: "hidden" }}>
           <Toggle label="Spinning globe"  hint="Auto-rotate when no panel is open" value={spinGlobe}   onChange={setSpinGlobe} />
           <Toggle label="Country borders" hint="Show political borders on idle globe" value={showBorders} onChange={setShowBorders} />

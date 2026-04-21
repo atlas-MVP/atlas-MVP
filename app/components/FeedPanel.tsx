@@ -411,7 +411,7 @@ export default function FeedPanel({ countryCode, countryName, onClose, onSourceT
         style={{ borderBottom: "1px solid rgba(255,255,255,0.05)", flexShrink: 0 }}>
         <div className="flex items-center gap-3">
           <div className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
-          <span className="text-white/25 text-xs tracking-widest uppercase font-mono">Live Feed</span>
+          <span className="text-white/25 text-xs tracking-widest uppercase font-mono">live feed</span>
           <span className="text-white/60 text-xs font-medium">{countryName}</span>
         </div>
         <div className="flex items-center gap-2">
@@ -492,7 +492,7 @@ export default function FeedPanel({ countryCode, countryName, onClose, onSourceT
 
       {/* Footer */}
       <div className="px-5 py-3" style={{ borderTop: "1px solid rgba(255,255,255,0.05)" }}>
-        <p className="text-white/10 text-xs text-center font-mono tracking-widest">ATLAS · INTELLIGENCE FEED</p>
+        <p className="text-white/10 text-xs text-center font-mono tracking-widest">atlas · intelligence feed</p>
       </div>
     </div>
   );

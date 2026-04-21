@@ -113,7 +113,7 @@ export default function HeadlinesPanel({ onClose }: Props) {
       }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
           <div style={{ width: 6, height: 6, borderRadius: "50%", background: "#ef4444", boxShadow: "0 0 6px #ef4444" }} />
-          <span style={{ fontSize: 12, fontFamily: "monospace", letterSpacing: "0.22em", color: "rgba(255,255,255,0.75)", fontWeight: 700 }}>NEWS</span>
+          <span style={{ fontSize: 12, fontFamily: "monospace", letterSpacing: "0.22em", color: "rgba(255,255,255,0.75)", fontWeight: 700 }}>news</span>
         </div>
         <button
           onClick={onClose}
@@ -177,7 +177,7 @@ export default function HeadlinesPanel({ onClose }: Props) {
 
       {/* Footer */}
       <div style={{ padding: "10px 20px", borderTop: "1px solid rgba(255,255,255,0.05)", flexShrink: 0, textAlign: "center" }}>
-        <EText value="ATLAS · INTELLIGENCE FEED" onChange={() => {}} style={{ fontSize: 10, fontFamily: "monospace", letterSpacing: "0.2em", color: "rgba(255,255,255,0.22)" }} />
+        <EText value="atlas · intelligence feed" onChange={() => {}} style={{ fontSize: 10, fontFamily: "monospace", letterSpacing: "0.2em", color: "rgba(255,255,255,0.22)" }} />
       </div>
     </div>
   );

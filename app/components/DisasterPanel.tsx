@@ -13,7 +13,7 @@ const DISASTER_DATA: Record<string, {
   "kenya-floods": {
     title: "Kenya Floods",
     date: "March–April 2026",
-    tag: "ACTIVE DISASTER",
+    tag: "active disaster",
     stats: [
       { label: "Confirmed dead", value: "110+" },
       { label: "Displaced",      value: "34,765+" },

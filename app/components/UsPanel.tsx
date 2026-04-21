@@ -66,19 +66,19 @@ export default function UsPanel({ onClose, onBack }: Props) {
         </div>
 
         {/* Mission */}
-        <SLabel text="Mission" />
+        <SLabel text="mission" />
         <div style={{ margin: "0 14px", padding: "11px 13px", borderRadius: 10, background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.07)" }}>
           <EText value={mission} onChange={setMission} as="div" style={{ fontSize: 12, color: "rgba(255,255,255,0.58)", lineHeight: 1.7, fontFamily: "monospace" }} />
         </div>
 
         {/* What we cover */}
-        <SLabel text="What we cover" />
+        <SLabel text="what we cover" />
         <div style={{ margin: "0 14px", padding: "11px 13px", borderRadius: 10, background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.07)" }}>
           <EText value={coverage} onChange={setCoverage} as="div" style={{ fontSize: 12, color: "rgba(255,255,255,0.58)", lineHeight: 1.7, fontFamily: "monospace" }} />
         </div>
 
         {/* Team */}
-        <SLabel text="Team" />
+        <SLabel text="team" />
         <div style={{ margin: "0 14px", display: "flex", flexDirection: "column", gap: 6 }}>
           {TEAM.map(m => (
             <div key={m.initials} style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 13px", borderRadius: 10, background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.07)" }}>
@@ -94,7 +94,7 @@ export default function UsPanel({ onClose, onBack }: Props) {
         </div>
 
         {/* Contact */}
-        <SLabel text="Contact" />
+        <SLabel text="contact" />
         <div style={{ margin: "0 14px 24px", padding: "11px 13px", borderRadius: 10, background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.07)" }}>
           <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
             {[
