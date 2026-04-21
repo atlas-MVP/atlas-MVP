@@ -470,7 +470,7 @@ export default function AtlasHQ({ onClose, onNavigate, onHeadlinesToggle, onSour
           } : {};
 
           if (section === "geo") return (
-            <div key="geo" {...dropHandlers} style={wrapStyle}>
+            <div key="geo" {...dropHandlers} style={{ paddingBottom: 28, ...wrapStyle }}>
               <SectionLabel label={displayConfig.sectionLabels?.geo ?? "geopolitics"} onClick={editMode ? undefined : () => setShowMore(v => !v)} dragHandle={sectionDragHandle} onLabelChange={v => patchDraft(d => ({ ...d, sectionLabels: { ...d.sectionLabels, geo: v } }))} />
               <div style={{ padding: "0 14px", display: "flex", flexDirection: "column", gap: 6 }}>
                 {displayConfig.topConflicts.map((c, idx) => (
@@ -515,7 +515,7 @@ export default function AtlasHQ({ onClose, onNavigate, onHeadlinesToggle, onSour
                         <EText
                           value={c.label}
                           onChange={v => patchDraft(d => ({ ...d, topConflicts: d.topConflicts.map((x, j) => j === idx ? { ...x, label: v } : x) }))}
-                          style={{ fontSize: 14, fontFamily: "monospace", letterSpacing: "0.06em", color: "rgba(255,255,255,0.92)", fontWeight: 700, lineHeight: 1.3 }}
+                          style={{ fontSize: 14, fontFamily: "monospace", letterSpacing: "0.06em", color: "rgba(255,255,255,1)", fontWeight: 800, lineHeight: 1.3 }}
                         />
                       </div>
                     </div>
@@ -529,7 +529,7 @@ export default function AtlasHQ({ onClose, onNavigate, onHeadlinesToggle, onSour
                         style={{ padding: "12px 13px", borderRadius: 10, background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.09)", cursor: "pointer" }}
                         onMouseEnter={e => (e.currentTarget.style.background = "rgba(255,255,255,0.04)")}
                         onMouseLeave={e => (e.currentTarget.style.background = "rgba(255,255,255,0.02)")}>
-                        <div style={{ fontSize: 14, fontFamily: "monospace", letterSpacing: "0.07em", color: "rgba(255,255,255,0.92)", fontWeight: 700 }}>{c.label}</div>
+                        <div style={{ fontSize: 14, fontFamily: "monospace", letterSpacing: "0.07em", color: "rgba(255,255,255,1)", fontWeight: 800 }}>{c.label}</div>
                         <div style={{ fontSize: 11, color: "rgba(255,255,255,0.52)", marginTop: 5, lineHeight: 1.45, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{c.sub}</div>
                       </div>
                     ))}
@@ -548,7 +548,7 @@ export default function AtlasHQ({ onClose, onNavigate, onHeadlinesToggle, onSour
           );
 
           if (section === "alerts") return (
-            <div key="alerts" {...dropHandlers} style={wrapStyle}>
+            <div key="alerts" {...dropHandlers} style={{ paddingBottom: 28, ...wrapStyle }}>
               <SectionLabel label={displayConfig.sectionLabels?.alerts ?? "live alerts"} dragHandle={sectionDragHandle} onLabelChange={v => patchDraft(d => ({ ...d, sectionLabels: { ...d.sectionLabels, alerts: v } }))} />
               <Reveal minStage={3} stage={loadStage}>
                 <div style={{ padding: "0 6px", position: "relative" }}>
@@ -646,7 +646,7 @@ export default function AtlasHQ({ onClose, onNavigate, onHeadlinesToggle, onSour
                         <EText
                           value={item.headline}
                           onChange={v => patchDraft(d => ({ ...d, violenceItems: d.violenceItems.map((x, j) => j === idx ? { ...x, headline: v } : x) }))}
-                          style={{ fontSize: 14, fontFamily: "monospace", letterSpacing: "0.06em", color: "rgba(255,255,255,0.92)", fontWeight: 700, lineHeight: 1.3 }}
+                          style={{ fontSize: 14, fontFamily: "monospace", letterSpacing: "0.06em", color: "rgba(255,255,255,1)", fontWeight: 800, lineHeight: 1.3 }}
                         />
                         <div style={{ fontSize: 9, color: "rgba(255,255,255,0.48)", marginTop: 4, letterSpacing: "0.12em", textTransform: "uppercase" }}>{item.source}</div>
                       </div>
@@ -706,7 +706,7 @@ export default function AtlasHQ({ onClose, onNavigate, onHeadlinesToggle, onSour
                         <EText
                           value={item.headline}
                           onChange={v => patchDraft(d => ({ ...d, financeItems: d.financeItems.map((x, j) => j === idx ? { ...x, headline: v } : x) }))}
-                          style={{ fontSize: 14, fontFamily: "monospace", letterSpacing: "0.06em", color: "rgba(255,255,255,0.92)", fontWeight: 700, lineHeight: 1.3 }}
+                          style={{ fontSize: 14, fontFamily: "monospace", letterSpacing: "0.06em", color: "rgba(255,255,255,1)", fontWeight: 800, lineHeight: 1.3 }}
                         />
                       </div>
                     </div>
@@ -761,7 +761,7 @@ export default function AtlasHQ({ onClose, onNavigate, onHeadlinesToggle, onSour
                         <EText
                           value={dis.label}
                           onChange={v => patchDraft(d => ({ ...d, disasters: d.disasters.map((x, j) => j === idx ? { ...x, label: v } : x) }))}
-                          style={{ fontSize: 14, fontFamily: "monospace", letterSpacing: "0.06em", color: "rgba(255,255,255,0.92)", fontWeight: 700 }}
+                          style={{ fontSize: 14, fontFamily: "monospace", letterSpacing: "0.06em", color: "rgba(255,255,255,1)", fontWeight: 800 }}
                         />
                       </div>
                     </div>
@@ -820,7 +820,7 @@ function SectionLabel({ label, onClick, dragHandle, onLabelChange }: {
       onDragStart={dragHandle?.onDragStart}
       onDragEnd={dragHandle?.onDragEnd}
       style={{
-        display: "flex", alignItems: "center", gap: 6, padding: "22px 18px 6px",
+        display: "flex", alignItems: "center", gap: 6, padding: "10px 18px 4px",
         cursor: dragHandle ? "grab" : "default", userSelect: "none",
       }}
     >
@@ -833,7 +833,7 @@ function SectionLabel({ label, onClick, dragHandle, onLabelChange }: {
         <span
           onClick={onClick}
           style={{ ...labelStyle, cursor: onClick ? "pointer" : "default" }}
-          onMouseEnter={e => { if (onClick) e.currentTarget.style.color = "rgba(255,255,255,0.7)"; }}
+          onMouseEnter={e => { e.currentTarget.style.color = "rgba(255,255,255,0.9)"; }}
           onMouseLeave={e => { if (onClick) e.currentTarget.style.color = "rgba(255,255,255,0.42)"; }}
         >{label}</span>
       )}
