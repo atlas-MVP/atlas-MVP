@@ -29,17 +29,80 @@ const STATE_NAMES: Record<string, string> = {
   WI: "Wisconsin", WY: "Wyoming",
 };
 
-const SCHUMER_DATA = {
-  name: "Chuck Schumer",
-  party: "D" as const,
-  state: "NY",
-  vote: "No" as const,
-  photo: "/chuck-schumer.jpg",
-  age: 73,
-  yearsInOffice: 25,
-  nextElection: 2028,
-  officialUrl: "https://www.schumer.senate.gov",
+// Photos live in R2 under atlas-radar/senators/<slug>.<ext> and are served
+// through /api/radar-image?key=… — the same route used for every other
+// R2-hosted image in the app.
+const senatorPhoto = (key: string) =>
+  `/api/radar-image?key=${encodeURIComponent(key)}`;
+
+interface SenatorBio {
+  name:          string;
+  party:         "R" | "D" | "I";
+  state:         string;
+  vote:          "Aye" | "No" | "Present" | "Not Voting";
+  photo:         string;
+  age:           number;
+  yearsInOffice: number;
+  nextElection:  number;
+  officialUrl:   string;
+}
+
+// Factual bios (age/years-in-office/re-election year as of April 2026).
+// Keyed by full senator name — matches the `senators` array below.
+const SENATOR_DATA: Record<string, SenatorBio> = {
+  "Chuck Schumer": {
+    name: "Chuck Schumer", party: "D", state: "NY", vote: "No",
+    photo: senatorPhoto("atlas-radar/senators/chuck-schumer.jpeg"),
+    age: 75, yearsInOffice: 27, nextElection: 2028,
+    officialUrl: "https://www.schumer.senate.gov",
+  },
+  "John Fetterman": {
+    name: "John Fetterman", party: "D", state: "PA", vote: "No",
+    photo: senatorPhoto("atlas-radar/senators/john-fetterman.jpeg"),
+    age: 56, yearsInOffice: 3, nextElection: 2028,
+    officialUrl: "https://www.fetterman.senate.gov",
+  },
+  "Joe Manchin": {
+    name: "Joe Manchin", party: "D", state: "WV", vote: "No",
+    photo: senatorPhoto("atlas-radar/senators/joe-manchin.webp"),
+    age: 78, yearsInOffice: 14, nextElection: 2024,
+    officialUrl: "https://www.manchin.senate.gov",
+  },
+  "Jeanne Shaheen": {
+    name: "Jeanne Shaheen", party: "D", state: "NH", vote: "No",
+    photo: senatorPhoto("atlas-radar/senators/jeanne-shaheen.jpeg"),
+    age: 79, yearsInOffice: 17, nextElection: 2026,
+    officialUrl: "https://www.shaheen.senate.gov",
+  },
+  "Maggie Hassan": {
+    name: "Maggie Hassan", party: "D", state: "NH", vote: "No",
+    photo: senatorPhoto("atlas-radar/senators/maggie-hassan.jpeg"),
+    age: 68, yearsInOffice: 9, nextElection: 2028,
+    officialUrl: "https://www.hassan.senate.gov",
+  },
+  "Chris Coons": {
+    name: "Chris Coons", party: "D", state: "DE", vote: "No",
+    photo: senatorPhoto("atlas-radar/senators/chris-coons.jpeg"),
+    age: 62, yearsInOffice: 15, nextElection: 2026,
+    officialUrl: "https://www.coons.senate.gov",
+  },
+  "Tom Carper": {
+    name: "Tom Carper", party: "D", state: "DE", vote: "No",
+    photo: senatorPhoto("atlas-radar/senators/tom-carper.jpeg"),
+    age: 79, yearsInOffice: 24, nextElection: 2024,
+    officialUrl: "https://www.carper.senate.gov",
+  },
+  "Elissa Slotkin": {
+    name: "Elissa Slotkin", party: "D", state: "MI", vote: "No",
+    photo: senatorPhoto("atlas-radar/senators/elissa-slotkin.webp"),
+    age: 49, yearsInOffice: 1, nextElection: 2030,
+    officialUrl: "https://www.slotkin.senate.gov",
+  },
 };
+
+// Legacy alias — the rest of the file still references SCHUMER_DATA for the
+// small in-line hover card. Kept pointing at the new R2-backed entry.
+const SCHUMER_DATA = SENATOR_DATA["Chuck Schumer"];
 
 export default function ArticlePage({
   headline,
@@ -421,8 +484,9 @@ export default function ArticlePage({
             const senator = lockedSenator || hoveredSenator;
             if (!senator) return null;
 
-            const isAye = senator.vote === "Aye";
-            const isSchumer = senator.name === SCHUMER_DATA.name;
+            const isAye     = senator.vote === "Aye";
+            const bio       = SENATOR_DATA[senator.name];      // full bio + photo (may be undefined)
+            const hasBio    = !!bio;
             const crossover = isCrossoverSenator(senator);
 
             return (
@@ -461,8 +525,8 @@ export default function ArticlePage({
                     animation: crossover ? "crossoverPulse 2s ease-in-out infinite" : "none",
                   }}
                 >
-                  <div style={{ display: "flex", gap: 14, marginBottom: isSchumer ? 14 : 0 }}>
-                    {isSchumer && (
+                  <div style={{ display: "flex", gap: 14, marginBottom: hasBio ? 14 : 0 }}>
+                    {hasBio && (
                       <div
                         onMouseEnter={() => setPhotoEnlarged(true)}
                         onMouseLeave={() => setPhotoEnlarged(false)}
@@ -478,8 +542,8 @@ export default function ArticlePage({
                         }}
                       >
                         <img
-                          src={SCHUMER_DATA.photo}
-                          alt={SCHUMER_DATA.name}
+                          src={bio.photo}
+                          alt={bio.name}
                           style={{ width: "100%", height: "100%", objectFit: "cover" }}
                         />
                         {/* Enlarged overlay — separate element so the small photo never moves */}
@@ -494,15 +558,15 @@ export default function ArticlePage({
                               pointerEvents: "none",
                               borderRadius: 16,
                               overflow: "hidden",
-                              width: 360,
-                              height: 360,
+                              width: 520,
+                              height: 520,
                               boxShadow: "0 24px 80px rgba(0,0,0,0.7)",
                               transition: "opacity 0.18s",
                             }}
                           >
                             <img
-                              src={SCHUMER_DATA.photo}
-                              alt={SCHUMER_DATA.name}
+                              src={bio.photo}
+                              alt={bio.name}
                               style={{ width: "100%", height: "100%", objectFit: "cover" }}
                             />
                           </div>
@@ -538,7 +602,7 @@ export default function ArticlePage({
                     </div>
                   </div>
 
-                  {isSchumer && (
+                  {hasBio && (
                     <div style={{
                       display: "flex",
                       flexDirection: "column",
@@ -548,9 +612,21 @@ export default function ArticlePage({
                       borderTop: "1px solid rgba(255,255,255,0.08)",
                       paddingTop: 14,
                     }}>
-                      <div><span style={{ fontWeight: 700 }}>Age:</span> {SCHUMER_DATA.age}</div>
-                      <div><span style={{ fontWeight: 700 }}>In office:</span> {SCHUMER_DATA.yearsInOffice} years</div>
-                      <div><span style={{ fontWeight: 700 }}>Up for re-election:</span> {SCHUMER_DATA.nextElection}</div>
+                      <div><span style={{ fontWeight: 700 }}>Age:</span> {bio.age}</div>
+                      <div><span style={{ fontWeight: 700 }}>In office:</span> {bio.yearsInOffice} years</div>
+                      <div><span style={{ fontWeight: 700 }}>Up for re-election:</span> {bio.nextElection}</div>
+                      <div>
+                        <span style={{ fontWeight: 700 }}>Official site:</span>{" "}
+                        <a
+                          href={bio.officialUrl}
+                          target="_blank"
+                          rel="noreferrer"
+                          onClick={e => e.stopPropagation()}
+                          style={{ color: "rgba(96,165,250,0.9)", textDecoration: "none" }}
+                        >
+                          {bio.officialUrl.replace(/^https?:\/\//, "")}
+                        </a>
+                      </div>
                     </div>
                   )}
                 </div>
