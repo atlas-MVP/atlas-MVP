@@ -285,18 +285,52 @@ export default function Home() {
     <EditModeCtx.Provider value={editMode}>
     <EditModeSetCtx.Provider value={setEditMode}>
     <main className="relative w-screen h-screen bg-black overflow-hidden">
-      <Map
-        onCountryClick={handleCountryClick}
-        flyToCode={flyToCode}
-        flyToPosition={flyToPosition}
-        selectedCountry={selectedCountry ?? homeCountry}
-        secondaryCountries={secondaryCountries}
-        casualtyCountries={casualtyCountries}
-        focusCountries={focusCountries}
-        activeStrikes={activeStrikes}
-        homeView={showRadar && !selectedCountry && !homeCountry && !feedCountry}
-        onReady={() => setMapReady(true)}
-      />
+      <style>{`
+        @keyframes flicker {
+          0% { opacity: 0.3; color: rgba(255,255,255,0.35); background: rgba(255,255,255,0.06); border-color: rgba(255,255,255,0.14); }
+          20% { opacity: 0.5; color: rgba(34,197,94,0.5); background: rgba(34,197,94,0.09); border-color: rgba(34,197,94,0.2); }
+          25% { opacity: 0.4; color: rgba(255,255,255,0.35); background: rgba(255,255,255,0.06); border-color: rgba(255,255,255,0.14); }
+          40% { opacity: 0.8; color: rgba(34,197,94,0.8); background: rgba(34,197,94,0.14); border-color: rgba(34,197,94,0.3); }
+          50% { opacity: 1; color: #22c55e; background: rgba(34,197,94,0.18); border-color: rgba(34,197,94,0.35); }
+          100% { opacity: 1; color: #22c55e; background: rgba(34,197,94,0.18); border-color: rgba(34,197,94,0.35); }
+        }
+        @keyframes yearFlicker {
+          0% { opacity: 0.2; }
+          20% { opacity: 0.4; }
+          25% { opacity: 0.3; }
+          40% { opacity: 0.7; }
+          50% { opacity: 0.9; }
+          100% { opacity: 0.9; }
+        }
+      `}</style>
+      <div style={{
+        position: "absolute",
+        inset: 0,
+        overflow: "hidden",
+        maskImage: mapReady ? "linear-gradient(to right, black 0%, black 12.5%, black 25%, black 37.5%, black 50%, black 62.5%, black 75%, black 87.5%, black 100%)" : "none",
+        maskSize: mapReady ? "800% 100%" : "100% 100%",
+        maskPosition: mapReady ? "0% 0%" : "0% 0%",
+        animation: mapReady ? "slideReveal 0.8s steps(8) forwards" : "none",
+      }}>
+        <style>{`
+          @keyframes slideReveal {
+            0% { mask-position: -700% 0%; }
+            100% { mask-position: 0% 0%; }
+          }
+        `}</style>
+        <Map
+          onCountryClick={handleCountryClick}
+          flyToCode={flyToCode}
+          flyToPosition={flyToPosition}
+          selectedCountry={selectedCountry ?? homeCountry}
+          secondaryCountries={secondaryCountries}
+          casualtyCountries={casualtyCountries}
+          focusCountries={focusCountries}
+          activeStrikes={activeStrikes}
+          homeView={showRadar && !selectedCountry && !homeCountry && !feedCountry}
+          onReady={() => setMapReady(true)}
+        />
+      </div>
 
       {/* Map event playback — scripted flyTo + popup + narration sequences */}
       <MapEventPlayer
@@ -524,13 +558,18 @@ export default function Home() {
             background: isLive ? "rgba(34,197,94,0.18)" : "rgba(255,255,255,0.06)",
             border: `1px solid ${isLive ? "rgba(34,197,94,0.35)" : "rgba(255,255,255,0.14)"}`,
             color:      isLive ? "#22c55e" : "rgba(255,255,255,0.35)",
+            animation: mapReady && isLive ? "flicker 1.2s ease-out forwards" : "none",
           }}
         >live</button>
-        <Clock
-          onYearClick={() => setTimelineOpen(v => !v)}
-          displayYear={previewYear ?? historicalYear ?? undefined}
-          historyDate={historyDate}
-        />
+        <div style={{
+          animation: mapReady ? "yearFlicker 1.2s ease-out forwards" : "none",
+        }}>
+          <Clock
+            onYearClick={() => setTimelineOpen(v => !v)}
+            displayYear={previewYear ?? historicalYear ?? undefined}
+            historyDate={historyDate}
+          />
+        </div>
       </div>
         );
       })()}

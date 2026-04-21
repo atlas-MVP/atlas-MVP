@@ -107,15 +107,69 @@ async function uploadToR2(slug, buf, ext) {
   }));
 }
 
-// Bioguide hi-res URL: photos are bucketed by first letter of bioguide ID.
-// Try "<id>.jpg" first (≈800×1000), fall back to "<id>_200.jpg" thumb.
+// Bioguide gives us ~45KB 180×225 photos. Wikipedia (Commons) hosts the
+// official Senate portrait at up to 2000×3000px, and we can request a
+// specific-width thumb to keep payload reasonable. We prefer Wikipedia first.
 function bioguideUrls(id) {
-  const letter = id.charAt(0);
-  return [
-    `https://bioguide.congress.gov/bioguide/photo/${letter}/${id}.jpg`,
-    `https://www.congress.gov/img/member/${id.toLowerCase()}_200.jpg`,
-    `https://bioguide.congress.gov/photo/${id}.jpg`,
-  ];
+  return [`https://bioguide.congress.gov/photo/${id}.jpg`];
+}
+
+// Slug → Wikipedia page title override for ambiguous names. Wikipedia's page
+// for "Tim Scott" is a disambig — we need "Tim Scott (American politician)".
+const WIKI_OVERRIDE = {
+  "tim-scott":              "Tim_Scott",
+  "rick-scott":             "Rick_Scott",
+  "jim-banks":              "Jim_Banks_(politician)",
+  "jim-justice":            "Jim_Justice",
+  "lindsey-graham":         "Lindsey_Graham",
+  "mike-lee":               "Mike_Lee_(American_politician)",
+  "john-kennedy":           "John_Kennedy_(Louisiana_politician)",
+  "chris-murphy":           "Chris_Murphy",
+  "mark-kelly":             "Mark_Kelly_(astronaut)",
+  "roger-marshall":         "Roger_Marshall_(politician)",
+  "john-hoeven":            "John_Hoeven",
+  "kelly-armstrong":        "Kelly_Armstrong",
+  "ashley-moody":           "Ashley_Moody",
+  "jon-husted":             "Jon_Husted",
+  "bernie-moreno":          "Bernie_Moreno",
+  "dave-mccormick":         "Dave_McCormick",
+  "tim-sheehy":             "Tim_Sheehy",
+  "ted-budd":               "Ted_Budd",
+  "john-curtis":            "John_Curtis_(politician)",
+  "mike-rounds":            "Mike_Rounds",
+  "todd-young":             "Todd_Young",
+  "mike-braun":             "Mike_Braun",
+  "tom-cotton":             "Tom_Cotton",
+  "eric-schmitt":           "Eric_Schmitt",
+  "richard-blumenthal":     "Richard_Blumenthal",
+  "john-boozman":           "John_Boozman",
+  "peter-welch":            "Peter_Welch",
+  "andy-kim":               "Andy_Kim_(politician)",
+  "angela-alsobrooks":      "Angela_Alsobrooks",
+  "lisa-blunt-rochester":   "Lisa_Blunt_Rochester",
+};
+
+function wikiTitleFor(row) {
+  return WIKI_OVERRIDE[row.slug] ?? row.name.replace(/\s+/g, "_");
+}
+
+// Fetch the Wikipedia page summary and return the "originalimage" URL
+// rewritten to an 800px thumbnail so the file size stays ~100-250KB. The
+// originalimage is often 2000+px which would bloat R2 and hurt page load.
+async function wikiPhotoUrl(title) {
+  const summary = await get(`https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(title)}`);
+  if (summary.status >= 400 || !summary.body) return null;
+  let json;
+  try { json = JSON.parse(summary.body); } catch { return null; }
+  const orig = json?.originalimage?.source;
+  if (!orig) return null;
+  // Rewrite: upload.wikimedia.org/wikipedia/commons/<a>/<ab>/<name>.jpg
+  //      →   upload.wikimedia.org/wikipedia/commons/thumb/<a>/<ab>/<name>.jpg/800px-<name>.jpg
+  const m = orig.match(/^(https:\/\/upload\.wikimedia\.org\/wikipedia\/commons\/)([0-9a-f]\/[0-9a-f]{2})\/([^/]+)$/);
+  if (!m) return orig;
+  const filename = m[3];
+  // If filename ends with svg, thumbs need a .png suffix — but senators use jpg/png.
+  return `${m[1]}thumb/${m[2]}/${filename}/800px-${filename}`;
 }
 
 // ── 1. URL audit ──────────────────────────────────────────────────────────
@@ -146,11 +200,23 @@ const photoFailures = [];
 const photoSources  = [];
 for (const row of filtered) {
   let picked;
-  for (const pUrl of bioguideUrls(row.bioguide)) {
-    const r = await get(pUrl, true);
+  // 1. Wikipedia Commons (best quality, 800×1000 thumb ≈150KB).
+  const wikiTitle = wikiTitleFor(row);
+  const wikiUrl   = await wikiPhotoUrl(wikiTitle);
+  if (wikiUrl) {
+    const r = await get(wikiUrl, true);
     if (r.status < 400 && r.body && r.body.length > 3000) {
-      picked = { url: pUrl, buf: r.body, size: r.body.length };
-      break;
+      picked = { url: wikiUrl, buf: r.body, size: r.body.length, tag: "WIKI" };
+    }
+  }
+  // 2. Bioguide (180×225 tiny fallback).
+  if (!picked) {
+    for (const pUrl of bioguideUrls(row.bioguide)) {
+      const r = await get(pUrl, true);
+      if (r.status < 400 && r.body && r.body.length > 3000) {
+        picked = { url: pUrl, buf: r.body, size: r.body.length, tag: "BIO " };
+        break;
+      }
     }
   }
   if (!picked) {
@@ -158,10 +224,8 @@ for (const row of filtered) {
     photoFailures.push(row);
     continue;
   }
-  const kb = Math.round(picked.size / 1024);
-  const tag = picked.url.includes("_200") ? "LOW "
-            : picked.url.includes("bioguide/photo") ? "HI  "
-            : "FALL";
+  const kb  = Math.round(picked.size / 1024);
+  const tag = picked.tag;
   try {
     await uploadToR2(row.slug, picked.buf, "jpeg");
     console.log(`${shouldUpload ? "✓" : "•"} ${tag}  ${row.slug.padEnd(26)} ${kb.toString().padStart(4)}KB  ${picked.url}`);
