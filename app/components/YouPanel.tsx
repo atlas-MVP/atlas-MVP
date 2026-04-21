@@ -42,8 +42,8 @@ function Row({ label, value }: { label: string; value: string }) {
 interface Props { onClose: () => void; onBack: () => void; }
 
 export default function YouPanel({ onClose, onBack }: Props) {
-  const [name,  setName]  = useState("William G.");
-  const [email, setEmail] = useState("wgraham2@berklee.edu");
+  const [name,  setName]  = useState("John Doe");
+  const [email, setEmail] = useState("johndoe@gmail.com");
   const [role,  setRole]  = useState("Atlas Intelligence Contributor");
   const [bio,   setBio]   = useState("Researcher & editorial contributor. Focused on Middle East geopolitics, conflict verification, and open-source intelligence.");
 
@@ -62,7 +62,7 @@ export default function YouPanel({ onClose, onBack }: Props) {
           <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
             {/* Avatar */}
             <div style={{ width: 60, height: 60, borderRadius: "50%", background: "linear-gradient(135deg, rgba(96,165,250,0.25) 0%, rgba(167,139,250,0.25) 100%)", border: "1px solid rgba(255,255,255,0.1)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-              <span style={{ fontSize: 20, fontFamily: "monospace", color: "rgba(255,255,255,0.6)", fontWeight: 600 }}>W</span>
+              <span style={{ fontSize: 20, fontFamily: "monospace", color: "rgba(255,255,255,0.6)", fontWeight: 600 }}>J</span>
             </div>
             <div>
               <div style={{ fontSize: 16, fontWeight: 600, color: "rgba(255,255,255,0.92)", letterSpacing: "0.01em", marginBottom: 3 }}>
@@ -73,7 +73,7 @@ export default function YouPanel({ onClose, onBack }: Props) {
               </div>
               <div style={{ display: "inline-flex", alignItems: "center", gap: 5, padding: "2px 8px", borderRadius: 4, background: "rgba(96,165,250,0.1)", border: "1px solid rgba(96,165,250,0.2)" }}>
                 <span style={{ width: 4, height: 4, borderRadius: "50%", background: "#60a5fa" }} />
-                <span style={{ fontSize: 9, fontFamily: "monospace", letterSpacing: "0.1em", color: "rgba(96,165,250,0.85)", textTransform: "uppercase" }}>Intelligence Access</span>
+                <span style={{ fontSize: 9, fontFamily: "monospace", letterSpacing: "0.1em", color: "rgba(96,165,250,0.85)", textTransform: "uppercase" }}>Verified User</span>
               </div>
             </div>
           </div>
@@ -94,10 +94,8 @@ export default function YouPanel({ onClose, onBack }: Props) {
         <SLabel text="account" />
         <div style={{ margin: "0 14px" }}>
           <div style={{ padding: "6px 13px", borderRadius: 10, background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.07)" }}>
-            <Row label="Joined"       value="April 2026" />
-            <Row label="Tier"         value="Atlas Intelligence" />
-            <Row label="Region"       value="North America" />
-            <Row label="Affiliation"  value="Berklee College of Music" />
+            <Row label="Joined" value="April 2026" />
+            <Row label="Tier"   value="Verified User" />
           </div>
         </div>
 
@@ -105,9 +103,9 @@ export default function YouPanel({ onClose, onBack }: Props) {
         <SLabel text="activity" />
         <div style={{ margin: "0 14px", display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 6, paddingBottom: 20 }}>
           {[
-            { value: "147", label: "Alerts read" },
-            { value: "23",  label: "Conflicts tracked" },
-            { value: "8",   label: "Sources pinned" },
+            { value: "2",   label: "security level" },
+            { value: "23",  label: "events tracked" },
+            { value: "147", label: "events" },
           ].map(({ value, label }) => (
             <div key={label} style={{ padding: "10px 12px", borderRadius: 10, background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.07)", textAlign: "center" }}>
               <div style={{ fontSize: 22, fontWeight: 700, fontFamily: "monospace", color: "rgba(255,255,255,0.88)" }}>{value}</div>

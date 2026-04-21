@@ -36,7 +36,6 @@ export default function SettingsSubPanel({ onClose, onBack, spinEnabled, onSpinC
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 14px" }}>
             <div>
               <div style={{ fontSize: 13, fontFamily: "monospace", color: "rgba(255,255,255,0.78)" }}>spinning globe</div>
-              <div style={{ fontSize: 10, fontFamily: "monospace", color: "rgba(255,255,255,0.28)", marginTop: 2 }}>auto-rotate when no panel is open</div>
             </div>
             <button
               onClick={() => onSpinChange(!spinEnabled)}

@@ -58,11 +58,6 @@ export default function UsPanel({ onClose, onBack }: Props) {
             <span style={{ fontSize: 22, fontWeight: 300, letterSpacing: "0.3em", color: "rgba(255,255,255,0.92)" }}>ATLAS</span>
             <span style={{ fontSize: 9, fontFamily: "monospace", letterSpacing: "0.18em", color: "rgba(255,255,255,0.28)", textTransform: "uppercase", paddingTop: 2 }}>Intelligence</span>
           </div>
-          <div style={{ display: "flex", gap: 6, flexWrap: "wrap" as const, marginBottom: 12 }}>
-            {["Conflict Tracking", "Casualty Data", "Live Alerts", "Timeline History", "Source Verification"].map(tag => (
-              <span key={tag} style={{ fontSize: 9, fontFamily: "monospace", letterSpacing: "0.1em", padding: "3px 8px", borderRadius: 4, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.45)" }}>{tag}</span>
-            ))}
-          </div>
         </div>
 
         {/* Mission */}

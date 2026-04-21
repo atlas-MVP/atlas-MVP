@@ -30,17 +30,12 @@ function SLabel({ text }: { text: string }) {
 }
 
 // Danger-level legend row
-function DangerRow({ level, label, color, desc }: { level: number; label: string; color: string; desc: string }) {
+function DangerRow({ level, label, color }: { level: number; label: string; color: string }) {
   return (
-    <div style={{ display: "flex", alignItems: "flex-start", gap: 10, padding: "6px 0", borderBottom: "1px solid rgba(255,255,255,0.04)" }}>
-      <div style={{ display: "flex", alignItems: "center", gap: 6, minWidth: 60, flexShrink: 0 }}>
-        <span style={{ width: 6, height: 6, borderRadius: "50%", background: color, flexShrink: 0 }} />
-        <span style={{ fontSize: 12, fontFamily: "monospace", fontWeight: 700, color }}>{level}</span>
-      </div>
-      <div>
-        <div style={{ fontSize: 11, fontFamily: "monospace", color: "rgba(255,255,255,0.72)", fontWeight: 600 }}>{label}</div>
-        <div style={{ fontSize: 10, fontFamily: "monospace", color: "rgba(255,255,255,0.38)", marginTop: 1, lineHeight: 1.5 }}>{desc}</div>
-      </div>
+    <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "5px 0", borderBottom: "1px solid rgba(255,255,255,0.04)" }}>
+      <span style={{ width: 6, height: 6, borderRadius: "50%", background: color, flexShrink: 0 }} />
+      <span style={{ fontSize: 12, fontFamily: "monospace", fontWeight: 700, color, minWidth: 16 }}>{level}</span>
+      <span style={{ fontSize: 11, fontFamily: "monospace", color: "rgba(255,255,255,0.65)" }}>{label}</span>
     </div>
   );
 }
@@ -58,7 +53,7 @@ export default function MethodologyPanel({ onClose, onBack }: Props) {
     "Every alert requires confirmation from a minimum of two independent primary sources before publication. High-danger events (level 4–5) require three. Sources are weighted by historical accuracy, institutional authority, and proximity to the event."
   );
   const [dataText, setDataText] = useState(
-    "Atlas draws on structured feeds from ACLED, GDELT, and UN OCHA alongside real-time reporting from AP, Reuters, Al Jazeera, BBC, NYT, and regional outlets. Casualty figures are reconciled against government announcements, hospital records, and NGO field reports."
+    "Casualty figures are cross-referenced against government announcements, hospital records, and NGO field reports."
   );
   const [securityText, setSecurityText] = useState(
     "Atlas does not track user location, store browsing history, or sell personal data. Account information is encrypted at rest. Intelligence sources and internal editorial communications use end-to-end encryption."
@@ -74,7 +69,6 @@ export default function MethodologyPanel({ onClose, onBack }: Props) {
         {/* Header */}
         <div style={{ padding: "0 18px 14px", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
           <h2 style={{ margin: 0, fontSize: 15, fontWeight: 600, color: "rgba(255,255,255,0.9)", letterSpacing: "0.02em" }}>how atlas works</h2>
-          <p style={{ margin: "4px 0 0", fontSize: 11, fontFamily: "monospace", color: "rgba(255,255,255,0.32)", letterSpacing: "0.04em" }}>scoring · verification · data · security</p>
         </div>
 
         {/* ── SCORING ── */}
@@ -84,11 +78,11 @@ export default function MethodologyPanel({ onClose, onBack }: Props) {
             <p style={{ margin: "0 0 10px", fontSize: 11, fontFamily: "monospace", color: "rgba(255,255,255,0.42)", lineHeight: 1.6 }}>
               Each alert carries two independent scores: <span style={{ color: "rgba(255,255,255,0.72)" }}>danger</span> (severity 1–5) and <span style={{ color: "rgba(255,255,255,0.72)" }}>confidence</span> (source certainty 0–100%).
             </p>
-            <DangerRow level={5} color="#ef4444" label="Critical" desc="Mass casualty event, active military engagement, or imminent threat to civilian population." />
-            <DangerRow level={4} color="#f97316" label="High"     desc="Confirmed strikes, deployments, or large-scale humanitarian emergency." />
-            <DangerRow level={3} color="#eab308" label="Elevated" desc="Escalating tensions, limited strikes, or significant displacement." />
-            <DangerRow level={2} color="#84cc16" label="Moderate" desc="Political crisis, minor skirmish, or credible threat posturing." />
-            <DangerRow level={1} color="#22d3ee" label="Low"      desc="Background monitoring — ceasefire violations, diplomatic movement." />
+            <DangerRow level={5} color="#ef4444" label="Critical" />
+            <DangerRow level={4} color="#f97316" label="High" />
+            <DangerRow level={3} color="#eab308" label="Elevated" />
+            <DangerRow level={2} color="#84cc16" label="Moderate" />
+            <DangerRow level={1} color="#22d3ee" label="Low" />
           </div>
 
           {/* Confidence bar legend */}
@@ -111,11 +105,6 @@ export default function MethodologyPanel({ onClose, onBack }: Props) {
         <SLabel text="verification" />
         <div style={{ margin: "0 14px", padding: "11px 13px", borderRadius: 10, background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.07)" }}>
           <EText value={verificationText} onChange={setVerificationText} as="div" style={{ fontSize: 12, color: "rgba(255,255,255,0.55)", lineHeight: 1.7, fontFamily: "monospace" }} />
-          <div style={{ display: "flex", gap: 5, flexWrap: "wrap" as const, marginTop: 10 }}>
-            {["2-source minimum", "3-source for Danger 4–5", "48h review cycle", "Field cross-check"].map(t => (
-              <span key={t} style={{ fontSize: 9, fontFamily: "monospace", padding: "3px 8px", borderRadius: 4, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.42)" }}>{t}</span>
-            ))}
-          </div>
         </div>
 
         {/* ── DATA ── */}
@@ -133,11 +122,6 @@ export default function MethodologyPanel({ onClose, onBack }: Props) {
         <SLabel text="security & privacy" />
         <div style={{ margin: "0 14px 24px", padding: "11px 13px", borderRadius: 10, background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.07)" }}>
           <EText value={securityText} onChange={setSecurityText} as="div" style={{ fontSize: 12, color: "rgba(255,255,255,0.55)", lineHeight: 1.7, fontFamily: "monospace" }} />
-          <div style={{ display: "flex", gap: 5, flexWrap: "wrap" as const, marginTop: 10 }}>
-            {["No location tracking", "Encrypted at rest", "No data sales", "E2E editorial comms"].map(t => (
-              <span key={t} style={{ fontSize: 9, fontFamily: "monospace", padding: "3px 8px", borderRadius: 4, background: "rgba(74,222,128,0.06)", border: "1px solid rgba(74,222,128,0.12)", color: "rgba(74,222,128,0.6)" }}>{t}</span>
-            ))}
-          </div>
         </div>
 
       </div>
