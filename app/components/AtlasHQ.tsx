@@ -465,7 +465,30 @@ export default function AtlasHQ({ onClose, onNavigate, onHeadlinesToggle, onSour
                   <Reveal key={c.label} minStage={1 + idx} stage={loadStage}>
                     <div
                       onClick={editMode ? undefined : () => onNavigate?.(c.code, c.flyTo?.center ?? [0,0], c.flyTo?.zoom ?? 4, undefined, c.slug)}
-                      style={{ height: 196, borderRadius: 14, overflow: "hidden", position: "relative", cursor: editMode ? "default" : "pointer", border: "1px solid rgba(255,255,255,0.09)", background: "#0a0c18" }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.transform = "scale(1.05) translateY(-8px) rotateX(2deg)";
+                        e.currentTarget.style.boxShadow = "0 20px 40px rgba(0,0,0,0.5), 0 30px 60px rgba(0,0,0,0.4), 0 40px 80px rgba(0,0,0,0.3)";
+                        e.currentTarget.style.zIndex = "10";
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.transform = "scale(1) translateY(0) rotateX(0deg)";
+                        e.currentTarget.style.boxShadow = "0 2px 8px rgba(0,0,0,0.2)";
+                        e.currentTarget.style.zIndex = "1";
+                      }}
+                      style={{
+                        height: 196,
+                        borderRadius: 14,
+                        overflow: "hidden",
+                        position: "relative",
+                        cursor: editMode ? "default" : "pointer",
+                        border: "1px solid rgba(255,255,255,0.09)",
+                        background: "#0a0c18",
+                        transform: "scale(1) translateY(0) rotateX(0deg)",
+                        transformStyle: "preserve-3d",
+                        boxShadow: "0 2px 8px rgba(0,0,0,0.2)",
+                        transition: "all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)",
+                        zIndex: 1,
+                      }}
                     >
                       {(c.imageUrl || c.image) && (
                         <EImg
@@ -632,7 +655,32 @@ export default function AtlasHQ({ onClose, onNavigate, onHeadlinesToggle, onSour
                   {displayConfig.financeItems.map((item, idx) => (
                     <div key={item.headline}
                       onClick={editMode ? undefined : () => onFinanceTap?.(item.slug)}
-                      style={{ flex: 1, height: 196, borderRadius: 14, overflow: "hidden", position: "relative", cursor: editMode ? "default" : "pointer", border: "1px solid rgba(255,255,255,0.09)", background: "#0a0c18", minWidth: 0 }}>
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.transform = "scale(1.05) translateY(-8px) rotateX(2deg)";
+                        e.currentTarget.style.boxShadow = "0 20px 40px rgba(0,0,0,0.5), 0 30px 60px rgba(0,0,0,0.4), 0 40px 80px rgba(0,0,0,0.3)";
+                        e.currentTarget.style.zIndex = "10";
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.transform = "scale(1) translateY(0) rotateX(0deg)";
+                        e.currentTarget.style.boxShadow = "0 2px 8px rgba(0,0,0,0.2)";
+                        e.currentTarget.style.zIndex = "1";
+                      }}
+                      style={{
+                        flex: 1,
+                        height: 196,
+                        borderRadius: 14,
+                        overflow: "hidden",
+                        position: "relative",
+                        cursor: editMode ? "default" : "pointer",
+                        border: "1px solid rgba(255,255,255,0.09)",
+                        background: "#0a0c18",
+                        minWidth: 0,
+                        transform: "scale(1) translateY(0) rotateX(0deg)",
+                        transformStyle: "preserve-3d",
+                        boxShadow: "0 2px 8px rgba(0,0,0,0.2)",
+                        transition: "all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)",
+                        zIndex: 1,
+                      }}>
                       {(item.imageUrl || item.image) && (
                         <EImg
                           src={item.imageUrl || item.image || ""}
