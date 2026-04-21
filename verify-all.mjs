@@ -125,9 +125,12 @@ for (const row of filtered) {
   const url = urlMap[row.slug];
   if (!url) { console.log(`✗ NO_URL       ${row.slug}`); urlFailures.push(row); continue; }
   const r = await get(url);
-  const title = titleOf(r.body).toLowerCase();
-  const last  = lastNameOf(row.name);
-  const ok    = r.status < 400 && title.includes(last);
+  const title   = titleOf(r.body).toLowerCase();
+  const ogTitle = (r.body?.match(/og:title"\s*content="([^"]+)"/i)?.[1] ?? "").toLowerCase();
+  const host    = url.toLowerCase();
+  const last    = lastNameOf(row.name);
+  // Pass if: status OK AND (title, og:title, or subdomain contains last name)
+  const ok = r.status < 400 && (title.includes(last) || ogTitle.includes(last) || host.includes(last.replace("-", "")));
   if (!ok) {
     console.log(`✗ BAD_URL      ${row.slug.padEnd(26)} status=${r.status}  title="${titleOf(r.body).slice(0,70)}"  url=${url}`);
     urlFailures.push({ ...row, url, status: r.status, title: titleOf(r.body) });

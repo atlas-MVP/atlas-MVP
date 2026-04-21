@@ -62,6 +62,12 @@ export default function LiveAlertRow({
 
   const enter = () => {
     setHovered(true);
+    // Apply 3D hover effect
+    if (rowRef.current) {
+      rowRef.current.style.transform = "scale(1.025) translateY(-4px) rotateX(1deg)";
+      rowRef.current.style.boxShadow = "0 10px 20px rgba(0,0,0,0.3), 0 15px 30px rgba(0,0,0,0.2)";
+      rowRef.current.style.zIndex = "5";
+    }
     // Double rAF: wait for expansion render, then measure true vertical center
     requestAnimationFrame(() => {
       requestAnimationFrame(() => {
@@ -75,6 +81,12 @@ export default function LiveAlertRow({
 
   const leave = () => {
     setHovered(false);
+    // Remove 3D hover effect
+    if (rowRef.current) {
+      rowRef.current.style.transform = "scale(1) translateY(0) rotateX(0deg)";
+      rowRef.current.style.boxShadow = "none";
+      rowRef.current.style.zIndex = "1";
+    }
     // Don't call onHoverChange(false) here — let parent's scheduleLeave handle
     // the delay so the confidence panel stays reachable
     onHoverChange?.(false, 0);
@@ -92,7 +104,7 @@ export default function LiveAlertRow({
         cursor: onClick ? "pointer" : "default",
         background: expanded ? "rgba(255,255,255,0.04)" : "transparent",
         borderBottom: bottomBorder ? "1px solid rgba(255,255,255,0.04)" : "none",
-        transition: "background 0.12s",
+        transition: "background 0.12s, transform 0.2s, box-shadow 0.2s",
         // Width matches the full expanded alert so hover zone covers body text
         boxSizing: "border-box",
         width: "100%",
