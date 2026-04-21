@@ -91,8 +91,15 @@ export const NATURE_COLORS: Record<NatureCategory, string> = {
   others:    "#fbbf24",   // amber — anomaly
 };
 
-// Zoom level we fly to after dropping a pin — tight enough to see the site.
-export const NATURE_FLY_ZOOM = 7.2;
+// Per-category fly-to zoom — close enough to actually see the feature.
+export const NATURE_CATEGORY_ZOOM: Record<NatureCategory, number> = {
+  forest:    13.5,  // see individual canopy texture
+  beach:     13.0,  // see coastline + ocean waves
+  mountains: 13.5,  // see individual ridges and peaks
+  others:    12.5,  // anomalies vary in size — slightly wider
+};
+// Fallback for "any" category
+export const NATURE_FLY_ZOOM = 13.0;
 
 // Pick a random site from a category, skipping any already on the map.
 // Cycles: when every site in the category is used, we reset and start over
