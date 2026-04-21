@@ -29,6 +29,16 @@ function SLabel({ text }: { text: string }) {
   );
 }
 
+function LevelRow({ level, label, color }: { level: number; label: string; color: string }) {
+  return (
+    <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "5px 0", borderBottom: "1px solid rgba(255,255,255,0.04)" }}>
+      <span style={{ width: 7, height: 7, borderRadius: "50%", background: color, flexShrink: 0, boxShadow: `0 0 6px ${color}88` }} />
+      <span style={{ fontSize: 13, fontFamily: "monospace", fontWeight: 700, color, minWidth: 18 }}>{level}</span>
+      <span style={{ fontSize: 11, fontFamily: "monospace", color: "rgba(255,255,255,0.65)" }}>{label}</span>
+    </div>
+  );
+}
+
 function SourceBadge({ name }: { name: string }) {
   return (
     <span style={{ fontSize: 9, fontFamily: "monospace", letterSpacing: "0.1em", padding: "3px 8px", borderRadius: 4, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.5)", textTransform: "none" }}>{name}</span>
@@ -60,13 +70,39 @@ export default function MethodologyPanel({ onClose, onBack }: Props) {
 
         {/* Header */}
         <div style={{ padding: "0 18px 14px", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
-          <h2 style={{ margin: 0, fontSize: 15, fontWeight: 600, color: "rgba(255,255,255,0.9)", letterSpacing: "0.02em" }}>how atlas works</h2>
+          <h2 style={{ margin: 0, fontSize: 15, fontWeight: 600, color: "rgba(255,255,255,0.9)", letterSpacing: "0.02em" }}>methodology</h2>
         </div>
 
         {/* ── CONFIDENCE SCORING ── */}
         <SLabel text="confidence scoring" />
-        <div style={{ margin: "0 14px", padding: "11px 13px", borderRadius: 10, background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.07)" }}>
-          <EText value={confidenceText} onChange={setConfidenceText} as="div" style={{ fontSize: 12, color: "rgba(255,255,255,0.55)", lineHeight: 1.7, fontFamily: "monospace" }} />
+        <div style={{ margin: "0 14px" }}>
+          <div style={{ padding: "10px 13px", borderRadius: 10, background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.07)", marginBottom: 6 }}>
+            <EText value={confidenceText} onChange={setConfidenceText} as="div" style={{ fontSize: 12, color: "rgba(255,255,255,0.55)", lineHeight: 1.7, fontFamily: "monospace" }} />
+          </div>
+
+          {/* Level scale */}
+          <div style={{ padding: "10px 13px", borderRadius: 10, background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.07)", marginBottom: 6 }}>
+            <LevelRow level={5} color="#ef4444" label="critical" />
+            <LevelRow level={4} color="#f97316" label="high" />
+            <LevelRow level={3} color="#eab308" label="elevated" />
+            <LevelRow level={2} color="#84cc16" label="moderate" />
+            <LevelRow level={1} color="#22d3ee" label="low" />
+          </div>
+
+          {/* Confidence bar */}
+          <div style={{ padding: "10px 13px", borderRadius: 10, background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.07)" }}>
+            <div style={{ fontSize: 9, fontFamily: "monospace", letterSpacing: "0.12em", color: "rgba(255,255,255,0.28)", textTransform: "uppercase", marginBottom: 7 }}>confidence scale</div>
+            <div style={{ display: "flex", height: 6, borderRadius: 4, overflow: "hidden" }}>
+              {(["#ef4444","#f97316","#eab308","#22d3ee","#4ade80"] as const).map(c => (
+                <div key={c} style={{ flex: 1, background: c, opacity: 0.65 }} />
+              ))}
+            </div>
+            <div style={{ display: "flex", justifyContent: "space-between", marginTop: 5 }}>
+              {["<50%","50–70%","70–85%","85–95%",">95%"].map(l => (
+                <span key={l} style={{ fontSize: 8, fontFamily: "monospace", color: "rgba(255,255,255,0.28)" }}>{l}</span>
+              ))}
+            </div>
+          </div>
         </div>
 
         {/* ── VERIFICATION ── */}
