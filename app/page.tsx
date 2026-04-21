@@ -362,6 +362,7 @@ export default function Home() {
           focusCountries={focusCountries}
           activeStrikes={activeStrikes}
           homeView={showRadar && !selectedCountry && !homeCountry && !feedCountry}
+          isIdle={!selectedCountry && !homeCountry && !feedCountry && !activeGunViolence && !activeDisaster && !activeFinance}
           onReady={() => setMapReady(true)}
         />
       </div>

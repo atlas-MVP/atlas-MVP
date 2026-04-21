@@ -131,13 +131,19 @@ interface Props {
   focusCountries?: string[]; // when set, ONLY these countries are active — everything else dims
   homeView?: boolean; // radar is open, no country selected — suppress auto-highlight
   onReady?: () => void; // fires once when first idle event lands (all tiles rendered)
+  isIdle?: boolean;  // true when nothing is selected — enables slow globe spin
 }
 
 // Zoom fade range — used for global layers (hover, secondary); per-country uses COUNTRY_FADE_RANGES
 const FADE_START = 3.5;
 const FADE_END = 5.5;
 
-export default function Map({ onCountryClick, flyToCode, flyToPosition, selectedCountry, secondaryCountries = [], activeStrikes, casualtyCountries = [], focusCountries, homeView = false, onReady }: Props) {
+// Earth rotates 360° in 86 400 seconds → 0.004167 °/s
+const EARTH_DEG_PER_SEC = 360 / 86400;
+// Only spin when zoomed out to globe level
+const SPIN_MAX_ZOOM = 3.0;
+
+export default function Map({ onCountryClick, flyToCode, flyToPosition, selectedCountry, secondaryCountries = [], activeStrikes, casualtyCountries = [], focusCountries, homeView = false, onReady, isIdle = false }: Props) {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
   const [mapReady, setMapReady] = useState(false);
@@ -150,6 +156,10 @@ export default function Map({ onCountryClick, flyToCode, flyToPosition, selected
   const idlePulseFrame = useRef<number | null>(null);
   const panelOpenRef = useRef(false);
   const [tooltip, setTooltip] = useState<{ x: number; y: number; name: string; isHighlighted: boolean } | null>(null);
+  // Globe spin state
+  const spinFrameRef = useRef<number | null>(null);
+  const spinLastTs = useRef<number | null>(null);
+  const userInteracting = useRef(false);
 
   // Focus mode: when a conflict is active, only involved countries are visible.
   // When no conflict, all highlighted countries show normally.
@@ -235,6 +245,61 @@ export default function Map({ onCountryClick, flyToCode, flyToPosition, selected
     if (!flyToPosition || !map.current) return;
     map.current.flyTo({ center: flyToPosition.center, zoom: flyToPosition.zoom, duration: 1600, curve: 1.2, essential: true });
   }, [flyToPosition]);
+
+  // ── Slow globe spin at Earth's real rotation rate ─────────────────────────
+  // 360° / 86 400 s ≈ 0.00417°/s. Only runs when isIdle=true, zoom ≤ 3,
+  // and the user is not actively dragging/zooming.
+  useEffect(() => {
+    const m = map.current;
+    if (!m || !mapReady) return;
+
+    // Register interaction guards once
+    const onDown  = () => { userInteracting.current = true;  };
+    const onUp    = () => { userInteracting.current = false; };
+    const onWheel = () => { userInteracting.current = false; }; // wheel ends interaction
+    m.getCanvas().addEventListener("mousedown",  onDown);
+    m.getCanvas().addEventListener("mouseup",    onUp);
+    m.getCanvas().addEventListener("touchstart", onDown, { passive: true });
+    m.getCanvas().addEventListener("touchend",   onUp);
+    // Also pause during programmatic flyTo
+    m.on("movestart", () => { if (m.isMoving()) spinLastTs.current = null; });
+
+    return () => {
+      m.getCanvas().removeEventListener("mousedown",  onDown);
+      m.getCanvas().removeEventListener("mouseup",    onUp);
+      m.getCanvas().removeEventListener("touchstart", onDown);
+      m.getCanvas().removeEventListener("touchend",   onUp);
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mapReady]);
+
+  useEffect(() => {
+    const m = map.current;
+    if (!m || !mapReady) return;
+
+    const tick = (ts: number) => {
+      spinFrameRef.current = requestAnimationFrame(tick);
+      if (!isIdle || userInteracting.current || m.isMoving() || m.getZoom() > SPIN_MAX_ZOOM) {
+        spinLastTs.current = null; // reset so next active frame starts fresh
+        return;
+      }
+      if (spinLastTs.current === null) {
+        spinLastTs.current = ts;
+        return;
+      }
+      const dtSec = (ts - spinLastTs.current) / 1000;
+      spinLastTs.current = ts;
+      const c = m.getCenter();
+      m.setCenter([c.lng - EARTH_DEG_PER_SEC * dtSec, c.lat]);
+    };
+
+    spinFrameRef.current = requestAnimationFrame(tick);
+    return () => {
+      if (spinFrameRef.current !== null) cancelAnimationFrame(spinFrameRef.current);
+      spinFrameRef.current = null;
+      spinLastTs.current = null;
+    };
+  }, [isIdle, mapReady]);
 
   // Secondary (conflict partner) border — turquoise
   useEffect(() => {
