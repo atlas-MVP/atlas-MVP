@@ -457,6 +457,11 @@ export default function Map({ onCountryClick, flyToCode, flyToPosition, selected
         }
         if (l.type === "symbol") {
           try { m.setLayoutProperty(l.id, "text-transform", "lowercase"); } catch {}
+          // Pin ALL text labels to the globe surface — states, provinces,
+          // regions, settlements — so nothing floats off the limb into space.
+          try { m.setLayoutProperty(l.id, "text-pitch-alignment", "map"); } catch {}
+          try { m.setLayoutProperty(l.id, "text-rotation-alignment", "map"); } catch {}
+          try { m.setLayoutProperty(l.id, "symbol-avoid-edges", true); } catch {}
         }
 
         // Country labels: pin to globe surface so they behave like paint on
@@ -475,12 +480,7 @@ export default function Map({ onCountryClick, flyToCode, flyToPosition, selected
               // eslint-disable-next-line @typescript-eslint/no-explicit-any
               m.setLayoutProperty(l.id, "text-size", mod as any);
             }
-            // Pin text to the globe surface (not billboard/screen-space).
-            // In globe projection this means the label lies flat on the surface
-            // and is only visible when the country faces the camera.
-            m.setLayoutProperty(l.id, "text-pitch-alignment", "map");
-            m.setLayoutProperty(l.id, "text-rotation-alignment", "map");
-            m.setLayoutProperty(l.id, "symbol-avoid-edges", true);
+            // (pitch/rotation/avoid-edges applied globally to all symbol layers above)
           } catch {}
         }
 
