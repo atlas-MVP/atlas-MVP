@@ -307,14 +307,17 @@ export default function AtlasHQ({ onClose, onNavigate, onHeadlinesToggle, onSour
   const activeDisasters = (liveConfig?.disasters?.length      ? liveConfig.disasters      : DISASTERS) as RadarDisasterItem[];
 
   const currentConfig: RadarConfig = {
-    liveAlerts:   activeFeed as RadarAlertItem[],
-    topConflicts: (liveConfig?.topConflicts?.length ? liveConfig.topConflicts : TOP_CONFLICTS) as RadarConflictItem[],
+    liveAlerts:    activeFeed as RadarAlertItem[],
+    topConflicts:  (liveConfig?.topConflicts?.length ? liveConfig.topConflicts : TOP_CONFLICTS) as RadarConflictItem[],
     moreConflicts: (liveConfig?.moreConflicts?.length ? liveConfig.moreConflicts : MORE_CONFLICTS) as RadarConflictItem[],
     violenceItems: activeViolence as RadarViolenceItem[],
     financeItems:  activeFinance as RadarFinanceItem[],
     disasters:     activeDisasters as RadarDisasterItem[],
-    sectionOrder:   liveConfig?.sectionOrder,
-    sectionLabels:  liveConfig?.sectionLabels,
+    sectionOrder:  liveConfig?.sectionOrder,
+    sectionLabels: liveConfig?.sectionLabels,
+    geoAlerts:      (liveConfig?.geoAlerts?.length      ? liveConfig.geoAlerts      : GEO_ALERTS)      as RadarAlertItem[],
+    violenceAlerts: (liveConfig?.violenceAlerts?.length  ? liveConfig.violenceAlerts  : VIOLENCE_ALERTS) as RadarAlertItem[],
+    disasterAlerts: (liveConfig?.disasterAlerts?.length  ? liveConfig.disasterAlerts  : DISASTER_ALERTS) as RadarAlertItem[],
   };
 
   const displayConfig = editMode && editDraft ? editDraft : currentConfig;
@@ -327,7 +330,10 @@ export default function AtlasHQ({ onClose, onNavigate, onHeadlinesToggle, onSour
     else          { setEditDraft(null); }
   }, [editMode]);
 
-  const renderAlertRows = (alerts: FeedItem[]) => (
+  const renderAlertRows = (
+    alerts: FeedItem[],
+    configKey?: "geoAlerts" | "violenceAlerts" | "disasterAlerts",
+  ) => (
     <div style={{ padding: "0 6px 2px" }}>
       {alerts.slice(0, 2).map((item, i, arr) => (
         <div key={`${item.code}-${item.time}`}
@@ -342,9 +348,42 @@ export default function AtlasHQ({ onClose, onNavigate, onHeadlinesToggle, onSour
             }
           }}
         >
-          <LiveAlertRow item={item} onSourceClick={onSourceClick}
-            isActive={false}
-            bottomBorder={i < arr.length - 1} showConfidenceInline={false} expandOnHover={false} />
+          {editMode && configKey ? (
+            /* Edit mode: show inline editable text for each alert */
+            <div style={{
+              padding: "8px 10px",
+              borderRadius: 8,
+              background: "rgba(255,255,255,0.03)",
+              border: "1px dashed rgba(100,160,255,0.25)",
+              marginBottom: i < arr.length - 1 ? 6 : 0,
+            }}>
+              <div style={{ fontSize: 9, fontFamily: "monospace", letterSpacing: "0.14em", color: "rgba(255,255,255,0.28)", textTransform: "uppercase", marginBottom: 5 }}>click to edit</div>
+              <EText
+                value={item.text}
+                onChange={v => patchDraft(d => ({
+                  ...d,
+                  [configKey]: ((d[configKey] as RadarAlertItem[] | undefined) ?? alerts as RadarAlertItem[])
+                    .map((x, j) => j === i ? { ...x, text: v } : x),
+                }))}
+                as="div"
+                style={{ fontSize: 14, lineHeight: 1.6, color: "rgba(255,255,255,0.88)" }}
+              />
+              <EText
+                value={item.description}
+                onChange={v => patchDraft(d => ({
+                  ...d,
+                  [configKey]: ((d[configKey] as RadarAlertItem[] | undefined) ?? alerts as RadarAlertItem[])
+                    .map((x, j) => j === i ? { ...x, description: v } : x),
+                }))}
+                as="div"
+                style={{ fontSize: 13, color: "rgba(255,255,255,0.52)", lineHeight: 1.5, marginTop: 4 }}
+              />
+            </div>
+          ) : (
+            <LiveAlertRow item={item} onSourceClick={onSourceClick}
+              isActive={false}
+              bottomBorder={i < arr.length - 1} showConfidenceInline={false} expandOnHover={false} />
+          )}
         </div>
       ))}
     </div>
@@ -468,7 +507,7 @@ export default function AtlasHQ({ onClose, onNavigate, onHeadlinesToggle, onSour
               </div>
               {/* Geo-specific live alerts */}
               <Reveal minStage={3} stage={loadStage}>
-                {renderAlertRows(GEO_ALERTS)}
+                {renderAlertRows((displayConfig.geoAlerts ?? GEO_ALERTS) as FeedItem[], "geoAlerts")}
               </Reveal>
             </div>
           );
@@ -580,7 +619,7 @@ export default function AtlasHQ({ onClose, onNavigate, onHeadlinesToggle, onSour
                   ))}
                 </div>
                 {/* Violence-specific live alerts */}
-                {!editMode && renderAlertRows(VIOLENCE_ALERTS)}
+                {renderAlertRows((displayConfig.violenceAlerts ?? VIOLENCE_ALERTS) as FeedItem[], "violenceAlerts")}
               </Reveal>
             </div>
           );
@@ -669,7 +708,7 @@ export default function AtlasHQ({ onClose, onNavigate, onHeadlinesToggle, onSour
                   ))}
                 </div>
                 {/* Disaster-specific live alerts */}
-                {!editMode && renderAlertRows(DISASTER_ALERTS)}
+                {renderAlertRows((displayConfig.disasterAlerts ?? DISASTER_ALERTS) as FeedItem[], "disasterAlerts")}
               </Reveal>
             </div>
           );

@@ -70,6 +70,9 @@ export interface RadarConfig {
   disasters:     DisasterItem[];
   sectionOrder?:  string[]; // persisted drag order of radar sections
   sectionLabels?: { geo?: string; alerts?: string; violence?: string; finance?: string; disasters?: string };
+  geoAlerts?:      LiveAlertItem[];
+  violenceAlerts?: LiveAlertItem[];
+  disasterAlerts?: LiveAlertItem[];
 }
 
 // ── Nav ────────────────────────────────────────────────────────────────────────
