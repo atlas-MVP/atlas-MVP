@@ -2,11 +2,8 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 
-// Menu items surfaced when the user taps the Atlas logo. First item is the
-// primary call-to-action — everything else is a quick link into the app.
-const ITEMS: { text: string; href: string }[] = [
-  { text: "upload videos", href: "/admin/upload" },
-];
+// Menu items surfaced when the user taps the Atlas logo.
+const ITEMS: { text: string; href: string }[] = [];
 
 function TypeLine({ text, delay, href, onNavigate }: {
   text: string; delay: number; href: string; onNavigate: () => void;
