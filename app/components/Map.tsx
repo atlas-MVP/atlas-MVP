@@ -459,7 +459,8 @@ export default function Map({ onCountryClick, flyToCode, flyToPosition, selected
           try { m.setLayoutProperty(l.id, "text-transform", "lowercase"); } catch {}
         }
 
-        // Country labels: reduce text-size by 1px
+        // Country labels: reduce text-size by 1px; prevent labels from
+        // extending past the globe edge into space.
         if (l.id.includes("country-label")) {
           try {
             const sz = m.getLayoutProperty(l.id, "text-size");
@@ -474,6 +475,8 @@ export default function Map({ onCountryClick, flyToCode, flyToPosition, selected
               // eslint-disable-next-line @typescript-eslint/no-explicit-any
               m.setLayoutProperty(l.id, "text-size", mod as any);
             }
+            // Prevent labels crossing the globe boundary into space
+            m.setLayoutProperty(l.id, "symbol-avoid-edges", true);
           } catch {}
         }
 
@@ -509,7 +512,9 @@ export default function Map({ onCountryClick, flyToCode, flyToPosition, selected
         color: "rgb(0,0,0)",
         "high-color": "rgb(0,0,0)",
         "space-color": "rgb(0,0,0)",
-        "horizon-blend": 0.02,
+        // Increased from 0.02 — fog now fades in earlier so labels near the
+        // globe limb go invisible before they can "stick out" into space.
+        "horizon-blend": 0.12,
         "star-intensity": 0.08,
       } as never);
 
