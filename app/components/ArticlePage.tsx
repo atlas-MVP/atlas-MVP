@@ -426,21 +426,30 @@ export default function ArticlePage({
             const crossover = isCrossoverSenator(senator);
 
             return (
-              <div style={{
-                position: "fixed",
-                [isAye ? "left" : "right"]: 80,
-                top: "50%",
-                transform: "translateY(-50%)",
-                zIndex: 201,
-                pointerEvents: lockedSenator ? "auto" : "none",
-              }}>
-                <div
-                  onClick={() => {
-                    if (lockedSenator) {
-                      setLockedSenator(null);
-                    }
-                  }}
-                  style={{
+              <>
+                {/* Backdrop - click outside to close */}
+                {lockedSenator && (
+                  <div
+                    onClick={() => setLockedSenator(null)}
+                    style={{
+                      position: "fixed",
+                      inset: 0,
+                      zIndex: 200,
+                      background: "rgba(0,0,0,0.2)",
+                    }}
+                  />
+                )}
+                <div style={{
+                  position: "fixed",
+                  [isAye ? "left" : "right"]: 80,
+                  top: "50%",
+                  transform: "translateY(-50%)",
+                  zIndex: 201,
+                  pointerEvents: lockedSenator ? "auto" : "none",
+                }}>
+                  <div
+                    onClick={(e) => e.stopPropagation()}
+                    style={{
                     background: "rgba(4,6,18,0.95)",
                     backdropFilter: "blur(30px)",
                     borderRadius: 16,
@@ -448,7 +457,7 @@ export default function ArticlePage({
                     padding: "20px",
                     width: 420,
                     boxShadow: "0 20px 60px rgba(0,0,0,0.5)",
-                    cursor: lockedSenator ? "pointer" : "default",
+                    cursor: "default",
                     animation: crossover ? "crossoverPulse 2s ease-in-out infinite" : "none",
                   }}
                 >
@@ -546,6 +555,7 @@ export default function ArticlePage({
                   )}
                 </div>
               </div>
+              </>
             );
           })()}
         </div>
