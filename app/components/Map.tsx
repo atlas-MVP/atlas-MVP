@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
 import { SIDE_COLORS, COUNTRY_SIDE } from "../lib/sides";
+import { NATURE_COLORS, type NatureCategory } from "../lib/natureSites";
 
 mapboxgl.accessToken =
   "pk.eyJ1IjoiYXRsYXNib3N0b24iLCJhIjoiY21qejY1c211Nmt2azNlcHMwcnljOGR1dCJ9.Pnq-qa_giDk0LN95OpFvMg";
@@ -120,6 +121,15 @@ interface ActiveStrikesData {
   zoom: number;
 }
 
+interface NatureMarker {
+  name:     string;
+  country:  string;
+  lng:      number;
+  lat:      number;
+  category: NatureCategory;
+  note?:    string;
+}
+
 interface Props {
   onCountryClick?: (code: string) => void;
   flyToCode?: string | null;
@@ -131,13 +141,14 @@ interface Props {
   focusCountries?: string[]; // when set, ONLY these countries are active — everything else dims
   homeView?: boolean; // radar is open, no country selected — suppress auto-highlight
   onReady?: () => void; // fires once when first idle event lands (all tiles rendered)
+  natureSites?: NatureMarker[]; // user-dropped nature pins (Forest/Beach/Mountains/Others)
 }
 
 // Zoom fade range — used for global layers (hover, secondary); per-country uses COUNTRY_FADE_RANGES
 const FADE_START = 3.5;
 const FADE_END = 5.5;
 
-export default function Map({ onCountryClick, flyToCode, flyToPosition, selectedCountry, secondaryCountries = [], activeStrikes, casualtyCountries = [], focusCountries, homeView = false, onReady }: Props) {
+export default function Map({ onCountryClick, flyToCode, flyToPosition, selectedCountry, secondaryCountries = [], activeStrikes, casualtyCountries = [], focusCountries, homeView = false, onReady, natureSites = [] }: Props) {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
   const [mapReady, setMapReady] = useState(false);
@@ -283,6 +294,28 @@ export default function Map({ onCountryClick, flyToCode, flyToPosition, selected
     m.setFilter("idle-pulse-blue", ["all", wf, ["in", ["get", "iso_3166_1_alpha_3"], ["literal", [...blueH, ...neutH, ...extraBlue, ...extraNeutral]]]]);
     m.setFilter("idle-pulse-red",  ["all", wf, ["in", ["get", "iso_3166_1_alpha_3"], ["literal", [...redH, ...extraRed]]]]);
   }, [casualtyCountries, focusCountries]);
+
+  // Sync nature pins whenever the prop array changes. The source may not yet
+  // exist (map still loading) — the effect re-runs on mapReady which then
+  // finds the source and flushes the current list.
+  useEffect(() => {
+    const m = map.current;
+    if (!m || !m.getSource("nature")) return;
+    (m.getSource("nature") as mapboxgl.GeoJSONSource).setData({
+      type: "FeatureCollection",
+      features: natureSites.map(s => ({
+        type: "Feature" as const,
+        geometry: { type: "Point" as const, coordinates: [s.lng, s.lat] },
+        properties: {
+          name:     s.name,
+          country:  s.country,
+          category: s.category,
+          note:     s.note ?? "",
+          color:    NATURE_COLORS[s.category],
+        },
+      })),
+    });
+  }, [natureSites, mapReady]);
 
   // Strike marker animation — fast scroll: instant, pause: sequential reveal
   useEffect(() => {
@@ -630,6 +663,69 @@ export default function Map({ onCountryClick, flyToCode, flyToPosition, selected
         type: "circle",
         source: "events",
         paint: { "circle-radius": 3, "circle-color": ["get", "color"], "circle-opacity": 0.50, "circle-blur": 0, "circle-stroke-width": 0 },
+      });
+
+      // Nature pins (Forest/Beach/Mountains/Others) — user-dropped via search
+      m.addSource("nature", {
+        type: "geojson",
+        data: { type: "FeatureCollection", features: [] },
+      });
+      m.addLayer({
+        id: "nature-halo",
+        type: "circle",
+        source: "nature",
+        paint: { "circle-radius": 18, "circle-color": ["get", "color"], "circle-opacity": 0.10, "circle-blur": 1.0, "circle-stroke-width": 0 },
+      });
+      m.addLayer({
+        id: "nature-glow",
+        type: "circle",
+        source: "nature",
+        paint: { "circle-radius": 9,  "circle-color": ["get", "color"], "circle-opacity": 0.32, "circle-blur": 0.6, "circle-stroke-width": 0 },
+      });
+      m.addLayer({
+        id: "nature-core",
+        type: "circle",
+        source: "nature",
+        paint: { "circle-radius": 5,  "circle-color": ["get", "color"], "circle-opacity": 0.90, "circle-blur": 0.1, "circle-stroke-width": 0 },
+      });
+      m.addLayer({
+        id: "nature-dot",
+        type: "circle",
+        source: "nature",
+        paint: { "circle-radius": 2,  "circle-color": "#ffffff",        "circle-opacity": 0.80, "circle-blur": 0,    "circle-stroke-width": 0 },
+      });
+
+      // Nature click → popup with name, country, note
+      let naturePopup: mapboxgl.Popup | null = null;
+      m.on("mouseenter", "nature-core", () => { m.getCanvas().style.cursor = "pointer"; });
+      m.on("mouseleave", "nature-core", () => { m.getCanvas().style.cursor = ""; });
+      m.on("click", "nature-core", (e) => {
+        const f = e.features?.[0];
+        if (!f) return;
+        e.originalEvent.stopPropagation();
+        const props = f.properties ?? {};
+        const coords = (f.geometry as GeoJSON.Point).coordinates as [number, number];
+        const name     = String(props.name     ?? "");
+        const country  = String(props.country  ?? "");
+        const category = String(props.category ?? "");
+        const note     = String(props.note     ?? "");
+        const color    = String(props.color    ?? "#fbbf24");
+        const html = `
+          <div style="min-width:200px;max-width:300px">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+              <span style="width:8px;height:8px;border-radius:50%;background:${color};box-shadow:0 0 10px ${color}aa;flex-shrink:0"></span>
+              <span style="font-size:9px;font-family:monospace;letter-spacing:0.14em;color:rgba(255,255,255,0.45);text-transform:uppercase">${category}</span>
+            </div>
+            <div style="font-size:13px;font-weight:600;color:rgba(255,255,255,0.95);letter-spacing:0.01em;margin-bottom:3px">${name}</div>
+            <div style="font-size:10px;font-family:monospace;color:rgba(255,255,255,0.4);letter-spacing:0.06em;margin-bottom:${note ? 8 : 0}px">${country}</div>
+            ${note ? `<div style="font-size:11px;color:rgba(255,255,255,0.72);line-height:1.45;border-top:1px solid rgba(255,255,255,0.08);padding-top:8px">${note}</div>` : ""}
+          </div>
+        `;
+        if (naturePopup) naturePopup.remove();
+        naturePopup = new mapboxgl.Popup({ className: "atlas-popup", closeButton: true, closeOnClick: false, maxWidth: "320px", offset: 14 })
+          .setLngLat(coords)
+          .setHTML(html)
+          .addTo(m);
       });
 
       // Strike markers source + layers

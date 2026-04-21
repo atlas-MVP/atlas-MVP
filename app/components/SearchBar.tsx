@@ -38,6 +38,14 @@ const SEARCH_ITEMS: SearchItem[] = [
   { label: "Hezbollah", subLabel: "Active Conflict", code: "LBN" },
   { label: "Hamas", subLabel: "Active Conflict", code: "PSE" },
   { label: "IRGC", subLabel: "Active Conflict", code: "IRN" },
+  // Nature randomiser — each tap drops a new beautiful spot on the globe.
+  // `code` uses a NATURE_ prefix so page.tsx can branch on it instead of
+  // treating it as an ISO country code.
+  { label: "Forest",    subLabel: "Nature — random site",        code: "NATURE_FOREST" },
+  { label: "Beach",     subLabel: "Nature — random site",        code: "NATURE_BEACH" },
+  { label: "Mountains", subLabel: "Nature — random site",        code: "NATURE_MOUNTAINS" },
+  { label: "Natural Wonders", subLabel: "Nature — random site",  code: "NATURE_OTHERS" },
+  { label: "Nature",    subLabel: "Random beautiful spot",       code: "NATURE_ANY" },
 ];
 
 function levenshtein(a: string, b: string): number {

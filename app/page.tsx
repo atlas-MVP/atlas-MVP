@@ -19,6 +19,7 @@ import AuthorBioPanel from "./components/AuthorBioPanel";
 import SettingsPanel from "./components/SettingsPanel";
 import MapEventPlayer from "./components/MapEventPlayer";
 import type { MapEvent } from "./lib/mapEvents";
+import { pickRandomNatureSite, NATURE_FLY_ZOOM, type NatureSite, type NatureCategory } from "./lib/natureSites";
 import { EditModeCtx, EditModeSetCtx } from "./components/InlineEdit";
 
 // ATLAS appears instantly; clock fades in shortly after as one unit
@@ -134,6 +135,9 @@ export default function Home() {
   const [activeDisaster,     setActiveDisaster]     = useState<string | null>(null);
   const [activeFinance,      setActiveFinance]      = useState<string | null>(null);
   const [activeGunViolence,  setActiveGunViolence]  = useState<string | null>(null); // incident id
+  // Nature pins dropped via search (Forest / Beach / Mountains / Others).
+  // Appended-to, never reset — every tap adds a fresh random site.
+  const [natureSites, setNatureSites] = useState<NatureSite[]>([]);
 
   // Deep link: /?reel=<id> → redirect to the dedicated /you page so shared
   // links land on the full reels experience, not the HQ widget.
@@ -232,7 +236,38 @@ export default function Home() {
     else setSecondaryCountries([]);
   };
 
+  // Drop a fresh random nature pin of the given category (cycling so the
+  // user can tap "Forest" repeatedly and keep getting new sites), fly to it,
+  // and DO NOT touch selectedCountry — this is a discovery action, not a
+  // country-focused one. If `category` is null → any category.
+  const dropNaturePin = (category: NatureCategory | null) => {
+    const placedNames = natureSites.map(s => s.name);
+    const cat: NatureCategory = category
+      ?? (["forest", "beach", "mountains", "others"] as const)[Math.floor(Math.random() * 4)];
+    const site = pickRandomNatureSite(cat, placedNames);
+    setNatureSites(prev => [...prev, site]);
+    // Clear any active conflict state so the fly-to lands cleanly.
+    setSelectedCountry(null);
+    setHomeCountry(null);
+    setFeedCountry(null);
+    setSecondaryCountries([]);
+    setFocusCountries([]);
+    setShowRadar(false);
+    setFlyToPosition({ center: [site.lng, site.lat], zoom: NATURE_FLY_ZOOM, key: `nature-${site.name}-${Date.now()}` });
+  };
+
   const handleSearch = (code: string) => {
+    // Nature-category searches (Forest / Beach / Mountains / Others / Any)
+    if (code.startsWith("NATURE_")) {
+      const key = code.slice(7).toLowerCase();
+      const cat: NatureCategory | null =
+        key === "forest"    ? "forest"    :
+        key === "beach"     ? "beach"     :
+        key === "mountains" ? "mountains" :
+        key === "others"    ? "others"    : null;
+      dropNaturePin(cat);
+      return;
+    }
     setFeedCountry(null);
     setHomeCountry(null);
     setShowRadar(false);
@@ -329,6 +364,7 @@ export default function Home() {
           activeStrikes={activeStrikes}
           homeView={showRadar && !selectedCountry && !homeCountry && !feedCountry}
           onReady={() => setMapReady(true)}
+          natureSites={natureSites}
         />
       </div>
 
