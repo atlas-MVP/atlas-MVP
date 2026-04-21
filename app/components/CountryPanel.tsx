@@ -10,7 +10,7 @@ import EventMediaEditor from "./EventMediaEditor";
 import EventVideoBubble from "./EventVideoBubble";
 import { playTts, type TtsHandle } from "../lib/tts";
 import { T, clr, confColor } from "../lib/tokens";
-import { EText } from "./InlineEdit";
+import { EText, useEditMode } from "./InlineEdit";
 
 // Stable per-event R2 folder id: "<conflictId>-<slug-of-date>"
 // e.g. ("israel-gaza", "October 7, 2023") → "israel-gaza-october-7-2023"
@@ -978,6 +978,7 @@ function extractSourceName(label: string): string {
 }
 
 export default function CountryPanel({ countryCode, onClose, onViewFeed, onConflictSelect, onFocusCountry, onFocusPosition, onCountryHome, onAuthorClick, onTimelineStrike, onSourceTap, onCasualtyHighlight, onPlayEvent, onHistoryDate, initialAlertText, onAlertLock, onCountrySwitch, conflictSlug, defaultHistoryExpanded = false }: Props) {
+  const editMode = useEditMode();
   const [selectedConflictId, setSelectedConflictId] = useState<string | null>(null);
   const [civTooltip, setCivTooltip]       = useState<string | null>(null);
   const [showAllCasualties, setShowAllCasualties] = useState(false);
@@ -1370,8 +1371,20 @@ export default function CountryPanel({ countryCode, onClose, onViewFeed, onConfl
     );
   };
 
-  const alerts = CONFLICT_ALERTS[activeId ?? ""] ?? [];
+  const rawAlerts = CONFLICT_ALERTS[activeId ?? ""] ?? [];
+  const [editAlerts, setEditAlerts] = useState<Record<string, { text: string; description: string }[]>>({});
+  const [conflictTitles, setConflictTitles] = useState<Record<string, string>>({});
+  const [conflictDates,  setConflictDates]  = useState<Record<string, string>>({});
+  const [timelineEdits,  setTimelineEdits]  = useState<Record<string, string>>({});
+
+  const alerts = rawAlerts.map((a, i) => {
+    const overrides = (editAlerts[activeId ?? ""] ?? [])[i];
+    return overrides ? { ...a, ...overrides } : a;
+  });
   const activeAlert = hoveredAlert !== null ? alerts[hoveredAlert] : null;
+
+  const conflictTitle = conflictTitles[conflict.id] ?? conflict.title;
+  const conflictDate  = conflictDates[conflict.id]  ?? conflict.date;
 
   return (
     <>
@@ -1403,13 +1416,13 @@ export default function CountryPanel({ countryCode, onClose, onViewFeed, onConfl
                     onFocusPosition?.(home.center, home.zoom);
                     if (timelineExpanded) exitHistory();
                   }}
-                  style={{ margin: 0, fontSize: 15, fontWeight: 600, color: "rgba(255,255,255,0.9)", letterSpacing: "0.02em", lineHeight: 1.2, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", cursor: "pointer" }}
+                  style={{ margin: 0, fontSize: 15, fontWeight: 600, color: "rgba(255,255,255,0.9)", letterSpacing: "0.02em", lineHeight: 1.2, cursor: "pointer" }}
                 >
-                  {conflict.title}
+                  <EText value={conflictTitle} onChange={v => setConflictTitles(p => ({ ...p, [conflict.id]: v }))} style={{ fontSize: 15, fontWeight: 600, color: "rgba(255,255,255,0.9)", letterSpacing: "0.02em" }} />
                 </h2>
               </div>
               <p style={{ margin: "3px 0 0", fontSize: 10, fontFamily: "monospace", color: "rgba(255,255,255,0.32)", letterSpacing: "0.06em" }}>
-                {conflict.date}
+                <EText value={conflictDate} onChange={v => setConflictDates(p => ({ ...p, [conflict.id]: v }))} style={{ fontSize: 10, fontFamily: "monospace", color: "rgba(255,255,255,0.32)", letterSpacing: "0.06em" }} />
               </p>
             </div>
             <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
@@ -1523,7 +1536,7 @@ export default function CountryPanel({ countryCode, onClose, onViewFeed, onConfl
 
           {/* Live alerts */}
           {(() => {
-            const conflictAlerts = CONFLICT_ALERTS[conflict.id] ?? [];
+            const conflictAlerts = alerts;
             if (conflictAlerts.length === 0) return null;
             const visibleAlerts = showAllAlerts ? conflictAlerts : conflictAlerts.slice(0, 3);
             return (
@@ -1544,28 +1557,41 @@ export default function CountryPanel({ countryCode, onClose, onViewFeed, onConfl
                   onMouseLeave={e => (e.currentTarget.style.color = "rgba(255,255,255,0.42)")}
                 >live alerts</p>
                 {visibleAlerts.map((a, i, arr) => {
-                  const alertId = `${conflict.id}-alert-${i}`;
                   const isLocked = lockedAlertIdx === i;
+                  const patchAlert = (field: "text" | "description", val: string) =>
+                    setEditAlerts(prev => {
+                      const key = activeId ?? "";
+                      const existing = prev[key] ?? rawAlerts.map(r => ({ text: r.text, description: r.description }));
+                      return { ...prev, [key]: existing.map((x, j) => j === i ? { ...x, [field]: val } : x) };
+                    });
                   return (
                     <div key={i}>
-                      <LiveAlertRow
-                        item={a}
-                        bottomBorder={i < arr.length - 1}
-                        showConfidenceInline={false}
-                        expandOnHover={true}
-                        defaultExpanded={!!initialAlertText && a.text === initialAlertText}
-                        isActive={isLocked || hoveredAlert === i}
-                        onClick={() => setLockedAlertIdx(prev => prev === i ? null : i)}
-                        onHoverChange={(active, anchorY) => {
-                          cancelLeave();
-                          if (active) { setHoveredAlert(i); setHoverMidY(anchorY); }
-                          else scheduleLeave();
-                        }}
-                      />
+                      {editMode ? (
+                        <div style={{ padding: "8px 10px", borderRadius: 8, background: "rgba(255,255,255,0.03)", border: "1px dashed rgba(100,160,255,0.25)", marginBottom: i < arr.length - 1 ? 6 : 0 }}>
+                          <div style={{ fontSize: 9, fontFamily: "monospace", letterSpacing: "0.14em", color: "rgba(255,255,255,0.28)", textTransform: "uppercase", marginBottom: 5 }}>click to edit</div>
+                          <EText value={a.text} onChange={v => patchAlert("text", v)} as="div" style={{ fontSize: 14, lineHeight: 1.6, color: "rgba(255,255,255,0.88)" }} />
+                          <EText value={a.description} onChange={v => patchAlert("description", v)} as="div" style={{ fontSize: 13, color: "rgba(255,255,255,0.52)", lineHeight: 1.5, marginTop: 4 }} />
+                        </div>
+                      ) : (
+                        <LiveAlertRow
+                          item={a}
+                          bottomBorder={i < arr.length - 1}
+                          showConfidenceInline={false}
+                          expandOnHover={true}
+                          defaultExpanded={!!initialAlertText && a.text === initialAlertText}
+                          isActive={isLocked || hoveredAlert === i}
+                          onClick={() => setLockedAlertIdx(prev => prev === i ? null : i)}
+                          onHoverChange={(active, anchorY) => {
+                            cancelLeave();
+                            if (active) { setHoveredAlert(i); setHoverMidY(anchorY); }
+                            else scheduleLeave();
+                          }}
+                        />
+                      )}
                     </div>
                   );
                 })}
-                {showAllAlerts && conflictAlerts.length > 3 && (
+                {showAllAlerts && alerts.length > 3 && (
                   <div style={{ padding: "8px 12px", textAlign: "center" }}>
                     <button
                       onClick={(e) => { e.stopPropagation(); setShowAllAlerts(false); }}
@@ -1817,7 +1843,15 @@ export default function CountryPanel({ countryCode, onClose, onViewFeed, onConfl
                                     </span>
                                   )}
                                 </div>
-                                {event.link ? (
+                                {(() => {
+                                  const tKey = `${conflict.id}-${i}`;
+                                  const tText = timelineEdits[tKey] ?? event.text;
+                                  if (editMode) return (
+                                    <EText value={tText} onChange={v => setTimelineEdits(p => ({ ...p, [tKey]: v }))} as="div" style={{ fontSize: 14, lineHeight: 1.65, color: isActive ? "rgba(255,255,255,0.85)" : palette.text }} />
+                                  );
+                                  return null;
+                                })()}
+                                {!editMode && event.link ? (
                                   <a
                                     href={event.link}
                                     target="_blank"
@@ -1831,13 +1865,13 @@ export default function CountryPanel({ countryCode, onClose, onViewFeed, onConfl
                                     onMouseEnter={(e) => { e.currentTarget.style.color = "rgba(34,197,94,0.9)"; }}
                                     onMouseLeave={(e) => { e.currentTarget.style.color = isActive ? "rgba(255,255,255,0.85)" : palette.text; }}
                                   >
-                                    {event.text}
+                                    {timelineEdits[`${conflict.id}-${i}`] ?? event.text}
                                   </a>
-                                ) : (
+                                ) : !editMode ? (
                                   <p style={{ margin: 0, fontSize: 14, color: isActive ? "rgba(255,255,255,0.85)" : palette.text, lineHeight: 1.65, transition: "color 0.3s ease" }}>
-                                    {event.text}
+                                    {timelineEdits[`${conflict.id}-${i}`] ?? event.text}
                                   </p>
-                                )}
+                                ) : null}
                                 {showBullets && (
                                   <div
                                     onMouseEnter={() => setHoveredTile(i)}

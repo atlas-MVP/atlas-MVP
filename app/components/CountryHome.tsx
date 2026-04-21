@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { EText } from "./InlineEdit";
 
 function extractAlertSource(line: string): string {
   return line.split(":")[0].trim();
@@ -204,15 +205,27 @@ export default function CountryHome({ countryCode, onClose, onSourceTap }: Props
   const data = DATA[countryCode];
   if (!data) return null;
 
-  const StatTile = ({ label, value }: { label: string; value: string }) => (
+  const [fullName,    setFullName]    = useState(data.fullName);
+  const [description, setDescription] = useState(data.description);
+  const [founded,     setFounded]     = useState(data.founded);
+  const [capital,     setCapital]     = useState(data.capital);
+  const [population,  setPopulation]  = useState(data.population);
+  const [region,      setRegion]      = useState(data.region);
+  const [stats,       setStats]       = useState(data.stats);
+
+  const StatTile = ({ label, value, onLabelChange, onValueChange }: { label: string; value: string; onLabelChange: (v: string) => void; onValueChange: (v: string) => void }) => (
     <div style={{
       padding: "9px 11px", borderRadius: 10,
       background: "rgba(255,255,255,0.03)",
       border: "1px solid rgba(255,255,255,0.09)",
       boxShadow: "inset 0 1px 0 rgba(255,255,255,0.06)",
     }}>
-      <p style={{ margin: 0, fontSize: 9, fontFamily: "monospace", letterSpacing: "0.14em", color: "rgba(255,255,255,0.28)", textTransform: "uppercase", marginBottom: 4 }}>{label}</p>
-      <p style={{ margin: 0, fontSize: 12, fontFamily: "monospace", color: "rgba(255,255,255,0.78)", fontWeight: 500 }}>{value}</p>
+      <p style={{ margin: 0, fontSize: 9, fontFamily: "monospace", letterSpacing: "0.14em", color: "rgba(255,255,255,0.28)", textTransform: "uppercase", marginBottom: 4 }}>
+        <EText value={label} onChange={onLabelChange} style={{ fontSize: 9, fontFamily: "monospace", letterSpacing: "0.14em", color: "rgba(255,255,255,0.28)" }} />
+      </p>
+      <p style={{ margin: 0, fontSize: 12, fontFamily: "monospace", color: "rgba(255,255,255,0.78)", fontWeight: 500 }}>
+        <EText value={value} onChange={onValueChange} style={{ fontSize: 12, fontFamily: "monospace", color: "rgba(255,255,255,0.78)", fontWeight: 500 }} />
+      </p>
     </div>
   );
 
@@ -235,8 +248,8 @@ export default function CountryHome({ countryCode, onClose, onSourceTap }: Props
         {/* Header — no flag, no border */}
         <div style={{ flexShrink: 0, padding: "14px 18px 4px" }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10 }}>
-            <h2 style={{ margin: 0, fontSize: 15, fontWeight: 600, color: "rgba(255,255,255,0.92)", letterSpacing: "0.01em", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-              {data.fullName}
+            <h2 style={{ margin: 0, fontSize: 15, fontWeight: 600, color: "rgba(255,255,255,0.92)", letterSpacing: "0.01em" }}>
+              <EText value={fullName} onChange={setFullName} style={{ fontSize: 15, fontWeight: 600, color: "rgba(255,255,255,0.92)", letterSpacing: "0.01em" }} />
             </h2>
             <button
               onClick={onClose}
@@ -268,12 +281,10 @@ export default function CountryHome({ countryCode, onClose, onSourceTap }: Props
             <span style={{ fontSize: 11, fontFamily: "monospace", letterSpacing: "0.18em", color: "rgba(255,255,255,0.28)", textTransform: "uppercase", fontWeight: 500 }}>key facts</span>
           </div>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6, margin: "0 14px" }}>
-            {[
-              { label: "Founded", value: data.founded },
-              { label: "Capital", value: data.capital },
-              { label: "Population", value: data.population },
-              { label: "Region", value: data.region },
-            ].map(({ label, value }) => <StatTile key={label} label={label} value={value} />)}
+            <StatTile label="Founded"    value={founded}    onLabelChange={() => {}} onValueChange={setFounded} />
+            <StatTile label="Capital"    value={capital}    onLabelChange={() => {}} onValueChange={setCapital} />
+            <StatTile label="Population" value={population} onLabelChange={() => {}} onValueChange={setPopulation} />
+            <StatTile label="Region"     value={region}     onLabelChange={() => {}} onValueChange={setRegion} />
           </div>
 
           {/* OVERVIEW */}
@@ -281,7 +292,7 @@ export default function CountryHome({ countryCode, onClose, onSourceTap }: Props
             <span style={{ fontSize: 11, fontFamily: "monospace", letterSpacing: "0.18em", color: "rgba(255,255,255,0.28)", textTransform: "uppercase", fontWeight: 500 }}>overview</span>
           </div>
           <div style={{ margin: "0 14px", padding: "11px 13px", borderRadius: 10, background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.08)", boxShadow: "inset 0 1px 0 rgba(255,255,255,0.05)" }}>
-            <p style={{ margin: 0, fontSize: 12, color: "rgba(255,255,255,0.58)", lineHeight: 1.65 }}>{data.description}</p>
+            <EText value={description} onChange={setDescription} as="div" style={{ fontSize: 12, color: "rgba(255,255,255,0.58)", lineHeight: 1.65 }} />
           </div>
 
           {/* ECONOMY */}
@@ -289,7 +300,15 @@ export default function CountryHome({ countryCode, onClose, onSourceTap }: Props
             <span style={{ fontSize: 11, fontFamily: "monospace", letterSpacing: "0.18em", color: "rgba(255,255,255,0.28)", textTransform: "uppercase", fontWeight: 500 }}>economy</span>
           </div>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6, margin: "0 14px 20px" }}>
-            {data.stats.map(({ label, value }) => <StatTile key={label} label={label} value={value} />)}
+            {stats.map((s, i) => (
+              <StatTile
+                key={i}
+                label={s.label}
+                value={s.value}
+                onLabelChange={v => setStats(prev => prev.map((st, j) => j === i ? { ...st, label: v } : st))}
+                onValueChange={v => setStats(prev => prev.map((st, j) => j === i ? { ...st, value: v } : st))}
+              />
+            ))}
           </div>
 
         </div>

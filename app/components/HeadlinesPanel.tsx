@@ -1,4 +1,6 @@
 "use client";
+import { useState } from "react";
+import { EText } from "./InlineEdit";
 
 const SOURCE_ABBR: Record<string, string> = {
   "Reuters":       "R",
@@ -84,6 +86,8 @@ interface Props {
 }
 
 export default function HeadlinesPanel({ onClose }: Props) {
+  const [articles, setArticles] = useState(ARTICLES);
+
   return (
     <div style={{
       position: "absolute",
@@ -121,7 +125,7 @@ export default function HeadlinesPanel({ onClose }: Props) {
 
       {/* Articles */}
       <div style={{ flex: 1, overflowY: "auto" }}>
-        {ARTICLES.map((a, i) => (
+        {articles.map((a, i) => (
           <div
             key={i}
             style={{
@@ -144,15 +148,23 @@ export default function HeadlinesPanel({ onClose }: Props) {
               }}>
                 {SOURCE_ABBR[a.source] ?? a.source}
               </span>
-              <span style={{ fontSize: 11, color: "rgba(255,255,255,0.42)" }}>{a.source}</span>
-              <span style={{ fontSize: 10, fontFamily: "monospace", color: "rgba(255,255,255,0.30)", marginLeft: "auto" }}>{a.time}</span>
+              <span style={{ fontSize: 11, color: "rgba(255,255,255,0.42)" }}>
+                <EText value={a.source} onChange={v => setArticles(prev => prev.map((x, j) => j === i ? { ...x, source: v } : x))} style={{ fontSize: 11, color: "rgba(255,255,255,0.42)" }} />
+              </span>
+              <span style={{ fontSize: 10, fontFamily: "monospace", color: "rgba(255,255,255,0.30)", marginLeft: "auto" }}>
+                <EText value={a.time} onChange={v => setArticles(prev => prev.map((x, j) => j === i ? { ...x, time: v } : x))} style={{ fontSize: 10, fontFamily: "monospace", color: "rgba(255,255,255,0.30)" }} />
+              </span>
             </div>
 
             {/* Headline + thumbnail */}
             <div style={{ display: "flex", gap: 12 }}>
               <div style={{ flex: 1 }}>
-                <p style={{ margin: "0 0 6px", fontSize: 13, color: "rgba(255,255,255,0.82)", fontWeight: 600, lineHeight: 1.4 }}>{a.headline}</p>
-                <p style={{ margin: 0, fontSize: 11, color: "rgba(255,255,255,0.48)", lineHeight: 1.45, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{a.excerpt}</p>
+                <p style={{ margin: "0 0 6px", fontSize: 13, color: "rgba(255,255,255,0.82)", fontWeight: 600, lineHeight: 1.4 }}>
+                  <EText value={a.headline} onChange={v => setArticles(prev => prev.map((x, j) => j === i ? { ...x, headline: v } : x))} style={{ fontSize: 13, color: "rgba(255,255,255,0.82)", fontWeight: 600, lineHeight: 1.4 }} />
+                </p>
+                <p style={{ margin: 0, fontSize: 11, color: "rgba(255,255,255,0.48)", lineHeight: 1.45 }}>
+                  <EText value={a.excerpt} onChange={v => setArticles(prev => prev.map((x, j) => j === i ? { ...x, excerpt: v } : x))} style={{ fontSize: 11, color: "rgba(255,255,255,0.48)", lineHeight: 1.45 }} />
+                </p>
               </div>
               <div style={{ width: 56, height: 56, borderRadius: 6, overflow: "hidden", flexShrink: 0, marginTop: 2, background: "rgba(255,255,255,0.05)" }}>
                 <img src={a.img} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", opacity: 0.55 }}
@@ -164,8 +176,8 @@ export default function HeadlinesPanel({ onClose }: Props) {
       </div>
 
       {/* Footer */}
-      <div style={{ padding: "10px 20px", borderTop: "1px solid rgba(255,255,255,0.05)", flexShrink: 0 }}>
-        <p style={{ margin: 0, fontSize: 10, fontFamily: "monospace", letterSpacing: "0.2em", color: "rgba(255,255,255,0.22)", textAlign: "center" }}>ATLAS · INTELLIGENCE FEED</p>
+      <div style={{ padding: "10px 20px", borderTop: "1px solid rgba(255,255,255,0.05)", flexShrink: 0, textAlign: "center" }}>
+        <EText value="ATLAS · INTELLIGENCE FEED" onChange={() => {}} style={{ fontSize: 10, fontFamily: "monospace", letterSpacing: "0.2em", color: "rgba(255,255,255,0.22)" }} />
       </div>
     </div>
   );

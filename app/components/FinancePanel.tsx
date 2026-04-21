@@ -1,5 +1,6 @@
 "use client";
-import React from "react";
+import React, { useState } from "react";
+import { EText } from "./InlineEdit";
 
 const FINANCE_DATA: Record<string, {
   title: string;
@@ -27,6 +28,11 @@ interface Props {
 export default function FinancePanel({ slug, onClose }: Props) {
   const data = FINANCE_DATA[slug];
   if (!data) return null;
+
+  const [tag,      setTag]      = useState(data.tag);
+  const [title,    setTitle]    = useState(data.title);
+  const [headline, setHeadline] = useState(data.article.headline);
+  const [source,   setSource]   = useState(data.article.source);
 
   return (
     <div
@@ -63,7 +69,7 @@ export default function FinancePanel({ slug, onClose }: Props) {
                   color: "rgba(255,255,255,0.48)", textTransform: "uppercase", marginBottom: 6,
                 }}
               >
-                {data.tag}
+                <EText value={tag} onChange={setTag} style={{ fontSize: 10, fontFamily: "monospace", letterSpacing: "0.18em", color: "rgba(255,255,255,0.48)" }} />
               </div>
               <div
                 style={{
@@ -71,7 +77,7 @@ export default function FinancePanel({ slug, onClose }: Props) {
                   letterSpacing: "-0.01em", lineHeight: 1.15,
                 }}
               >
-                {data.title}
+                <EText value={title} onChange={setTitle} style={{ fontSize: 20, fontWeight: 700, color: "rgba(255,255,255,0.92)", letterSpacing: "-0.01em" }} />
               </div>
             </div>
             <button
@@ -116,11 +122,9 @@ export default function FinancePanel({ slug, onClose }: Props) {
                 style={{
                   fontSize: 12, fontFamily: "monospace", letterSpacing: "0.03em",
                   color: "rgba(255,255,255,0.88)", lineHeight: 1.4,
-                  display: "-webkit-box", WebkitLineClamp: 3,
-                  WebkitBoxOrient: "vertical", overflow: "hidden",
                 }}
               >
-                {data.article.headline}
+                <EText value={headline} onChange={setHeadline} as="div" style={{ fontSize: 12, fontFamily: "monospace", letterSpacing: "0.03em", color: "rgba(255,255,255,0.88)", lineHeight: 1.4 }} />
               </div>
               <div
                 style={{
@@ -128,7 +132,7 @@ export default function FinancePanel({ slug, onClose }: Props) {
                   marginTop: 4, letterSpacing: "0.12em", textTransform: "uppercase",
                 }}
               >
-                {data.article.source}
+                <EText value={source} onChange={setSource} style={{ fontSize: 9, color: "rgba(255,255,255,0.48)", letterSpacing: "0.12em", fontFamily: "monospace" }} />
               </div>
             </div>
           </a>

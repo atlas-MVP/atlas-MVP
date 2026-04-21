@@ -2,6 +2,7 @@
 import React, { useState } from "react";
 import { T, clr } from "../lib/tokens";
 import LiveAlertRow from "./LiveAlertRow";
+import { EText } from "./InlineEdit";
 
 // ── Live Alert data (recent incidents) ────────────────────────────────────
 interface LiveAlert {
@@ -77,6 +78,9 @@ export default function GunViolencePanel({ onClose, onFlyTo, highlightId }: Prop
   const [lockedAlertIdx, setLockedAlertIdx] = useState<number | null>(null);
   const [hoveredAlert, setHoveredAlert] = useState<number | null>(null);
   const [showAllAlerts, setShowAllAlerts] = useState(false);
+  const [panelTitle, setPanelTitle] = useState("Gun Violence in America");
+  const [panelYear,  setPanelYear]  = useState("2026");
+  const [casualties, setCasualties] = useState(CASUALTIES);
 
   return (
     <div
@@ -109,7 +113,7 @@ export default function GunViolencePanel({ onClose, onFlyTo, highlightId }: Prop
                 letterSpacing: "-0.01em",
                 lineHeight: 1.15,
               }}>
-                Gun Violence in America
+                <EText value={panelTitle} onChange={setPanelTitle} style={{ fontSize: 20, fontWeight: 700, color: clr.white(0.92), letterSpacing: "-0.01em" }} />
               </div>
               <div style={{
                 fontSize: 11,
@@ -117,7 +121,7 @@ export default function GunViolencePanel({ onClose, onFlyTo, highlightId }: Prop
                 marginTop: 4,
                 fontFamily: T.MONO,
               }}>
-                2026
+                <EText value={panelYear} onChange={setPanelYear} style={{ fontSize: 11, color: clr.white(0.42), fontFamily: T.MONO }} />
               </div>
             </div>
             <button
@@ -153,9 +157,9 @@ export default function GunViolencePanel({ onClose, onFlyTo, highlightId }: Prop
               <tbody>
                 <tr>
                   <td style={{ fontSize: 12, fontFamily: "monospace", color: "rgba(255,255,255,0.72)", paddingTop: 2, paddingBottom: 6 }}>USA</td>
-                  <td style={{ textAlign: "right", fontSize: 14, fontFamily: "monospace", fontWeight: 700, color: "rgba(255,255,255,0.88)", paddingTop: 2, paddingBottom: 6, paddingRight: 8 }}>{CASUALTIES.injured}</td>
-                  <td style={{ textAlign: "right", fontSize: 14, fontFamily: "monospace", fontWeight: 700, color: "rgba(255,255,255,0.88)", paddingTop: 2, paddingBottom: 6, paddingRight: 8 }}>{CASUALTIES.killed}</td>
-                  <td style={{ textAlign: "right", fontSize: 14, fontFamily: "monospace", fontWeight: 700, color: "rgba(255,255,255,0.88)", paddingTop: 2, paddingBottom: 6 }}>{CASUALTIES.massShootings}</td>
+                  <td style={{ textAlign: "right", fontSize: 14, fontFamily: "monospace", fontWeight: 700, color: "rgba(255,255,255,0.88)", paddingTop: 2, paddingBottom: 6, paddingRight: 8 }}><EText value={casualties.injured} onChange={v => setCasualties(c => ({ ...c, injured: v }))} style={{ fontSize: 14, fontFamily: "monospace", fontWeight: 700, color: "rgba(255,255,255,0.88)" }} /></td>
+                  <td style={{ textAlign: "right", fontSize: 14, fontFamily: "monospace", fontWeight: 700, color: "rgba(255,255,255,0.88)", paddingTop: 2, paddingBottom: 6, paddingRight: 8 }}><EText value={casualties.killed} onChange={v => setCasualties(c => ({ ...c, killed: v }))} style={{ fontSize: 14, fontFamily: "monospace", fontWeight: 700, color: "rgba(255,255,255,0.88)" }} /></td>
+                  <td style={{ textAlign: "right", fontSize: 14, fontFamily: "monospace", fontWeight: 700, color: "rgba(255,255,255,0.88)", paddingTop: 2, paddingBottom: 6 }}><EText value={casualties.massShootings} onChange={v => setCasualties(c => ({ ...c, massShootings: v }))} style={{ fontSize: 14, fontFamily: "monospace", fontWeight: 700, color: "rgba(255,255,255,0.88)" }} /></td>
                 </tr>
               </tbody>
             </table>

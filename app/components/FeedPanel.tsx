@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { EText } from "./InlineEdit";
 
 interface Article {
   source: string;
@@ -383,10 +384,14 @@ interface Props {
 }
 
 export default function FeedPanel({ countryCode, countryName, onClose, onSourceTap }: Props) {
-  const [freeOnly, setFreeOnly] = useState(false);
+  const [freeOnly,  setFreeOnly]  = useState(false);
+  const [allArticles, setAllArticles] = useState<Article[]>(() => FEED_DATA[countryCode ?? ""] ?? []);
+
+  useEffect(() => {
+    setAllArticles(FEED_DATA[countryCode ?? ""] ?? []);
+  }, [countryCode]);
 
   if (!countryCode) return null;
-  const allArticles = FEED_DATA[countryCode] ?? [];
   const articles = allArticles.filter((a) => freeOnly ? !a.paywall : true);
 
   return (
@@ -432,17 +437,17 @@ export default function FeedPanel({ countryCode, countryName, onClose, onSourceT
             <p className="text-white/20 text-xs font-mono tracking-wide">NO ARTICLES MATCH FILTER</p>
           </div>
         ) : (
-          articles.map((article, i) => (
-            <a
-              key={i}
-              href={article.url}
-              target="_blank"
-              rel="noopener noreferrer"
+          articles.map((article, _fi) => {
+            const realIdx = allArticles.indexOf(article);
+            const patch = (field: keyof Article, val: string) =>
+              setAllArticles(prev => prev.map((x, j) => j === realIdx ? { ...x, [field]: val } : x));
+            return (
+            <div
+              key={realIdx}
               className="block group transition-all"
               style={{
                 borderBottom: "1px solid rgba(255,255,255,0.04)",
                 padding: "14px 20px",
-                textDecoration: "none",
               }}
               onMouseEnter={(e) => (e.currentTarget.style.background = "rgba(255,255,255,0.025)")}
               onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
@@ -450,33 +455,38 @@ export default function FeedPanel({ countryCode, countryName, onClose, onSourceT
               {/* Source + time + paywall badge */}
               <div className="flex items-center gap-2 mb-2">
                 <span className="text-xs font-bold font-mono px-1.5 py-0.5 rounded"
-                  onClick={e => { e.preventDefault(); e.stopPropagation(); onSourceTap?.(article.source); }}
+                  onClick={e => { e.stopPropagation(); onSourceTap?.(article.source); }}
                   style={{ background: `${article.sourceColor}18`, color: article.sourceColor, border: `1px solid ${article.sourceColor}30`, cursor: "pointer" }}>
                   {SOURCE_ABBR[article.source] ?? article.source}
                 </span>
-                <span className="text-white/25 text-xs" onClick={e => { e.preventDefault(); e.stopPropagation(); onSourceTap?.(article.source); }} style={{ cursor: "pointer" }}>{article.source}</span>
+                <span className="text-white/25 text-xs" onClick={e => { e.stopPropagation(); onSourceTap?.(article.source); }} style={{ cursor: "pointer" }}>
+                  <EText value={article.source} onChange={v => patch("source", v)} style={{ fontSize: 12, color: "rgba(255,255,255,0.25)" }} />
+                </span>
                 {article.paywall && (
                   <span className="text-white/20 text-xs font-mono ml-0.5">🔒</span>
                 )}
-                <span className="text-white/15 text-xs ml-auto font-mono">{article.time}</span>
+                <span className="text-white/15 text-xs ml-auto font-mono">
+                  <EText value={article.time} onChange={v => patch("time", v)} style={{ fontSize: 10, color: "rgba(255,255,255,0.15)", fontFamily: "monospace" }} />
+                </span>
               </div>
 
               {/* Headline + thumbnail */}
               <div className="flex gap-3">
                 <div className="flex-1">
-                  <p className="text-white/80 text-sm font-medium leading-snug mb-1.5 group-hover:text-white transition-colors">
-                    {article.headline}
+                  <p className="mb-1.5" style={{ fontSize: 14, color: "rgba(255,255,255,0.80)", fontWeight: 500, lineHeight: 1.4 }}>
+                    <EText value={article.headline} onChange={v => patch("headline", v)} style={{ fontSize: 14, color: "rgba(255,255,255,0.80)", fontWeight: 500, lineHeight: 1.4 }} />
                   </p>
-                  <p className="text-white/30 text-xs leading-relaxed line-clamp-2">
-                    {article.excerpt}
+                  <p style={{ fontSize: 12, color: "rgba(255,255,255,0.30)", lineHeight: 1.5, margin: 0 }}>
+                    <EText value={article.excerpt} onChange={v => patch("excerpt", v)} style={{ fontSize: 12, color: "rgba(255,255,255,0.30)", lineHeight: 1.5 }} />
                   </p>
                 </div>
                 <div className="w-14 h-14 rounded overflow-hidden shrink-0 mt-0.5">
                   <img src={article.imageUrl} alt="" className="w-full h-full object-cover opacity-50 group-hover:opacity-70 transition-opacity" />
                 </div>
               </div>
-            </a>
-          ))
+            </div>
+            );
+          })
         )}
       </div>
 

@@ -1,5 +1,6 @@
 "use client";
-import React from "react";
+import React, { useState } from "react";
+import { EText } from "./InlineEdit";
 
 const DISASTER_DATA: Record<string, {
   title: string;
@@ -39,6 +40,14 @@ export default function DisasterPanel({ slug, onClose }: Props) {
   const data = DISASTER_DATA[slug];
   if (!data) return null;
 
+  const [tag,   setTag]   = useState(data.tag);
+  const [title, setTitle] = useState(data.title);
+  const [date,  setDate]  = useState(data.date);
+  const [stats, setStats] = useState(data.stats);
+  const [intro, setIntro] = useState(data.intro);
+  const [headline, setHeadline] = useState(data.article.headline);
+  const [source,   setSource]   = useState(data.article.source);
+
   return (
     <div
       className="absolute left-6 z-20 w-[520px]"
@@ -74,7 +83,7 @@ export default function DisasterPanel({ slug, onClose }: Props) {
                   color: "rgba(255,255,255,0.48)", textTransform: "uppercase", marginBottom: 6,
                 }}
               >
-                {data.tag}
+                <EText value={tag} onChange={setTag} style={{ fontSize: 10, fontFamily: "monospace", letterSpacing: "0.18em", color: "rgba(255,255,255,0.48)" }} />
               </div>
               <div
                 style={{
@@ -82,7 +91,7 @@ export default function DisasterPanel({ slug, onClose }: Props) {
                   letterSpacing: "-0.01em", lineHeight: 1.15,
                 }}
               >
-                {data.title}
+                <EText value={title} onChange={setTitle} style={{ fontSize: 20, fontWeight: 700, color: "rgba(255,255,255,0.92)", letterSpacing: "-0.01em" }} />
               </div>
               <div
                 style={{
@@ -90,7 +99,7 @@ export default function DisasterPanel({ slug, onClose }: Props) {
                   fontFamily: "monospace", marginTop: 4,
                 }}
               >
-                {data.date}
+                <EText value={date} onChange={setDate} style={{ fontSize: 11, color: "rgba(255,255,255,0.48)", fontFamily: "monospace" }} />
               </div>
             </div>
             <button
@@ -107,15 +116,15 @@ export default function DisasterPanel({ slug, onClose }: Props) {
 
           {/* Stats */}
           <div style={{ display: "flex", gap: 28, marginTop: 18 }}>
-            {data.stats.map((s) => (
-              <div key={s.label}>
+            {stats.map((s, i) => (
+              <div key={i}>
                 <div
                   style={{
                     fontSize: 22, fontWeight: 700,
                     color: "rgba(255,255,255,0.92)", fontFamily: "monospace",
                   }}
                 >
-                  {s.value}
+                  <EText value={s.value} onChange={v => setStats(prev => prev.map((st, j) => j === i ? { ...st, value: v } : st))} style={{ fontSize: 22, fontWeight: 700, color: "rgba(255,255,255,0.92)", fontFamily: "monospace" }} />
                 </div>
                 <div
                   style={{
@@ -123,7 +132,7 @@ export default function DisasterPanel({ slug, onClose }: Props) {
                     letterSpacing: "0.12em", textTransform: "uppercase", marginTop: 3,
                   }}
                 >
-                  {s.label}
+                  <EText value={s.label} onChange={v => setStats(prev => prev.map((st, j) => j === i ? { ...st, label: v } : st))} style={{ fontSize: 10, color: "rgba(255,255,255,0.48)", letterSpacing: "0.12em", fontFamily: "monospace" }} />
                 </div>
               </div>
             ))}
@@ -138,7 +147,7 @@ export default function DisasterPanel({ slug, onClose }: Props) {
             lineHeight: 1.7, fontFamily: "monospace",
           }}
         >
-          {data.intro}
+          <EText value={intro} onChange={setIntro} as="div" style={{ fontSize: 12, color: "rgba(255,255,255,0.62)", lineHeight: 1.7, fontFamily: "monospace" }} />
         </div>
 
         {/* ── Article card ── */}
@@ -170,11 +179,9 @@ export default function DisasterPanel({ slug, onClose }: Props) {
                 style={{
                   fontSize: 12, fontFamily: "monospace", letterSpacing: "0.03em",
                   color: "rgba(255,255,255,0.88)", lineHeight: 1.4,
-                  display: "-webkit-box", WebkitLineClamp: 3,
-                  WebkitBoxOrient: "vertical", overflow: "hidden",
                 }}
               >
-                {data.article.headline}
+                <EText value={headline} onChange={setHeadline} as="div" style={{ fontSize: 12, fontFamily: "monospace", letterSpacing: "0.03em", color: "rgba(255,255,255,0.88)", lineHeight: 1.4 }} />
               </div>
               <div
                 style={{
@@ -182,7 +189,7 @@ export default function DisasterPanel({ slug, onClose }: Props) {
                   marginTop: 4, letterSpacing: "0.12em", textTransform: "uppercase",
                 }}
               >
-                {data.article.source}
+                <EText value={source} onChange={setSource} style={{ fontSize: 9, color: "rgba(255,255,255,0.48)", letterSpacing: "0.12em", fontFamily: "monospace" }} />
               </div>
             </div>
           </a>
