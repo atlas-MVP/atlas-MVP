@@ -303,7 +303,7 @@ export function EImg({ src, alt, style, onUploaded }: EImgProps) {
 
   const imgEl = (
     <img
-      src={src} alt={alt}
+      src={src || undefined} alt={alt}
       style={{
         width: "100%", height: "100%", objectFit: "cover", display: "block",
         opacity: uploading ? 0.35 : 1, transition: "opacity 0.2s",

@@ -628,6 +628,7 @@ export default function Map({ onCountryClick, flyToCode, flyToPosition, selected
     const _processed = new WeakSet<Event>();
     const _wheelHandler = (e: WheelEvent) => {
       if (_processed.has(e)) return; // our re-dispatched event — let Mapbox handle it
+      if (e.ctrlKey) return; // pinch gesture — let Mapbox handle natively (ctrlKey=true on Mac trackpad)
       e.preventDefault();
       e.stopPropagation();
       const inverted = new WheelEvent("wheel", {
@@ -833,9 +834,9 @@ export default function Map({ onCountryClick, flyToCode, flyToPosition, selected
         filter: conflictFilter,
         paint: {
           "fill-color": "#1e3a5f",
-          "fill-opacity": ["case", ["boolean", ["feature-state", "hover"], false],
-            ["interpolate", ["linear"], ["zoom"], FADE_START, 0.5, FADE_END, 0],
-            0
+          "fill-opacity": ["interpolate", ["linear"], ["zoom"],
+            FADE_START, ["case", ["boolean", ["feature-state", "hover"], false], 0.5, 0],
+            FADE_END,   ["case", ["boolean", ["feature-state", "hover"], false], 0,   0],
           ] as never,
         },
       });
