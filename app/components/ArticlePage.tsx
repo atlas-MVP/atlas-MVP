@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import SenateVoteVisualization from "./SenateVoteVisualization";
 import { Senator } from "./SenateVoteVisualization";
+import { SENATOR_BIOS, photoFor } from "./senatorBios";
 
 interface ArticlePageProps {
   headline: string;
@@ -29,79 +30,16 @@ const STATE_NAMES: Record<string, string> = {
   WI: "Wisconsin", WY: "Wyoming",
 };
 
-// Photos live in R2 under atlas-radar/senators/<slug>.<ext> and are served
-// through /api/radar-image?key=… — the same route used for every other
-// R2-hosted image in the app.
-const senatorPhoto = (key: string) =>
-  `/api/radar-image?key=${encodeURIComponent(key)}`;
+// Bios + R2 photo URLs live in ./senatorBios — one record per senator.
+// Build a view model that adds the computed `photo` URL so the JSX below can
+// stay exactly as-is (reads `bio.photo`, `bio.age`, etc.).
+import type { SenatorBio } from "./senatorBios";
+type SenatorView = SenatorBio & { photo: string };
+const SENATOR_DATA: Record<string, SenatorView> = Object.fromEntries(
+  Object.entries(SENATOR_BIOS).map(([name, bio]) => [name, { ...bio, photo: photoFor(bio) }])
+);
 
-interface SenatorBio {
-  name:          string;
-  party:         "R" | "D" | "I";
-  state:         string;
-  vote:          "Aye" | "No" | "Present" | "Not Voting";
-  photo:         string;
-  age:           number;
-  yearsInOffice: number;
-  nextElection:  number;
-  officialUrl:   string;
-}
-
-// Factual bios (age/years-in-office/re-election year as of April 2026).
-// Keyed by full senator name — matches the `senators` array below.
-const SENATOR_DATA: Record<string, SenatorBio> = {
-  "Chuck Schumer": {
-    name: "Chuck Schumer", party: "D", state: "NY", vote: "No",
-    photo: senatorPhoto("atlas-radar/senators/chuck-schumer.jpeg"),
-    age: 75, yearsInOffice: 27, nextElection: 2028,
-    officialUrl: "https://www.schumer.senate.gov",
-  },
-  "John Fetterman": {
-    name: "John Fetterman", party: "D", state: "PA", vote: "No",
-    photo: senatorPhoto("atlas-radar/senators/john-fetterman.jpeg"),
-    age: 56, yearsInOffice: 3, nextElection: 2028,
-    officialUrl: "https://www.fetterman.senate.gov",
-  },
-  "Joe Manchin": {
-    name: "Joe Manchin", party: "D", state: "WV", vote: "No",
-    photo: senatorPhoto("atlas-radar/senators/joe-manchin.webp"),
-    age: 78, yearsInOffice: 14, nextElection: 2024,
-    officialUrl: "https://www.manchin.senate.gov",
-  },
-  "Jeanne Shaheen": {
-    name: "Jeanne Shaheen", party: "D", state: "NH", vote: "No",
-    photo: senatorPhoto("atlas-radar/senators/jeanne-shaheen.jpeg"),
-    age: 79, yearsInOffice: 17, nextElection: 2026,
-    officialUrl: "https://www.shaheen.senate.gov",
-  },
-  "Maggie Hassan": {
-    name: "Maggie Hassan", party: "D", state: "NH", vote: "No",
-    photo: senatorPhoto("atlas-radar/senators/maggie-hassan.jpeg"),
-    age: 68, yearsInOffice: 9, nextElection: 2028,
-    officialUrl: "https://www.hassan.senate.gov",
-  },
-  "Chris Coons": {
-    name: "Chris Coons", party: "D", state: "DE", vote: "No",
-    photo: senatorPhoto("atlas-radar/senators/chris-coons.jpeg"),
-    age: 62, yearsInOffice: 15, nextElection: 2026,
-    officialUrl: "https://www.coons.senate.gov",
-  },
-  "Tom Carper": {
-    name: "Tom Carper", party: "D", state: "DE", vote: "No",
-    photo: senatorPhoto("atlas-radar/senators/tom-carper.jpeg"),
-    age: 79, yearsInOffice: 24, nextElection: 2024,
-    officialUrl: "https://www.carper.senate.gov",
-  },
-  "Elissa Slotkin": {
-    name: "Elissa Slotkin", party: "D", state: "MI", vote: "No",
-    photo: senatorPhoto("atlas-radar/senators/elissa-slotkin.webp"),
-    age: 49, yearsInOffice: 1, nextElection: 2030,
-    officialUrl: "https://www.slotkin.senate.gov",
-  },
-};
-
-// Legacy alias — the rest of the file still references SCHUMER_DATA for the
-// small in-line hover card. Kept pointing at the new R2-backed entry.
+// Legacy alias — the small in-line hover card still references SCHUMER_DATA.
 const SCHUMER_DATA = SENATOR_DATA["Chuck Schumer"];
 
 export default function ArticlePage({
