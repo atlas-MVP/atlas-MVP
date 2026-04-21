@@ -135,17 +135,114 @@ const RAW: Omit<SenatorBio, "officialUrl">[] = [
   { slug: "shelley-moore-capito",  bioguide: "C001047", name: "Shelley Moore Capito",   party: "R", state: "WV", vote: "No",  ext: "jpeg", age: 72, yearsInOffice: 11, nextElection: 2026, runningAgain: true },
 ];
 
-const officialUrl = (slug: string): string => {
-  // Official Senate sites follow <lastname>.senate.gov — strip the first-name
-  // segment from the slug. Handles hyphenated names ("ben-ray-lujan" →
-  // "lujan.senate.gov") and dots ("jd-vance" → "vance.senate.gov").
-  const parts = slug.split("-");
-  const last  = parts[parts.length - 1];
-  return `https://www.${last}.senate.gov`;
+// Verified one-by-one against live HTTP responses (see check-senate-urls.mjs
+// commit history). Senate.gov for serving members; Ballotpedia for retired,
+// defeated, or those who moved to the exec branch (Rubio → SecState,
+// Vance → VP). Last-name collisions hand-tuned: Rick Scott uses
+// rickscott.senate.gov, Tim Scott gets the plain scott.senate.gov; Lindsey
+// Graham is lgraham.senate.gov because of past collisions; Tina Smith holds
+// smith.senate.gov, Cindy Hyde-Smith uses hydesmith.senate.gov.
+const OFFICIAL_URL: Record<string, string> = {
+  "bernie-sanders":         "https://www.sanders.senate.gov/",
+  "elizabeth-warren":       "https://www.warren.senate.gov/",
+  "amy-klobuchar":          "https://www.klobuchar.senate.gov/",
+  "cory-booker":            "https://www.booker.senate.gov/",
+  "adam-schiff":            "https://www.schiff.senate.gov/",
+  "dick-durbin":            "https://www.durbin.senate.gov/",
+  "kirsten-gillibrand":     "https://www.gillibrand.senate.gov/",
+  "ron-wyden":              "https://www.wyden.senate.gov/",
+  "tammy-duckworth":        "https://www.duckworth.senate.gov/",
+  "raphael-warnock":        "https://www.warnock.senate.gov/",
+  "mark-kelly":             "https://www.kelly.senate.gov/",
+  "alex-padilla":           "https://www.padilla.senate.gov/",
+  "angus-king":             "https://www.king.senate.gov/",
+  "jon-ossoff":             "https://www.ossoff.senate.gov/",
+  "sherrod-brown":          "https://ballotpedia.org/Sherrod_Brown",
+  "patty-murray":           "https://www.murray.senate.gov/",
+  "maria-cantwell":         "https://www.cantwell.senate.gov/",
+  "bob-casey":              "https://ballotpedia.org/Bob_Casey_Jr.",
+  "jeff-merkley":           "https://www.merkley.senate.gov/",
+  "ed-markey":              "https://www.markey.senate.gov/",
+  "tim-kaine":              "https://www.kaine.senate.gov/",
+  "mark-warner":            "https://www.warner.senate.gov/",
+  "mazie-hirono":           "https://www.hirono.senate.gov/",
+  "tammy-baldwin":          "https://www.baldwin.senate.gov/",
+  "catherine-cortez-masto": "https://www.cortezmasto.senate.gov/",
+  "debbie-stabenow":        "https://ballotpedia.org/Debbie_Stabenow",
+  "gary-peters":            "https://www.peters.senate.gov/",
+  "michael-bennet":         "https://www.bennet.senate.gov/",
+  "john-hickenlooper":      "https://www.hickenlooper.senate.gov/",
+  "brian-schatz":           "https://www.schatz.senate.gov/",
+  "jacky-rosen":            "https://www.rosen.senate.gov/",
+  "ruben-gallego":          "https://www.gallego.senate.gov/",
+  "martin-heinrich":        "https://www.heinrich.senate.gov/",
+  "tina-smith":             "https://www.smith.senate.gov/",
+  "chris-van-hollen":       "https://www.vanhollen.senate.gov/",
+  "ben-ray-lujan":          "https://www.lujan.senate.gov/",
+  "jon-tester":             "https://ballotpedia.org/Jon_Tester",
+  "angela-alsobrooks":      "https://www.alsobrooks.senate.gov/",
+  "peter-welch":            "https://www.welch.senate.gov/",
+  "andy-kim":               "https://www.kim.senate.gov/",
+  "chuck-schumer":          "https://www.schumer.senate.gov/",
+  "john-fetterman":         "https://www.fetterman.senate.gov/",
+  "joe-manchin":            "https://ballotpedia.org/Joe_Manchin",
+  "jeanne-shaheen":         "https://www.shaheen.senate.gov/",
+  "maggie-hassan":          "https://www.hassan.senate.gov/",
+  "chris-coons":            "https://www.coons.senate.gov/",
+  "elissa-slotkin":         "https://www.slotkin.senate.gov/",
+  "tom-carper":             "https://ballotpedia.org/Tom_Carper",
+  "mitch-mcconnell":        "https://www.mcconnell.senate.gov/",
+  "ted-cruz":               "https://www.cruz.senate.gov/",
+  "marco-rubio":            "https://ballotpedia.org/Marco_Rubio",
+  "rand-paul":              "https://www.paul.senate.gov/",
+  "lindsey-graham":         "https://www.lgraham.senate.gov/",
+  "jd-vance":               "https://ballotpedia.org/JD_Vance",
+  "josh-hawley":            "https://www.hawley.senate.gov/",
+  "susan-collins":          "https://www.collins.senate.gov/",
+  "mitt-romney":            "https://ballotpedia.org/Mitt_Romney",
+  "john-thune":             "https://www.thune.senate.gov/",
+  "lisa-murkowski":         "https://www.murkowski.senate.gov/",
+  "john-cornyn":            "https://www.cornyn.senate.gov/",
+  "chuck-grassley":         "https://www.grassley.senate.gov/",
+  "rick-scott":             "https://www.rickscott.senate.gov/",
+  "tim-scott":              "https://www.scott.senate.gov/",
+  "kyrsten-sinema":         "https://ballotpedia.org/Kyrsten_Sinema",
+  "ron-johnson":            "https://www.ronjohnson.senate.gov/",
+  "marsha-blackburn":       "https://www.blackburn.senate.gov/",
+  "bill-cassidy":           "https://www.cassidy.senate.gov/",
+  "mike-lee":               "https://www.lee.senate.gov/",
+  "joni-ernst":             "https://www.ernst.senate.gov/",
+  "john-kennedy":           "https://www.kennedy.senate.gov/",
+  "bill-hagerty":           "https://www.hagerty.senate.gov/",
+  "roger-wicker":           "https://www.wicker.senate.gov/",
+  "john-barrasso":          "https://www.barrasso.senate.gov/",
+  "katie-britt":            "https://www.britt.senate.gov/",
+  "steve-daines":           "https://www.daines.senate.gov/",
+  "jim-risch":              "https://www.risch.senate.gov/",
+  "dan-sullivan":           "https://www.sullivan.senate.gov/",
+  "mike-crapo":             "https://www.crapo.senate.gov/",
+  "mike-rounds":            "https://www.rounds.senate.gov/",
+  "tommy-tuberville":       "https://www.tuberville.senate.gov/",
+  "thom-tillis":            "https://www.tillis.senate.gov/",
+  "ted-budd":               "https://www.budd.senate.gov/",
+  "pete-ricketts":          "https://www.ricketts.senate.gov/",
+  "mike-braun":             "https://ballotpedia.org/Mike_Braun",
+  "deb-fischer":            "https://www.fischer.senate.gov/",
+  "todd-young":             "https://www.young.senate.gov/",
+  "eric-schmitt":           "https://www.schmitt.senate.gov/",
+  "jerry-moran":            "https://www.moran.senate.gov/",
+  "james-lankford":         "https://www.lankford.senate.gov/",
+  "cynthia-lummis":         "https://www.lummis.senate.gov/",
+  "cindy-hyde-smith":       "https://www.hydesmith.senate.gov/",
+  "markwayne-mullin":       "https://www.mullin.senate.gov/",
+  "kevin-cramer":           "https://www.cramer.senate.gov/",
+  "john-hoeven":            "https://www.hoeven.senate.gov/",
+  "roger-marshall":         "https://www.marshall.senate.gov/",
+  "shelley-moore-capito":   "https://www.capito.senate.gov/",
 };
 
 export const SENATOR_BIOS: Record<string, SenatorBio> = Object.fromEntries(
-  RAW.map(r => [r.name, { ...r, photo: undefined, officialUrl: officialUrl(r.slug) } as unknown as SenatorBio])
+  RAW.map(r => [r.name, { ...r, officialUrl: OFFICIAL_URL[r.slug] ?? "" }])
 );
 
 // Runtime-computed photo URL (separate helper so the URL builder logic stays

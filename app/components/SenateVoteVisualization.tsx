@@ -48,81 +48,100 @@ export default function SenateVoteVisualization({
   const totalNo  = senators.filter(s => s.vote === "No").length;
 
   // ── Hemicycle layout ─────────────────────────────────────────────────────
-  // Perfect 180° arc (π → 2π). Bottom seats at both ends sit on the same
-  // horizontal line (y = centerY), forming a straight flush base.
-  // A gapAngle splits the two halves at the top so there is visible air.
+  // Both halves share the exact same 7-ring geometry so the Aye side and
+  // No side line up perfectly row-for-row. Within a ring, seat count is
+  // proportional to arc length (outer rings hold more dots than inner
+  // rings), and seats are evenly spaced endpoint-to-endpoint. The two
+  // halves are separated by a wide gap at top-center, pushing all dots
+  // toward the horizontal baseline (west-3-o'clock and east-9-o'clock).
   const generatePositions = () => {
     const positions: Array<{ senator: Senator; x: number; y: number }> = [];
-    const centerX       = 325;
-    const centerY       = 258;
-    const rows          = 7;
-    const baseRadius    = 91;   // 40% more space
-    const radiusStep    = 25;   // 40% more space
-    const gapAngle      = 0.22 * Math.PI; // ~40° gap between halves at the top
+    const centerX    = 325;
+    const centerY    = 258;
+    const rings      = 7;
+    const baseRadius = 91;
+    const ringStep   = 25;
+    // Big gap at the top so rows stay close to 90°/270° (E/W) and well
+    // clear of 0° (N). 0.5π ≈ 90° total → 45° wedge on each side of top-center.
+    const gapAngle   = 0.5 * Math.PI;
 
-    const ayeVoters = senators.filter(s => s.vote === "Aye");
-    const noVoters  = senators.filter(s => s.vote === "No");
-
-    // Separate crossover Democrats (voted No) from Republicans
+    const ayeVoters     = senators.filter(s => s.vote === "Aye");
+    const noVoters      = senators.filter(s => s.vote === "No");
     const crossoverDems = noVoters.filter(s => s.party === "D");
     const republicansNo = noVoters.filter(s => s.party !== "D");
 
-    const placeGroup = (
-      voters: Senator[],
-      arcStart: number,
-      arcEnd: number,
-      startRow: number = 0,
-    ) => {
-      if (!voters.length) return;
-
-      // Calculate number of radial spokes needed
-      const spokes = Math.ceil(voters.length / rows);
-
-      // Create angular positions (spokes from center)
-      const angles: number[] = [];
-      for (let i = 0; i < spokes; i++) {
-        const t = spokes === 1 ? 0.5 : i / (spokes - 1);
-        angles.push(arcStart + t * (arcEnd - arcStart));
-      }
-
-      // Place senators along radial lines (spokes)
-      for (let idx = 0; idx < voters.length; idx++) {
-        const spokeIdx = idx % spokes;
-        const row = Math.floor(idx / spokes) + startRow;
-        const angle = angles[spokeIdx];
-        const r = baseRadius + row * radiusStep;
-
-        positions.push({
-          senator: voters[idx],
-          x: centerX + r * Math.cos(angle),
-          y: centerY + r * Math.sin(angle),
-        });
-      }
+    // Split N voters across a list of ring radii, weighted by radius (arc
+    // length ≈ r·θ, and θ is constant, so weight == radius). Uses the
+    // largest-remainder method so the total always matches exactly.
+    const splitByArcLength = (total: number, ringRadii: number[]): number[] => {
+      if (!total) return ringRadii.map(() => 0);
+      const sumW = ringRadii.reduce((a, b) => a + b, 0);
+      const raw  = ringRadii.map(w => (w / sumW) * total);
+      const sizes = raw.map(Math.floor);
+      let remainder = total - sizes.reduce((a, b) => a + b, 0);
+      const fracs = raw
+        .map((r, i) => ({ i, frac: r - sizes[i] }))
+        .sort((a, b) => b.frac - a.frac);
+      for (let k = 0; k < remainder; k++) sizes[fracs[k].i]++;
+      return sizes;
     };
 
-    // Place crossover Democrats in innermost row on No side
-    const placeCrossovers = (voters: Senator[], arcStart: number, arcEnd: number) => {
-      if (!voters.length) return;
-      const count = voters.length;
-      for (let i = 0; i < count; i++) {
-        const t = count === 1 ? 0.5 : i / (count - 1);
+    // Place `voters` on a single ring at `radius`, spanning [arcStart, arcEnd].
+    // Dots are evenly spaced, including both endpoints (so rings align on the
+    // inner and outer edges of the fan).
+    const placeRing = (
+      voters: Senator[],
+      radius: number,
+      arcStart: number,
+      arcEnd: number,
+    ) => {
+      const n = voters.length;
+      if (!n) return;
+      for (let i = 0; i < n; i++) {
+        const t = n === 1 ? 0.5 : i / (n - 1);
         const angle = arcStart + t * (arcEnd - arcStart);
         positions.push({
           senator: voters[i],
-          x: centerX + baseRadius * Math.cos(angle),
-          y: centerY + baseRadius * Math.sin(angle),
+          x: centerX + radius * Math.cos(angle),
+          y: centerY + radius * Math.sin(angle),
         });
       }
     };
 
-    // Aye: π (bottom-left, flush) → just-left-of-top-center
-    placeGroup(ayeVoters, Math.PI, Math.PI * 1.5 - gapAngle / 2);
+    // Place a block of voters across every ring of a hemicycle half. If
+    // `innerOverride` is set, that ring is filled with its override voters
+    // and the block fills only the outer rings 1..rings-1.
+    const placeHalf = (
+      voters: Senator[],
+      arcStart: number,
+      arcEnd: number,
+      innerOverride?: Senator[],
+    ) => {
+      const ringRadii = Array.from({ length: rings }, (_, r) => baseRadius + r * ringStep);
 
-    // Crossover Dems: innermost row on No side
-    placeCrossovers(crossoverDems, Math.PI * 1.5 + gapAngle / 2, Math.PI * 2);
+      // Inner ring: either the override (crossover Dems) or part of the main block.
+      let firstRingForBlock = 0;
+      if (innerOverride) {
+        placeRing(innerOverride, ringRadii[0], arcStart, arcEnd);
+        firstRingForBlock = 1;
+      }
 
-    // Republicans who voted No: outer rows (start at row 1 to not overlap crossover Dems)
-    placeGroup(republicansNo, Math.PI * 1.5 + gapAngle / 2, Math.PI * 2, 1);
+      const outerRadii = ringRadii.slice(firstRingForBlock);
+      const sizes = splitByArcLength(voters.length, outerRadii);
+      let cursor = 0;
+      for (let i = 0; i < sizes.length; i++) {
+        const chunk = voters.slice(cursor, cursor + sizes[i]);
+        placeRing(chunk, outerRadii[i], arcStart, arcEnd);
+        cursor += sizes[i];
+      }
+    };
+
+    // Aye: from 270° compass (W, math π) rising to the top-center gap edge.
+    placeHalf(ayeVoters, Math.PI, Math.PI * 1.5 - gapAngle / 2);
+
+    // No: from top-center gap edge down to 90° compass (E, math 2π).
+    // Crossover Dems claim the innermost ring as a visual pulse band.
+    placeHalf(republicansNo, Math.PI * 1.5 + gapAngle / 2, Math.PI * 2, crossoverDems);
 
     return positions;
   };
