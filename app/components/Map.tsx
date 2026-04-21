@@ -140,8 +140,6 @@ const FADE_END = 5.5;
 
 // Earth rotates 360° in 86 400 seconds → 0.004167 °/s
 const EARTH_DEG_PER_SEC = 360 / 86400;
-// Only spin when zoomed out to globe level
-const SPIN_MAX_ZOOM = 3.0;
 
 export default function Map({ onCountryClick, flyToCode, flyToPosition, selectedCountry, secondaryCountries = [], activeStrikes, casualtyCountries = [], focusCountries, homeView = false, onReady, isIdle = false }: Props) {
   const mapContainer = useRef<HTMLDivElement>(null);
@@ -247,22 +245,18 @@ export default function Map({ onCountryClick, flyToCode, flyToPosition, selected
   }, [flyToPosition]);
 
   // ── Slow globe spin at Earth's real rotation rate ─────────────────────────
-  // 360° / 86 400 s ≈ 0.00417°/s. Only runs when isIdle=true, zoom ≤ 3,
-  // and the user is not actively dragging/zooming.
+  // Spins whenever isIdle=true. Only a mousedown/touchstart pauses it;
+  // releasing (mouseup/touchend) resumes immediately. Zoom level is irrelevant.
   useEffect(() => {
     const m = map.current;
     if (!m || !mapReady) return;
 
-    // Register interaction guards once
-    const onDown  = () => { userInteracting.current = true;  };
-    const onUp    = () => { userInteracting.current = false; };
-    const onWheel = () => { userInteracting.current = false; }; // wheel ends interaction
+    const onDown = () => { userInteracting.current = true;  spinLastTs.current = null; };
+    const onUp   = () => { userInteracting.current = false; };
     m.getCanvas().addEventListener("mousedown",  onDown);
     m.getCanvas().addEventListener("mouseup",    onUp);
     m.getCanvas().addEventListener("touchstart", onDown, { passive: true });
     m.getCanvas().addEventListener("touchend",   onUp);
-    // Also pause during programmatic flyTo
-    m.on("movestart", () => { if (m.isMoving()) spinLastTs.current = null; });
 
     return () => {
       m.getCanvas().removeEventListener("mousedown",  onDown);
@@ -279,14 +273,11 @@ export default function Map({ onCountryClick, flyToCode, flyToPosition, selected
 
     const tick = (ts: number) => {
       spinFrameRef.current = requestAnimationFrame(tick);
-      if (!isIdle || userInteracting.current || m.isMoving() || m.getZoom() > SPIN_MAX_ZOOM) {
-        spinLastTs.current = null; // reset so next active frame starts fresh
+      if (!isIdle || userInteracting.current) {
+        spinLastTs.current = null;
         return;
       }
-      if (spinLastTs.current === null) {
-        spinLastTs.current = ts;
-        return;
-      }
+      if (spinLastTs.current === null) { spinLastTs.current = ts; return; }
       const dtSec = (ts - spinLastTs.current) / 1000;
       spinLastTs.current = ts;
       const c = m.getCenter();
