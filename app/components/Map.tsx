@@ -338,10 +338,14 @@ export default function Map({ onCountryClick, flyToCode, flyToPosition, selected
       ].forEach(id => {
         if (m.getLayer(id)) try { m.setPaintProperty(id, "circle-opacity", idle ? 0 : undefined); } catch {}
       });
-      // Mapbox style admin border lines
+      // All Mapbox style layers: borders, labels, symbols — everything
       try {
         m.getStyle().layers.forEach(l => {
-          if (l.id.includes("admin") && l.type === "line") {
+          if (
+            l.id.includes("admin") ||   // country + state borders
+            l.type === "symbol" ||       // all text labels (countries, cities, oceans, etc.)
+            l.id.includes("road") || l.id.includes("water-label")
+          ) {
             try { m.setLayoutProperty(l.id, "visibility", idle ? "none" : "visible"); } catch {}
           }
         });
