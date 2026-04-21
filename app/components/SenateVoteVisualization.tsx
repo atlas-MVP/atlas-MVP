@@ -78,8 +78,8 @@ export default function SenateVoteVisualization({
     ) => {
       if (!voters.length) return;
 
-      // Calculate number of spokes needed (roughly voters / rings)
-      const numSpokes = Math.max(1, Math.ceil(voters.length / rings));
+      // Calculate number of spokes needed (2-3 dots per spoke maximum)
+      const numSpokes = Math.max(1, Math.ceil(voters.length / 3));
 
       // Evenly distribute spoke angles across the arc
       const spokeAngles: number[] = [];

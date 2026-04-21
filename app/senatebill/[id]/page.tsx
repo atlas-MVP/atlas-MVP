@@ -5,10 +5,10 @@ import ArticlePage from "../../components/ArticlePage";
 
 const SENATE_VOTES = {
   "israel-arms-2026": {
-    headline: "Senate vote fails 40-59 to block arms sales to Israel",
-    description: "The US Senate defeated a resolution introduced by Sen. Bernie Sanders to halt new arms transfers to Israel, 40 in favor to 59 opposed. Despite the failure, the tally marked the highest level of Democratic support to date: 85% of Senate Democrats voted yes, including several members who had previously opposed similar measures. The resolution targeted a pending $8.1B package covering tank rounds, mortar shells, and guidance kits. The White House had lobbied against passage.",
+    headline: "Senate vote fails 40-59 to block bulldozer sales to Israel",
+    description: "The US Senate defeated S.J.Res. 32, a resolution introduced by Sen. Bernie Sanders to halt a pending $295M transfer of armored Caterpillar D9 bulldozers to Israel. The measure failed 40-59-1 (one not voting: Sen. Cynthia Lummis). Despite the defeat, the tally represented unprecedented Democratic unity: 85% of Senate Democrats voted yes, including several members who had previously opposed similar measures. Seven Democrats broke with their party to vote no, led by Senate Majority Leader Chuck Schumer. The White House had lobbied aggressively against passage, arguing the equipment was vital to border security operations.",
     heroImage: "/bernie-sanders-senate.jpg",
-    date: "April 18, 2026",
+    date: "April 15, 2026",
     billId: "israel-arms-2026",
   },
 };
