@@ -360,30 +360,56 @@ export default function Map({ onCountryClick, flyToCode, flyToPosition, selected
     if (!m || !mapReady) return;
 
     const apply = (idle: boolean) => {
-      // world-hit needs an explicit value — passing `undefined` falls back to the
-      // Mapbox spec default of 1.0, turning it into a solid black overlay.
-      if (m.getLayer("world-hit")) try { m.setPaintProperty("world-hit", "fill-opacity", idle ? 0 : 0.001); } catch {}
-      // Other custom fill layers
-      ["highlighted-fill-LBN","highlighted-fill-IRN","highlighted-fill-UKR",
-       "highlighted-fill-RUS","highlighted-fill-PSE","highlighted-fill-ISR",
-       "casualty-fill-blue","casualty-fill-red",
-       "idle-pulse-blue","idle-pulse-red","hover-fill",
-      ].forEach(id => {
-        if (m.getLayer(id)) try { m.setPaintProperty(id, "fill-opacity", idle ? 0 : undefined); } catch {}
-      });
-      // Custom line layers → line-opacity
-      ["hover-border","secondary-border"].forEach(id => {
-        if (m.getLayer(id)) try { m.setPaintProperty(id, "line-opacity", idle ? 0 : undefined); } catch {}
-      });
-      // Event + strike circle layers → circle-opacity
-      ["events-halo","events-glow","events-dot",
-       "strike-outer-halo","strike-halo","strike-glow","strike-core","strike-dot",
-      ].forEach(id => {
-        if (m.getLayer(id)) try { m.setPaintProperty(id, "circle-opacity", idle ? 0 : undefined); } catch {}
-      });
+      // Passing `undefined` to setPaintProperty on runtime (addLayer) layers falls
+      // back to the Mapbox SPEC default (1.0), not the addLayer value — solid fills.
+      // Every layer that isn't idle uses an explicit value or its correct expression.
+      if (idle) {
+        // ── Hide everything when idle ──────────────────────────────────────────
+        if (m.getLayer("world-hit")) try { m.setPaintProperty("world-hit", "fill-opacity", 0); } catch {}
+        for (const iso of HIGHLIGHTED) {
+          if (m.getLayer(`highlighted-fill-${iso}`)) try { m.setPaintProperty(`highlighted-fill-${iso}`, "fill-opacity", 0); } catch {}
+        }
+        ["casualty-fill-blue","casualty-fill-red","idle-pulse-blue","idle-pulse-red","hover-fill",
+        ].forEach(id => { if (m.getLayer(id)) try { m.setPaintProperty(id, "fill-opacity", 0); } catch {} });
+        ["hover-border","secondary-border"].forEach(id => {
+          if (m.getLayer(id)) try { m.setPaintProperty(id, "line-opacity", 0); } catch {}
+        });
+        ["events-halo","events-glow","events-dot",
+         "strike-outer-halo","strike-halo","strike-glow","strike-core","strike-dot",
+        ].forEach(id => { if (m.getLayer(id)) try { m.setPaintProperty(id, "circle-opacity", 0); } catch {} });
+      } else {
+        // ── Restore when active — explicit values only, never undefined ────────
+        // world-hit: near-invisible hit target
+        if (m.getLayer("world-hit")) try { m.setPaintProperty("world-hit", "fill-opacity", 0.001); } catch {}
+        // Highlighted fills: restore zoom-interpolated translucent expressions
+        for (const iso of HIGHLIGHTED) {
+          if (!m.getLayer(`highlighted-fill-${iso}`)) continue;
+          const [fs, fe] = COUNTRY_FADE_RANGES[iso] ?? [FADE_START, FADE_END];
+          try { m.setPaintProperty(`highlighted-fill-${iso}`, "fill-opacity",
+            ["interpolate", ["linear"], ["zoom"], fs, 0.48, fe, 0] as never); } catch {}
+        }
+        // Casualty / pulse: 0 — their own effects (casualtyCountries, animateIdle) drive them
+        ["casualty-fill-blue","casualty-fill-red","idle-pulse-blue","idle-pulse-red",
+        ].forEach(id => { if (m.getLayer(id)) try { m.setPaintProperty(id, "fill-opacity", 0); } catch {} });
+        // hover-fill: restore feature-state expression
+        if (m.getLayer("hover-fill")) try { m.setPaintProperty("hover-fill", "fill-opacity", [
+          "case", ["boolean", ["feature-state", "hover"], false],
+          ["interpolate", ["linear"], ["zoom"], FADE_START, 0.5, FADE_END, 0], 0
+        ] as never); } catch {}
+        // Borders: 0 — selectedCountry / secondaryCountries effects set them when needed
+        ["hover-border","secondary-border"].forEach(id => {
+          if (m.getLayer(id)) try { m.setPaintProperty(id, "line-opacity", 0); } catch {}
+        });
+        // Events: restore their defined opacities
+        if (m.getLayer("events-halo")) try { m.setPaintProperty("events-halo", "circle-opacity", 0.07); } catch {}
+        if (m.getLayer("events-glow")) try { m.setPaintProperty("events-glow", "circle-opacity", 0.20); } catch {}
+        if (m.getLayer("events-dot"))  try { m.setPaintProperty("events-dot",  "circle-opacity", 0.50); } catch {}
+        // Strike layers: 0 — activeStrikes effect manages them
+        ["strike-outer-halo","strike-halo","strike-glow","strike-core","strike-dot",
+        ].forEach(id => { if (m.getLayer(id)) try { m.setPaintProperty(id, "circle-opacity", 0); } catch {} });
+      }
       // Mapbox style symbol / admin layers are handled by the 8-second reveal
-      // animation on load — they stay at their revealed opacity permanently and
-      // are NOT toggled by idle state.
+      // animation on load — they stay at their revealed opacity permanently.
     };
 
     apply(isIdle);
