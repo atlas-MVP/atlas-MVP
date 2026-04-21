@@ -140,7 +140,7 @@ const RAW: Omit<SenatorBio, "officialUrl">[] = [
   { slug: "ashley-moody",          bioguide: "M001244", name: "Ashley Moody",           party: "R", state: "FL", vote: "No",  ext: "jpeg", age: 50, yearsInOffice: 1,  nextElection: 2026, runningAgain: true },
   { slug: "jon-husted",            bioguide: "H001104", name: "Jon Husted",             party: "R", state: "OH", vote: "No",  ext: "jpeg", age: 58, yearsInOffice: 1,  nextElection: 2026, runningAgain: true },
   { slug: "tim-sheehy",            bioguide: "S001232", name: "Tim Sheehy",             party: "R", state: "MT", vote: "No",  ext: "jpeg", age: 40, yearsInOffice: 1,  nextElection: 2030, runningAgain: true },
-  { slug: "kelly-armstrong",       bioguide: "A000377", name: "Kelly Armstrong",        party: "R", state: "OK", vote: "No",  ext: "jpeg", age: 48, yearsInOffice: 1,  nextElection: 2030, runningAgain: true },
+  { slug: "kelly-armstrong",       bioguide: "A000377", name: "Kelly Armstrong",        party: "R", state: "ND", vote: "No",  ext: "jpeg", age: 48, yearsInOffice: 1,  nextElection: 2030, runningAgain: true },
 
   // ── NOT VOTING (1) ─────────────────────────────────────────────────────
   { slug: "cynthia-lummis",        bioguide: "L000571", name: "Cynthia Lummis",         party: "R", state: "WY", vote: "Not Voting", ext: "jpeg", age: 71, yearsInOffice: 5, nextElection: 2026, runningAgain: true },
