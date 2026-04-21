@@ -122,7 +122,7 @@ export default function Home() {
   const [previewYear, setPreviewYear]         = useState<number | null>(null);
   const [timelineOpen, setTimelineOpen]       = useState(false);
   const [showHeadlines, setShowHeadlines]     = useState(false);
-  const [showRadar, setShowRadar]             = useState(true);
+  const [showRadar, setShowRadar]             = useState(false);
   const [mapReady, setMapReady]                = useState(false);
   const [showSettings, setShowSettings]       = useState(false);
   const [activeSource, setActiveSource]       = useState<string | null>(null);

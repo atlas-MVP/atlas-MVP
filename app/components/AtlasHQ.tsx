@@ -406,22 +406,14 @@ export default function AtlasHQ({ onClose, onNavigate, onHeadlinesToggle, onSour
     });
   };
 
-  const sectionOrder = displayConfig.sectionOrder ?? ["geo", "violence", "disasters", "finance"];
-
-  // Define which sections go in which column
-  const leftColumnSections = ["geo", "violence"];
-  const centerColumnSections = ["alerts"];
-  const rightColumnSections = ["finance", "disasters"];
-
   return (
     <div style={{
       position: "absolute",
-      top: 52, left: 20, right: 20, bottom: 28,
+      top: 52, left: 20, bottom: 28,
+      width: 488,
       zIndex: 20,
       display: "flex",
-      flexDirection: "row",
-      gap: 20,
-      padding: 20,
+      flexDirection: "column",
       background: "rgba(4,6,18,0.62)",
       border: "1px solid rgba(255,255,255,0.06)",
       borderRadius: 16,
@@ -431,9 +423,11 @@ export default function AtlasHQ({ onClose, onNavigate, onHeadlinesToggle, onSour
       pointerEvents: "auto",
     }}>
 
-      {/* Left Column: geo + violence */}
-      <div className="radar-scroll" style={{ flex: 1, overflowY: "auto", overflowX: "hidden", position: "relative" }}>
-        {sectionOrder.filter(s => leftColumnSections.includes(s)).map((section, i) => {
+      {/* Scrollable body */}
+      <div className="radar-scroll" style={{ flex: 1, overflowY: "auto", overflowX: "hidden", position: "relative", paddingTop: 10 }}>
+
+        {/* Sections rendered in saved drag order */}
+        {(displayConfig.sectionOrder ?? ["geo", "violence", "disasters", "finance"]).map((section, i) => {
           const DEFAULT_ORDER = ["geo", "violence", "disasters", "finance"];
           const sectionDragHandle = editMode ? {
             onDragStart: (e: React.DragEvent<HTMLDivElement>) => {
@@ -541,98 +535,6 @@ export default function AtlasHQ({ onClose, onNavigate, onHeadlinesToggle, onSour
             </div>
           );
 
-          if (section === "violence") return (
-            <div key="violence" {...dropHandlers} style={wrapStyle}>
-              <SectionLabel label={displayConfig.sectionLabels?.violence ?? "violence"} dragHandle={sectionDragHandle} onLabelChange={v => patchDraft(d => ({ ...d, sectionLabels: { ...d.sectionLabels, violence: v } }))} />
-              <Reveal minStage={4} stage={loadStage}>
-                <div style={{ padding: "0 14px 6px" }}>
-                  {displayConfig.violenceItems.map((item, idx) => (
-                    <div key={item.headline}
-                      onClick={editMode ? undefined : () => onViolenceTap?.(item.incidentId ?? "", item.flyTo?.center ?? [0,0] as [number,number], item.flyTo?.zoom ?? 4)}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.transform = "scale(1.05) translateY(-8px) rotateX(2deg)";
-                        e.currentTarget.style.boxShadow = "0 20px 40px rgba(0,0,0,0.5), 0 30px 60px rgba(0,0,0,0.4), 0 40px 80px rgba(0,0,0,0.3)";
-                        e.currentTarget.style.zIndex = "10";
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.transform = "scale(1) translateY(0) rotateX(0deg)";
-                        e.currentTarget.style.boxShadow = "0 2px 8px rgba(0,0,0,0.2)";
-                        e.currentTarget.style.zIndex = "1";
-                      }}
-                      style={{
-                        height: 196,
-                        borderRadius: 14,
-                        overflow: "hidden",
-                        position: "relative",
-                        cursor: editMode ? "default" : "pointer",
-                        border: "1px solid rgba(255,255,255,0.09)",
-                        background: "#0a0c18",
-                        transform: "scale(1) translateY(0) rotateX(0deg)",
-                        transformStyle: "preserve-3d",
-                        boxShadow: "0 2px 8px rgba(0,0,0,0.2)",
-                        transition: "all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)",
-                        zIndex: 1,
-                      }}>
-                      <EImg
-                          src={item.imageUrl || item.image || ""}
-                          alt={item.headline}
-                          style={{ width: "100%", height: "100%" }}
-                          onUploaded={(key, url) => patchDraft(d => ({ ...d, violenceItems: d.violenceItems.map((x, j) => j === idx ? { ...x, imageKey: key, imageUrl: url } : x) }))}
-                        />
-                      <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom, transparent 30%, rgba(0,0,0,0.90) 100%)", pointerEvents: "none" }} />
-                      <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, padding: "8px 10px 10px" }}>
-                        <EText
-                          value={item.headline}
-                          onChange={v => patchDraft(d => ({ ...d, violenceItems: d.violenceItems.map((x, j) => j === idx ? { ...x, headline: v } : x) }))}
-                          style={{ fontSize: 14, fontFamily: "monospace", letterSpacing: "0.06em", color: "rgba(255,255,255,0.92)", fontWeight: 700, lineHeight: 1.3 }}
-                        />
-                        <div style={{ fontSize: 9, color: "rgba(255,255,255,0.48)", marginTop: 4, letterSpacing: "0.12em", textTransform: "uppercase" }}>{item.source}</div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-                {/* Violence-specific live alerts */}
-                {renderAlertRows((displayConfig.violenceAlerts ?? VIOLENCE_ALERTS) as FeedItem[], "violenceAlerts")}
-              </Reveal>
-            </div>
-          );
-
-          return null;
-        })}
-      </div>
-
-      {/* Center Column: alerts + article placeholders */}
-      <div className="radar-scroll" style={{ flex: 1, overflowY: "auto", overflowX: "hidden", position: "relative" }}>
-        {sectionOrder.filter(s => centerColumnSections.includes(s)).map((section, i) => {
-          const DEFAULT_ORDER = ["geo", "violence", "disasters", "finance"];
-          const sectionDragHandle = editMode ? {
-            onDragStart: (e: React.DragEvent<HTMLDivElement>) => {
-              setDragSection(i);
-              e.dataTransfer.effectAllowed = "move";
-              e.dataTransfer.setData("text/plain", String(i));
-            },
-            onDragEnd: () => { setDragSection(null); setOverSection(null); },
-          } : undefined;
-          const isDropTarget = editMode && overSection === i && dragSection !== null && dragSection !== i;
-          const dropHandlers = editMode ? {
-            onDragOver: (e: React.DragEvent) => { e.preventDefault(); setOverSection(i); },
-            onDrop: (e: React.DragEvent) => {
-              e.preventDefault();
-              if (dragSection !== null && dragSection !== i) {
-                const base = displayConfig.sectionOrder ?? DEFAULT_ORDER;
-                const next = [...base];
-                const [moved] = next.splice(dragSection, 1);
-                next.splice(i, 0, moved);
-                patchDraft(d => ({ ...d, sectionOrder: next }));
-              }
-              setDragSection(null); setOverSection(null);
-            },
-          } : {};
-          const wrapStyle: React.CSSProperties = editMode ? {
-            outline: isDropTarget ? "2px solid rgba(100,160,255,0.45)" : "2px solid transparent",
-            borderRadius: 12, opacity: dragSection === i ? 0.35 : 1, transition: "opacity 0.15s",
-          } : {};
-
           if (section === "alerts") return (
             <div key="alerts" {...dropHandlers} style={wrapStyle}>
               <SectionLabel label={displayConfig.sectionLabels?.alerts ?? "live alerts"} dragHandle={sectionDragHandle} onLabelChange={v => patchDraft(d => ({ ...d, sectionLabels: { ...d.sectionLabels, alerts: v } }))} />
@@ -689,79 +591,61 @@ export default function AtlasHQ({ onClose, onNavigate, onHeadlinesToggle, onSour
             </div>
           );
 
-          return null;
-        })}
-
-        {/* Article placeholder cards */}
-        <SectionLabel label="articles" />
-        <Reveal minStage={4} stage={loadStage}>
-          <div style={{ padding: "0 14px", display: "flex", flexDirection: "column", gap: 6 }}>
-            {[1, 2, 3, 4].map(num => (
-              <div
-                key={`article-${num}`}
-                style={{
-                  height: 196,
-                  borderRadius: 14,
-                  overflow: "hidden",
-                  position: "relative",
-                  border: "1px solid rgba(255,255,255,0.09)",
-                  background: "#0a0c18",
-                  cursor: "pointer",
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.transform = "scale(1.05) translateY(-8px) rotateX(2deg)";
-                  e.currentTarget.style.boxShadow = "0 20px 40px rgba(0,0,0,0.5), 0 30px 60px rgba(0,0,0,0.4), 0 40px 80px rgba(0,0,0,0.3)";
-                  e.currentTarget.style.zIndex = "10";
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.transform = "scale(1) translateY(0) rotateX(0deg)";
-                  e.currentTarget.style.boxShadow = "0 2px 8px rgba(0,0,0,0.2)";
-                  e.currentTarget.style.zIndex = "1";
-                }}
-              >
-                <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom, transparent 35%, rgba(0,0,0,0.88) 100%)", pointerEvents: "none" }} />
-                <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, padding: "8px 10px 10px" }}>
-                  <div style={{ fontSize: 14, fontFamily: "monospace", letterSpacing: "0.06em", color: "rgba(255,255,255,0.92)", fontWeight: 700, lineHeight: 1.3 }}>
-                    Article {num}
-                  </div>
+          if (section === "violence") return (
+            <div key="violence" {...dropHandlers} style={wrapStyle}>
+              <SectionLabel label={displayConfig.sectionLabels?.violence ?? "violence"} dragHandle={sectionDragHandle} onLabelChange={v => patchDraft(d => ({ ...d, sectionLabels: { ...d.sectionLabels, violence: v } }))} />
+              <Reveal minStage={4} stage={loadStage}>
+                <div style={{ padding: "0 14px 6px" }}>
+                  {displayConfig.violenceItems.map((item, idx) => (
+                    <div key={item.headline}
+                      onClick={editMode ? undefined : () => onViolenceTap?.(item.incidentId ?? "", item.flyTo?.center ?? [0,0] as [number,number], item.flyTo?.zoom ?? 4)}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.transform = "scale(1.05) translateY(-8px) rotateX(2deg)";
+                        e.currentTarget.style.boxShadow = "0 20px 40px rgba(0,0,0,0.5), 0 30px 60px rgba(0,0,0,0.4), 0 40px 80px rgba(0,0,0,0.3)";
+                        e.currentTarget.style.zIndex = "10";
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.transform = "scale(1) translateY(0) rotateX(0deg)";
+                        e.currentTarget.style.boxShadow = "0 2px 8px rgba(0,0,0,0.2)";
+                        e.currentTarget.style.zIndex = "1";
+                      }}
+                      style={{
+                        height: 196,
+                        borderRadius: 14,
+                        overflow: "hidden",
+                        position: "relative",
+                        cursor: editMode ? "default" : "pointer",
+                        border: "1px solid rgba(255,255,255,0.09)",
+                        background: "#0a0c18",
+                        transform: "scale(1) translateY(0) rotateX(0deg)",
+                        transformStyle: "preserve-3d",
+                        boxShadow: "0 2px 8px rgba(0,0,0,0.2)",
+                        transition: "all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)",
+                        zIndex: 1,
+                      }}>
+                      <EImg
+                          src={item.imageUrl || item.image || ""}
+                          alt={item.headline}
+                          style={{ width: "100%", height: "100%" }}
+                          onUploaded={(key, url) => patchDraft(d => ({ ...d, violenceItems: d.violenceItems.map((x, j) => j === idx ? { ...x, imageKey: key, imageUrl: url } : x) }))}
+                        />
+                      <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom, transparent 30%, rgba(0,0,0,0.90) 100%)", pointerEvents: "none" }} />
+                      <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, padding: "8px 10px 10px" }}>
+                        <EText
+                          value={item.headline}
+                          onChange={v => patchDraft(d => ({ ...d, violenceItems: d.violenceItems.map((x, j) => j === idx ? { ...x, headline: v } : x) }))}
+                          style={{ fontSize: 14, fontFamily: "monospace", letterSpacing: "0.06em", color: "rgba(255,255,255,0.92)", fontWeight: 700, lineHeight: 1.3 }}
+                        />
+                        <div style={{ fontSize: 9, color: "rgba(255,255,255,0.48)", marginTop: 4, letterSpacing: "0.12em", textTransform: "uppercase" }}>{item.source}</div>
+                      </div>
+                    </div>
+                  ))}
                 </div>
-              </div>
-            ))}
-          </div>
-        </Reveal>
-      </div>
-
-      {/* Right Column: finance + disasters */}
-      <div className="radar-scroll" style={{ flex: 1, overflowY: "auto", overflowX: "hidden", position: "relative" }}>
-        {sectionOrder.filter(s => rightColumnSections.includes(s)).map((section, i) => {
-          const DEFAULT_ORDER = ["geo", "violence", "disasters", "finance"];
-          const sectionDragHandle = editMode ? {
-            onDragStart: (e: React.DragEvent<HTMLDivElement>) => {
-              setDragSection(i);
-              e.dataTransfer.effectAllowed = "move";
-              e.dataTransfer.setData("text/plain", String(i));
-            },
-            onDragEnd: () => { setDragSection(null); setOverSection(null); },
-          } : undefined;
-          const isDropTarget = editMode && overSection === i && dragSection !== null && dragSection !== i;
-          const dropHandlers = editMode ? {
-            onDragOver: (e: React.DragEvent) => { e.preventDefault(); setOverSection(i); },
-            onDrop: (e: React.DragEvent) => {
-              e.preventDefault();
-              if (dragSection !== null && dragSection !== i) {
-                const base = displayConfig.sectionOrder ?? DEFAULT_ORDER;
-                const next = [...base];
-                const [moved] = next.splice(dragSection, 1);
-                next.splice(i, 0, moved);
-                patchDraft(d => ({ ...d, sectionOrder: next }));
-              }
-              setDragSection(null); setOverSection(null);
-            },
-          } : {};
-          const wrapStyle: React.CSSProperties = editMode ? {
-            outline: isDropTarget ? "2px solid rgba(100,160,255,0.45)" : "2px solid transparent",
-            borderRadius: 12, opacity: dragSection === i ? 0.35 : 1, transition: "opacity 0.15s",
-          } : {};
+                {/* Violence-specific live alerts */}
+                {renderAlertRows((displayConfig.violenceAlerts ?? VIOLENCE_ALERTS) as FeedItem[], "violenceAlerts")}
+              </Reveal>
+            </div>
+          );
 
           if (section === "finance") return (
             <div key="finance" {...dropHandlers} style={wrapStyle}>
@@ -879,6 +763,24 @@ export default function AtlasHQ({ onClose, onNavigate, onHeadlinesToggle, onSour
 
           return null;
         })}
+
+        {/* + Add section — only visible in edit mode */}
+        {editMode && (
+          <div style={{ padding: "4px 18px 28px", display: "flex", justifyContent: "center" }}>
+            <button
+              style={{
+                background: "rgba(255,255,255,0.03)",
+                border: "1px dashed rgba(255,255,255,0.16)",
+                borderRadius: 10, color: "rgba(255,255,255,0.42)",
+                fontFamily: "monospace", fontSize: 12, letterSpacing: "0.10em",
+                padding: "10px 0", cursor: "pointer", width: "100%",
+              }}
+              onMouseEnter={e => { e.currentTarget.style.background = "rgba(255,255,255,0.06)"; e.currentTarget.style.color = "rgba(255,255,255,0.72)"; }}
+              onMouseLeave={e => { e.currentTarget.style.background = "rgba(255,255,255,0.03)"; e.currentTarget.style.color = "rgba(255,255,255,0.42)"; }}
+            >+ add section</button>
+          </div>
+        )}
+
       </div>
     </div>
   );
