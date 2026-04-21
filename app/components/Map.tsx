@@ -316,15 +316,16 @@ export default function Map({ onCountryClick, flyToCode, flyToPosition, selected
       const a = e.touches[0], b = e.touches[1];
       const dist = Math.hypot(b.clientX - a.clientX, b.clientY - a.clientY);
 
-      // If fingers are pinching, give up and let Mapbox handle zoom
-      if (!swipeLocked && Math.abs(dist - t0.dist) / t0.dist > 0.06) { t0 = null; return; }
+      // Always bail on pinch — even after swipe lock, so zoom is never blocked
+      if (Math.abs(dist - t0.dist) / t0.dist > 0.05) { t0 = null; swipeLocked = false; return; }
 
       const avgDx = ((a.clientX - t0.x1) + (b.clientX - t0.x2)) / 2;
       const avgDy = ((a.clientY - t0.y1) + (b.clientY - t0.y2)) / 2;
 
       if (!swipeLocked) {
         if (Math.abs(avgDx) < 5) return;
-        if (Math.abs(avgDy) > Math.abs(avgDx)) { t0 = null; return; }
+        // Bail on up/down movement so vertical gestures pass through to Mapbox
+        if (Math.abs(avgDy) > Math.abs(avgDx) * 0.6) { t0 = null; return; }
         swipeLocked = true;
       }
 
