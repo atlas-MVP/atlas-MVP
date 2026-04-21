@@ -227,18 +227,18 @@ export default function SenateVoteVisualization({
         {title}
       </div>
 
-      {/* ── yes label — flush with bottom-left end of arc ─────────────────── */}
+      {/* ── yes label — on left-right axis ─────────────────────────────────── */}
       <div style={{
-        position: "absolute", left: 16, bottom: 58,
+        position: "absolute", left: 16, top: 258,
         fontSize: 15, fontFamily: "monospace", letterSpacing: "0.1em",
         color: "rgba(100,200,100,0.7)",
       }}>
         yes
       </div>
 
-      {/* ── no label — flush with bottom-right end of arc ─────────────────── */}
+      {/* ── no label — on left-right axis ──────────────────────────────────── */}
       <div style={{
-        position: "absolute", right: 16, bottom: 58,
+        position: "absolute", right: 16, top: 258,
         fontSize: 15, fontFamily: "monospace", letterSpacing: "0.1em",
         color: "rgba(239,68,68,0.7)",
       }}>
@@ -249,7 +249,7 @@ export default function SenateVoteVisualization({
       <div style={{
         position: "absolute", bottom: 34, left: "50%",
         transform: "translateX(-50%)",
-        fontSize: 16, fontWeight: 300, fontFamily: "inherit",
+        fontSize: 16, fontWeight: 700, fontFamily: "inherit",
         letterSpacing: "0.3em", color: "rgba(255,255,255,0.9)",
         whiteSpace: "nowrap",
       }}>
@@ -258,7 +258,7 @@ export default function SenateVoteVisualization({
 
       {/* ── BLOCKED badge ─────────────────────────────────────────────────── */}
       <div style={{
-        position: "absolute", bottom: 10, left: "50%",
+        position: "absolute", bottom: 3, left: "50%",
         transform: "translateX(-50%)",
         background: "rgba(239,68,68,0.15)",
         border: "1px solid rgba(239,68,68,0.4)",
@@ -292,7 +292,7 @@ export default function SenateVoteVisualization({
             key={i}
             cx={x} cy={y} r={7}
             fill={isCrossover(senator) ? "url(#crossoverPulse)" : dotFill(senator)}
-            stroke={dotStroke(senator)}
+            stroke={isCrossover(senator) ? "rgba(96,165,250,0.8)" : dotStroke(senator)}
             strokeWidth={1}
             style={{ cursor: "pointer", transition: "all 0.2s" }}
             onMouseEnter={() => {
@@ -322,7 +322,16 @@ export default function SenateVoteVisualization({
                 }
               }
             }}
-          />
+          >
+            {isCrossover(senator) && (
+              <animate
+                attributeName="stroke"
+                values="rgba(96,165,250,0.8);rgba(239,68,68,0.8);rgba(96,165,250,0.8)"
+                dur="2s"
+                repeatCount="indefinite"
+              />
+            )}
+          </circle>
         ))}
       </svg>
 
