@@ -254,9 +254,8 @@ export default function AtlasHQ({ onClose, onNavigate, onHeadlinesToggle, onSour
   const [showAllDisasters, setShowAllDisasters] = useState(false);
   const MAX_STAGE = STAGE_DELAYS.length - 1;
   const [loadStage, setLoadStage] = useState(0);
-  const [editorOpen, setEditorOpen] = useState(false);
   const [liveConfig, setLiveConfig] = useState<RadarConfig | null>(null);
-  const [editMode,    setEditMode]    = useState(false);
+  const editMode = useEditMode(); // sourced from global context in page.tsx
   const [editDraft,   setEditDraft]   = useState<RadarConfig | null>(null);
   const [dragSection, setDragSection] = useState<number | null>(null);
   const [overSection, setOverSection] = useState<number | null>(null);
@@ -320,6 +319,14 @@ export default function AtlasHQ({ onClose, onNavigate, onHeadlinesToggle, onSour
 
   const displayConfig = editMode && editDraft ? editDraft : currentConfig;
 
+  // Initialise draft when global edit mode is switched on; clear on exit.
+  const currentConfigRef = useRef(currentConfig);
+  currentConfigRef.current = currentConfig;
+  useEffect(() => {
+    if (editMode) { setEditDraft(currentConfigRef.current); }
+    else          { setEditDraft(null); }
+  }, [editMode]);
+
   const renderAlertRows = (alerts: FeedItem[]) => (
     <div style={{ padding: "0 6px 2px" }}>
       {alerts.slice(0, 2).map((item, i, arr) => (
@@ -361,25 +368,6 @@ export default function AtlasHQ({ onClose, onNavigate, onHeadlinesToggle, onSour
   };
 
   return (
-    <>
-    {/* Edit button — floats outside panel to the right */}
-    <button
-      onClick={() => {
-        if (editMode) { setEditMode(false); }
-        else { setEditDraft({ ...currentConfig }); setEditMode(true); }
-      }}
-      style={{
-        position: "absolute", top: 52, left: 516, zIndex: 25,
-        background: editMode ? "rgba(100,160,255,0.14)" : "rgba(255,255,255,0.07)",
-        border: editMode ? "1px solid rgba(100,160,255,0.40)" : "1px solid rgba(255,255,255,0.14)",
-        borderRadius: 6,
-        color: editMode ? "rgba(140,185,255,0.95)" : "rgba(255,255,255,0.55)",
-        fontFamily: "monospace", fontSize: 11, letterSpacing: "0.10em",
-        padding: "3px 9px", cursor: "pointer", pointerEvents: "auto",
-      }}
-      onMouseEnter={e => (e.currentTarget.style.background = editMode ? "rgba(100,160,255,0.22)" : "rgba(255,255,255,0.12)")}
-      onMouseLeave={e => (e.currentTarget.style.background = editMode ? "rgba(100,160,255,0.14)" : "rgba(255,255,255,0.07)")}
-    >{editMode ? "✓ done" : "✎"}</button>
     <div style={{
       position: "absolute",
       top: 52, left: 20, bottom: 28,
@@ -399,7 +387,6 @@ export default function AtlasHQ({ onClose, onNavigate, onHeadlinesToggle, onSour
       {/* Scrollable body */}
       <div className="radar-scroll" style={{ flex: 1, overflowY: "auto", overflowX: "hidden", position: "relative", paddingTop: 10 }}>
 
-        <EditModeCtx.Provider value={editMode}>
         {/* Sections rendered in saved drag order */}
         {(displayConfig.sectionOrder ?? ["geo", "violence", "disasters", "finance"]).map((section, i) => {
           const DEFAULT_ORDER = ["geo", "violence", "disasters", "finance"];
@@ -701,30 +688,11 @@ export default function AtlasHQ({ onClose, onNavigate, onHeadlinesToggle, onSour
           </div>
         )}
 
-        </EditModeCtx.Provider>
       </div>
     </div>
-
-    {editorOpen && (
-      <RadarEditor
-        config={currentConfig}
-        onSave={async (c) => {
-          setLiveConfig(c);
-          setEditorOpen(false);
-          await fetch("/api/radar-config", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ config: c }),
-          });
-        }}
-        onClose={() => setEditorOpen(false)}
-      />
-    )}
-
-    </>
-
   );
 }
+
 
 function SectionLabel({ label, onClick, dragHandle, onLabelChange }: {
   label: string;
@@ -747,7 +715,7 @@ function SectionLabel({ label, onClick, dragHandle, onLabelChange }: {
       onDragStart={dragHandle?.onDragStart}
       onDragEnd={dragHandle?.onDragEnd}
       style={{
-        display: "flex", alignItems: "center", gap: 6, padding: "28px 18px 6px",
+        display: "flex", alignItems: "center", gap: 6, padding: "22px 18px 6px",
         cursor: dragHandle ? "grab" : "default", userSelect: "none",
       }}
     >

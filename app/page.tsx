@@ -19,6 +19,7 @@ import AuthorBioPanel from "./components/AuthorBioPanel";
 import SettingsPanel from "./components/SettingsPanel";
 import MapEventPlayer from "./components/MapEventPlayer";
 import type { MapEvent } from "./lib/mapEvents";
+import { EditModeCtx, EditModeSetCtx } from "./components/InlineEdit";
 
 // ATLAS appears instantly; clock fades in shortly after as one unit
 function AtlasWordmark() {
@@ -105,6 +106,7 @@ const COUNTRY_NAMES: Record<string, string> = {
 
 export default function Home() {
   const router = useRouter();
+  const [editMode, setEditMode] = useState(false);
   const [selectedCountry, setSelectedCountry] = useState<string | null>(null);
   const [homeCountry, setHomeCountry]         = useState<string | null>(null);
   const [feedCountry, setFeedCountry]         = useState<string | null>(null);
@@ -280,6 +282,8 @@ export default function Home() {
   };
 
   return (
+    <EditModeCtx.Provider value={editMode}>
+    <EditModeSetCtx.Provider value={setEditMode}>
     <main className="relative w-screen h-screen bg-black overflow-hidden">
       <Map
         onCountryClick={handleCountryClick}
@@ -540,6 +544,27 @@ export default function Home() {
         currentYear={historicalYear ?? undefined}
         resetSignal={liveReset}
       />
+
+      {/* ── Global edit button — always visible, site-wide ── */}
+      <button
+        onClick={() => setEditMode(v => !v)}
+        style={{
+          position: "fixed", top: 52, left: 516, zIndex: 9999,
+          background: editMode ? "rgba(100,160,255,0.14)" : "rgba(255,255,255,0.07)",
+          border: editMode ? "1px solid rgba(100,160,255,0.40)" : "1px solid rgba(255,255,255,0.14)",
+          borderRadius: 6,
+          color: editMode ? "rgba(140,185,255,0.95)" : "rgba(255,255,255,0.55)",
+          fontFamily: "monospace", fontSize: 11, letterSpacing: "0.10em",
+          padding: "3px 10px", cursor: "pointer",
+          transition: "background 0.15s, border-color 0.15s, color 0.15s",
+        }}
+        onMouseEnter={e => (e.currentTarget.style.background = editMode ? "rgba(100,160,255,0.22)" : "rgba(255,255,255,0.12)")}
+        onMouseLeave={e => (e.currentTarget.style.background = editMode ? "rgba(100,160,255,0.14)" : "rgba(255,255,255,0.07)")}
+      >
+        {editMode ? "✓ done" : "✎ edit"}
+      </button>
     </main>
+    </EditModeSetCtx.Provider>
+    </EditModeCtx.Provider>
   );
 }

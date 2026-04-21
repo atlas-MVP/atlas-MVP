@@ -5,8 +5,11 @@ import React, {
 import { createPortal } from "react-dom";
 
 // ── Edit mode context ─────────────────────────────────────────────────────────
-export const EditModeCtx = createContext(false);
-export const useEditMode  = () => useContext(EditModeCtx);
+export const EditModeCtx    = createContext(false);
+export const useEditMode    = () => useContext(EditModeCtx);
+// Setter in a sibling context — reading components don't re-render when setter identity changes
+export const EditModeSetCtx = createContext<(v: boolean) => void>(() => {});
+export const useSetEditMode = () => useContext(EditModeSetCtx);
 
 // ── Shared toolbar constants ───────────────────────────────────────────────────
 const TEXT_COLORS = [
