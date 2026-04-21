@@ -294,6 +294,67 @@ export default function Map({ onCountryClick, flyToCode, flyToPosition, selected
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mapReady]);
 
+  // ── Two-finger horizontal swipe → globe spin ─────────────────────────────
+  useEffect(() => {
+    const m = map.current;
+    if (!m || !mapReady) return;
+    const canvas = m.getCanvas();
+
+    let t0: { x1: number; y1: number; x2: number; y2: number; dist: number } | null = null;
+    let swipeLocked = false;
+
+    const onStart = (e: TouchEvent) => {
+      if (e.touches.length !== 2) { t0 = null; swipeLocked = false; return; }
+      const a = e.touches[0], b = e.touches[1];
+      t0 = { x1: a.clientX, y1: a.clientY, x2: b.clientX, y2: b.clientY,
+             dist: Math.hypot(b.clientX - a.clientX, b.clientY - a.clientY) };
+      swipeLocked = false;
+    };
+
+    const onMove = (e: TouchEvent) => {
+      if (e.touches.length !== 2 || !t0) return;
+      const a = e.touches[0], b = e.touches[1];
+      const dist = Math.hypot(b.clientX - a.clientX, b.clientY - a.clientY);
+
+      // If fingers are pinching, give up and let Mapbox handle zoom
+      if (!swipeLocked && Math.abs(dist - t0.dist) / t0.dist > 0.06) { t0 = null; return; }
+
+      const avgDx = ((a.clientX - t0.x1) + (b.clientX - t0.x2)) / 2;
+      const avgDy = ((a.clientY - t0.y1) + (b.clientY - t0.y2)) / 2;
+
+      if (!swipeLocked) {
+        if (Math.abs(avgDx) < 5) return;
+        if (Math.abs(avgDy) > Math.abs(avgDx)) { t0 = null; return; }
+        swipeLocked = true;
+      }
+
+      const zoom = m.getZoom();
+      const degPerPx = 360 / (512 * Math.pow(2, zoom));
+      const c = m.getCenter();
+      const newLng = c.lng - avgDx * degPerPx * 2;
+      const tr = (m as any).transform;
+      if (tr?.center !== undefined) {
+        tr.center = new mapboxgl.LngLat(newLng, c.lat);
+        m.triggerRepaint();
+      } else {
+        m.setCenter([newLng, c.lat]);
+      }
+      t0 = { x1: a.clientX, y1: a.clientY, x2: b.clientX, y2: b.clientY, dist };
+    };
+
+    const onEnd = () => { t0 = null; swipeLocked = false; };
+
+    canvas.addEventListener("touchstart", onStart, { passive: true });
+    canvas.addEventListener("touchmove",  onMove,  { passive: true });
+    canvas.addEventListener("touchend",   onEnd);
+    return () => {
+      canvas.removeEventListener("touchstart", onStart);
+      canvas.removeEventListener("touchmove",  onMove);
+      canvas.removeEventListener("touchend",   onEnd);
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mapReady]);
+
   // ATLAS tap / X button reset: increment spinKey from the parent to resume spin.
   useEffect(() => {
     hasInteracted.current = false;
