@@ -19,6 +19,20 @@ const PANEL: React.CSSProperties = {
   pointerEvents: "auto",
 };
 
+const INPUT: React.CSSProperties = {
+  width: "100%",
+  boxSizing: "border-box" as const,
+  background: "rgba(255,255,255,0.03)",
+  border: "1px solid rgba(255,255,255,0.09)",
+  borderRadius: 8,
+  padding: "9px 11px",
+  fontSize: 12,
+  fontFamily: "monospace",
+  color: "rgba(255,255,255,0.75)",
+  outline: "none",
+  resize: "none" as const,
+};
+
 function SLabel({ text }: { text: string }) {
   return (
     <div style={{ padding: "16px 18px 6px" }}>
@@ -44,6 +58,16 @@ export default function UsPanel({ onClose, onBack }: Props) {
   const [coverage, setCoverage] = useState(
     "We cover geopolitical conflicts, humanitarian crises, gun violence, natural disasters, and financial market disruptions. Our focus is accuracy over speed — every item is source-weighted and confidence-scored."
   );
+  const [formName,    setFormName]    = useState("");
+  const [formEmail,   setFormEmail]   = useState("");
+  const [formMessage, setFormMessage] = useState("");
+  const [submitted,   setSubmitted]   = useState(false);
+
+  function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    window.location.href = `mailto:founders@atlas.boston?subject=Message from ${encodeURIComponent(formName)}&body=${encodeURIComponent(formMessage)}%0A%0A${encodeURIComponent(formEmail)}`;
+    setSubmitted(true);
+  }
 
   return (
     <div style={PANEL}>
@@ -52,12 +76,12 @@ export default function UsPanel({ onClose, onBack }: Props) {
 
       <div style={{ flex: 1, overflowY: "auto", paddingTop: 38 }}>
 
-        {/* Wordmark + tagline */}
+        {/* Wordmark + pre-mvp note */}
         <div style={{ padding: "0 18px 18px", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
-            <span style={{ fontSize: 22, fontWeight: 300, letterSpacing: "0.3em", color: "rgba(255,255,255,0.92)" }}>ATLAS</span>
-            <span style={{ fontSize: 9, fontFamily: "monospace", letterSpacing: "0.18em", color: "rgba(255,255,255,0.28)", textTransform: "uppercase", paddingTop: 2 }}>Intelligence</span>
-          </div>
+          <span style={{ fontSize: 22, fontWeight: 300, letterSpacing: "0.3em", color: "rgba(255,255,255,0.92)" }}>ATLAS</span>
+          <p style={{ margin: "10px 0 0", fontSize: 12, fontFamily: "monospace", color: "rgba(255,255,255,0.42)", lineHeight: 1.7 }}>
+            you accidentally found atlas. this site is under construction and is currently pre mvp. if you like what you see, send us an email.
+          </p>
         </div>
 
         {/* Mission */}
@@ -88,10 +112,54 @@ export default function UsPanel({ onClose, onBack }: Props) {
           ))}
         </div>
 
-        {/* Contact */}
+        {/* Contact form */}
         <SLabel text="contact" />
-        <div style={{ margin: "0 14px 24px", padding: "11px 13px", borderRadius: 10, background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.07)" }}>
-          <span style={{ fontSize: 11, fontFamily: "monospace", color: "rgba(96,165,250,0.75)" }}>founders@atlas.boston</span>
+        <div style={{ margin: "0 14px 24px" }}>
+          {submitted ? (
+            <div style={{ padding: "14px 13px", borderRadius: 10, background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.07)", fontSize: 12, fontFamily: "monospace", color: "rgba(255,255,255,0.45)" }}>
+              message sent.
+            </div>
+          ) : (
+            <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+              <div>
+                <div style={{ fontSize: 10, fontFamily: "monospace", color: "rgba(255,255,255,0.32)", letterSpacing: "0.06em", marginBottom: 4 }}>name</div>
+                <input
+                  value={formName}
+                  onChange={e => setFormName(e.target.value)}
+                  style={INPUT}
+                  placeholder=""
+                />
+              </div>
+              <div>
+                <div style={{ fontSize: 10, fontFamily: "monospace", color: "rgba(255,255,255,0.32)", letterSpacing: "0.06em", marginBottom: 4 }}>email address</div>
+                <input
+                  type="email"
+                  value={formEmail}
+                  onChange={e => setFormEmail(e.target.value)}
+                  style={INPUT}
+                  placeholder=""
+                />
+              </div>
+              <div>
+                <div style={{ fontSize: 10, fontFamily: "monospace", color: "rgba(255,255,255,0.32)", letterSpacing: "0.06em", marginBottom: 4 }}>message</div>
+                <textarea
+                  value={formMessage}
+                  onChange={e => setFormMessage(e.target.value)}
+                  rows={4}
+                  style={INPUT}
+                  placeholder=""
+                />
+              </div>
+              <button
+                type="submit"
+                style={{ alignSelf: "flex-start", padding: "8px 18px", fontSize: 10, fontFamily: "monospace", letterSpacing: "0.1em", background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 7, color: "rgba(255,255,255,0.65)", cursor: "pointer" }}
+                onMouseEnter={e => { e.currentTarget.style.background = "rgba(255,255,255,0.1)"; e.currentTarget.style.color = "rgba(255,255,255,0.9)"; }}
+                onMouseLeave={e => { e.currentTarget.style.background = "rgba(255,255,255,0.06)"; e.currentTarget.style.color = "rgba(255,255,255,0.65)"; }}
+              >
+                submit
+              </button>
+            </form>
+          )}
         </div>
 
       </div>
