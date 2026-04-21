@@ -459,8 +459,8 @@ export default function Map({ onCountryClick, flyToCode, flyToPosition, selected
           try { m.setLayoutProperty(l.id, "text-transform", "lowercase"); } catch {}
         }
 
-        // Country labels: reduce text-size by 1px; prevent labels from
-        // extending past the globe edge into space.
+        // Country labels: pin to globe surface so they behave like paint on
+        // a physical globe — fixed in place, invisible when facing away.
         if (l.id.includes("country-label")) {
           try {
             const sz = m.getLayoutProperty(l.id, "text-size");
@@ -475,7 +475,11 @@ export default function Map({ onCountryClick, flyToCode, flyToPosition, selected
               // eslint-disable-next-line @typescript-eslint/no-explicit-any
               m.setLayoutProperty(l.id, "text-size", mod as any);
             }
-            // Prevent labels crossing the globe boundary into space
+            // Pin text to the globe surface (not billboard/screen-space).
+            // In globe projection this means the label lies flat on the surface
+            // and is only visible when the country faces the camera.
+            m.setLayoutProperty(l.id, "text-pitch-alignment", "map");
+            m.setLayoutProperty(l.id, "text-rotation-alignment", "map");
             m.setLayoutProperty(l.id, "symbol-avoid-edges", true);
           } catch {}
         }
@@ -512,9 +516,7 @@ export default function Map({ onCountryClick, flyToCode, flyToPosition, selected
         color: "rgb(0,0,0)",
         "high-color": "rgb(0,0,0)",
         "space-color": "rgb(0,0,0)",
-        // Increased from 0.02 — fog now fades in earlier so labels near the
-        // globe limb go invisible before they can "stick out" into space.
-        "horizon-blend": 0.12,
+        "horizon-blend": 0.08,
         "star-intensity": 0.08,
       } as never);
 
