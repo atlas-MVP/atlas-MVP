@@ -98,9 +98,8 @@ const DATA: Record<string, CountryHomeData> = {
     description: "The world's leading military and economic power, with the largest defense budget on Earth. The United States projects force globally through carrier groups, forward bases, and a vast alliance network.",
     stats: [{ label: "GDP / Military", value: "$28.8T / $886B" }, { label: "Gov't", value: "Federal Republic" }],
     conflicts: [
-      { label: "US · Israel · Iran war", dot: "#ef4444", alerts: ["Reuters: US 5th Fleet on heightened alert in Persian Gulf", "AP: Iran threatens Strait of Hormuz closure amid escalation", "NYT: White House convenes NSC emergency session"] },
-      { label: "Israel · Lebanon conflict", dot: "#f87171", alerts: ["AP: IDF artillery active along southern Lebanon border", "Al Jazeera: Hezbollah rockets fired into northern Galilee", "Reuters: Lebanon ceasefire talks collapse in Doha"] },
-      { label: "Russia · Ukraine war", dot: "#fb923c", alerts: ["NYT: Ukraine reports overnight drone barrage targeting Kyiv", "Reuters: Russia captures two villages in eastern Donetsk", "AP: US approves additional $2.1B military aid package"] },
+      { label: "Israel / US in the Middle East", dot: "#ef4444", alerts: ["Reuters: US 5th Fleet on heightened alert in Persian Gulf", "AP: Iran threatens Strait of Hormuz closure amid escalation", "NYT: White House convenes NSC emergency session"] },
+      { label: "Russia — Ukraine war", dot: "#fb923c", alerts: ["NYT: Ukraine reports overnight drone barrage targeting Kyiv", "Reuters: Russia captures two villages in eastern Donetsk", "AP: US approves additional $2.1B military aid package"] },
     ],
   },
   ISR: {
@@ -111,9 +110,8 @@ const DATA: Record<string, CountryHomeData> = {
     description: "A parliamentary democracy in the Middle East, founded following the 1948 Arab–Israeli War. Home to Jerusalem and a global leader in technology and defense innovation.",
     stats: [{ label: "GDP / Military", value: "$564B / $23.7B" }, { label: "Gov't", value: "Parliamentary Republic" }],
     conflicts: [
-      { label: "US · Israel · Iran war", dot: "#ef4444", alerts: ["Reuters: IDF strikes Iranian-backed militia positions in Syria", "AP: US carrier group positioned in Persian Gulf in support", "NYT: Iran vows retaliation for strikes on proxy forces"] },
-      { label: "Israel · Lebanon conflict", dot: "#f87171", alerts: ["AP: IDF artillery active along southern Lebanon border", "Al Jazeera: Hezbollah fires rockets into northern Galilee", "Reuters: Beirut airport suspended operations"] },
-      { label: "Gaza genocide", dot: "#fb923c", alerts: ["Al Jazeera: Gaza death toll surpasses 58,000", "AP: UNRWA fuel exhausted in northern Gaza hospitals", "NYT: Aid corridors remain sealed — famine conditions spreading"] },
+      { label: "Israel / US in the Middle East", dot: "#ef4444", alerts: ["Reuters: IDF strikes Iranian-backed militia positions in Syria", "AP: US carrier group positioned in Persian Gulf in support", "NYT: Iran vows retaliation for strikes on proxy forces"] },
+      { label: "Israel–Palestine Conflict", dot: "#f87171", alerts: ["Al Jazeera: Gaza death toll surpasses 58,000", "AP: UNRWA fuel exhausted in northern Gaza hospitals", "NYT: Aid corridors remain sealed — famine conditions spreading"] },
     ],
   },
   IRN: {
@@ -124,7 +122,7 @@ const DATA: Record<string, CountryHomeData> = {
     description: "A theocratic republic established after the 1979 Islamic Revolution. One of the most influential powers in the Middle East, with vast oil reserves and a long Persian cultural history.",
     stats: [{ label: "GDP / Military", value: "$367B / $10B" }, { label: "Gov't", value: "Islamic Republic" }],
     conflicts: [
-      { label: "US · Israel · Iran war", dot: "#ef4444", alerts: ["Reuters: Iran nuclear enrichment at 84% — IAEA monitoring limited", "AP: Iran threatens Strait of Hormuz closure amid US pressure", "NYT: Iranian proxies targeted in Syria by IDF strikes"] },
+      { label: "Israel / US in the Middle East", dot: "#ef4444", alerts: ["Reuters: Iran nuclear enrichment at 84% — IAEA monitoring limited", "AP: Iran threatens Strait of Hormuz closure amid US pressure", "NYT: Mojtaba Khamenei consolidates power after father's death in strikes"] },
     ],
   },
   UKR: {
@@ -135,7 +133,7 @@ const DATA: Record<string, CountryHomeData> = {
     description: "The largest country entirely within Europe. At the center of Europe's largest ground war since World War II following Russia's 2022 full-scale invasion.",
     stats: [{ label: "GDP / Military", value: "$160B / $62B" }, { label: "Gov't", value: "Presidential Republic" }],
     conflicts: [
-      { label: "Russia · Ukraine war", dot: "#ef4444", alerts: ["NYT: Ukraine reports overnight drone barrage targeting Kyiv", "Reuters: Russia captures two villages in eastern Donetsk", "AP: US approves additional $2.1B military aid package"] },
+      { label: "Russia — Ukraine war", dot: "#ef4444", alerts: ["NYT: Ukraine reports overnight drone barrage targeting Kyiv", "Reuters: Russia captures two villages in eastern Donetsk", "AP: US approves additional $2.1B military aid package"] },
     ],
   },
   RUS: {
@@ -146,7 +144,7 @@ const DATA: Record<string, CountryHomeData> = {
     description: "The world's largest country by area. A permanent UN Security Council member and major nuclear power, Russia is conducting a full-scale war in Ukraine.",
     stats: [{ label: "GDP / Military", value: "$1.86T / $109B" }, { label: "Gov't", value: "Semi-Presidential" }],
     conflicts: [
-      { label: "Russia · Ukraine war", dot: "#ef4444", alerts: ["Reuters: Russian forces advance in eastern Donetsk", "NYT: Russia launches mass Shahed drone attack overnight", "AP: Kremlin rules out ceasefire negotiations"] },
+      { label: "Russia — Ukraine war", dot: "#ef4444", alerts: ["Reuters: Russian forces advance in eastern Donetsk", "NYT: Russia launches mass Shahed drone attack overnight", "AP: Kremlin rules out ceasefire negotiations"] },
     ],
   },
   PSE: {
@@ -154,10 +152,10 @@ const DATA: Record<string, CountryHomeData> = {
     founded: "November 15, 1988", capital: "Ramallah (adm.)", population: "5.4M", region: "Middle East",
     leader: "Mahmoud Abbas", leaderTitle: "President, Palestinian Authority",
     leaderPhoto: "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e7/Mahmoud_Abbas_-_2008.jpg/400px-Mahmoud_Abbas_-_2008.jpg",
-    description: "Recognized by over 140 UN states, comprising the West Bank and Gaza Strip. Gaza has been under Israeli military campaign since October 2023.",
+    description: "Recognized by over 140 UN states, comprising the West Bank and Gaza Strip. Gaza has been under Israeli military campaign since October 2023 with 58,000+ killed.",
     stats: [{ label: "GDP / Military", value: "$18B / N/A" }, { label: "Gov't", value: "Semi-Presidential" }],
     conflicts: [
-      { label: "Gaza genocide", dot: "#ef4444", alerts: ["Al Jazeera: Gaza death toll surpasses 58,000", "AP: UNRWA fuel exhausted — northern hospitals at collapse", "NYT: Famine conditions declared across northern Gaza"] },
+      { label: "Israel–Palestine Conflict", dot: "#ef4444", alerts: ["Al Jazeera: Gaza death toll surpasses 58,000", "AP: UNRWA fuel exhausted — northern hospitals at collapse", "NYT: Famine conditions declared across northern Gaza"] },
     ],
   },
   CHN: {
@@ -187,10 +185,32 @@ const DATA: Record<string, CountryHomeData> = {
     founded: "November 22, 1943", capital: "Beirut", population: "5.5M", region: "Middle East",
     leader: "Joseph Aoun", leaderTitle: "President",
     leaderPhoto: "https://upload.wikimedia.org/wikipedia/commons/thumb/8/8e/Joseph_Aoun_2024.jpg/400px-Joseph_Aoun_2024.jpg",
-    description: "A small Mediterranean country with a complex sectarian political system. Hezbollah operates as a state-within-a-state and is the primary actor in active border exchanges with Israel.",
+    description: "A small Mediterranean country with a complex sectarian political system. A US-brokered ceasefire with Israel took hold in November 2024, though Hezbollah's long-term status remains unresolved.",
     stats: [{ label: "GDP / Military", value: "$23B / $400M" }, { label: "Gov't", value: "Confessional Republic" }],
     conflicts: [
-      { label: "Israel · Lebanon conflict", dot: "#ef4444", alerts: ["AP: IDF ground forces reported crossing the Blue Line", "Al Jazeera: Hezbollah drone swarm intercepted over Haifa", "Reuters: Beirut airport suspends all operations"] },
+      { label: "Israel / US in the Middle East", dot: "#f87171", alerts: ["Reuters: IDF maintains buffer zone in southern Lebanon despite ceasefire", "AP: Hezbollah rearms amid ongoing regional escalation", "Al Jazeera: Lebanon army deploying to south under ceasefire terms"] },
+    ],
+  },
+  SDN: {
+    name: "Sudan", fullName: "Republic of Sudan", flag: "🇸🇩",
+    founded: "January 1, 1956", capital: "Port Sudan", population: "47M", region: "East Africa",
+    leader: "Abdel Fattah al-Burhan", leaderTitle: "Chairman, Sovereignty Council",
+    leaderPhoto: "https://upload.wikimedia.org/wikipedia/commons/thumb/6/6d/Abdel_Fattah_al-Burhan.jpg/400px-Abdel_Fattah_al-Burhan.jpg",
+    description: "Sub-Saharan Africa's third-largest country, gripped by a devastating civil war between the Sudanese Armed Forces and the Rapid Support Forces since April 2023.",
+    stats: [{ label: "GDP / Military", value: "$34B / $1.2B" }, { label: "Gov't", value: "Military Council" }],
+    conflicts: [
+      { label: "Sudan civil war + genocide", dot: "#ef4444", alerts: ["AP: RSF accused of mass atrocities in Darfur — ICC opens investigation", "NYT: 10M+ displaced — world's largest displacement crisis", "Reuters: SAF and RSF both blocking humanitarian access to Khartoum"] },
+    ],
+  },
+  MMR: {
+    name: "Myanmar", fullName: "Republic of the Union of Myanmar", flag: "🇲🇲",
+    founded: "January 4, 1948", capital: "Naypyidaw", population: "54M", region: "Southeast Asia",
+    leader: "Min Aung Hlaing", leaderTitle: "Chairman, State Administration Council",
+    leaderPhoto: "https://upload.wikimedia.org/wikipedia/commons/thumb/3/3e/Min_Aung_Hlaing_2019.jpg/400px-Min_Aung_Hlaing_2019.jpg",
+    description: "Since the February 2021 military coup, Myanmar has been engulfed in civil war. Ethnic armed groups and the People's Defence Force control large swaths of territory once held by the junta.",
+    stats: [{ label: "GDP / Military", value: "$65B / $2.8B" }, { label: "Gov't", value: "Military Junta" }],
+    conflicts: [
+      { label: "Myanmar civil war", dot: "#ef4444", alerts: ["Reuters: Junta loses Lashio — resistance controls 60% of Shan State", "AP: Junta airstrikes on civilian markets in Sagaing Region", "NYT: 2.6M+ displaced — ASEAN ceasefire efforts stalled"] },
     ],
   },
 };
