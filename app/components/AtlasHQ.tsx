@@ -837,7 +837,7 @@ function SectionLabel({ label, onClick, dragHandle, onLabelChange }: {
   const editMode = useEditMode();
   const labelStyle: React.CSSProperties = {
     fontSize: 13, fontFamily: "monospace", letterSpacing: "0.18em",
-    color: "rgba(255,255,255,0.42)", textTransform: "uppercase",
+    color: "rgba(255,255,255,0.42)",
     fontWeight: 500, userSelect: "none",
   };
   return (
