@@ -948,20 +948,20 @@ export default function Map({ onCountryClick, flyToCode, flyToPosition, selected
         type: "geojson",
         data: "/oslo-agreement.geojson",
       });
-      // Area C, H2, East Jerusalem, Nature Reserve → deep blue (Israeli control, ~60%)
+      // Area C, H2, East Jerusalem, No Man's Land → deep blue (Israeli-administered)
       m.addLayer({
         id: "oslo-fill-israeli",
         type: "fill",
         source: "oslo-agreement",
-        filter: ["in", ["get", "CLASS"], ["literal", ["C", "H2", "Israeli Declared East Jerusalem", "Nature Reserve"]]],
+        filter: ["in", ["get", "CLASS"], ["literal", ["C", "H2", "Israeli Declared East Jerusalem", "No Man's Land"]]],
         paint: { "fill-color": "#0d2a52", "fill-opacity": 0 },
       });
-      // Area B → purple (joint Israeli-Palestinian control, ~22%)
+      // Area B + Nature Reserve → purple (joint Israeli-Palestinian control, ~22%+)
       m.addLayer({
         id: "oslo-fill-joint",
         type: "fill",
         source: "oslo-agreement",
-        filter: ["==", ["get", "CLASS"], "B"],
+        filter: ["in", ["get", "CLASS"], ["literal", ["B", "Nature Reserve"]]],
         paint: { "fill-color": "#4a1a6e", "fill-opacity": 0 },
       });
       // Area A, H1 → deep red (Palestinian full control, ~18%)
