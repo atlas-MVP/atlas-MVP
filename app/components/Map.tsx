@@ -1009,15 +1009,15 @@ export default function Map({ onCountryClick, flyToCode, flyToPosition, selected
             geometry: {
               type: "Polygon",
               coordinates: [[
-                [34.2228, 31.5950],  // NW coast (north border with Israel)
-                [34.5470, 31.5920],  // NE — Erez crossing
-                [34.4870, 31.5000],  // E middle-north
-                [34.4560, 31.4000],  // E middle
-                [34.3480, 31.3000],  // E south
-                [34.2850, 31.2300],  // SE — Kerem Shalom
-                [34.2650, 31.2180],  // SE corner — Rafah
-                [34.2228, 31.2180],  // SW coast — Egyptian border
-                [34.2228, 31.5950],  // close
+                [34.4330, 31.5940],  // NW — coast at north Israel-Gaza border
+                [34.5380, 31.5920],  // NE — Erez crossing (inland end)
+                [34.4950, 31.4500],  // E — Karni/Karm Abu Salem
+                [34.3850, 31.3450],  // E — middle south
+                [34.2680, 31.2280],  // SE — Kerem Shalom / Rafah east
+                [34.2370, 31.2180],  // SW — Rafah coast (Egyptian border meets sea)
+                [34.3430, 31.3480],  // coast mid
+                [34.4050, 31.4700],  // coast north-mid
+                [34.4330, 31.5940],  // close
               ]],
             },
           }],
