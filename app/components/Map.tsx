@@ -146,7 +146,7 @@ const OVERLAY_LAYER_IDS = [
   "casualty-fill-blue", "casualty-fill-red",
   "idle-pulse-blue", "idle-pulse-red",
   "world-hit", "hover-fill", "hover-border", "secondary-border",
-  "oslo-fill-israeli", "oslo-fill-palestinian", "oslo-border",
+  "oslo-fill-israeli", "oslo-fill-palestinian", "oslo-fill-gaza", "oslo-border",
   "events-halo", "events-glow", "events-dot",
   "strike-outer-halo", "strike-halo", "strike-glow", "strike-core", "strike-dot",
 ];
@@ -271,8 +271,11 @@ export default function Map({ onCountryClick, flyToCode, flyToPosition, selected
       // match the West Bank zone shades. When Oslo is hidden, restore zoom-fades.
       if (m.getLayer("highlighted-fill-PSE")) {
         const [fs, fe] = COUNTRY_FADE_RANGES["PSE"] ?? [FADE_START, FADE_END];
+        // Zero out PSE country fill when selected — replaced by oslo-fill-palestinian
+        // (West Bank A/H1) + oslo-fill-gaza (Gaza Strip). This lets No Man's Land
+        // (between Gaza and Israel, excluded from all oslo fills) show bare satellite.
         m.setPaintProperty("highlighted-fill-PSE", "fill-opacity",
-          show ? 0.52 : ["interpolate", ["linear"], ["zoom"], fs, 0.48, fe, 0] as never
+          show ? 0 : ["interpolate", ["linear"], ["zoom"], fs, 0.48, fe, 0] as never
         );
       }
       if (m.getLayer("highlighted-fill-ISR")) {
@@ -281,14 +284,13 @@ export default function Map({ onCountryClick, flyToCode, flyToPosition, selected
           show ? 0.52 : ["interpolate", ["linear"], ["zoom"], fs, 0.48, fe, 0] as never
         );
       }
-      // oslo-fill-palestinian suppressed — highlighted-fill-PSE at flat 0.52 already
-      // covers all Palestinian territory (Gaza + West Bank) at a uniform shade.
-      // Stacking it would make West Bank A/H1 darker than Gaza.
-      m.setPaintProperty("oslo-fill-palestinian", "fill-opacity", 0);
-      // oslo-fill-israeli at 0.92 so it fully overrides the PSE-red base in
-      // Israeli-controlled West Bank zones (Area C, H2, East Jerusalem, Nature Reserve).
-      m.setPaintProperty("oslo-fill-israeli",    "fill-opacity", show ? 0.92 : 0);
-      m.setPaintProperty("oslo-border",          "line-opacity", show ? 0.85 : 0);
+      // West Bank Palestinian zones (Area A, H1)
+      m.setPaintProperty("oslo-fill-palestinian", "fill-opacity", show ? 0.52 : 0);
+      // Gaza Strip explicit polygon (matches PSE red, no No Man's Land bleed)
+      m.setPaintProperty("oslo-fill-gaza",        "fill-opacity", show ? 0.52 : 0);
+      // Israeli-controlled West Bank zones (Area C, H2, East Jerusalem, Nature Reserve)
+      m.setPaintProperty("oslo-fill-israeli",     "fill-opacity", show ? 0.92 : 0);
+      m.setPaintProperty("oslo-border",           "line-opacity", show ? 0.85 : 0);
     } catch {}
   }, [selectedCountry, mapReady]);
 
@@ -968,6 +970,38 @@ export default function Map({ onCountryClick, flyToCode, flyToPosition, selected
           "line-width": 1.5,
           "line-opacity": 0,
         },
+      });
+
+      // Gaza Strip explicit polygon — lets No Man's Land show bare satellite.
+      // highlighted-fill-PSE (country boundary fill) covers all of PSE including
+      // No Man's Land; replacing it with this explicit polygon + oslo-fill-palestinian
+      // (West Bank) means No Man's Land has zero fill coverage → raw satellite.
+      m.addSource("gaza-strip", {
+        type: "geojson",
+        data: {
+          type: "FeatureCollection",
+          features: [{
+            type: "Feature",
+            properties: {},
+            geometry: {
+              type: "Polygon",
+              coordinates: [[
+                [34.2228, 31.5960],
+                [34.4075, 31.5880],
+                [34.5575, 31.5590],
+                [34.4950, 31.2163],
+                [34.2228, 31.2163],
+                [34.2228, 31.5960],
+              ]],
+            },
+          }],
+        },
+      });
+      m.addLayer({
+        id: "oslo-fill-gaza",
+        type: "fill",
+        source: "gaza-strip",
+        paint: { "fill-color": "#3b0f1f", "fill-opacity": 0 },
       });
 
       // Crisis event dots
