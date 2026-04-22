@@ -147,7 +147,7 @@ const OVERLAY_LAYER_IDS = [
   "idle-pulse-blue", "idle-pulse-red",
   "world-hit", "hover-fill", "hover-border", "secondary-border",
   "oslo-fill-isr-country",
-  "oslo-fill-israeli", "oslo-fill-palestinian", "oslo-fill-gaza", "oslo-border",
+  "oslo-fill-israeli", "oslo-fill-palestinian", "oslo-fill-gaza", "oslo-fill-nomansland", "oslo-border",
   "events-halo", "events-glow", "events-dot",
   "strike-outer-halo", "strike-halo", "strike-glow", "strike-core", "strike-dot",
 ];
@@ -295,6 +295,8 @@ export default function Map({ onCountryClick, flyToCode, flyToPosition, selected
       m.setPaintProperty("oslo-fill-gaza",        "fill-opacity", show ? 0.52 : 0);
       // Israeli-controlled West Bank zones — 0.52, no underlying fill to mix with
       m.setPaintProperty("oslo-fill-israeli",     "fill-opacity", show ? 0.52 : 0);
+      // No Man's Land — bright amber, renders on top of Gaza/Israel fills
+      m.setPaintProperty("oslo-fill-nomansland",  "fill-opacity", show ? 0.9 : 0);
       m.setPaintProperty("oslo-border",           "line-opacity", show ? 0.85 : 0);
     } catch {}
   }, [selectedCountry, mapReady]);
@@ -1017,6 +1019,15 @@ export default function Map({ onCountryClick, flyToCode, flyToPosition, selected
         type: "fill",
         source: "gaza-strip",
         paint: { "fill-color": "#3b0f1f", "fill-opacity": 0 },
+      });
+
+      // No Man's Land — bright amber so it's visually identifiable on top of all fills
+      m.addLayer({
+        id: "oslo-fill-nomansland",
+        type: "fill",
+        source: "oslo-agreement",
+        filter: ["==", ["get", "CLASS"], "No Man's Land"],
+        paint: { "fill-color": "#f5a623", "fill-opacity": 0 },
       });
 
       // Crisis event dots
