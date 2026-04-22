@@ -1534,6 +1534,13 @@ export default function CountryPanel({ countryCode, onClose, onViewFeed, onConfl
                   onMouseLeave={e => (e.currentTarget.style.color = "rgba(255,255,255,0.35)")}
                 >← back</button>
               )}
+              <button
+                onClick={onClose}
+                title="close"
+                style={{ color: "rgba(255,255,255,0.28)", fontSize: 16, lineHeight: 1, background: "none", border: "none", cursor: "pointer", padding: "2px 2px", display: "flex", alignItems: "center", justifyContent: "center" }}
+                onMouseEnter={e => (e.currentTarget.style.color = "rgba(255,255,255,0.85)")}
+                onMouseLeave={e => (e.currentTarget.style.color = "rgba(255,255,255,0.28)")}
+              >✕</button>
             </div>
           </div>
 

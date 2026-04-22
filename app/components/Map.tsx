@@ -332,7 +332,7 @@ export default function Map({ onCountryClick, flyToCode, flyToPosition, selected
         sp("oslo-fill-israeli",     FULL.isr);
         sp("oslo-fill-isr-country", FULL.isrC);
       } else if (g === "pal") {
-        sp("highlighted-fill-PSE", FULL.pse);
+        sp("highlighted-fill-PSE", 0);
         sp("oslo-fill-palestinian", FULL.pal);
         sp("oslo-fill-joint",       0);
         sp("oslo-fill-israeli",     0);
@@ -1266,8 +1266,9 @@ export default function Map({ onCountryClick, flyToCode, flyToPosition, selected
         setHovered(null);
       });
 
-      // Click: open panel + fly to country
+      // Click: open panel + fly to country (blocked when a conflict/disaster panel is open)
       m.on("click", "world-hit", (e) => {
+        if (panelOpenRef.current) return;
         const feature = e.features?.[0];
         if (!feature) return;
         const code = feature.properties?.iso_3166_1_alpha_3 as string;
