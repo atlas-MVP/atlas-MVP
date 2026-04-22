@@ -841,7 +841,7 @@ export default function Map({ onCountryClick, flyToCode, flyToPosition, selected
         // Semi-arid savanna / steppe (Sahel, Turkey, India Thar, S.America)
         ["ETH","BFA","TUR","ARM","IND","PER","CHL","MEX","ZWE","ZAF","CHN"], 0.44,
         // Dry savanna / light bush (fades toward green)
-        ["SEN","GMB","KEN","TZA","MOZ","NGA","CMR","UGA","COL","VEN","ARG"], 0.22,
+        ["SEN","GMB","KEN","TZA","MOZ","NGA","CMR","UGA","ARG"], 0.22,
         // Default = 0 (fully green: SLE, LBR, GIN, CIV, GHA, TGO, BEN, etc.)
         0,
       ] as never;
