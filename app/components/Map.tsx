@@ -146,6 +146,7 @@ const OVERLAY_LAYER_IDS = [
   "casualty-fill-blue", "casualty-fill-red",
   "idle-pulse-blue", "idle-pulse-red",
   "world-hit", "hover-fill", "hover-border", "secondary-border",
+  "oslo-fill-isr-country",
   "oslo-fill-israeli", "oslo-fill-palestinian", "oslo-fill-gaza", "oslo-border",
   "events-halo", "events-glow", "events-dot",
   "strike-outer-halo", "strike-halo", "strike-glow", "strike-core", "strike-dot",
@@ -280,16 +281,20 @@ export default function Map({ onCountryClick, flyToCode, flyToPosition, selected
       }
       if (m.getLayer("highlighted-fill-ISR")) {
         const [fs, fe] = COUNTRY_FADE_RANGES["ISR"] ?? [FADE_START, FADE_END];
+        // Hide ISR country fill when Oslo shown — oslo-fill-isr-country takes over
+        // so Israel proper and West Bank Israeli zones share the exact same opacity.
         m.setPaintProperty("highlighted-fill-ISR", "fill-opacity",
-          show ? 0.52 : ["interpolate", ["linear"], ["zoom"], fs, 0.48, fe, 0] as never
+          show ? 0 : ["interpolate", ["linear"], ["zoom"], fs, 0.48, fe, 0] as never
         );
       }
+      // Israel proper — same 0.52 blue as the West Bank Oslo Israeli zones
+      m.setPaintProperty("oslo-fill-isr-country", "fill-opacity", show ? 0.52 : 0);
       // West Bank Palestinian zones (Area A, H1)
       m.setPaintProperty("oslo-fill-palestinian", "fill-opacity", show ? 0.52 : 0);
       // Gaza Strip explicit polygon (matches PSE red, no No Man's Land bleed)
       m.setPaintProperty("oslo-fill-gaza",        "fill-opacity", show ? 0.52 : 0);
-      // Israeli-controlled West Bank zones (Area C, H2, East Jerusalem, Nature Reserve)
-      m.setPaintProperty("oslo-fill-israeli",     "fill-opacity", show ? 0.92 : 0);
+      // Israeli-controlled West Bank zones — 0.52, no underlying fill to mix with
+      m.setPaintProperty("oslo-fill-israeli",     "fill-opacity", show ? 0.52 : 0);
       m.setPaintProperty("oslo-border",           "line-opacity", show ? 0.85 : 0);
     } catch {}
   }, [selectedCountry, mapReady]);
@@ -970,6 +975,16 @@ export default function Map({ onCountryClick, flyToCode, flyToPosition, selected
           "line-width": 1.5,
           "line-opacity": 0,
         },
+      });
+
+      // Israel proper fill for Oslo mode — same color/opacity as West Bank Israeli zones
+      m.addLayer({
+        id: "oslo-fill-isr-country",
+        type: "fill",
+        source: "country-boundaries",
+        "source-layer": "country_boundaries",
+        filter: ["all", worldviewFilter, ["==", ["get", "iso_3166_1_alpha_3"], "ISR"]] as never,
+        paint: { "fill-color": "#0d2a52", "fill-opacity": 0 },
       });
 
       // Gaza Strip explicit polygon — lets No Man's Land show bare satellite.
