@@ -273,10 +273,16 @@ export default function Map({ onCountryClick, flyToCode, flyToPosition, selected
     try {
       // PSE fill covers Gaza correctly via Mapbox built-in tile. Oslo layers sit on top
       // for the West Bank zones. High opacity on Israeli/joint layers overrides PSE red.
+      // Oslo fills fade from full opacity at zoom 11 → 0 at zoom 12.5 (becomes border-stroke only)
+      const OSLO_FADE_START = 11;
+      const OSLO_FADE_END   = 12.5;
+      const osloFade = (maxVal: number) =>
+        ["interpolate", ["linear"], ["zoom"], OSLO_FADE_START, maxVal, OSLO_FADE_END, 0];
+
       if (m.getLayer("highlighted-fill-PSE")) {
         const [fs, fe] = COUNTRY_FADE_RANGES["PSE"] ?? [FADE_START, FADE_END];
         m.setPaintProperty("highlighted-fill-PSE", "fill-opacity",
-          show ? 0.65 : ["interpolate", ["linear"], ["zoom"], fs, 0.48, fe, 0] as never
+          (show ? osloFade(0.65) : ["interpolate", ["linear"], ["zoom"], fs, 0.48, fe, 0]) as never
         );
       }
       if (m.getLayer("highlighted-fill-ISR")) {
@@ -285,14 +291,14 @@ export default function Map({ onCountryClick, flyToCode, flyToPosition, selected
           show ? 0 : ["interpolate", ["linear"], ["zoom"], fs, 0.48, fe, 0] as never
         );
       }
-      const sp = (id: string, prop: string, val: number) => {
+      const sp = (id: string, prop: string, val: unknown) => {
         if (m.getLayer(id)) m.setPaintProperty(id, prop as never, val as never);
       };
-      sp("oslo-fill-isr-country", "fill-opacity", show ? 0.52 : 0);  // reverted — original opacity
-      sp("oslo-fill-palestinian", "fill-opacity", show ? 0.82 : 0);  // deeper red
-      sp("oslo-fill-joint",       "fill-opacity", show ? 0.85 : 0);  // deeper purple
-      sp("oslo-fill-israeli",     "fill-opacity", show ? 0.52 : 0);  // reverted — original opacity
-      sp("oslo-border",           "line-opacity", show ? 0.5  : 0);
+      sp("oslo-fill-isr-country", "fill-opacity", show ? osloFade(0.52) : 0);
+      sp("oslo-fill-palestinian", "fill-opacity", show ? osloFade(0.82) : 0);
+      sp("oslo-fill-joint",       "fill-opacity", show ? osloFade(0.85) : 0);
+      sp("oslo-fill-israeli",     "fill-opacity", show ? osloFade(0.52) : 0);
+      sp("oslo-border",           "line-opacity", show ? 0.5  : 0);  // border stays at all zoom levels
     } catch {}
   }, [selectedCountry, focusCountries, mapReady]);
 
@@ -320,35 +326,40 @@ export default function Map({ onCountryClick, flyToCode, flyToPosition, selected
       "Israeli Declared East Jerusalem": "isr", "No Man's Land": "isr",
     };
 
-    const sp = (id: string, val: number) => {
+    const OSLO_FADE_START = 11;
+    const OSLO_FADE_END   = 12.5;
+    const fade = (maxVal: number) =>
+      ["interpolate", ["linear"], ["zoom"], OSLO_FADE_START, maxVal, OSLO_FADE_END, 0];
+
+    const sp = (id: string, val: unknown) => {
       if (m.getLayer(id)) m.setPaintProperty(id, "fill-opacity" as never, val as never);
     };
 
     const applyGroup = (g: "pal" | "joint" | "isr" | null) => {
       if (g === null) {
-        sp("highlighted-fill-PSE", FULL.pse);
-        sp("oslo-fill-palestinian", FULL.pal);
-        sp("oslo-fill-joint",       FULL.joint);
-        sp("oslo-fill-israeli",     FULL.isr);
-        sp("oslo-fill-isr-country", FULL.isrC);
+        sp("highlighted-fill-PSE", fade(FULL.pse));
+        sp("oslo-fill-palestinian", fade(FULL.pal));
+        sp("oslo-fill-joint",       fade(FULL.joint));
+        sp("oslo-fill-israeli",     fade(FULL.isr));
+        sp("oslo-fill-isr-country", fade(FULL.isrC));
       } else if (g === "pal") {
         sp("highlighted-fill-PSE", 0);
-        sp("oslo-fill-palestinian", FULL.pal);
+        sp("oslo-fill-palestinian", fade(FULL.pal));
         sp("oslo-fill-joint",       0);
         sp("oslo-fill-israeli",     0);
         sp("oslo-fill-isr-country", 0);
       } else if (g === "joint") {
         sp("highlighted-fill-PSE", 0);
         sp("oslo-fill-palestinian", 0);
-        sp("oslo-fill-joint",       FULL.joint);
+        sp("oslo-fill-joint",       fade(FULL.joint));
         sp("oslo-fill-israeli",     0);
         sp("oslo-fill-isr-country", 0);
       } else {
         sp("highlighted-fill-PSE", 0);
         sp("oslo-fill-palestinian", 0);
         sp("oslo-fill-joint",       0);
-        sp("oslo-fill-israeli",     FULL.isr);
-        sp("oslo-fill-isr-country", FULL.isrC);
+        sp("oslo-fill-israeli",     fade(FULL.isr));
+        sp("oslo-fill-isr-country", fade(FULL.isrC));
       }
     };
 
