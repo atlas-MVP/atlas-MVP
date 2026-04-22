@@ -889,6 +889,98 @@ const CONFLICTS: Record<string, Conflict> = {
       { date: "1995–1996 — Third Taiwan Strait Crisis", text: "China fires missiles near Taiwan ahead of Taiwan's first democratic presidential election. The US deploys two carrier battle groups. China backs down — the last direct military standoff before the current era." },
     ],
   },
+  "israel-lebanon": {
+    id: "israel-lebanon",
+    title: "Israel–Lebanon conflict",
+    date: "1978 – Present",
+    feedKey: "LBN",
+    sides: {
+      blue: ["Israel", "USA"],
+      red:  ["Lebanon", "Hezbollah", "Iran"],
+    },
+    casualties: [
+      { country: "Lebanon", displaced: "1,200,000", injured: "5,200", killed: "1,180", civilianPct: 48, civSources: [
+        { label: "Al Jazeera — Lebanon death toll tracker", url: "https://www.aljazeera.com/news/liveblog/2024/10/6/live-israel-attacks-lebanon" },
+        { label: "Reuters — Lebanon conflict casualties", url: "https://www.reuters.com/world/middle-east/lebanon/" },
+        { label: "Lebanese Ministry of Public Health", url: "https://www.moph.gov.lb" },
+      ]},
+      { country: "Israel", displaced: "96,000", injured: "412", killed: "74", civilianPct: 24, civSources: [
+        { label: "Reuters — Israel war casualties", url: "https://www.reuters.com/world/middle-east/israel/" },
+        { label: "IDF official spokesperson", url: "https://www.idf.il/en/" },
+      ]},
+    ],
+    xPost: {
+      user: "Al Jazeera English",
+      handle: "@AJEnglish",
+      text: "BREAKING: Israel confirms ground troops have entered southern Lebanon. Hezbollah fires 200+ rockets at northern Israel. 1.2 million Lebanese displaced. US calls for restraint. #Lebanon #IsraelLebanonWar",
+      imageUrl: "https://images.unsplash.com/photo-1579532537598-459ecdaf39cc?w=600&q=80",
+      xUrl: "https://x.com/search?q=%23Lebanon",
+    },
+    timeline: [
+      {
+        date: "November 27, 2024 — Ceasefire",
+        text: "A US and France-brokered ceasefire halts 60 days of full-scale war. Lebanon's army deploys to the south. Israel maintains temporary positions inside Lebanese territory pending full withdrawal. Hezbollah's command structure is decimated — Nasrallah, Naim Qassem, and 10+ senior commanders killed.",
+        era: "war",
+        mapView: { center: [35.5, 33.5], zoom: 7 },
+      },
+      {
+        date: "October 1–31, 2024 — Ground invasion",
+        text: "Israel launches limited ground operations into southern Lebanon targeting Hezbollah tunnel networks. Simultaneously, wave strikes kill Yahya Sinwar in Gaza. Hezbollah fires its longest-range missiles at Tel Aviv and Haifa. Over 1 million Lebanese displaced. 1,180 killed in Lebanon, 74 in Israel.",
+        era: "war",
+        highlight: true,
+        strikeEvent: {
+          center: [35.5, 33.5], zoom: 7.5,
+          strikes: [
+            { lng: 35.50, lat: 33.27, side: "amber", label: "Southern Lebanon ground operations", confidence: 97, sources: [SRC.idf, SRC.reuters, SRC.bbc] },
+            { lng: 35.49, lat: 33.89, side: "amber", label: "Beirut southern suburbs (Dahieh)", confidence: 95, sources: [SRC.aljazeera, SRC.reuters] },
+            { lng: 35.00, lat: 33.55, side: "crimson", label: "Haifa — Hezbollah missiles", confidence: 92, sources: [SRC.reuters, SRC.bbc] },
+            { lng: 34.78, lat: 32.09, side: "crimson", label: "Tel Aviv — long-range rockets", confidence: 88, sources: [SRC.reuters, SRC.nyt] },
+          ],
+        },
+      },
+      {
+        date: "September 27, 2024 — Nasrallah killed",
+        text: "Israel assassinates Hezbollah Secretary-General Hassan Nasrallah in a massive airstrike on the southern Beirut suburb of Dahieh. Nasrallah had led Hezbollah for 32 years and was the most powerful non-state actor in the Arab world. Iran vows retaliation. The strike uses 80+ 2,000-lb bunker-buster bombs.",
+        era: "war",
+        highlight: true,
+        mapView: { center: [35.49, 33.84], zoom: 11 },
+      },
+      {
+        date: "September 17–18, 2024 — Pager attacks",
+        text: "Thousands of Hezbollah pagers and walkie-talkies explode simultaneously across Lebanon and Syria — a covert Israeli supply chain operation inserting explosives into devices months earlier. At least 39 killed, 2,900+ injured. The most sophisticated covert operation in decades.",
+        era: "war",
+        mapView: { center: [35.5, 33.9], zoom: 7 },
+      },
+      {
+        date: "October 8, 2023 — Solidarity front opens",
+        text: "The day after Hamas's October 7 attack, Hezbollah opens a 'solidarity front' against Israel from southern Lebanon. Daily cross-border exchanges begin — rockets, anti-tank missiles, drones — displacing 60,000+ Israelis and 90,000+ Lebanese from the border zone.",
+        era: "war",
+        mapView: { center: [35.5, 33.1], zoom: 8 },
+      },
+      {
+        date: "2006 — Second Lebanon War",
+        text: "Hezbollah kills 8 Israeli soldiers and kidnaps 2 others, triggering a 34-day war. Israel launches a massive air campaign and ground invasion. Hezbollah fires 4,000 rockets into Israel. 1,200 Lebanese killed (majority civilian), 165 Israelis killed. UN Resolution 1701 ends hostilities. Hezbollah declares victory.",
+        highlight: true,
+        mapView: { center: [35.5, 33.5], zoom: 7.5 },
+      },
+      {
+        date: "May 2000 — Israeli withdrawal",
+        text: "After 22 years of occupation, Israel unilaterally withdraws all forces from southern Lebanon. Hezbollah claims victory. The South Lebanon Army (Israel's proxy militia) collapses overnight. Prisoners of war are exchanged. A new era of Hezbollah dominance in the south begins.",
+        mapView: { center: [35.5, 33.3], zoom: 8 },
+      },
+      {
+        date: "1982 — First Lebanon War",
+        text: "Israel invades Lebanon under Defense Minister Ariel Sharon, aiming to destroy the PLO and install a friendly government. Israeli forces reach Beirut — the only Arab capital ever besieged by Israel. The Sabra and Shatila massacre kills 800–3,500 Palestinian refugees. Israel occupies southern Lebanon until 2000.",
+        highlight: true,
+        mapView: { center: [35.5, 33.9], zoom: 7 },
+      },
+      {
+        date: "1978 — Operation Litani",
+        text: "Israel's first invasion of Lebanon in response to a PLO attack on the Coastal Road. Israel occupies southern Lebanon up to the Litani River. UN Resolution 425 demands withdrawal and creates UNIFIL. Israel refuses full withdrawal, beginning a presence in southern Lebanon that lasts until 2000.",
+        mapView: { center: [35.5, 33.2], zoom: 8 },
+      },
+    ],
+  },
   "haiti": {
     id: "haiti",
     title: "Haiti gang crisis",
@@ -910,9 +1002,9 @@ const CONFLICTS: Record<string, Conflict> = {
 };
 
 const COUNTRY_CONFLICTS: Record<string, string[]> = {
-  ISR: ["israel-iran", "israel-gaza"],
+  ISR: ["israel-iran", "israel-gaza", "israel-lebanon"],
   IRN: ["israel-iran"],
-  LBN: ["israel-iran"],
+  LBN: ["israel-lebanon", "israel-iran"],
   PSE: ["israel-gaza"],
   UKR: ["russia-ukraine"],
   RUS: ["russia-ukraine"],
@@ -1647,13 +1739,28 @@ export default function CountryPanel({ countryCode, onClose, onViewFeed, onConfl
                       </p>
                     </div>
                   )}
-                  <div style={{ padding: "10px 16px 16px" }}>
+                  <div style={{ padding: "10px 16px 16px", display: "flex", alignItems: "center", gap: 8 }}>
                     <button
                       onClick={(e) => { e.stopPropagation(); onViewFeed(conflict.feedKey); }}
-                      style={{ width: "100%", padding: "8px", fontSize: 10, fontFamily: "monospace", letterSpacing: "0.12em", textTransform: "uppercase", background: "none", border: "none", borderRadius: 8, color: "rgba(255,255,255,0.45)", cursor: "pointer", animation: "cpFade 2s ease-in-out infinite" }}
+                      style={{ flex: 1, padding: "8px", fontSize: 10, fontFamily: "monospace", letterSpacing: "0.12em", textTransform: "uppercase", background: "none", border: "none", borderRadius: 8, color: "rgba(255,255,255,0.45)", cursor: "pointer", animation: "cpFade 2s ease-in-out infinite", textAlign: "center" }}
                       onMouseEnter={e => { e.currentTarget.style.animationPlayState = "paused"; e.currentTarget.style.opacity = "1"; e.currentTarget.style.color = "rgba(255,255,255,0.8)"; }}
                       onMouseLeave={e => { e.currentTarget.style.animationPlayState = "running"; e.currentTarget.style.color = "rgba(255,255,255,0.45)"; }}
                     >Live Feed</button>
+                    {(conflict.id === "israel-iran" || conflict.id === "israel-gaza") && (
+                      <button
+                        onClick={(e) => { e.stopPropagation(); onFocusCountry?.("LBN"); }}
+                        style={{
+                          flex: 1, padding: "8px 10px", fontSize: 9, fontFamily: "monospace", letterSpacing: "0.10em",
+                          textTransform: "uppercase", border: "1px solid rgba(255,180,60,0.35)",
+                          borderRadius: 8, cursor: "pointer", textAlign: "center",
+                          color: "rgba(255,200,80,0.85)", background: "rgba(255,160,30,0.07)",
+                          animation: "cpFade 2s ease-in-out infinite",
+                          position: "relative", overflow: "hidden",
+                        }}
+                        onMouseEnter={e => { e.currentTarget.style.animationPlayState = "paused"; e.currentTarget.style.opacity = "1"; e.currentTarget.style.background = "rgba(255,160,30,0.16)"; e.currentTarget.style.color = "rgba(255,215,100,1)"; }}
+                        onMouseLeave={e => { e.currentTarget.style.animationPlayState = "running"; e.currentTarget.style.background = "rgba(255,160,30,0.07)"; e.currentTarget.style.color = "rgba(255,200,80,0.85)"; }}
+                      >israel–lebanon conflict ↗</button>
+                    )}
                   </div>
                 </div>
               );
