@@ -935,7 +935,7 @@ export default function Map({ onCountryClick, flyToCode, flyToPosition, selected
         type: "fill",
         source: "oslo-agreement",
         filter: ["in", ["get", "CLASS"], ["literal", ["A", "H1"]]],
-        paint: { "fill-color": "#8b0f20", "fill-opacity": 0 },
+        paint: { "fill-color": "#3b0f1f", "fill-opacity": 0 },
       });
       // Shared border on all non-No-Man's-Land zones
       m.addLayer({
