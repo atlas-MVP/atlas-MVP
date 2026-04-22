@@ -927,7 +927,7 @@ export default function Map({ onCountryClick, flyToCode, flyToPosition, selected
         type: "fill",
         source: "oslo-agreement",
         filter: ["in", ["get", "CLASS"], ["literal", ["C", "H2", "Israeli Declared East Jerusalem", "Nature Reserve"]]],
-        paint: { "fill-color": "#0d2a6e", "fill-opacity": 0 },
+        paint: { "fill-color": "#0d2a52", "fill-opacity": 0 },
       });
       // Palestinian-controlled: Area A, H1 → deep red
       m.addLayer({
