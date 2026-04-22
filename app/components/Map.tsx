@@ -1142,8 +1142,10 @@ export default function Map({ onCountryClick, flyToCode, flyToPosition, selected
         revealLayersRef.current = { borders, ocean, countries, cities };
       }
 
-      // ── Country label stagger: reveal on first click, closest→farthest ────────
-      m.once("click", (e) => {
+      // ── Country label stagger: reveal on first contact (mousedown/touch), closest→farthest ──
+      const onFirstContact = (e: mapboxgl.MapMouseEvent | mapboxgl.MapTouchEvent) => {
+        m.off("mousedown", onFirstContact);
+        m.off("touchstart", onFirstContact);
         if (labelsRevealedRef.current) return;
         labelsRevealedRef.current = true;
 
@@ -1181,7 +1183,9 @@ export default function Map({ onCountryClick, flyToCode, flyToPosition, selected
           entries.push({ name, coords: (f.geometry as GeoJSON.Point).coordinates as [number, number] });
         });
 
-        const cx = e.point.x, cy = e.point.y;
+        // touchstart has an array of points; use the first touch
+        const pt = "points" in e && e.points?.length ? e.points[0] : e.point;
+        const cx = pt.x, cy = pt.y;
         const sorted = entries
           .sort((a, b) => {
             const pa = m.project(a.coords), pb = m.project(b.coords);
@@ -1216,7 +1220,10 @@ export default function Map({ onCountryClick, flyToCode, flyToPosition, selected
           }, delay);
           labelRevealTimers.current.push(t);
         });
-      });
+      };
+
+      m.on("mousedown", onFirstContact);
+      m.on("touchstart", onFirstContact);
 
       // No intro auto-scroll — user navigates manually
     });
