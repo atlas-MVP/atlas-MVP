@@ -597,7 +597,7 @@ const CONFLICTS: Record<string, Conflict> = {
       red:  ["Gaza", "Hamas"],
     },
     casualties: [
-      { country: "Gaza", displaced: "1,900,000", injured: "110,165", killed: "46,707", civilianPct: 72, civSources: [
+      { country: "Gaza", displaced: "1,900,000", injured: "135,000", killed: "58,011", civilianPct: 72, civSources: [
         { label: "Al Jazeera — Gaza death toll live tracker", url: "https://www.aljazeera.com/news/liveblog/2024/10/6/live-israel-attacks-lebanon" },
         { label: "Gaza Ministry of Health (via UN OCHA)", url: "https://www.ochaopt.org" },
         { label: "NYT — Gaza casualty analysis", url: "https://www.nytimes.com/section/world/middleeast" },
@@ -773,7 +773,7 @@ const CONFLICTS: Record<string, Conflict> = {
     title: "Sudan civil war + genocide",
     date: "April 2023 – Present",
     feedKey: "SDN",
-    casualties: [{ country: "Sudan", displaced: "10,700,000", injured: "14,200", killed: "20,079", killedHasMissing: true, missing: "8,000", }],
+    casualties: [{ country: "Sudan", displaced: "10,700,000", injured: "14,200", killed: "20,079", killedHasMissing: true, missing: "8,000", civilianPct: 76 }],
     xPost: {
       user: "Al Jazeera English",
       handle: "@AJEnglish",
