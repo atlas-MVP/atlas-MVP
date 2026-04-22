@@ -266,8 +266,28 @@ export default function Map({ onCountryClick, flyToCode, flyToPosition, selected
     if (!m || !mapReady) return;
     const show = selectedCountry === "PSE" || selectedCountry === "ISR";
     try {
-      m.setPaintProperty("oslo-fill-israeli",    "fill-opacity", show ? 0.52 : 0);
-      m.setPaintProperty("oslo-fill-palestinian", "fill-opacity", show ? 0.52 : 0);
+      // When Oslo is active, pin PSE and ISR country fills to a flat 0.52 opacity
+      // so Gaza (PSE country fill) and Israel proper (ISR country fill) exactly
+      // match the West Bank zone shades. When Oslo is hidden, restore zoom-fades.
+      if (m.getLayer("highlighted-fill-PSE")) {
+        const [fs, fe] = COUNTRY_FADE_RANGES["PSE"] ?? [FADE_START, FADE_END];
+        m.setPaintProperty("highlighted-fill-PSE", "fill-opacity",
+          show ? 0.52 : ["interpolate", ["linear"], ["zoom"], fs, 0.48, fe, 0] as never
+        );
+      }
+      if (m.getLayer("highlighted-fill-ISR")) {
+        const [fs, fe] = COUNTRY_FADE_RANGES["ISR"] ?? [FADE_START, FADE_END];
+        m.setPaintProperty("highlighted-fill-ISR", "fill-opacity",
+          show ? 0.52 : ["interpolate", ["linear"], ["zoom"], fs, 0.48, fe, 0] as never
+        );
+      }
+      // oslo-fill-palestinian suppressed — highlighted-fill-PSE at flat 0.52 already
+      // covers all Palestinian territory (Gaza + West Bank) at a uniform shade.
+      // Stacking it would make West Bank A/H1 darker than Gaza.
+      m.setPaintProperty("oslo-fill-palestinian", "fill-opacity", 0);
+      // oslo-fill-israeli at 0.92 so it fully overrides the PSE-red base in
+      // Israeli-controlled West Bank zones (Area C, H2, East Jerusalem, Nature Reserve).
+      m.setPaintProperty("oslo-fill-israeli",    "fill-opacity", show ? 0.92 : 0);
       m.setPaintProperty("oslo-border",          "line-opacity", show ? 0.85 : 0);
     } catch {}
   }, [selectedCountry, mapReady]);
