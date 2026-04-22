@@ -1404,7 +1404,7 @@ export default function CountryPanel({ countryCode, onClose, onViewFeed, onConfl
             {c.missing ?? ""}
           </td>
         )}
-        <td style={{ textAlign: "right", fontSize: 13, fontFamily: "monospace", fontWeight: 700, color: "rgba(255,255,255,0.88)", paddingRight: 8, paddingTop: 4, paddingBottom: 4 }}>
+        <td style={{ textAlign: "right", fontSize: 13, fontFamily: "Arial, sans-serif", fontWeight: 700, color: "rgba(255,255,255,0.88)", paddingRight: 8, paddingTop: 4, paddingBottom: 4 }}>
           {c.killed}{c.killedHasMissing ? "+" : ""}
         </td>
         {hasCivCol && !hasMissingCol && (
