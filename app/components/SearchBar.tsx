@@ -61,6 +61,43 @@ function levenshtein(a: string, b: string): number {
   return dp[m][n];
 }
 
+// Parses many coordinate formats and returns { lng, lat } or null.
+// Supported: "37.77, -122.41" · "-122.41, 37.77" · "40N 74W" · "40°N 74°W"
+// · "40.7128° N, 74.0060° W" · plain "37.77 -122.41"
+export function parseCoordinates(q: string): { lat: number; lng: number } | null {
+  const s = q.trim().replace(/°/g, "").replace(/,/g, " ");
+
+  // Match two numbers, each optionally followed by N/S/E/W
+  const numDir = /([+-]?\d+(?:\.\d+)?)\s*([NSns]?)\s+([+-]?\d+(?:\.\d+)?)\s*([EWew]?)/;
+  const m = s.match(numDir);
+  if (!m) return null;
+
+  let a = parseFloat(m[1]);
+  const aDir = m[2].toUpperCase();
+  let b = parseFloat(m[3]);
+  const bDir = m[4].toUpperCase();
+
+  if (aDir === "S") a = -Math.abs(a);
+  if (aDir === "N") a =  Math.abs(a);
+  if (bDir === "W") b = -Math.abs(b);
+  if (bDir === "E") b =  Math.abs(b);
+
+  // Determine which is lat and which is lng.
+  // If both are ambiguous (no direction letters), treat first as lat, second as lng.
+  // Latitude is always -90..90; longitude is -180..180.
+  let lat: number, lng: number;
+  if (Math.abs(a) <= 90 && Math.abs(b) <= 180) {
+    lat = a; lng = b;
+  } else if (Math.abs(b) <= 90 && Math.abs(a) <= 180) {
+    lat = b; lng = a;
+  } else {
+    return null;
+  }
+
+  if (lat < -90 || lat > 90 || lng < -180 || lng > 180) return null;
+  return { lat, lng };
+}
+
 function scoreItem(query: string, item: SearchItem): number {
   const q = query.toLowerCase().trim();
   if (!q) return 0;
@@ -100,6 +137,8 @@ export default function SearchBar({ onSelect }: Props) {
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
+  const coordResult = query.length >= 3 ? parseCoordinates(query) : null;
+
   const scored = SEARCH_ITEMS
     .map(item => ({ item, score: scoreItem(query, item) }))
     .filter(x => x.score > 0)
@@ -107,10 +146,16 @@ export default function SearchBar({ onSelect }: Props) {
 
   const direct = scored.filter(x => x.score >= 3).slice(0, 5);
   const suggestions = scored.filter(x => x.score < 3 && x.score > 0).slice(0, 3);
-  const showDropdown = open && query.length >= 1 && (direct.length > 0 || suggestions.length > 0);
+  const showDropdown = open && query.length >= 1 && (direct.length > 0 || suggestions.length > 0 || !!coordResult);
 
   const handleSelect = (code: string) => {
     onSelect(code);
+    setQuery("");
+    setOpen(false);
+  };
+
+  const handleCoordSelect = (lat: number, lng: number) => {
+    onSelect(`COORD_${lng},${lat}`);
     setQuery("");
     setOpen(false);
   };
@@ -136,6 +181,7 @@ export default function SearchBar({ onSelect }: Props) {
           onFocus={() => setOpen(true)}
           onKeyDown={e => {
             if (e.key === "Enter") {
+              if (coordResult) { handleCoordSelect(coordResult.lat, coordResult.lng); return; }
               const top = direct[0] ?? suggestions[0];
               if (top) handleSelect(top.item.code);
             }
@@ -174,6 +220,26 @@ export default function SearchBar({ onSelect }: Props) {
           boxShadow: "0 8px 32px rgba(0,0,0,0.6)",
           zIndex: 50,
         }}>
+          {coordResult && (
+            <button
+              onClick={() => handleCoordSelect(coordResult.lat, coordResult.lng)}
+              style={{
+                display: "flex", alignItems: "center", justifyContent: "space-between",
+                width: "100%", padding: "9px 14px",
+                background: "rgba(255,255,255,0.02)", border: "none",
+                borderBottom: "1px solid rgba(255,255,255,0.06)", cursor: "pointer", textAlign: "left",
+              }}
+              onMouseEnter={e => (e.currentTarget.style.background = "rgba(255,255,255,0.06)")}
+              onMouseLeave={e => (e.currentTarget.style.background = "rgba(255,255,255,0.02)")}
+            >
+              <span style={{ color: "rgba(255,255,255,0.85)", fontSize: 13 }}>
+                {coordResult.lat.toFixed(4)}°, {coordResult.lng.toFixed(4)}°
+              </span>
+              <span style={{ color: "rgba(255,255,255,0.25)", fontSize: 10, fontFamily: "monospace", letterSpacing: "0.06em" }}>
+                coordinates
+              </span>
+            </button>
+          )}
           {direct.length > 0 && (
             <>
               {direct.map(({ item }) => (

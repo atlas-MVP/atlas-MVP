@@ -262,6 +262,14 @@ export default function Home() {
   };
 
   const handleSearch = (code: string) => {
+    // Coordinate fly-to: "COORD_lng,lat"
+    if (code.startsWith("COORD_")) {
+      const [lng, lat] = code.slice(6).split(",").map(Number);
+      if (!isNaN(lng) && !isNaN(lat)) {
+        setFlyToPosition({ center: [lng, lat], zoom: 10, key: `coord-${Date.now()}` });
+      }
+      return;
+    }
     // Nature-category searches (Forest / Beach / Mountains / Others / Any)
     if (code.startsWith("NATURE_")) {
       const key = code.slice(7).toLowerCase();
