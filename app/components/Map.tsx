@@ -287,17 +287,15 @@ export default function Map({ onCountryClick, flyToCode, flyToPosition, selected
           show ? 0 : ["interpolate", ["linear"], ["zoom"], fs, 0.48, fe, 0] as never
         );
       }
-      // Israel proper → blue
-      m.setPaintProperty("oslo-fill-isr-country", "fill-opacity", show ? 0.52 : 0);
-      // Area A + H1 → red (Palestinian full control, ~18%)
-      m.setPaintProperty("oslo-fill-palestinian", "fill-opacity", show ? 0.65 : 0);
-      // Area B → purple (joint control, ~22%)
-      m.setPaintProperty("oslo-fill-joint",       "fill-opacity", show ? 0.65 : 0);
-      // Area C + H2 + East Jerusalem + Nature Reserve → blue (Israeli control, ~60%)
-      m.setPaintProperty("oslo-fill-israeli",     "fill-opacity", show ? 0.52 : 0);
-      // Gaza Strip → red
-      m.setPaintProperty("oslo-fill-gaza",        "fill-opacity", show ? 0.65 : 0);
-      m.setPaintProperty("oslo-border",           "line-opacity", show ? 0.6 : 0);
+      const sp = (id: string, prop: string, val: number) => {
+        if (m.getLayer(id)) m.setPaintProperty(id, prop as never, val as never);
+      };
+      sp("oslo-fill-isr-country", "fill-opacity", show ? 0.52 : 0);
+      sp("oslo-fill-palestinian", "fill-opacity", show ? 0.65 : 0);
+      sp("oslo-fill-joint",       "fill-opacity", show ? 0.65 : 0);
+      sp("oslo-fill-israeli",     "fill-opacity", show ? 0.52 : 0);
+      sp("oslo-fill-gaza",        "fill-opacity", show ? 0.65 : 0);
+      sp("oslo-border",           "line-opacity", show ? 0.6  : 0);
     } catch {}
   }, [selectedCountry, focusCountries, mapReady]);
 
