@@ -147,7 +147,7 @@ const OVERLAY_LAYER_IDS = [
   "idle-pulse-blue", "idle-pulse-red",
   "world-hit", "hover-fill", "hover-border", "secondary-border",
   "oslo-fill-isr-country",
-  "oslo-fill-israeli", "oslo-fill-palestinian", "oslo-fill-gaza", "oslo-fill-nomansland", "oslo-border",
+  "oslo-fill-israeli", "oslo-fill-joint", "oslo-fill-palestinian", "oslo-fill-gaza", "oslo-fill-nomansland", "oslo-border",
   "events-halo", "events-glow", "events-dot",
   "strike-outer-halo", "strike-halo", "strike-glow", "strike-core", "strike-dot",
 ];
@@ -287,15 +287,17 @@ export default function Map({ onCountryClick, flyToCode, flyToPosition, selected
           show ? 0 : ["interpolate", ["linear"], ["zoom"], fs, 0.48, fe, 0] as never
         );
       }
-      // Israel proper — same 0.52 blue as the West Bank Oslo Israeli zones
+      // Israel proper → blue
       m.setPaintProperty("oslo-fill-isr-country", "fill-opacity", show ? 0.52 : 0);
-      // West Bank Palestinian zones (Area A, H1)
-      m.setPaintProperty("oslo-fill-palestinian", "fill-opacity", show ? 0.52 : 0);
-      // Gaza Strip explicit polygon (matches PSE red, no No Man's Land bleed)
-      m.setPaintProperty("oslo-fill-gaza",        "fill-opacity", show ? 0.52 : 0);
-      // Israeli-controlled West Bank zones — 0.52, no underlying fill to mix with
+      // Area A + H1 → red (Palestinian full control, ~18%)
+      m.setPaintProperty("oslo-fill-palestinian", "fill-opacity", show ? 0.65 : 0);
+      // Area B → purple (joint control, ~22%)
+      m.setPaintProperty("oslo-fill-joint",       "fill-opacity", show ? 0.65 : 0);
+      // Area C + H2 + East Jerusalem + Nature Reserve → blue (Israeli control, ~60%)
       m.setPaintProperty("oslo-fill-israeli",     "fill-opacity", show ? 0.52 : 0);
-      m.setPaintProperty("oslo-border",           "line-opacity", show ? 0.85 : 0);
+      // Gaza Strip → red
+      m.setPaintProperty("oslo-fill-gaza",        "fill-opacity", show ? 0.65 : 0);
+      m.setPaintProperty("oslo-border",           "line-opacity", show ? 0.6 : 0);
     } catch {}
   }, [selectedCountry, focusCountries, mapReady]);
 
@@ -948,7 +950,7 @@ export default function Map({ onCountryClick, flyToCode, flyToPosition, selected
         type: "geojson",
         data: "/oslo-agreement.geojson",
       });
-      // Israeli-controlled: Area C, H2, East Jerusalem, Nature Reserve → deep blue
+      // Area C, H2, East Jerusalem, Nature Reserve → deep blue (Israeli control, ~60%)
       m.addLayer({
         id: "oslo-fill-israeli",
         type: "fill",
@@ -956,7 +958,15 @@ export default function Map({ onCountryClick, flyToCode, flyToPosition, selected
         filter: ["in", ["get", "CLASS"], ["literal", ["C", "H2", "Israeli Declared East Jerusalem", "Nature Reserve"]]],
         paint: { "fill-color": "#0d2a52", "fill-opacity": 0 },
       });
-      // Palestinian-controlled: Area A, H1 → deep red
+      // Area B → purple (joint Israeli-Palestinian control, ~22%)
+      m.addLayer({
+        id: "oslo-fill-joint",
+        type: "fill",
+        source: "oslo-agreement",
+        filter: ["==", ["get", "CLASS"], "B"],
+        paint: { "fill-color": "#4a1a6e", "fill-opacity": 0 },
+      });
+      // Area A, H1 → deep red (Palestinian full control, ~18%)
       m.addLayer({
         id: "oslo-fill-palestinian",
         type: "fill",
@@ -964,15 +974,15 @@ export default function Map({ onCountryClick, flyToCode, flyToPosition, selected
         filter: ["in", ["get", "CLASS"], ["literal", ["A", "H1"]]],
         paint: { "fill-color": "#3b0f1f", "fill-opacity": 0 },
       });
-      // Shared border on all non-No-Man's-Land zones
+      // Border on all zones
       m.addLayer({
         id: "oslo-border",
         type: "line",
         source: "oslo-agreement",
         filter: ["!=", ["get", "CLASS"], "No Man's Land"],
         paint: {
-          "line-color": "#6b0f1a",
-          "line-width": 1.5,
+          "line-color": "rgba(255,255,255,0.25)",
+          "line-width": 0.8,
           "line-opacity": 0,
         },
       });
