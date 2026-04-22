@@ -48,12 +48,9 @@ export default function SenateVoteVisualization({
   const totalNo  = senators.filter(s => s.vote === "No").length;
 
   // ── Hemicycle layout ─────────────────────────────────────────────────────
-  // Both halves share the exact same 7-ring geometry so the Aye side and
-  // No side line up perfectly row-for-row. Within a ring, seat count is
-  // proportional to arc length (outer rings hold more dots than inner
-  // rings), and seats are evenly spaced endpoint-to-endpoint. The two
-  // halves are separated by a wide gap at top-center, pushing all dots
-  // toward the horizontal baseline (west-3-o'clock and east-9-o'clock).
+  // Arc-row approach: each ring is an arc, dots spaced ≥ dotDiam apart along
+  // the arc so no two dots on the same row ever overlap. Rings are 25px apart
+  // radially (> dot diameter) so adjacent rows never overlap either.
   const generatePositions = () => {
     const positions: Array<{ senator: Senator; x: number; y: number }> = [];
     const centerX    = 325;
@@ -61,7 +58,7 @@ export default function SenateVoteVisualization({
     const rings      = 7;
     const baseRadius = 91;
     const ringStep   = 25;
-    // Gap at the top - reduced from 0.5π to 0.35π for tighter spread
+    const dotDiam    = 16; // dot r=7 (14px) + 2px gap
     const gapAngle   = 0.35 * Math.PI;
 
     const ayeVoters     = senators.filter(s => s.vote === "Aye");
@@ -69,67 +66,43 @@ export default function SenateVoteVisualization({
     const crossoverDems = noVoters.filter(s => s.party === "D");
     const republicansNo = noVoters.filter(s => s.party !== "D");
 
-    // Place voters on radial spokes (straight lines from center). Each spoke
-    // is an exact angle, and dots are placed along that spoke at precise radii.
-    const placeOnSpokes = (
-      voters: Senator[],
-      arcStart: number,
-      arcEnd: number,
-    ) => {
+    // Fill arc rows from innermost ring outward. Each row holds as many dots as
+    // its arc length allows at dotDiam spacing — guaranteeing no overlap.
+    const fillArcRows = (voters: Senator[], arcStart: number, arcEnd: number) => {
       if (!voters.length) return;
-
-      // Calculate number of spokes needed (2-3 dots per spoke maximum)
-      const numSpokes = Math.max(1, Math.ceil(voters.length / 3));
-
-      // Evenly distribute spoke angles across the arc
-      const spokeAngles: number[] = [];
-      for (let i = 0; i < numSpokes; i++) {
-        const t = numSpokes === 1 ? 0.5 : i / (numSpokes - 1);
-        spokeAngles.push(arcStart + t * (arcEnd - arcStart));
-      }
-
-      // Distribute voters across spokes
-      let voterIdx = 0;
-      for (let spokeIdx = 0; spokeIdx < numSpokes && voterIdx < voters.length; spokeIdx++) {
-        const angle = spokeAngles[spokeIdx];
-        // Place dots along this spoke at each ring radius
-        for (let ring = 0; ring < rings && voterIdx < voters.length; ring++) {
-          const radius = baseRadius + ring * ringStep;
+      let idx = 0;
+      for (let ring = 0; ring < rings && idx < voters.length; ring++) {
+        const r        = baseRadius + ring * ringStep;
+        const arcLen   = Math.abs(arcEnd - arcStart) * r;
+        const capacity = Math.max(1, Math.floor(arcLen / dotDiam));
+        const count    = Math.min(capacity, voters.length - idx);
+        for (let i = 0; i < count; i++) {
+          const t     = count === 1 ? 0.5 : i / (count - 1);
+          const angle = arcStart + t * (arcEnd - arcStart);
           positions.push({
-            senator: voters[voterIdx],
-            x: centerX + radius * Math.cos(angle),
-            y: centerY + radius * Math.sin(angle),
+            senator: voters[idx + i],
+            x: centerX + r * Math.cos(angle),
+            y: centerY + r * Math.sin(angle),
           });
-          voterIdx++;
         }
+        idx += count;
       }
     };
 
-    // Place crossover Dems on a horizontal line at the baseline (y = centerY)
-    // on the No (right) side, evenly spaced
+    // Crossover Dems: evenly spaced horizontal line at baseline on the No side
     const placeCrossoverLine = (voters: Senator[]) => {
       if (!voters.length) return;
-      const lineStartX = centerX + baseRadius; // Start at innermost radius on right
-      const lineEndX = centerX + baseRadius + (rings - 1) * ringStep; // End at outermost
-      const spacing = voters.length > 1 ? (lineEndX - lineStartX) / (voters.length - 1) : 0;
-
-      for (let i = 0; i < voters.length; i++) {
+      const lineStartX = centerX + baseRadius;
+      const lineEndX   = centerX + baseRadius + (rings - 1) * ringStep;
+      const spacing    = voters.length > 1 ? (lineEndX - lineStartX) / (voters.length - 1) : 0;
+      voters.forEach((s, i) => {
         const x = voters.length === 1 ? (lineStartX + lineEndX) / 2 : lineStartX + i * spacing;
-        positions.push({
-          senator: voters[i],
-          x,
-          y: centerY, // Horizontal line at baseline
-        });
-      }
+        positions.push({ senator: s, x, y: centerY });
+      });
     };
 
-    // Aye: from 270° compass (W, math π) rising to the top-center gap edge.
-    placeOnSpokes(ayeVoters, Math.PI, Math.PI * 1.5 - gapAngle / 2);
-
-    // No: Republicans only, crossover Dems get their own line
-    placeOnSpokes(republicansNo, Math.PI * 1.5 + gapAngle / 2, Math.PI * 2);
-
-    // Crossover Dems on horizontal line
+    fillArcRows(ayeVoters,    Math.PI,                        Math.PI * 1.5 - gapAngle / 2);
+    fillArcRows(republicansNo, Math.PI * 1.5 + gapAngle / 2, Math.PI * 2);
     placeCrossoverLine(crossoverDems);
 
     return positions;
