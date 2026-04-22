@@ -260,6 +260,17 @@ export default function Map({ onCountryClick, flyToCode, flyToPosition, selected
     }
   }, [selectedCountry, focusCountries]);
 
+  // Oslo Agreement layers — only visible when PSE or ISR is selected
+  useEffect(() => {
+    const m = map.current;
+    if (!m || !mapReady) return;
+    const show = selectedCountry === "PSE" || selectedCountry === "ISR";
+    try {
+      m.setPaintProperty("oslo-fill",   "fill-opacity", show ? 0.45 : 0);
+      m.setPaintProperty("oslo-border", "line-opacity", show ? 0.9  : 0);
+    } catch {}
+  }, [selectedCountry, mapReady]);
+
   // FlyTo when flyToCode changes from outside (search)
   useEffect(() => {
     if (!flyToCode || !map.current) return;
@@ -904,21 +915,21 @@ export default function Map({ onCountryClick, flyToCode, flyToPosition, selected
       });
 
       // Oslo Agreement — West Bank Area A/B/C + Hebron zones
+      // Hidden by default; shown only when PSE or ISR is selected
       m.addSource("oslo-agreement", {
         type: "geojson",
         data: "/oslo-agreement.geojson",
       });
-      // Fill — ocean blue matching Mediterranean beside Israel
       m.addLayer({
         id: "oslo-fill",
         type: "fill",
         source: "oslo-agreement",
+        filter: ["!=", ["get", "CLASS"], "No Man's Land"],
         paint: {
-          "fill-color": "#1a5f7a",
-          "fill-opacity": 0.45,
+          "fill-color": "#c41e3a",
+          "fill-opacity": 0,
         },
       });
-      // Border — dark maroon
       m.addLayer({
         id: "oslo-border",
         type: "line",
@@ -926,7 +937,7 @@ export default function Map({ onCountryClick, flyToCode, flyToPosition, selected
         paint: {
           "line-color": "#6b0f1a",
           "line-width": 1.5,
-          "line-opacity": 0.9,
+          "line-opacity": 0,
         },
       });
 
