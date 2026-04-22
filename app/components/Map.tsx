@@ -301,7 +301,7 @@ export default function Map({ onCountryClick, flyToCode, flyToPosition, selected
       sp("oslo-fill-israeli",     "fill-opacity", show ? osloFade(0.52) : 0);
       // Borders fade IN only after fills fade out (inverse of fill fade)
       const borderExpr = show
-        ? ["interpolate", ["linear"], ["zoom"], OSLO_FADE_START, 0, OSLO_FADE_END, 0.75]
+        ? ["interpolate", ["linear"], ["zoom"], OSLO_FADE_START, 0, OSLO_FADE_END, 0.52]
         : 0;
       sp("oslo-border-pal",   "line-opacity", borderExpr);
       sp("oslo-border-joint", "line-opacity", borderExpr);
@@ -1097,21 +1097,21 @@ export default function Map({ onCountryClick, flyToCode, flyToPosition, selected
         type: "line",
         source: "oslo-agreement",
         filter: ["in", ["get", "CLASS"], ["literal", ["A", "H1"]]],
-        paint: { "line-color": "#8b2030", "line-width": 1.4, "line-opacity": 0 },
+        paint: { "line-color": "#8b2030", "line-width": 4, "line-opacity": 0 },
       });
       m.addLayer({
         id: "oslo-border-joint",
         type: "line",
         source: "oslo-agreement",
         filter: ["in", ["get", "CLASS"], ["literal", ["B", "Nature Reserve"]]],
-        paint: { "line-color": "#5a2070", "line-width": 1.4, "line-opacity": 0 },
+        paint: { "line-color": "#5a2070", "line-width": 4, "line-opacity": 0 },
       });
       m.addLayer({
         id: "oslo-border-isr",
         type: "line",
         source: "oslo-agreement",
         filter: ["in", ["get", "CLASS"], ["literal", ["C", "H2", "Israeli Declared East Jerusalem", "No Man's Land"]]],
-        paint: { "line-color": "#1e3f7a", "line-width": 1.4, "line-opacity": 0 },
+        paint: { "line-color": "#1e3f7a", "line-width": 4, "line-opacity": 0 },
       });
 
       // Israel proper fill for Oslo mode — same color/opacity as West Bank Israeli zones
