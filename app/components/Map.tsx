@@ -813,6 +813,58 @@ export default function Map({ onCountryClick, flyToCode, flyToPosition, selected
         paint: { "fill-color": SIDE_COLORS.red.pulse, "fill-opacity": 0 },
       });
 
+      // ── Desert border casing: dark shadow + crisp bright line ──────────────
+      // Applied to desert/arid countries only. Three opacity bands:
+      //   core desert (0.82) → Sahel/semi-arid transition (0.38) → green zone (0)
+      // Middle East: full casing, no fade needed.
+      // North Africa + Central Asia: core=0.82, transition Sahel countries=0.38.
+      const DESERT_CORE = ["MAR","ESH","DZA","TUN","LBY","EGY","MRT","SDN","ERI","DJI",
+        "SAU","YEM","OMN","ARE","QAT","BHR","KWT","IRQ","SYR","JOR","ISR","PSE","LBN",
+        "IRN","AFG","PAK","TKM","UZB","TJK","KGZ","KAZ","AZE","TUR","MLI","NER"];
+      const DESERT_MID  = ["SOM","ETH","ARM","GEO"];
+      const DESERT_FADE = ["SEN","GMB","GNB","GIN","SLE","LBR","CIV","GHA","TGO","BEN",
+        "NGA","CMR","BFA","TCD","SSD","KEN","CAF"];
+
+      const desertOpacity = (core: number, mid: number, fade: number) =>
+        ["match", ["get", "iso_3166_1_alpha_3"],
+          DESERT_CORE, core,
+          DESERT_MID,  mid,
+          DESERT_FADE, fade,
+          0,
+        ] as never;
+
+      // Shadow casing — wide, blurred, very dark
+      m.addLayer({
+        id: "desert-casing-shadow",
+        type: "line",
+        source: "country-boundaries",
+        "source-layer": "country_boundaries",
+        filter: worldviewFilter as never,
+        paint: {
+          "line-color": "#080503",
+          "line-width": ["interpolate", ["linear"], ["zoom"], 1, 3.5, 5, 5.5, 10, 8] as never,
+          "line-blur":  ["interpolate", ["linear"], ["zoom"], 1, 2.5, 5, 3,   10, 2] as never,
+          "line-opacity": desertOpacity(0.82, 0.55, 0.38),
+        },
+        layout: { "line-cap": "round", "line-join": "round" },
+      });
+
+      // Crisp top line — thin, warm sandy colour
+      m.addLayer({
+        id: "desert-casing-line",
+        type: "line",
+        source: "country-boundaries",
+        "source-layer": "country_boundaries",
+        filter: worldviewFilter as never,
+        paint: {
+          "line-color": "rgba(218, 200, 170, 0.80)",
+          "line-width": ["interpolate", ["linear"], ["zoom"], 1, 0.6, 5, 1.1, 10, 1.8] as never,
+          "line-blur":  0,
+          "line-opacity": desertOpacity(0.75, 0.50, 0.28),
+        },
+        layout: { "line-cap": "round", "line-join": "round" },
+      });
+
       const conflictFilter = [
         "all",
         worldviewFilter,
