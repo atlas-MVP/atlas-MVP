@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import SenateVoteVisualization from "./SenateVoteVisualization";
 import { Senator } from "./SenateVoteVisualization";
 import { SENATOR_BIOS, RAW_BIOS, photoFor } from "./senatorBios";
+import SenatorProfileCard from "./SenatorProfileCard";
 
 interface ArticlePageProps {
   headline: string;
@@ -68,6 +69,7 @@ export default function ArticlePage({
   const [senateExpanded, setSenateExpanded] = useState(false);
   const [lockedSenator, setLockedSenator] = useState<Senator | null>(null);
   const [photoEnlarged, setPhotoEnlarged] = useState(false);
+  const [profileSenator, setProfileSenator] = useState<typeof SENATOR_DATA[string] & { vote: string } | null>(null);
   const [editMode, setEditMode] = useState(false);
   const [selectedElement, setSelectedElement] = useState<"headline" | "body" | "date">("headline");
   const [textStyles, setTextStyles] = useState<{
@@ -484,6 +486,7 @@ export default function ArticlePage({
       {hoveredSenator && SENATOR_DATA[hoveredSenator.name] && !senateExpanded && (() => {
         const bio = SENATOR_DATA[hoveredSenator.name];
         const crossover = isCrossoverSenator(hoveredSenator);
+        const isSchumer = bio.slug === "chuck-schumer";
         return (
           <div style={{
             position: "fixed",
@@ -493,23 +496,31 @@ export default function ArticlePage({
             zIndex: 100,
             pointerEvents: "none",
           }}>
-            <div style={{
-              background: "rgba(4,6,18,0.95)",
-              backdropFilter: "blur(30px)",
-              borderRadius: 16,
-              border: `1px solid rgba(${bio.party === "R" ? "239,68,68" : "96,165,250"},0.55)`,
-              padding: "28px",
-              width: 420,
-              boxShadow: "0 20px 60px rgba(0,0,0,0.5)",
-              animation: crossover ? "crossoverPulse 2s ease-in-out infinite" : "none",
-              position: "relative",
-            }}>
+            <div
+              onClick={isSchumer ? () => setProfileSenator({ ...bio, vote: hoveredSenator.vote }) : undefined}
+              style={{
+                background: "rgba(4,6,18,0.95)",
+                backdropFilter: "blur(30px)",
+                borderRadius: 16,
+                border: `1px solid rgba(${bio.party === "R" ? "239,68,68" : "96,165,250"},0.55)`,
+                padding: "28px",
+                width: 420,
+                boxShadow: "0 20px 60px rgba(0,0,0,0.5)",
+                animation: crossover ? "crossoverPulse 2s ease-in-out infinite" : "none",
+                position: "relative",
+                cursor: isSchumer ? "pointer" : "default",
+                pointerEvents: "auto",
+              }}>
+              {isSchumer && (
+                <div style={{
+                  position: "absolute", top: 10, right: 14,
+                  fontSize: 9, fontFamily: "monospace", letterSpacing: "0.12em",
+                  color: "rgba(255,255,255,0.25)", textTransform: "uppercase",
+                }}>tap to expand</div>
+              )}
               <div style={{ display: "flex", gap: 20, marginBottom: 20 }}>
                 <div
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setPhotoEnlarged(v => !v);
-                  }}
+                  onClick={(e) => { e.stopPropagation(); setPhotoEnlarged(v => !v); }}
                   style={{
                     width: 100, height: 100, borderRadius: 12,
                     overflow: "hidden", background: "rgba(255,255,255,0.05)", flexShrink: 0,
@@ -522,18 +533,7 @@ export default function ArticlePage({
 
                 <div style={{ flex: 1 }}>
                   <div style={{ fontSize: 22, fontWeight: 700, marginBottom: 8 }}>
-                    <a
-                      href={bio.officialUrl}
-                      target="_blank"
-                      rel="noreferrer"
-                      style={{
-                        color: "rgba(255,255,255,0.95)",
-                        textDecoration: "underline",
-                        pointerEvents: "auto",
-                      }}
-                    >
-                      {bio.name}
-                    </a>
+                    <span style={{ color: "rgba(255,255,255,0.95)" }}>{bio.name}</span>
                   </div>
                   <div style={{ fontSize: 14, color: "rgba(255,255,255,0.62)", marginBottom: 6 }}>
                     {bio.party === "R" ? "Republican" : bio.party === "D" ? "Democrat" : "Independent"} • {STATE_NAMES[bio.state] ?? bio.state}
@@ -734,7 +734,12 @@ export default function ArticlePage({
                   pointerEvents: lockedSenator ? "auto" : "none",
                 }}>
                   <div
-                    onClick={(e) => e.stopPropagation()}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (hasBio && bio.slug === "chuck-schumer") {
+                        setProfileSenator({ ...bio, vote: senator.vote });
+                      }
+                    }}
                     style={{
                     background: "rgba(4,6,18,0.95)",
                     backdropFilter: "blur(30px)",
@@ -743,59 +748,37 @@ export default function ArticlePage({
                     padding: "20px",
                     width: 420,
                     boxShadow: "0 20px 60px rgba(0,0,0,0.5)",
-                    cursor: "default",
+                    cursor: hasBio && bio.slug === "chuck-schumer" ? "pointer" : "default",
                     animation: crossover ? "crossoverPulse 2s ease-in-out infinite" : "none",
                     position: "relative",
                   }}
                 >
+                  {hasBio && bio.slug === "chuck-schumer" && (
+                    <div style={{
+                      position: "absolute", top: 10, right: 14,
+                      fontSize: 9, fontFamily: "monospace", letterSpacing: "0.12em",
+                      color: "rgba(255,255,255,0.25)", textTransform: "uppercase",
+                    }}>tap to expand</div>
+                  )}
                   <div style={{ display: "flex", gap: 14, marginBottom: hasBio ? 14 : 0 }}>
                     {hasBio && (
                       <div
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setPhotoEnlarged(v => !v);
-                        }}
+                        onClick={(e) => { e.stopPropagation(); setPhotoEnlarged(v => !v); }}
                         style={{
-                          width: 120,
-                          height: 120,
-                          borderRadius: 12,
-                          overflow: "hidden",
-                          background: "rgba(255,255,255,0.05)",
-                          flexShrink: 0,
-                          cursor: photoEnlarged ? "zoom-out" : "zoom-in",
+                          width: 120, height: 120, borderRadius: 12,
+                          overflow: "hidden", background: "rgba(255,255,255,0.05)",
+                          flexShrink: 0, cursor: photoEnlarged ? "zoom-out" : "zoom-in",
                           position: "relative",
                         }}
                       >
-                        <img
-                          src={bio.photo}
-                          alt={bio.name}
-                          style={{ width: "100%", height: "100%", objectFit: "cover" }}
-                        />
+                        <img src={bio.photo} alt={bio.name}
+                          style={{ width: "100%", height: "100%", objectFit: "cover" }} />
                       </div>
                     )}
 
                     <div style={{ flex: 1 }}>
-                      <div style={{
-                        fontSize: 22,
-                        fontWeight: 700,
-                        marginBottom: 8,
-                      }}>
-                        {hasBio ? (
-                          <a
-                            href={bio.officialUrl}
-                            target="_blank"
-                            rel="noreferrer"
-                            onClick={e => e.stopPropagation()}
-                            style={{
-                              color: "rgba(255,255,255,0.95)",
-                              textDecoration: "underline",
-                            }}
-                          >
-                            {senator.name}
-                          </a>
-                        ) : (
-                          <span style={{ color: "rgba(255,255,255,0.95)" }}>{senator.name}</span>
-                        )}
+                      <div style={{ fontSize: 22, fontWeight: 700, marginBottom: 8 }}>
+                        <span style={{ color: "rgba(255,255,255,0.95)" }}>{senator.name}</span>
                       </div>
 
                       <div style={{
@@ -857,6 +840,23 @@ export default function ArticlePage({
             );
           })()}
         </div>
+      )}
+
+      {/* ── Senator profile card — expands from bio card on tap ── */}
+      {profileSenator && (
+        <SenatorProfileCard
+          bioguide={profileSenator.bioguide}
+          name={profileSenator.name}
+          photo={profileSenator.photo}
+          party={profileSenator.party}
+          state={profileSenator.state}
+          age={profileSenator.age}
+          yearsInOffice={profileSenator.yearsInOffice}
+          nextElection={profileSenator.nextElection}
+          runningAgain={profileSenator.runningAgain}
+          voteOnThisBill={profileSenator.vote}
+          onClose={() => setProfileSenator(null)}
+        />
       )}
     </div>
   );
