@@ -185,6 +185,9 @@ export default function Map({ onCountryClick, flyToCode, flyToPosition, selected
     cities: string[];
   } | null>(null);
   const revealDoneRef = useRef(false);
+  // Country label reveal on first click
+  const labelsRevealedRef = useRef(false);
+  const labelRevealTimers = useRef<ReturnType<typeof setTimeout>[]>([]);
 
   // Focus mode: when a conflict is active, only involved countries are visible.
   // When no conflict, all highlighted countries show normally.
@@ -460,12 +463,12 @@ export default function Map({ onCountryClick, flyToCode, flyToPosition, selected
     // Phase 2 (2–4 s): water / ocean / natural feature labels
     animateIn(phases.ocean, "text-opacity", () => 1, 2000);
     animateIn(phases.ocean, "icon-opacity", () => 1, 2000);
-    // Phase 3 (4–6 s): country and state labels
-    animateIn(phases.countries, "text-opacity", () => 1, 4000);
-    animateIn(phases.countries, "icon-opacity", () => 1, 4000);
-    // Phase 4 (6–8 s): city / settlement labels — mark done when complete
-    animateIn(phases.cities, "text-opacity", () => 1, 6000, () => { revealDoneRef.current = true; });
-    animateIn(phases.cities, "icon-opacity", () => 1, 6000);
+    // Phase 3: country labels — deferred to first click (staggered closest→farthest)
+    // phases.countries stays at opacity 0 until user taps the globe
+
+    // Phase 4 (4–6 s): city / settlement labels — mark done when complete
+    animateIn(phases.cities, "text-opacity", () => 1, 4000, () => { revealDoneRef.current = true; });
+    animateIn(phases.cities, "icon-opacity", () => 1, 4000);
 
     // After reveal completes, re-apply full opacity if Mapbox reloads style data
     const onStyleData = () => {
@@ -474,7 +477,7 @@ export default function Map({ onCountryClick, flyToCode, flyToPosition, selected
       phases.borders.forEach(({ id, targetOpacity }) => {
         try { cur.setPaintProperty(id, "line-opacity", targetOpacity); } catch {}
       });
-      [...phases.ocean, ...phases.countries, ...phases.cities].forEach(id => {
+      [...phases.ocean, ...(labelsRevealedRef.current ? phases.countries : []), ...phases.cities].forEach(id => {
         try { cur.setPaintProperty(id, "text-opacity", 1); } catch {}
         try { cur.setPaintProperty(id, "icon-opacity", 1); } catch {}
       });
@@ -834,10 +837,7 @@ export default function Map({ onCountryClick, flyToCode, flyToPosition, selected
         filter: conflictFilter,
         paint: {
           "fill-color": "#1e3a5f",
-          "fill-opacity": ["interpolate", ["linear"], ["zoom"],
-            FADE_START, ["case", ["boolean", ["feature-state", "hover"], false], 0.5, 0],
-            FADE_END,   ["case", ["boolean", ["feature-state", "hover"], false], 0,   0],
-          ] as never,
+          "fill-opacity": ["case", ["boolean", ["feature-state", "hover"], false], 0.38, 0] as never,
         },
       });
 
@@ -1142,11 +1142,88 @@ export default function Map({ onCountryClick, flyToCode, flyToPosition, selected
         revealLayersRef.current = { borders, ocean, countries, cities };
       }
 
+      // ── Country label stagger: reveal on first click, closest→farthest ────────
+      m.once("click", (e) => {
+        if (labelsRevealedRef.current) return;
+        labelsRevealedRef.current = true;
+
+        const phases = revealLayersRef.current;
+        if (!phases) return;
+
+        const validLayers = phases.countries.filter(id => { try { return !!m.getLayer(id); } catch { return false; } });
+        if (!validLayers.length) return;
+
+        // Query all visible country label features across the whole canvas
+        const canvas = m.getCanvas();
+        const features = m.queryRenderedFeatures(
+          [[0, 0], [canvas.offsetWidth, canvas.offsetHeight]],
+          { layers: validLayers }
+        );
+
+        // Fallback: show all at once if no features returned yet
+        if (!features.length) {
+          validLayers.forEach(id => {
+            try { m.setPaintProperty(id, "text-opacity", 1); } catch {}
+            try { m.setPaintProperty(id, "icon-opacity", 1); } catch {}
+          });
+          return;
+        }
+
+        // Deduplicate by name and sort by screen distance from click point
+        const seenNames = new Set<string>();
+        type LabelEntry = { name: string; coords: [number, number] };
+        const entries: LabelEntry[] = [];
+        features.forEach(f => {
+          const name = String(f.properties?.name_en || f.properties?.name || "");
+          if (!name || seenNames.has(name)) return;
+          if (f.geometry.type !== "Point") return;
+          seenNames.add(name);
+          entries.push({ name, coords: (f.geometry as GeoJSON.Point).coordinates as [number, number] });
+        });
+
+        const cx = e.point.x, cy = e.point.y;
+        const sorted = entries
+          .sort((a, b) => {
+            const pa = m.project(a.coords), pb = m.project(b.coords);
+            return Math.hypot(pa.x - cx, pa.y - cy) - Math.hypot(pb.x - cx, pb.y - cy);
+          })
+          .map(e => e.name);
+
+        if (!sorted.length) {
+          validLayers.forEach(id => {
+            try { m.setPaintProperty(id, "text-opacity", 1); } catch {}
+            try { m.setPaintProperty(id, "icon-opacity", 1); } catch {}
+          });
+          return;
+        }
+
+        const TOTAL = 1400; // ms spread across all countries
+        const revealed: string[] = [];
+
+        sorted.forEach((name, i) => {
+          const delay = sorted.length > 1 ? (i / (sorted.length - 1)) * TOTAL : 0;
+          const t = setTimeout(() => {
+            revealed.push(name);
+            const isLast = revealed.length === sorted.length;
+            // Once all revealed, use plain 1 for performance
+            const expr: never = isLast
+              ? 1 as never
+              : ["case", ["in", ["get", "name_en"], ["literal", [...revealed]]], 1, 0] as never;
+            validLayers.forEach(id => {
+              try { m.setPaintProperty(id, "text-opacity", expr); } catch {}
+              try { m.setPaintProperty(id, "icon-opacity", expr); } catch {}
+            });
+          }, delay);
+          labelRevealTimers.current.push(t);
+        });
+      });
+
       // No intro auto-scroll — user navigates manually
     });
 
     return () => {
       if (idlePulseFrame.current) cancelAnimationFrame(idlePulseFrame.current);
+      labelRevealTimers.current.forEach(clearTimeout);
       mapContainer.current?.removeEventListener("wheel", _wheelHandler, { capture: true });
       map.current?.remove();
       map.current = null;
