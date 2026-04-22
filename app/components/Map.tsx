@@ -670,7 +670,7 @@ export default function Map({ onCountryClick, flyToCode, flyToPosition, selected
           try {
             if (l.id.includes("admin-0")) {
               m.setPaintProperty(l.id, "line-color", "rgba(255,255,255,0.7)");
-              m.setPaintProperty(l.id, "line-width", 0.7);
+              m.setPaintProperty(l.id, "line-width", 0.55);
               m.setPaintProperty(l.id, "line-opacity", 0.6);
             } else if (l.id.includes("admin-1")) {
               m.setPaintProperty(l.id, "line-color", "rgba(255,255,255,0.45)");
@@ -813,43 +813,28 @@ export default function Map({ onCountryClick, flyToCode, flyToPosition, selected
         paint: { "fill-color": SIDE_COLORS.red.pulse, "fill-opacity": 0 },
       });
 
-      // ── Desert border casing: dark shadow + crisp bright line ──────────────
-      // Applied to desert/arid countries only. Three opacity bands:
-      //   core desert (0.82) → Sahel/semi-arid transition (0.38) → green zone (0)
-      // Middle East: full casing, no fade needed.
-      // North Africa + Central Asia: core=0.82, transition Sahel countries=0.38.
-      const DESERT_CORE = ["MAR","ESH","DZA","TUN","LBY","EGY","MRT","SDN","ERI","DJI",
-        "SAU","YEM","OMN","ARE","QAT","BHR","KWT","IRQ","SYR","JOR","ISR","PSE","LBN",
-        "IRN","AFG","PAK","TKM","UZB","TJK","KGZ","KAZ","AZE","TUR","MLI","NER"];
-      const DESERT_MID  = ["SOM","ETH","ARM","GEO"];
-      const DESERT_FADE = ["SEN","GMB","GNB","GIN","SLE","LBR","CIV","GHA","TGO","BEN",
-        "NGA","CMR","BFA","TCD","SSD","KEN","CAF"];
+      // ── Desert border casing: single warm line, opacity driven by aridity ──
+      // Per-country aridity score 0→1. Green countries (SLE, LBR, GIN…) get 0
+      // by default — only countries with meaningful arid terrain are listed.
+      // Global coverage: Sahara, Horn, Arabian Peninsula, Middle East,
+      // Central Asia, Southern Africa, South America, Australia, Gobi.
+      const aridityOpacity = ["match", ["get", "iso_3166_1_alpha_3"],
+        // Near-pure desert (Saharan core + Arabian Peninsula)
+        ["ESH","DZA","LBY","EGY","SAU","ARE","QAT","BHR","KWT","OMN"], 0.92,
+        // High desert (Sahara fringe + Horn + Central Asia core)
+        ["MRT","NER","MLI","DJI","YEM","AFG","TKM","NAM"], 0.82,
+        // Semi-arid Middle East + Central Asia
+        ["MAR","SDN","PAK","IRQ","JOR","SYR","IRN","UZB","SOM","ERI","BWA"], 0.72,
+        // Arid/Mediterranean mix + Gobi + Australia
+        ["TUN","ISR","PSE","LBN","TJK","KGZ","KAZ","TCD","AZE","MNG","AUS"], 0.60,
+        // Semi-arid savanna / steppe (Sahel, Turkey, India Thar, S.America)
+        ["ETH","BFA","TUR","ARM","IND","PER","CHL","MEX","ZWE","ZAF","CHN"], 0.44,
+        // Dry savanna / light bush (fades toward green)
+        ["SEN","GMB","KEN","TZA","MOZ","NGA","CMR","UGA","COL","VEN","ARG"], 0.22,
+        // Default = 0 (fully green: SLE, LBR, GIN, CIV, GHA, TGO, BEN, etc.)
+        0,
+      ] as never;
 
-      const desertOpacity = (core: number, mid: number, fade: number) =>
-        ["match", ["get", "iso_3166_1_alpha_3"],
-          DESERT_CORE, core,
-          DESERT_MID,  mid,
-          DESERT_FADE, fade,
-          0,
-        ] as never;
-
-      // Shadow casing — wide, blurred, very dark
-      m.addLayer({
-        id: "desert-casing-shadow",
-        type: "line",
-        source: "country-boundaries",
-        "source-layer": "country_boundaries",
-        filter: worldviewFilter as never,
-        paint: {
-          "line-color": "#080503",
-          "line-width": ["interpolate", ["linear"], ["zoom"], 1, 3.5, 5, 5.5, 10, 8] as never,
-          "line-blur":  ["interpolate", ["linear"], ["zoom"], 1, 2.5, 5, 3,   10, 2] as never,
-          "line-opacity": desertOpacity(0.82, 0.55, 0.38),
-        },
-        layout: { "line-cap": "round", "line-join": "round" },
-      });
-
-      // Crisp top line — thin, warm sandy colour
       m.addLayer({
         id: "desert-casing-line",
         type: "line",
@@ -857,10 +842,10 @@ export default function Map({ onCountryClick, flyToCode, flyToPosition, selected
         "source-layer": "country_boundaries",
         filter: worldviewFilter as never,
         paint: {
-          "line-color": "rgba(218, 200, 170, 0.80)",
-          "line-width": ["interpolate", ["linear"], ["zoom"], 1, 0.6, 5, 1.1, 10, 1.8] as never,
+          "line-color": "rgba(240, 220, 185, 0.90)",
+          "line-width": ["interpolate", ["linear"], ["zoom"], 1, 0.55, 5, 0.65, 10, 1.1] as never,
           "line-blur":  0,
-          "line-opacity": desertOpacity(0.75, 0.50, 0.28),
+          "line-opacity": aridityOpacity,
         },
         layout: { "line-cap": "round", "line-join": "round" },
       });
