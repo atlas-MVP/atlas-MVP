@@ -566,10 +566,10 @@ export default function AtlasHQ({ onClose, onNavigate, onHeadlinesToggle, onSour
                   </>
                 )}
               </div>
-              {/* Geo-specific live alerts — hidden, re-add "geoAlerts" to sectionOrder to restore */}
-              {false && <Reveal minStage={3} stage={loadStage}>
+              {/* Geo-specific live alerts */}
+              <Reveal minStage={3} stage={loadStage}>
                 {renderAlertRows((displayConfig.geoAlerts ?? GEO_ALERTS) as FeedItem[], "geoAlerts")}
-              </Reveal>}
+              </Reveal>
             </div>
           );
 
