@@ -16,7 +16,7 @@ const HIGHLIGHTED = ["LBN", "IRN", "UKR", "RUS", "PSE", "ISR"];
 // Per-country zoom fade ranges [fadeStart, fadeEnd] — proportional to country area
 // Smaller countries keep their highlight visible until much higher zoom levels
 const COUNTRY_FADE_RANGES: Record<string, [number, number]> = {
-  PSE: [7.5, 9.5],  // Gaza ~365 km²   — tiny
+  PSE: [9.5, 11.5], // Gaza — stay visible deep into zoom so Gaza stays red
   LBN: [7.0, 9.0],  // Lebanon ~10k km² — small
   ISR: [6.8, 8.8],  // Israel ~22k km²  — small
   UKR: [4.5, 6.5],  // Ukraine ~600k km²
@@ -146,7 +146,7 @@ const OVERLAY_LAYER_IDS = [
   "casualty-fill-blue", "casualty-fill-red",
   "idle-pulse-blue", "idle-pulse-red",
   "world-hit", "hover-fill", "hover-border", "secondary-border",
-  "oslo-fill", "oslo-border",
+  "oslo-fill-israeli", "oslo-fill-palestinian", "oslo-border",
   "events-halo", "events-glow", "events-dot",
   "strike-outer-halo", "strike-halo", "strike-glow", "strike-core", "strike-dot",
 ];
@@ -266,8 +266,9 @@ export default function Map({ onCountryClick, flyToCode, flyToPosition, selected
     if (!m || !mapReady) return;
     const show = selectedCountry === "PSE" || selectedCountry === "ISR";
     try {
-      m.setPaintProperty("oslo-fill",   "fill-opacity", show ? 0.45 : 0);
-      m.setPaintProperty("oslo-border", "line-opacity", show ? 0.9  : 0);
+      m.setPaintProperty("oslo-fill-israeli",    "fill-opacity", show ? 0.52 : 0);
+      m.setPaintProperty("oslo-fill-palestinian", "fill-opacity", show ? 0.52 : 0);
+      m.setPaintProperty("oslo-border",          "line-opacity", show ? 0.85 : 0);
     } catch {}
   }, [selectedCountry, mapReady]);
 
@@ -914,26 +915,34 @@ export default function Map({ onCountryClick, flyToCode, flyToPosition, selected
         paint: { "line-color": "rgba(255,255,255,0.75)", "line-width": 0.7, "line-blur": 0, "line-opacity": 0 },
       });
 
-      // Oslo Agreement — West Bank Area A/B/C + Hebron zones
-      // Hidden by default; shown only when PSE or ISR is selected
+      // Oslo Agreement — West Bank subdivisions by CLASS
+      // Hidden by default; shown when PSE or ISR is selected
       m.addSource("oslo-agreement", {
         type: "geojson",
         data: "/oslo-agreement.geojson",
       });
+      // Israeli-controlled: Area C, H2, East Jerusalem, Nature Reserve → deep blue
       m.addLayer({
-        id: "oslo-fill",
+        id: "oslo-fill-israeli",
         type: "fill",
         source: "oslo-agreement",
-        filter: ["!=", ["get", "CLASS"], "No Man's Land"],
-        paint: {
-          "fill-color": "#c41e3a",
-          "fill-opacity": 0,
-        },
+        filter: ["in", ["get", "CLASS"], ["literal", ["C", "H2", "Israeli Declared East Jerusalem", "Nature Reserve"]]],
+        paint: { "fill-color": "#0d2a6e", "fill-opacity": 0 },
       });
+      // Palestinian-controlled: Area A, H1 → deep red
+      m.addLayer({
+        id: "oslo-fill-palestinian",
+        type: "fill",
+        source: "oslo-agreement",
+        filter: ["in", ["get", "CLASS"], ["literal", ["A", "H1"]]],
+        paint: { "fill-color": "#8b0f20", "fill-opacity": 0 },
+      });
+      // Shared border on all non-No-Man's-Land zones
       m.addLayer({
         id: "oslo-border",
         type: "line",
         source: "oslo-agreement",
+        filter: ["!=", ["get", "CLASS"], "No Man's Land"],
         paint: {
           "line-color": "#6b0f1a",
           "line-width": 1.5,
