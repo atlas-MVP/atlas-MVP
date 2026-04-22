@@ -147,7 +147,8 @@ const OVERLAY_LAYER_IDS = [
   "idle-pulse-blue", "idle-pulse-red",
   "world-hit", "hover-fill", "hover-border", "secondary-border",
   "oslo-fill-isr-country",
-  "oslo-fill-israeli", "oslo-fill-joint", "oslo-fill-palestinian", "oslo-fill-nomansland", "oslo-border",
+  "oslo-fill-israeli", "oslo-fill-joint", "oslo-fill-palestinian", "oslo-fill-nomansland",
+  "oslo-border-pal", "oslo-border-joint", "oslo-border-isr",
   "events-halo", "events-glow", "events-dot",
   "strike-outer-halo", "strike-halo", "strike-glow", "strike-core", "strike-dot",
 ];
@@ -273,9 +274,9 @@ export default function Map({ onCountryClick, flyToCode, flyToPosition, selected
     try {
       // PSE fill covers Gaza correctly via Mapbox built-in tile. Oslo layers sit on top
       // for the West Bank zones. High opacity on Israeli/joint layers overrides PSE red.
-      // Oslo fills fade from full opacity at zoom 11 → 0 at zoom 12.5 (becomes border-stroke only)
-      const OSLO_FADE_START = 11;
-      const OSLO_FADE_END   = 12.5;
+      // Oslo fills stay full until zoom 14, fade to 0 by zoom 16 (becomes border-stroke only)
+      const OSLO_FADE_START = 14;
+      const OSLO_FADE_END   = 16;
       const osloFade = (maxVal: number) =>
         ["interpolate", ["linear"], ["zoom"], OSLO_FADE_START, maxVal, OSLO_FADE_END, 0];
 
@@ -298,7 +299,9 @@ export default function Map({ onCountryClick, flyToCode, flyToPosition, selected
       sp("oslo-fill-palestinian", "fill-opacity", show ? osloFade(0.82) : 0);
       sp("oslo-fill-joint",       "fill-opacity", show ? osloFade(0.85) : 0);
       sp("oslo-fill-israeli",     "fill-opacity", show ? osloFade(0.52) : 0);
-      sp("oslo-border",           "line-opacity", show ? 0.5  : 0);  // border stays at all zoom levels
+      sp("oslo-border-pal",   "line-opacity", show ? 0.75 : 0);  // colored borders persist after fills fade
+      sp("oslo-border-joint", "line-opacity", show ? 0.75 : 0);
+      sp("oslo-border-isr",   "line-opacity", show ? 0.75 : 0);
     } catch {}
   }, [selectedCountry, focusCountries, mapReady]);
 
@@ -326,8 +329,8 @@ export default function Map({ onCountryClick, flyToCode, flyToPosition, selected
       "Israeli Declared East Jerusalem": "isr", "No Man's Land": "isr",
     };
 
-    const OSLO_FADE_START = 11;
-    const OSLO_FADE_END   = 12.5;
+    const OSLO_FADE_START = 14;
+    const OSLO_FADE_END   = 16;
     const fade = (maxVal: number) =>
       ["interpolate", ["linear"], ["zoom"], OSLO_FADE_START, maxVal, OSLO_FADE_END, 0];
 
@@ -1084,17 +1087,27 @@ export default function Map({ onCountryClick, flyToCode, flyToPosition, selected
         filter: ["in", ["get", "CLASS"], ["literal", ["A", "H1"]]],
         paint: { "fill-color": "#3b0f1f", "fill-opacity": 0 },
       });
-      // Border on all zones
+      // Zone-colored borders — persist after fills fade out at high zoom
       m.addLayer({
-        id: "oslo-border",
+        id: "oslo-border-pal",
         type: "line",
         source: "oslo-agreement",
-        filter: ["!=", ["get", "CLASS"], "No Man's Land"],
-        paint: {
-          "line-color": "rgba(255,255,255,0.25)",
-          "line-width": 0.8,
-          "line-opacity": 0,
-        },
+        filter: ["in", ["get", "CLASS"], ["literal", ["A", "H1"]]],
+        paint: { "line-color": "#8b2030", "line-width": 1.4, "line-opacity": 0 },
+      });
+      m.addLayer({
+        id: "oslo-border-joint",
+        type: "line",
+        source: "oslo-agreement",
+        filter: ["in", ["get", "CLASS"], ["literal", ["B", "Nature Reserve"]]],
+        paint: { "line-color": "#5a2070", "line-width": 1.4, "line-opacity": 0 },
+      });
+      m.addLayer({
+        id: "oslo-border-isr",
+        type: "line",
+        source: "oslo-agreement",
+        filter: ["in", ["get", "CLASS"], ["literal", ["C", "H2", "Israeli Declared East Jerusalem", "No Man's Land"]]],
+        paint: { "line-color": "#1e3f7a", "line-width": 1.4, "line-opacity": 0 },
       });
 
       // Israel proper fill for Oslo mode — same color/opacity as West Bank Israeli zones
