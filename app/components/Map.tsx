@@ -147,7 +147,7 @@ const OVERLAY_LAYER_IDS = [
   "idle-pulse-blue", "idle-pulse-red",
   "world-hit", "hover-fill", "hover-border", "secondary-border",
   "oslo-fill-isr-country",
-  "oslo-fill-israeli", "oslo-fill-joint", "oslo-fill-palestinian", "oslo-fill-gaza", "oslo-fill-nomansland", "oslo-border",
+  "oslo-fill-israeli", "oslo-fill-joint", "oslo-fill-palestinian", "oslo-fill-nomansland", "oslo-border",
   "events-halo", "events-glow", "events-dot",
   "strike-outer-halo", "strike-halo", "strike-glow", "strike-core", "strike-dot",
 ];
@@ -171,6 +171,8 @@ export default function Map({ onCountryClick, flyToCode, flyToPosition, selected
   const idlePulseFrame = useRef<number | null>(null);
   const panelOpenRef = useRef(false);
   const [tooltip, setTooltip] = useState<{ x: number; y: number; name: string; isHighlighted: boolean } | null>(null);
+  const [osloTooltip, setOsloTooltip] = useState<{ label: string; x: number; y: number } | null>(null);
+  const osloLocked = useRef(false);
   // Globe spin state
   const spinFrameRef = useRef<number | null>(null);
   const spinLastTs = useRef<number | null>(null);
@@ -266,23 +268,18 @@ export default function Map({ onCountryClick, flyToCode, flyToPosition, selected
     const m = map.current;
     if (!m || !mapReady) return;
     const show = !!(focusCountries?.includes("PSE") || selectedCountry === "PSE");
+    if (!show) { osloLocked.current = false; setOsloTooltip(null); }
     try {
-      // When Oslo is active, pin PSE and ISR country fills to a flat 0.52 opacity
-      // so Gaza (PSE country fill) and Israel proper (ISR country fill) exactly
-      // match the West Bank zone shades. When Oslo is hidden, restore zoom-fades.
+      // PSE fill covers Gaza correctly via Mapbox built-in tile. Oslo layers sit on top
+      // for the West Bank zones. High opacity on Israeli/joint layers overrides PSE red.
       if (m.getLayer("highlighted-fill-PSE")) {
         const [fs, fe] = COUNTRY_FADE_RANGES["PSE"] ?? [FADE_START, FADE_END];
-        // Zero out PSE country fill when selected — replaced by oslo-fill-palestinian
-        // (West Bank A/H1) + oslo-fill-gaza (Gaza Strip). This lets No Man's Land
-        // (between Gaza and Israel, excluded from all oslo fills) show bare satellite.
         m.setPaintProperty("highlighted-fill-PSE", "fill-opacity",
-          show ? 0 : ["interpolate", ["linear"], ["zoom"], fs, 0.48, fe, 0] as never
+          show ? 0.65 : ["interpolate", ["linear"], ["zoom"], fs, 0.48, fe, 0] as never
         );
       }
       if (m.getLayer("highlighted-fill-ISR")) {
         const [fs, fe] = COUNTRY_FADE_RANGES["ISR"] ?? [FADE_START, FADE_END];
-        // Hide ISR country fill when Oslo shown — oslo-fill-isr-country takes over
-        // so Israel proper and West Bank Israeli zones share the exact same opacity.
         m.setPaintProperty("highlighted-fill-ISR", "fill-opacity",
           show ? 0 : ["interpolate", ["linear"], ["zoom"], fs, 0.48, fe, 0] as never
         );
@@ -290,13 +287,68 @@ export default function Map({ onCountryClick, flyToCode, flyToPosition, selected
       const sp = (id: string, prop: string, val: number) => {
         if (m.getLayer(id)) m.setPaintProperty(id, prop as never, val as never);
       };
-      sp("oslo-fill-isr-country", "fill-opacity", show ? 0.52 : 0);
+      // Israel proper (outside West Bank) → same blue, matches Area C
+      sp("oslo-fill-isr-country", "fill-opacity", show ? 0.88 : 0);
+      // Area A / H1 — Palestinian cities (red). PSE red is underneath; this adds depth.
       sp("oslo-fill-palestinian", "fill-opacity", show ? 0.65 : 0);
-      sp("oslo-fill-joint",       "fill-opacity", show ? 0.65 : 0);
-      sp("oslo-fill-israeli",     "fill-opacity", show ? 0.52 : 0);
-      sp("oslo-fill-gaza",        "fill-opacity", show ? 0.65 : 0);
-      sp("oslo-border",           "line-opacity", show ? 0.6  : 0);
+      // Area B + Nature Reserve — joint control (purple). High enough to override PSE red.
+      sp("oslo-fill-joint",       "fill-opacity", show ? 0.82 : 0);
+      // Area C + H2 + East Jerusalem + No Man's Land — Israeli (blue). Overrides PSE red.
+      sp("oslo-fill-israeli",     "fill-opacity", show ? 0.88 : 0);
+      sp("oslo-border",           "line-opacity", show ? 0.5  : 0);
     } catch {}
+  }, [selectedCountry, focusCountries, mapReady]);
+
+  // Oslo zone hover tooltip — follows cursor, tap locks, show=false clears
+  useEffect(() => {
+    const m = map.current;
+    if (!m || !mapReady) return;
+    const show = !!(focusCountries?.includes("PSE") || selectedCountry === "PSE");
+    if (!show) return;
+
+    const LABEL: Record<string, string> = {
+      A: "Palestinian Control", H1: "Palestinian Control",
+      B: "Israeli–Palestinian Control", "Nature Reserve": "Israeli–Palestinian Control",
+      C: "Israeli Control", H2: "Israeli Control",
+      "Israeli Declared East Jerusalem": "Israeli Control",
+      "No Man's Land": "Israeli Control",
+    };
+
+    const onMove = (e: mapboxgl.MapMouseEvent) => {
+      if (osloLocked.current) return;
+      const osloFeats = m.queryRenderedFeatures(e.point, {
+        layers: ["oslo-fill-israeli", "oslo-fill-joint", "oslo-fill-palestinian"],
+      });
+      if (osloFeats.length > 0) {
+        const cls = (osloFeats[0].properties?.CLASS ?? "") as string;
+        setOsloTooltip({ label: LABEL[cls] ?? "Israeli Control", x: e.point.x, y: e.point.y });
+        return;
+      }
+      // Gaza: PSE fill visible but no oslo layer on top
+      const pseFeats = m.queryRenderedFeatures(e.point, { layers: ["highlighted-fill-PSE"] });
+      if (pseFeats.length > 0) {
+        setOsloTooltip({ label: "Palestinian Control", x: e.point.x, y: e.point.y });
+      } else {
+        setOsloTooltip(null);
+      }
+    };
+
+    const onLeave = () => { if (!osloLocked.current) setOsloTooltip(null); };
+
+    const onClick = (e: mapboxgl.MapMouseEvent) => {
+      const feats = m.queryRenderedFeatures(e.point, {
+        layers: ["oslo-fill-israeli", "oslo-fill-joint", "oslo-fill-palestinian", "highlighted-fill-PSE"],
+      });
+      if (feats.length > 0) {
+        osloLocked.current = !osloLocked.current;
+        if (!osloLocked.current) setOsloTooltip(null);
+      }
+    };
+
+    m.on("mousemove", onMove);
+    m.on("mouseleave", onLeave);
+    m.on("click", onClick);
+    return () => { m.off("mousemove", onMove); m.off("mouseleave", onLeave); m.off("click", onClick); };
   }, [selectedCountry, focusCountries, mapReady]);
 
   // FlyTo when flyToCode changes from outside (search)
@@ -956,13 +1008,13 @@ export default function Map({ onCountryClick, flyToCode, flyToPosition, selected
         filter: ["in", ["get", "CLASS"], ["literal", ["C", "H2", "Israeli Declared East Jerusalem", "No Man's Land"]]],
         paint: { "fill-color": "#0d2a52", "fill-opacity": 0 },
       });
-      // Area B + Nature Reserve → purple (joint Israeli-Palestinian control, ~22%+)
+      // Area B + Nature Reserve → dark purple (joint control, midpoint of blue+red)
       m.addLayer({
         id: "oslo-fill-joint",
         type: "fill",
         source: "oslo-agreement",
         filter: ["in", ["get", "CLASS"], ["literal", ["B", "Nature Reserve"]]],
-        paint: { "fill-color": "#4a1a6e", "fill-opacity": 0 },
+        paint: { "fill-color": "#24193a", "fill-opacity": 0 },
       });
       // Area A, H1 → deep red (Palestinian full control, ~18%)
       m.addLayer({
@@ -995,49 +1047,7 @@ export default function Map({ onCountryClick, flyToCode, flyToPosition, selected
         paint: { "fill-color": "#0d2a52", "fill-opacity": 0 },
       });
 
-      // Gaza Strip explicit polygon — lets No Man's Land show bare satellite.
-      // highlighted-fill-PSE (country boundary fill) covers all of PSE including
-      // No Man's Land; replacing it with this explicit polygon + oslo-fill-palestinian
-      // (West Bank) means No Man's Land has zero fill coverage → raw satellite.
-      m.addSource("gaza-strip", {
-        type: "geojson",
-        data: {
-          type: "FeatureCollection",
-          features: [{
-            type: "Feature",
-            properties: {},
-            geometry: {
-              type: "Polygon",
-              coordinates: [[
-                [34.4330, 31.5940],  // NW — coast at north Israel-Gaza border
-                [34.5380, 31.5920],  // NE — Erez crossing (inland end)
-                [34.4950, 31.4500],  // E — Karni/Karm Abu Salem
-                [34.3850, 31.3450],  // E — middle south
-                [34.2680, 31.2280],  // SE — Kerem Shalom / Rafah east
-                [34.2370, 31.2180],  // SW — Rafah coast (Egyptian border meets sea)
-                [34.3430, 31.3480],  // coast mid
-                [34.4050, 31.4700],  // coast north-mid
-                [34.4330, 31.5940],  // close
-              ]],
-            },
-          }],
-        },
-      });
-      m.addLayer({
-        id: "oslo-fill-gaza",
-        type: "fill",
-        source: "gaza-strip",
-        paint: { "fill-color": "#3b0f1f", "fill-opacity": 0 },
-      });
-
-      // No Man's Land — bright amber so it's visually identifiable on top of all fills
-      m.addLayer({
-        id: "oslo-fill-nomansland",
-        type: "fill",
-        source: "oslo-agreement",
-        filter: ["==", ["get", "CLASS"], "No Man's Land"],
-        paint: { "fill-color": "#f5a623", "fill-opacity": 0 },
-      });
+      // (No Man's Land is now part of oslo-fill-israeli — no separate layer needed)
 
       // Crisis event dots
       m.addSource("events", {
@@ -1422,6 +1432,30 @@ export default function Map({ onCountryClick, flyToCode, flyToPosition, selected
       {/* Black overlay hides the map visually until tiles render — pointer-events:none keeps map interactive */}
       {!mapReady && (
         <div style={{ position: "absolute", inset: 0, background: "#000", pointerEvents: "none", zIndex: 1 }} />
+      )}
+
+      {osloTooltip && (
+        <div style={{
+          position: "absolute", left: osloTooltip.x + 14, top: osloTooltip.y - 36,
+          pointerEvents: "none", zIndex: 6,
+        }}>
+          <div style={{
+            background: "rgba(2,6,18,0.92)",
+            border: `1px solid ${osloLocked.current ? "rgba(255,255,255,0.3)" : "rgba(255,255,255,0.15)"}`,
+            borderRadius: 4, padding: "5px 10px",
+            display: "flex", alignItems: "center", gap: 7,
+          }}>
+            <span style={{
+              width: 6, height: 6, borderRadius: "50%", flexShrink: 0, display: "inline-block",
+              background: osloTooltip.label === "Palestinian Control" ? "#3b0f1f"
+                : osloTooltip.label === "Israeli–Palestinian Control" ? "#24193a"
+                : "#0d2a52",
+            }} />
+            <span style={{ color: "rgba(255,255,255,0.85)", fontSize: 11, fontFamily: "monospace", letterSpacing: "0.07em", whiteSpace: "nowrap" }}>
+              {osloTooltip.label}
+            </span>
+          </div>
+        </div>
       )}
 
       {tooltip && (
