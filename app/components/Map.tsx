@@ -299,9 +299,13 @@ export default function Map({ onCountryClick, flyToCode, flyToPosition, selected
       sp("oslo-fill-palestinian", "fill-opacity", show ? osloFade(0.82) : 0);
       sp("oslo-fill-joint",       "fill-opacity", show ? osloFade(0.85) : 0);
       sp("oslo-fill-israeli",     "fill-opacity", show ? osloFade(0.52) : 0);
-      sp("oslo-border-pal",   "line-opacity", show ? 0.75 : 0);  // colored borders persist after fills fade
-      sp("oslo-border-joint", "line-opacity", show ? 0.75 : 0);
-      sp("oslo-border-isr",   "line-opacity", show ? 0.75 : 0);
+      // Borders fade IN only after fills fade out (inverse of fill fade)
+      const borderExpr = show
+        ? ["interpolate", ["linear"], ["zoom"], OSLO_FADE_START, 0, OSLO_FADE_END, 0.75]
+        : 0;
+      sp("oslo-border-pal",   "line-opacity", borderExpr);
+      sp("oslo-border-joint", "line-opacity", borderExpr);
+      sp("oslo-border-isr",   "line-opacity", borderExpr);
     } catch {}
   }, [selectedCountry, focusCountries, mapReady]);
 
