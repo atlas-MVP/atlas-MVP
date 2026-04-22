@@ -842,9 +842,13 @@ export default function Map({ onCountryClick, flyToCode, flyToPosition, selected
         "source-layer": "country_boundaries",
         filter: worldviewFilter as never,
         paint: {
-          "line-color": "rgba(240, 220, 185, 0.90)",
-          "line-width": ["interpolate", ["linear"], ["zoom"], 1, 0.55, 5, 0.65, 10, 1.1] as never,
-          "line-blur":  0,
+          // Warm amber-white — clearly distinct from the cool white admin line,
+          // so desert borders read as a different colour, not just a doubled line.
+          "line-color": "rgba(255, 215, 140, 0.92)",
+          // Wider than the admin line so it's actually visible at globe zoom.
+          // Sits on top of the 0.55px white admin line and dominates in arid regions.
+          "line-width": ["interpolate", ["linear"], ["zoom"], 1, 1.2, 5, 1.8, 10, 2.6] as never,
+          "line-blur":  0.4,
           "line-opacity": aridityOpacity,
         },
         layout: { "line-cap": "round", "line-join": "round" },
