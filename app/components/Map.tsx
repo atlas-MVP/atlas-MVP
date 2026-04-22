@@ -261,11 +261,11 @@ export default function Map({ onCountryClick, flyToCode, flyToPosition, selected
     }
   }, [selectedCountry, focusCountries]);
 
-  // Oslo Agreement layers — only visible when PSE or ISR is selected
+  // Oslo Agreement layers — only for Israel–Palestine conflict (focusCountries includes PSE)
   useEffect(() => {
     const m = map.current;
     if (!m || !mapReady) return;
-    const show = selectedCountry === "PSE" || selectedCountry === "ISR";
+    const show = !!(focusCountries?.includes("PSE") || selectedCountry === "PSE");
     try {
       // When Oslo is active, pin PSE and ISR country fills to a flat 0.52 opacity
       // so Gaza (PSE country fill) and Israel proper (ISR country fill) exactly
@@ -295,11 +295,9 @@ export default function Map({ onCountryClick, flyToCode, flyToPosition, selected
       m.setPaintProperty("oslo-fill-gaza",        "fill-opacity", show ? 0.52 : 0);
       // Israeli-controlled West Bank zones — 0.52, no underlying fill to mix with
       m.setPaintProperty("oslo-fill-israeli",     "fill-opacity", show ? 0.52 : 0);
-      // No Man's Land — bright amber, renders on top of Gaza/Israel fills
-      m.setPaintProperty("oslo-fill-nomansland",  "fill-opacity", show ? 0.9 : 0);
       m.setPaintProperty("oslo-border",           "line-opacity", show ? 0.85 : 0);
     } catch {}
-  }, [selectedCountry, mapReady]);
+  }, [selectedCountry, focusCountries, mapReady]);
 
   // FlyTo when flyToCode changes from outside (search)
   useEffect(() => {
@@ -1003,12 +1001,15 @@ export default function Map({ onCountryClick, flyToCode, flyToPosition, selected
             geometry: {
               type: "Polygon",
               coordinates: [[
-                [34.2228, 31.5960],
-                [34.4075, 31.5880],
-                [34.5575, 31.5590],
-                [34.4950, 31.2163],
-                [34.2228, 31.2163],
-                [34.2228, 31.5960],
+                [34.2228, 31.5950],  // NW coast (north border with Israel)
+                [34.5470, 31.5920],  // NE — Erez crossing
+                [34.4870, 31.5000],  // E middle-north
+                [34.4560, 31.4000],  // E middle
+                [34.3480, 31.3000],  // E south
+                [34.2850, 31.2300],  // SE — Kerem Shalom
+                [34.2650, 31.2180],  // SE corner — Rafah
+                [34.2228, 31.2180],  // SW coast — Egyptian border
+                [34.2228, 31.5950],  // close
               ]],
             },
           }],
