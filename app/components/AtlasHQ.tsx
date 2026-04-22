@@ -465,8 +465,8 @@ export default function AtlasHQ({ onClose, onNavigate, onHeadlinesToggle, onSour
       <div className="radar-scroll" style={{ flex: 1, overflowY: "auto", overflowX: "hidden", position: "relative", paddingTop: 10 }}>
 
         {/* Sections rendered in saved drag order */}
-        {(displayConfig.sectionOrder ?? ["geo", "violence", "finance", "disasters"]).map((section, i) => {
-          const DEFAULT_ORDER = ["geo", "violence", "finance", "disasters"];
+        {(displayConfig.sectionOrder ?? ["geo", "disasters"]).map((section, i) => {
+          const DEFAULT_ORDER = ["geo", "disasters"];
           const sectionDragHandle = editMode ? {
             onDragStart: (e: React.DragEvent<HTMLDivElement>) => {
               setDragSection(i);
@@ -566,10 +566,10 @@ export default function AtlasHQ({ onClose, onNavigate, onHeadlinesToggle, onSour
                   </>
                 )}
               </div>
-              {/* Geo-specific live alerts */}
-              <Reveal minStage={3} stage={loadStage}>
+              {/* Geo-specific live alerts — hidden, re-add "geoAlerts" to sectionOrder to restore */}
+              {false && <Reveal minStage={3} stage={loadStage}>
                 {renderAlertRows((displayConfig.geoAlerts ?? GEO_ALERTS) as FeedItem[], "geoAlerts")}
-              </Reveal>
+              </Reveal>}
             </div>
           );
 
