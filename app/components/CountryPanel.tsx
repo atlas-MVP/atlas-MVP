@@ -1288,27 +1288,27 @@ export default function CountryPanel({ countryCode, onClose, onViewFeed, onConfl
             {CASUALTY_ISO[c.country] && onFocusCountry ? (
               <button
                 onClick={(e) => { e.stopPropagation(); onFocusCountry(CASUALTY_ISO[c.country]); }}
-                style={{ fontSize: 13, fontFamily: "monospace", color: nameColor, background: "none", border: "none", cursor: "pointer", padding: 0, textAlign: "left", letterSpacing: "0.02em" }}
+                style={{ fontSize: 13, fontFamily: "Arial, sans-serif", color: nameColor, background: "none", border: "none", cursor: "pointer", padding: 0, textAlign: "left" }}
                 onMouseEnter={e => (e.currentTarget.style.color = "rgba(255,255,255,1)")}
                 onMouseLeave={e => (e.currentTarget.style.color = nameColor)}
               >{c.country}</button>
             ) : (
-              <span style={{ fontSize: 13, fontFamily: "monospace", color: nameColor }}>{c.country}</span>
+              <span style={{ fontSize: 13, fontFamily: "Arial, sans-serif", color: nameColor }}>{c.country}</span>
             )}
           </div>
         </td>
         {hasDisplacedCol && (
-          <td style={{ textAlign: "right", fontSize: 13, fontFamily: "monospace", color: "rgba(255,255,255,0.88)", paddingRight: 8, paddingTop: 4, paddingBottom: 4 }}>
+          <td style={{ textAlign: "right", fontSize: 13, fontFamily: "Arial, sans-serif", color: "rgba(255,255,255,0.88)", paddingRight: 8, paddingTop: 4, paddingBottom: 4 }}>
             {c.displaced ?? ""}
           </td>
         )}
         {!hasMissingCol && (
-          <td style={{ textAlign: "right", fontSize: 13, fontFamily: "monospace", color: "rgba(255,255,255,0.88)", paddingRight: 8, paddingTop: 4, paddingBottom: 4 }}>
+          <td style={{ textAlign: "right", fontSize: 13, fontFamily: "Arial, sans-serif", color: "rgba(255,255,255,0.88)", paddingRight: 8, paddingTop: 4, paddingBottom: 4 }}>
             {hasInjured ? c.injured : ""}
           </td>
         )}
         {hasMissingCol && (
-          <td style={{ textAlign: "right", fontSize: 13, fontFamily: "monospace", color: "rgba(255,255,255,0.88)", paddingRight: 8 }}>
+          <td style={{ textAlign: "right", fontSize: 13, fontFamily: "Arial, sans-serif", color: "rgba(255,255,255,0.88)", paddingRight: 8 }}>
             {c.missing ?? ""}
           </td>
         )}
@@ -1322,7 +1322,7 @@ export default function CountryPanel({ countryCode, onClose, onViewFeed, onConfl
                 <button
                   onClick={(e) => { e.stopPropagation(); setCivTooltip(civTooltip === c.country ? null : c.country); }}
                   style={{
-                    fontSize: 11, fontFamily: "monospace", padding: "2px 6px", borderRadius: 4, cursor: "pointer", border: "none",
+                    fontSize: 11, fontFamily: "Arial, sans-serif", padding: "2px 6px", borderRadius: 4, cursor: "pointer", border: "none",
                     background: "rgba(255,255,255,0.05)",
                     color: "rgba(255,255,255,0.92)",
                     fontWeight: 700,
