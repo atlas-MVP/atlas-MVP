@@ -146,6 +146,7 @@ const OVERLAY_LAYER_IDS = [
   "casualty-fill-blue", "casualty-fill-red",
   "idle-pulse-blue", "idle-pulse-red",
   "world-hit", "hover-fill", "hover-border", "secondary-border",
+  "oslo-fill", "oslo-border",
   "events-halo", "events-glow", "events-dot",
   "strike-outer-halo", "strike-halo", "strike-glow", "strike-core", "strike-dot",
 ];
@@ -859,6 +860,33 @@ export default function Map({ onCountryClick, flyToCode, flyToPosition, selected
         "source-layer": "country_boundaries",
         filter: ["all", worldviewFilter, ["in", ["get", "iso_3166_1_alpha_3"], ["literal", [""]]]],
         paint: { "line-color": "rgba(255,255,255,0.75)", "line-width": 0.7, "line-blur": 0, "line-opacity": 0 },
+      });
+
+      // Oslo Agreement — West Bank Area A/B/C + Hebron zones
+      m.addSource("oslo-agreement", {
+        type: "geojson",
+        data: "/oslo-agreement.geojson",
+      });
+      // Fill — ocean blue matching Mediterranean beside Israel
+      m.addLayer({
+        id: "oslo-fill",
+        type: "fill",
+        source: "oslo-agreement",
+        paint: {
+          "fill-color": "#1a5f7a",
+          "fill-opacity": 0.45,
+        },
+      });
+      // Border — dark maroon
+      m.addLayer({
+        id: "oslo-border",
+        type: "line",
+        source: "oslo-agreement",
+        paint: {
+          "line-color": "#6b0f1a",
+          "line-width": 1.5,
+          "line-opacity": 0.9,
+        },
       });
 
       // Crisis event dots
