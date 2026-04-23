@@ -548,17 +548,6 @@ export default function ArticlePage({
                 </div>
               </div>
 
-              <div style={{
-                display: "flex", flexDirection: "column", gap: 10,
-                fontSize: 13, color: "rgba(255,255,255,0.68)",
-                borderTop: "1px solid rgba(255,255,255,0.08)",
-                paddingTop: 18,
-              }}>
-                <div>Age: {bio.age}</div>
-                <div>Years in office: {bio.yearsInOffice}</div>
-                <div>{reelectionLabel(bio)}</div>
-              </div>
-
               {bio.isSponsor && (
                 <div style={{
                   position: "absolute",
@@ -799,22 +788,6 @@ export default function ArticlePage({
                     </div>
                   </div>
 
-                  {hasBio && (
-                    <div style={{
-                      display: "flex",
-                      flexDirection: "column",
-                      gap: 10,
-                      fontSize: 14,
-                      color: "rgba(255,255,255,0.68)",
-                      borderTop: "1px solid rgba(255,255,255,0.08)",
-                      paddingTop: 14,
-                    }}>
-                      <div><span style={{ fontWeight: 700 }}>Age:</span> {bio.age}</div>
-                      <div><span style={{ fontWeight: 700 }}>Years in office:</span> {bio.yearsInOffice}</div>
-                      <div>{reelectionLabel(bio)}</div>
-                    </div>
-                  )}
-
                   {hasBio && bio.isSponsor && (
                     <div style={{
                       position: "absolute",
@@ -854,7 +827,7 @@ export default function ArticlePage({
           yearsInOffice={profileSenator.yearsInOffice}
           nextElection={profileSenator.nextElection}
           runningAgain={profileSenator.runningAgain}
-          voteOnThisBill={profileSenator.vote}
+          officialUrl={profileSenator.officialUrl}
           onClose={() => setProfileSenator(null)}
         />
       )}
