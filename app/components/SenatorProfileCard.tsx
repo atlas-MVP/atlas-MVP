@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import type { SenatorAlignmentResponse, VoteRecord } from "../api/senator-alignment/[bioguide]/route";
+import type { SenatorScorecard } from "../api/senator-alignment/[bioguide]/route";
+import IssueScoreSection from "./IssueScoreSection";
 
 interface Props {
   bioguide: string;
@@ -30,83 +31,11 @@ const STATE_NAMES: Record<string, string> = {
   VA:"Virginia",WA:"Washington",WV:"West Virginia",WI:"Wisconsin",WY:"Wyoming",
 };
 
-const BAR_GRADIENT = "linear-gradient(to right, #3b82f6 0%, #6b7280 50%, #ef4444 100%)";
-
-function alignmentLabel(score: number): string {
-  if (score <= -75) return "Far Left";
-  if (score <= -45) return "Left";
-  if (score <= -15) return "Center-Left";
-  if (score <=  15) return "Center";
-  if (score <=  45) return "Center-Right";
-  if (score <=  75) return "Right";
-  return "Far Right";
-}
-
-function VoteRow({ vote }: { vote: VoteRecord }) {
-  const aligned = vote.aligned;
-  // Derive a clean capitalized vote label
-  const voteLabel = vote.memberVote === "Yes" ? "Voted Yes" : vote.memberVote === "No" ? "Voted No" : "Not Voting";
-
-  return (
-    <div style={{
-      padding: "12px 0",
-      borderBottom: "1px solid rgba(255,255,255,0.06)",
-    }}>
-      {/* Bill title — Times New Roman, properly capitalized */}
-      <div style={{
-        fontSize: 15,
-        fontFamily: "'Times New Roman', Times, serif",
-        fontWeight: 400,
-        color: "rgba(255,255,255,0.92)",
-        lineHeight: 1.45,
-        marginBottom: 8,
-        textTransform: "none",
-        letterSpacing: "0.01em",
-      }}>
-        {vote.url
-          ? <a href={vote.url} target="_blank" rel="noreferrer"
-              onClick={e => e.stopPropagation()}
-              style={{ color: "rgba(255,255,255,0.92)", textDecoration: "none" }}
-              onMouseEnter={e => (e.currentTarget.style.textDecoration = "underline")}
-              onMouseLeave={e => (e.currentTarget.style.textDecoration = "none")}
-            >{vote.billTitle}</a>
-          : vote.billTitle
-        }
-      </div>
-
-      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-        {/* How they voted */}
-        <span style={{
-          fontSize: 12,
-          fontFamily: "'Times New Roman', Times, serif",
-          textTransform: "none",
-          color: aligned ? "rgba(100,200,100,0.9)" : "rgba(239,68,68,0.9)",
-          fontStyle: "italic",
-        }}>
-          {voteLabel}
-        </span>
-
-        {/* Aligned / misaligned badge */}
-        <span style={{
-          fontSize: 9, fontFamily: "monospace", letterSpacing: "0.1em",
-          color: aligned ? "rgba(100,200,100,0.75)" : "rgba(239,68,68,0.75)",
-          background: aligned ? "rgba(100,200,100,0.08)" : "rgba(239,68,68,0.08)",
-          border: `1px solid ${aligned ? "rgba(100,200,100,0.18)" : "rgba(239,68,68,0.18)"}`,
-          borderRadius: 4, padding: "2px 6px",
-          textTransform: "uppercase",
-        }}>
-          {aligned ? "aligned" : "misaligned"}
-        </span>
-      </div>
-    </div>
-  );
-}
-
 export default function SenatorProfileCard({
   bioguide, name, photo, party, state, age, yearsInOffice,
   nextElection, runningAgain, officialUrl, onClose,
 }: Props) {
-  const [data, setData] = useState<SenatorAlignmentResponse | null>(null);
+  const [data, setData] = useState<SenatorScorecard | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -118,11 +47,6 @@ export default function SenatorProfileCard({
   }, [bioguide]);
 
   const partyLabel = party === "R" ? "Republican" : party === "D" ? "Democrat" : "Independent";
-  const score = data?.alignmentScore ?? 0;
-  const dotPct = ((score + 100) / 200) * 100;
-  const dotColor = score < -15 ? "#3b82f6" : score > 15 ? "#ef4444" : "#9ca3af";
-
-  // Contact URL: append /contact to official site
   const contactUrl = officialUrl.replace(/\/$/, "") + "/contact";
 
   return (
@@ -136,7 +60,7 @@ export default function SenatorProfileCard({
         }}
       />
 
-      {/* Card — 488px wide (AtlasHQ width), centered right */}
+      {/* Card — 488px, right-anchored, vertically centered */}
       <div
         onClick={e => e.stopPropagation()}
         style={{
@@ -157,7 +81,7 @@ export default function SenatorProfileCard({
           overflow: "hidden",
         }}
       >
-        {/* ── Close ── */}
+        {/* Close */}
         <button
           onClick={onClose}
           style={{
@@ -169,11 +93,11 @@ export default function SenatorProfileCard({
           onMouseLeave={e => (e.currentTarget.style.color = "rgba(255,255,255,0.25)")}
         >×</button>
 
-        {/* ── Scrollable body ── */}
-        <div style={{ flex: 1, overflowY: "auto", padding: "20px 20px 24px" }}>
+        {/* Scrollable body */}
+        <div style={{ flex: 1, overflowY: "auto", padding: "20px 20px 28px" }}>
 
           {/* ── Header: photo + name + contact + party/state ── */}
-          <div style={{ display: "flex", gap: 16, marginBottom: 18 }}>
+          <div style={{ display: "flex", gap: 16, marginBottom: 16 }}>
             <div style={{
               width: 86, height: 86, borderRadius: 12, overflow: "hidden",
               background: "rgba(255,255,255,0.06)", flexShrink: 0,
@@ -181,7 +105,7 @@ export default function SenatorProfileCard({
               <img src={photo} alt={name} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
             </div>
             <div style={{ flex: 1, paddingTop: 4 }}>
-              {/* Name + inline contact button */}
+              {/* Name + inline contact pill */}
               <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", marginBottom: 5 }}>
                 <span style={{ fontSize: 21, fontWeight: 700, color: "rgba(255,255,255,0.95)", lineHeight: 1.2 }}>
                   {name}
@@ -212,105 +136,72 @@ export default function SenatorProfileCard({
             </div>
           </div>
 
-          {/* ── Senator info: age, years, reelection ── */}
+          {/* ── Info block: age, years, reelection ── */}
           <div style={{
-            display: "flex", flexDirection: "column", gap: 8,
-            padding: "14px 16px",
+            display: "flex",
+            alignItems: "center",
+            gap: 16,
+            padding: "11px 16px",
             background: "rgba(255,255,255,0.03)",
             border: "1px solid rgba(255,255,255,0.07)",
-            borderRadius: 12, marginBottom: 14,
+            borderRadius: 10,
+            marginBottom: 14,
+            flexWrap: "wrap",
           }}>
-            <div style={{ fontSize: 14, color: "rgba(255,255,255,0.75)" }}>
-              <span style={{ fontWeight: 700, color: "rgba(255,255,255,0.92)" }}>{age} Years Old</span>
-            </div>
-            <div style={{ fontSize: 14, color: "rgba(255,255,255,0.75)" }}>
-              <span style={{ fontWeight: 700, color: "rgba(255,255,255,0.92)" }}>{yearsInOffice} Years</span> in Office
-            </div>
+            <span style={{ fontSize: 13, color: "rgba(255,255,255,0.65)" }}>
+              <span style={{ fontWeight: 700, color: "rgba(255,255,255,0.9)" }}>{age}</span> yrs old
+            </span>
+            <span style={{ width: 1, height: 12, background: "rgba(255,255,255,0.1)", flexShrink: 0 }} />
+            <span style={{ fontSize: 13, color: "rgba(255,255,255,0.65)" }}>
+              <span style={{ fontWeight: 700, color: "rgba(255,255,255,0.9)" }}>{yearsInOffice} yrs</span> in office
+            </span>
             {runningAgain && (
-              <div style={{ marginTop: 2 }}>
+              <>
+                <span style={{ width: 1, height: 12, background: "rgba(255,255,255,0.1)", flexShrink: 0 }} />
                 <span style={{
-                  display: "inline-block",
-                  padding: "4px 10px",
-                  background: "rgba(251,146,60,0.12)",
-                  border: "1px solid rgba(251,146,60,0.45)",
-                  borderRadius: 6,
-                  fontSize: 11, fontFamily: "monospace", letterSpacing: "0.08em",
+                  fontSize: 10, fontFamily: "monospace", letterSpacing: "0.08em",
                   color: "rgba(251,146,60,0.95)", fontWeight: 700,
-                  textTransform: "none",
+                  background: "rgba(251,146,60,0.1)",
+                  border: "1px solid rgba(251,146,60,0.35)",
+                  borderRadius: 5, padding: "2px 7px",
                 }}>
                   Reelection {nextElection}
                 </span>
-              </div>
-            )}
-          </div>
-
-          {/* ── Alignment bar ── */}
-          <div style={{
-            background: "rgba(255,255,255,0.03)",
-            border: "1px solid rgba(255,255,255,0.07)",
-            borderRadius: 12, padding: "16px 16px 14px", marginBottom: 14,
-          }}>
-            <div style={{
-              fontSize: 9, fontFamily: "monospace", letterSpacing: "0.18em",
-              color: "rgba(255,255,255,0.32)", textTransform: "uppercase", marginBottom: 12,
-            }}>Alignment</div>
-
-            {loading ? (
-              <div style={{ height: 52, display: "flex", alignItems: "center" }}>
-                <span style={{ fontSize: 11, fontFamily: "monospace", color: "rgba(255,255,255,0.2)", letterSpacing: "0.1em" }}>loading…</span>
-              </div>
-            ) : (
-              <>
-                <div style={{ display: "flex", alignItems: "baseline", gap: 8, marginBottom: 12 }}>
-                  <span style={{ fontSize: 40, fontWeight: 700, lineHeight: 1, color: dotColor, letterSpacing: "-0.02em" }}>
-                    {score > 0 ? `+${score}` : score}
-                  </span>
-                  <span style={{ fontSize: 13, color: "rgba(255,255,255,0.4)" }}>
-                    {alignmentLabel(score)}
-                  </span>
-                </div>
-
-                <div style={{ position: "relative", height: 8, borderRadius: 999, background: BAR_GRADIENT, marginBottom: 8 }}>
-                  <div style={{ position: "absolute", left: "50%", top: -3, bottom: -3, width: 1, background: "rgba(255,255,255,0.18)" }} />
-                  <div style={{
-                    position: "absolute", left: `${dotPct}%`, top: "50%",
-                    transform: "translate(-50%, -50%)",
-                    width: 16, height: 16, borderRadius: "50%",
-                    background: dotColor, border: "2px solid rgba(255,255,255,0.9)",
-                    boxShadow: `0 0 10px ${dotColor}`,
-                    transition: "left 0.5s cubic-bezier(0.34,1.56,0.64,1)",
-                  }} />
-                </div>
-
-                <div style={{ display: "flex", justifyContent: "space-between" }}>
-                  <span style={{ fontSize: 9, fontFamily: "monospace", color: "#3b82f6", opacity: 0.7 }}>← liberal</span>
-                  <span style={{ fontSize: 9, fontFamily: "monospace", color: "#ef4444", opacity: 0.7 }}>conservative →</span>
-                </div>
               </>
             )}
           </div>
 
-          {/* ── Recent votes ── */}
-          <div style={{
-            background: "rgba(255,255,255,0.03)",
-            border: "1px solid rgba(255,255,255,0.07)",
-            borderRadius: 12, padding: "16px 16px 4px",
-          }}>
+          {/* ── Issue score section (8 categories) ── */}
+          {loading ? (
             <div style={{
-              fontSize: 9, fontFamily: "monospace", letterSpacing: "0.18em",
-              color: "rgba(255,255,255,0.32)", textTransform: "uppercase", marginBottom: 4,
-            }}>Recent Votes</div>
-
-            {loading ? (
-              <div style={{ fontSize: 11, fontFamily: "monospace", color: "rgba(255,255,255,0.2)", padding: "12px 0" }}>loading…</div>
-            ) : data?.recentVotes.length ? (
-              data.recentVotes.map((v, i) => <VoteRow key={i} vote={v} />)
-            ) : (
-              <div style={{ fontSize: 14, fontFamily: "'Times New Roman', Times, serif", color: "rgba(255,255,255,0.35)", padding: "12px 0" }}>
-                No vote data available.
-              </div>
-            )}
-          </div>
+              background: "rgba(255,255,255,0.03)",
+              border: "1px solid rgba(255,255,255,0.07)",
+              borderRadius: 12,
+              padding: "24px 16px",
+              display: "flex",
+              alignItems: "center",
+            }}>
+              <span style={{ fontSize: 11, fontFamily: "monospace", color: "rgba(255,255,255,0.2)", letterSpacing: "0.1em" }}>
+                loading…
+              </span>
+            </div>
+          ) : data ? (
+            <IssueScoreSection
+              globalIssues={data.globalIssues}
+              domesticIssues={data.domesticIssues}
+            />
+          ) : (
+            <div style={{
+              background: "rgba(255,255,255,0.03)",
+              border: "1px solid rgba(255,255,255,0.07)",
+              borderRadius: 12,
+              padding: "24px 16px",
+            }}>
+              <span style={{ fontSize: 13, fontFamily: "'Times New Roman', Times, serif", color: "rgba(255,255,255,0.3)" }}>
+                Score data unavailable.
+              </span>
+            </div>
+          )}
 
         </div>
       </div>
