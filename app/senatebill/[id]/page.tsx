@@ -15,6 +15,15 @@ const SENATE_VOTES: Record<string, {
 
   // ── War / Foreign Policy ─────────────────────────────────────────────────
 
+  // Legacy slug — keep for any existing links
+  "israel-arms-2026": {
+    headline: "Senate vote fails 40-59 to block bulldozer sales to Israel",
+    description: "The US Senate defeated S.J.Res. 32, a resolution introduced by Sen. Bernie Sanders to halt a pending $295M transfer of armored Caterpillar D9 bulldozers to Israel. The measure failed 40-59-1, with 85% of Senate Democrats voting yes. Seven Democrats broke with their party to vote no, led by Senate Majority Leader Chuck Schumer. The White House lobbied aggressively against passage, arguing the equipment was vital to border security operations.",
+    heroImage: "/bernie-sanders-senate.jpg",
+    date: "April 15, 2026",
+    billId: "israel-arms-2026",
+  },
+
   "block-bulldozer-sales-israel-2026": {
     headline: "Senate vote fails 40-59 to block bulldozer sales to Israel",
     description: "The US Senate defeated S.J.Res. 32, a resolution introduced by Sen. Bernie Sanders to halt a pending $295M transfer of armored Caterpillar D9 bulldozers to Israel. The measure failed 40-59-1, with 85% of Senate Democrats voting yes. Seven Democrats broke with their party to vote no, led by Senate Majority Leader Chuck Schumer. The White House lobbied aggressively against passage, arguing the equipment was vital to border security operations.",
