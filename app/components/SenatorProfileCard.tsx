@@ -56,7 +56,7 @@ function VoteRow({ vote }: { vote: VoteRecord }) {
       <div style={{
         fontSize: 15,
         fontFamily: "'Times New Roman', Times, serif",
-        fontWeight: 600,
+        fontWeight: 400,
         color: "rgba(255,255,255,0.92)",
         lineHeight: 1.45,
         marginBottom: 8,
@@ -172,31 +172,7 @@ export default function SenatorProfileCard({
         {/* ── Scrollable body ── */}
         <div style={{ flex: 1, overflowY: "auto", padding: "20px 20px 24px" }}>
 
-          {/* ── Contact button ── */}
-          <a
-            href={contactUrl}
-            target="_blank"
-            rel="noreferrer"
-            onClick={e => e.stopPropagation()}
-            style={{
-              display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
-              width: "100%", padding: "9px 0", marginBottom: 18,
-              background: "rgba(96,165,250,0.08)",
-              border: "1px solid rgba(96,165,250,0.3)",
-              borderRadius: 10,
-              color: "rgba(96,165,250,0.9)",
-              fontSize: 11, fontFamily: "monospace", letterSpacing: "0.12em",
-              textTransform: "uppercase", textDecoration: "none",
-              cursor: "pointer",
-              transition: "background 0.15s",
-            }}
-            onMouseEnter={e => (e.currentTarget.style.background = "rgba(96,165,250,0.15)")}
-            onMouseLeave={e => (e.currentTarget.style.background = "rgba(96,165,250,0.08)")}
-          >
-            <span>✉</span> Contact {name.split(" ").slice(-1)[0]}
-          </a>
-
-          {/* ── Header: photo + name + party/state ── */}
+          {/* ── Header: photo + name + contact + party/state ── */}
           <div style={{ display: "flex", gap: 16, marginBottom: 18 }}>
             <div style={{
               width: 86, height: 86, borderRadius: 12, overflow: "hidden",
@@ -205,8 +181,30 @@ export default function SenatorProfileCard({
               <img src={photo} alt={name} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
             </div>
             <div style={{ flex: 1, paddingTop: 4 }}>
-              <div style={{ fontSize: 21, fontWeight: 700, color: "rgba(255,255,255,0.95)", lineHeight: 1.2, marginBottom: 5 }}>
-                {name}
+              {/* Name + inline contact button */}
+              <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", marginBottom: 5 }}>
+                <span style={{ fontSize: 21, fontWeight: 700, color: "rgba(255,255,255,0.95)", lineHeight: 1.2 }}>
+                  {name}
+                </span>
+                <a
+                  href={contactUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  onClick={e => e.stopPropagation()}
+                  style={{
+                    padding: "2px 8px",
+                    background: "rgba(96,165,250,0.08)",
+                    border: "1px solid rgba(96,165,250,0.28)",
+                    borderRadius: 5,
+                    color: "rgba(96,165,250,0.85)",
+                    fontSize: 11, fontFamily: "monospace", letterSpacing: "0.06em",
+                    textDecoration: "none", whiteSpace: "nowrap",
+                  }}
+                  onMouseEnter={e => (e.currentTarget.style.background = "rgba(96,165,250,0.16)")}
+                  onMouseLeave={e => (e.currentTarget.style.background = "rgba(96,165,250,0.08)")}
+                >
+                  contact
+                </a>
               </div>
               <div style={{ fontSize: 13, color: "rgba(255,255,255,0.5)" }}>
                 {partyLabel} · {STATE_NAMES[state] ?? state}
@@ -223,7 +221,7 @@ export default function SenatorProfileCard({
             borderRadius: 12, marginBottom: 14,
           }}>
             <div style={{ fontSize: 14, color: "rgba(255,255,255,0.75)" }}>
-              <span style={{ fontWeight: 700, color: "rgba(255,255,255,0.92)" }}>Age {age}</span>
+              <span style={{ fontWeight: 700, color: "rgba(255,255,255,0.92)" }}>{age} Years Old</span>
             </div>
             <div style={{ fontSize: 14, color: "rgba(255,255,255,0.75)" }}>
               <span style={{ fontWeight: 700, color: "rgba(255,255,255,0.92)" }}>{yearsInOffice} Years</span> in Office
@@ -232,15 +230,15 @@ export default function SenatorProfileCard({
               <div style={{ marginTop: 2 }}>
                 <span style={{
                   display: "inline-block",
-                  padding: "5px 12px",
-                  background: "rgba(250,204,21,0.12)",
-                  border: "1px solid rgba(250,204,21,0.45)",
-                  borderRadius: 7,
-                  fontSize: 11, fontFamily: "monospace", letterSpacing: "0.1em",
-                  color: "rgba(250,204,21,0.95)", fontWeight: 700,
-                  textTransform: "uppercase",
+                  padding: "4px 10px",
+                  background: "rgba(251,146,60,0.12)",
+                  border: "1px solid rgba(251,146,60,0.45)",
+                  borderRadius: 6,
+                  fontSize: 11, fontFamily: "monospace", letterSpacing: "0.08em",
+                  color: "rgba(251,146,60,0.95)", fontWeight: 700,
+                  textTransform: "none",
                 }}>
-                  Up for Re-Election · {nextElection}
+                  Reelection {nextElection}
                 </span>
               </div>
             )}
