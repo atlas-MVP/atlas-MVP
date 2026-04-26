@@ -1,57 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import type { IssueCategoryScore, SubcategoryScore, BillRecord } from "../api/senator-alignment/[bioguide]/route";
-
-// ─── Helpers ──────────────────────────────────────────────────────────────────
-
-function scoreColor(score: number): string {
-  if (score >= 67) return "#22c55e";
-  if (score >= 40) return "#f59e0b";
-  return "#ef4444";
-}
-
-// ─── Slider ───────────────────────────────────────────────────────────────────
-
-function Slider({ score, size = "normal" }: { score: number; size?: "normal" | "mini" }) {
-  const pct = Math.max(0, Math.min(100, score));
-  const color = scoreColor(score);
-  const trackH = size === "normal" ? 7 : 4;
-  const thumbD = size === "normal" ? 14 : 10;
-
-  return (
-    <div style={{
-      position: "relative",
-      height: trackH,
-      borderRadius: 999,
-      background: "rgba(255,255,255,0.08)",
-      flex: 1,
-      minWidth: 0,
-    }}>
-      {/* Fill */}
-      <div style={{
-        position: "absolute", left: 0, top: 0, bottom: 0,
-        width: `${pct}%`, borderRadius: 999,
-        background: color,
-        opacity: 0.75,
-        transition: "width 0.5s cubic-bezier(0.34,1.56,0.64,1)",
-      }} />
-      {/* Thumb */}
-      <div style={{
-        position: "absolute",
-        left: `${pct}%`, top: "50%",
-        transform: "translate(-50%, -50%)",
-        width: thumbD, height: thumbD, borderRadius: "50%",
-        background: color,
-        border: "2px solid rgba(4,6,18,0.95)",
-        boxShadow: `0 0 7px ${color}70, 0 0 0 1.5px ${color}40`,
-        transition: "left 0.5s cubic-bezier(0.34,1.56,0.64,1)",
-        zIndex: 1,
-        flexShrink: 0,
-      }} />
-    </div>
-  );
-}
+import type { IssueCategory, Subcategory, BillRecord } from "../api/senator-alignment/[bioguide]/route";
 
 // ─── Bill row ─────────────────────────────────────────────────────────────────
 
@@ -68,8 +18,6 @@ function BillRow({
   onMouseLeave: () => void;
   onClick: () => void;
 }) {
-  const aligned = bill.aligned;
-
   return (
     <div
       onMouseEnter={onMouseEnter}
@@ -82,8 +30,8 @@ function BillRow({
         {/* Aligned dot */}
         <div style={{
           width: 5, height: 5, borderRadius: "50%", flexShrink: 0, marginTop: 5,
-          background: aligned ? "#22c55e" : "#ef4444",
-          boxShadow: `0 0 5px ${aligned ? "#22c55e" : "#ef4444"}80`,
+          background: bill.aligned ? "#22c55e" : "#ef4444",
+          boxShadow: `0 0 5px ${bill.aligned ? "#22c55e" : "#ef4444"}80`,
         }} />
 
         {/* Title */}
@@ -118,7 +66,6 @@ function BillRow({
             padding: "1px 5px",
             border: "1px solid rgba(96,165,250,0.2)",
             borderRadius: 3,
-            transition: "color 0.15s, border-color 0.15s",
           }}
           onMouseEnter={e => {
             e.currentTarget.style.color = "rgba(96,165,250,0.95)";
@@ -166,13 +113,12 @@ function SubcategoryRow({
   isExpanded,
   onToggle,
 }: {
-  sub: SubcategoryScore;
+  sub: Subcategory;
   isExpanded: boolean;
   onToggle: () => void;
 }) {
   const [hoveredBillId, setHoveredBillId] = useState<string | null>(null);
   const [lockedBillId, setLockedBillId] = useState<string | null>(null);
-  const color = scoreColor(sub.score);
 
   const handleBillClick = (id: string) => {
     setLockedBillId(prev => prev === id ? null : id);
@@ -181,7 +127,7 @@ function SubcategoryRow({
 
   return (
     <div style={{ paddingLeft: 12 }}>
-      {/* Sub row header */}
+      {/* Subcategory header */}
       <div
         onClick={onToggle}
         style={{
@@ -193,41 +139,23 @@ function SubcategoryRow({
           borderTop: "1px solid rgba(255,255,255,0.04)",
         }}
       >
-        {/* Expand indicator */}
         <span style={{
           fontSize: 8, fontFamily: "monospace",
           color: "rgba(255,255,255,0.25)",
           transform: isExpanded ? "rotate(90deg)" : "rotate(0deg)",
           transition: "transform 0.15s",
           display: "inline-block", flexShrink: 0,
-          width: 8,
         }}>▶</span>
 
-        {/* Label */}
         <span style={{
-          width: 128,
           fontSize: 9,
           fontFamily: "monospace",
           letterSpacing: "0.07em",
           color: isExpanded ? "rgba(255,255,255,0.7)" : "rgba(255,255,255,0.38)",
           textTransform: "uppercase",
-          lineHeight: 1.3,
-          flexShrink: 0,
           transition: "color 0.15s",
         }}>
           {sub.label}
-        </span>
-
-        {/* Mini slider */}
-        <Slider score={sub.score} size="mini" />
-
-        {/* Score */}
-        <span style={{
-          width: 26, fontSize: 11, fontWeight: 700,
-          color, textAlign: "right", flexShrink: 0,
-          fontVariantNumeric: "tabular-nums", letterSpacing: "-0.02em",
-        }}>
-          {sub.score}
         </span>
       </div>
 
@@ -238,7 +166,7 @@ function SubcategoryRow({
         transition: "max-height 0.25s ease",
         paddingLeft: 8,
         paddingRight: 4,
-        borderLeft: isExpanded ? `1px solid rgba(255,255,255,0.06)` : "1px solid transparent",
+        borderLeft: isExpanded ? "1px solid rgba(255,255,255,0.06)" : "1px solid transparent",
       }}>
         {sub.bills.map(bill => (
           <BillRow
@@ -268,7 +196,7 @@ function CategoryBlock({
   onCategoryClick,
   onSubcategoryToggle,
 }: {
-  cat: IssueCategoryScore;
+  cat: IssueCategory;
   isActive: boolean;
   isLocked: boolean;
   expandedSubId: string | null;
@@ -277,8 +205,6 @@ function CategoryBlock({
   onCategoryClick: () => void;
   onSubcategoryToggle: (id: string) => void;
 }) {
-  const color = scoreColor(cat.score);
-
   return (
     <div
       onMouseEnter={onCategoryEnter}
@@ -290,7 +216,7 @@ function CategoryBlock({
         marginBottom: 1,
       }}
     >
-      {/* Category header row */}
+      {/* Category header */}
       <div
         onClick={onCategoryClick}
         style={{
@@ -306,37 +232,22 @@ function CategoryBlock({
           {isLocked && (
             <div style={{
               width: 4, height: 4, borderRadius: "50%",
-              background: color, boxShadow: `0 0 4px ${color}`,
+              background: "rgba(255,255,255,0.4)",
             }} />
           )}
         </div>
 
-        {/* Label */}
         <span style={{
-          width: 138,
           fontSize: 10,
           fontFamily: "monospace",
           letterSpacing: "0.07em",
           color: isActive ? "rgba(255,255,255,0.88)" : "rgba(255,255,255,0.42)",
           textTransform: "uppercase",
           lineHeight: 1.3,
-          flexShrink: 0,
           transition: "color 0.15s",
           userSelect: "none",
         }}>
           {cat.label}
-        </span>
-
-        {/* Slider */}
-        <Slider score={cat.score} />
-
-        {/* Score */}
-        <span style={{
-          width: 30, fontSize: 16, fontWeight: 700,
-          color, textAlign: "right", flexShrink: 0,
-          fontVariantNumeric: "tabular-nums", letterSpacing: "-0.02em",
-        }}>
-          {cat.score}
         </span>
       </div>
 
@@ -363,7 +274,7 @@ function CategoryBlock({
   );
 }
 
-// ─── Section header ───────────────────────────────────────────────────────────
+// ─── Section divider ──────────────────────────────────────────────────────────
 
 function SectionHeader({ label }: { label: string }) {
   return (
@@ -395,14 +306,13 @@ function SectionHeader({ label }: { label: string }) {
 // ─── Main component ───────────────────────────────────────────────────────────
 
 interface Props {
-  globalIssues: IssueCategoryScore[];
-  domesticIssues: IssueCategoryScore[];
+  globalIssues: IssueCategory[];
+  domesticIssues: IssueCategory[];
 }
 
 export default function IssueScoreSection({ globalIssues, domesticIssues }: Props) {
   const [hoveredCatId, setHoveredCatId] = useState<string | null>(null);
   const [lockedCatId, setLockedCatId] = useState<string | null>(null);
-  // Map of categoryId → expanded subcategoryId
   const [expandedSubs, setExpandedSubs] = useState<Record<string, string | null>>({});
 
   const activeCatId = lockedCatId ?? hoveredCatId;
@@ -432,19 +342,13 @@ export default function IssueScoreSection({ globalIssues, domesticIssues }: Prop
     }));
   };
 
-  const allCategories = [
-    { group: "global" as const, cats: globalIssues },
-    { group: "domestic" as const, cats: domesticIssues },
-  ];
-
   return (
     <div style={{
       background: "rgba(255,255,255,0.03)",
       border: "1px solid rgba(255,255,255,0.07)",
       borderRadius: 12,
-      padding: "10px 4px 8px",
+      padding: "10px 4px 12px",
     }}>
-      {/* Global section */}
       <SectionHeader label="Global Issues" />
       {globalIssues.map(cat => (
         <CategoryBlock
@@ -460,7 +364,6 @@ export default function IssueScoreSection({ globalIssues, domesticIssues }: Prop
         />
       ))}
 
-      {/* Domestic section */}
       <SectionHeader label="Domestic Issues" />
       {domesticIssues.map(cat => (
         <CategoryBlock
@@ -475,21 +378,6 @@ export default function IssueScoreSection({ globalIssues, domesticIssues }: Prop
           onSubcategoryToggle={(subId) => handleSubToggle(cat.id, subId)}
         />
       ))}
-
-      {/* Legend */}
-      <div style={{
-        display: "flex",
-        gap: 12,
-        paddingLeft: 14,
-        paddingTop: 10,
-        marginTop: 6,
-        borderTop: "1px solid rgba(255,255,255,0.05)",
-      }}>
-        <span style={{ fontSize: 8, fontFamily: "monospace", color: "#22c55e", opacity: 0.6, letterSpacing: "0.06em" }}>● aligned</span>
-        <span style={{ fontSize: 8, fontFamily: "monospace", color: "#f59e0b", opacity: 0.6, letterSpacing: "0.06em" }}>● partial</span>
-        <span style={{ fontSize: 8, fontFamily: "monospace", color: "#ef4444", opacity: 0.6, letterSpacing: "0.06em" }}>● misaligned</span>
-        <span style={{ fontSize: 8, fontFamily: "monospace", color: "rgba(255,255,255,0.2)", marginLeft: "auto", letterSpacing: "0.04em" }}>vs. 67% public</span>
-      </div>
     </div>
   );
 }
