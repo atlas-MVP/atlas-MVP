@@ -70,7 +70,7 @@ export default function SenatorProfileCard({
           transform: "translateY(-50%)",
           zIndex: 300,
           width: 488,
-          maxHeight: "calc(100vh - 56px)",
+          height: "calc(100vh - 56px)",
           background: "rgba(4,6,18,0.97)",
           backdropFilter: "blur(40px)",
           borderRadius: 16,
