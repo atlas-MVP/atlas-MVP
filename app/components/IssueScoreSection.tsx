@@ -4,30 +4,25 @@ import { useState } from "react";
 import type { IssueCategory, Subcategory, BillRecord } from "../api/senator-alignment/[bioguide]/route";
 
 // ─── Score helpers ────────────────────────────────────────────────────────────
-// Computed from aligned booleans — no hardcoded values.
-// Replace with real algorithm output when data pipeline is ready.
 
+// Subcategory score: binary aligned average (0–100), used for display only.
 function computeSubScore(sub: Subcategory): number {
   if (!sub.bills.length) return 0;
   return Math.round(sub.bills.reduce((s, b) => s + (b.aligned ? 100 : 0), 0) / sub.bills.length);
 }
 
-function computeCatScore(cat: IssueCategory): number {
-  const all = cat.subcategories.flatMap(s => s.bills);
-  if (!all.length) return 0;
-  return Math.round(all.reduce((s, b) => s + (b.aligned ? 100 : 0), 0) / all.length);
-}
-
-function scoreColor(score: number): string {
-  if (score >= 67) return "#22c55e";
-  if (score >= 40) return "#f59e0b";
+// Color uses normalized 0–100 percentage regardless of raw scale.
+function scoreColor(score: number, max = 100): string {
+  const pct = (score / max) * 100;
+  if (pct >= 67) return "#22c55e";
+  if (pct >= 40) return "#f59e0b";
   return "#ef4444";
 }
 
 // ─── Slider ───────────────────────────────────────────────────────────────────
 
-function Slider({ score }: { score: number }) {
-  const pct = Math.max(0, Math.min(100, score));
+function Slider({ score, max = 100 }: { score: number; max?: number }) {
+  const pct = Math.max(0, Math.min(100, (score / max) * 100));
   const color = scoreColor(score);
   return (
     <div style={{ position: "relative", height: 6, borderRadius: 999, background: "rgba(255,255,255,0.08)", flex: 1, minWidth: 0 }}>
@@ -129,7 +124,7 @@ function BillRow({ bill }: { bill: BillRecord }) {
 
 function SubcategoryRow({ sub }: { sub: Subcategory }) {
   const [open, setOpen] = useState(false);
-  const score = computeSubScore(sub);
+  const score = computeSubScore(sub);  // binary 0–100 display indicator
   const color = scoreColor(score);
 
   return (
@@ -185,8 +180,8 @@ function SubcategoryRow({ sub }: { sub: Subcategory }) {
 
 function CategoryBlock({ cat }: { cat: IssueCategory }) {
   const [open, setOpen] = useState(false);
-  const score = computeCatScore(cat);
-  const color = scoreColor(score);
+  const score = cat.score;            // pre-computed weighted 0–67 from score engine
+  const color = scoreColor(score, 67);
 
   return (
     <div style={{
@@ -273,15 +268,12 @@ function SectionDivider({ label }: { label: string }) {
 export default function IssueScoreSection({
   globalIssues,
   domesticIssues,
+  overall,
 }: {
   globalIssues: IssueCategory[];
   domesticIssues: IssueCategory[];
+  overall: number;   // weighted 0–67 from score engine
 }) {
-  const allCats = [...globalIssues, ...domesticIssues];
-  const overallScore = allCats.length
-    ? Math.round(allCats.reduce((s, c) => s + computeCatScore(c), 0) / allCats.length)
-    : 0;
-
   return (
     <div style={{
       background: "rgba(255,255,255,0.03)",
@@ -295,11 +287,11 @@ export default function IssueScoreSection({
           <span style={{ fontSize: 9, fontFamily: "monospace", letterSpacing: "0.12em", textTransform: "uppercase", color: "rgba(255,255,255,0.4)" }}>
             Overall Alignment
           </span>
-          <span style={{ fontSize: 20, fontWeight: 700, color: scoreColor(overallScore), letterSpacing: "-0.02em" }}>
-            {overallScore}
+          <span style={{ fontSize: 20, fontWeight: 700, color: scoreColor(overall, 67), letterSpacing: "-0.02em" }}>
+            {Math.round(overall)}
           </span>
         </div>
-        <Slider score={overallScore} />
+        <Slider score={overall} max={67} />
       </div>
 
       <SectionDivider label="Global Issues" />

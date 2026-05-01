@@ -45,6 +45,40 @@ export async function getSenatorInfo(bioguide: string): Promise<SenatorInfo> {
   return { bioguide, lastName, stateAbbr, displayName };
 }
 
+// ─── Cosponsor lookup ─────────────────────────────────────────────────────────
+
+// Returns Set of bioguide IDs that cosponsored the bill.
+export async function getBillCosponsors(
+  congress: number,
+  billType: string,
+  billNumber: number,
+): Promise<Set<string>> {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const data = (await cgFetch(
+    `/bill/${congress}/${billType}/${billNumber}/cosponsors`,
+    86400 * 7, // cache 7 days
+  )) as any;
+  const ids = new Set<string>();
+  for (const c of data.cosponsors ?? []) {
+    if (c.bioguideId) ids.add(c.bioguideId);
+  }
+  return ids;
+}
+
+// Returns the lead sponsor's bioguide ID (or null if not found).
+export async function getBillLeadSponsor(
+  congress: number,
+  billType: string,
+  billNumber: number,
+): Promise<string | null> {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const data = (await cgFetch(
+    `/bill/${congress}/${billType}/${billNumber}`,
+    86400 * 30,
+  )) as any;
+  return data.bill?.sponsors?.[0]?.bioguideId ?? null;
+}
+
 // ─── Bill roll-call lookup ────────────────────────────────────────────────────
 
 // Returns all Senate roll-call refs for a bill, in chronological order.

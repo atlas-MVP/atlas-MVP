@@ -189,6 +189,7 @@ export default function SenatorProfileCard({
             <IssueScoreSection
               globalIssues={data.globalIssues}
               domesticIssues={data.domesticIssues}
+              overall={data.overall}
             />
           ) : (
             <div style={{
