@@ -285,7 +285,7 @@ export default function IssueScoreSection({
       </div>
 
       {/* All categories — top 5 visible above fold, rest scroll */}
-      {categories.map(cat => <CategoryBlock key={cat.id} cat={cat} />)}
+      {(categories ?? []).map(cat => <CategoryBlock key={cat.id} cat={cat} />)}
     </div>
   );
 }
