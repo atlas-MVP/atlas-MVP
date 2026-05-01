@@ -532,23 +532,20 @@ export default function ArticlePage({
                     background: "rgba(255,255,255,0.05)", flexShrink: 0,
                     cursor: photoEnlarged ? "zoom-out" : "zoom-in",
                     pointerEvents: "auto",
-                    position: "relative",
-                  }}>
+                    overflow: "hidden",
+                    transition: "transform 0.2s, box-shadow 0.2s",
+                  }}
+                  onMouseEnter={e => {
+                    e.currentTarget.style.transform = "scale(1.025) translateY(-4px) rotateX(1deg)";
+                    e.currentTarget.style.boxShadow = "0 10px 20px rgba(0,0,0,0.3), 0 15px 30px rgba(0,0,0,0.2)";
+                  }}
+                  onMouseLeave={e => {
+                    e.currentTarget.style.transform = "";
+                    e.currentTarget.style.boxShadow = "";
+                  }}
+                >
                   <img src={bio.photo} alt={bio.name}
-                    style={{
-                      width: "100%", height: "100%", objectFit: "cover",
-                      borderRadius: 12, position: "relative", zIndex: 1,
-                      transition: "transform 0.3s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.3s ease",
-                    }}
-                    onMouseEnter={e => {
-                      e.currentTarget.style.transform = "scale(1.4) translateY(-6px)";
-                      e.currentTarget.style.boxShadow = "0 20px 50px rgba(0,0,0,0.85), 0 0 0 1px rgba(255,255,255,0.08)";
-                    }}
-                    onMouseLeave={e => {
-                      e.currentTarget.style.transform = "";
-                      e.currentTarget.style.boxShadow = "";
-                    }}
-                  />
+                    style={{ width: "100%", height: "100%", objectFit: "cover" }} />
                 </div>
 
                 <div style={{ flex: 1 }}>
@@ -778,24 +775,20 @@ export default function ArticlePage({
                           width: 120, height: 120, borderRadius: 12,
                           background: "rgba(255,255,255,0.05)",
                           flexShrink: 0, cursor: photoEnlarged ? "zoom-out" : "zoom-in",
-                          position: "relative",
+                          overflow: "hidden",
+                          transition: "transform 0.2s, box-shadow 0.2s",
+                        }}
+                        onMouseEnter={e => {
+                          e.currentTarget.style.transform = "scale(1.025) translateY(-4px) rotateX(1deg)";
+                          e.currentTarget.style.boxShadow = "0 10px 20px rgba(0,0,0,0.3), 0 15px 30px rgba(0,0,0,0.2)";
+                        }}
+                        onMouseLeave={e => {
+                          e.currentTarget.style.transform = "";
+                          e.currentTarget.style.boxShadow = "";
                         }}
                       >
                         <img src={bio.photo} alt={bio.name}
-                          style={{
-                            width: "100%", height: "100%", objectFit: "cover",
-                            borderRadius: 12, position: "relative", zIndex: 1,
-                            transition: "transform 0.3s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.3s ease",
-                          }}
-                          onMouseEnter={e => {
-                            e.currentTarget.style.transform = "scale(1.4) translateY(-6px)";
-                            e.currentTarget.style.boxShadow = "0 20px 50px rgba(0,0,0,0.85), 0 0 0 1px rgba(255,255,255,0.08)";
-                          }}
-                          onMouseLeave={e => {
-                            e.currentTarget.style.transform = "";
-                            e.currentTarget.style.boxShadow = "";
-                          }}
-                        />
+                          style={{ width: "100%", height: "100%", objectFit: "cover" }} />
                       </div>
                     )}
 
@@ -862,6 +855,7 @@ export default function ArticlePage({
           nextElection={profileSenator.nextElection}
           runningAgain={profileSenator.runningAgain}
           officialUrl={profileSenator.officialUrl}
+          side={profileSenator.vote === "Aye" ? "left" : "right"}
           onClose={() => setProfileSenator(null)}
         />
       )}

@@ -15,6 +15,7 @@ interface Props {
   nextElection: number;
   runningAgain: boolean;
   officialUrl: string;
+  side?: "left" | "right";
   onClose: () => void;
 }
 
@@ -33,7 +34,7 @@ const STATE_NAMES: Record<string, string> = {
 
 export default function SenatorProfileCard({
   bioguide, name, photo, party, state, age, yearsInOffice,
-  nextElection, runningAgain, officialUrl, onClose,
+  nextElection, runningAgain, officialUrl, side = "right", onClose,
 }: Props) {
   const [data, setData] = useState<SenatorScorecard | null>(null);
   const [loading, setLoading] = useState(true);
@@ -66,7 +67,7 @@ export default function SenatorProfileCard({
         onClick={e => e.stopPropagation()}
         style={{
           position: "fixed",
-          right: 20,
+          [side === "left" ? "left" : "right"]: 20,
           top: "50%",
           transform: "translateY(-50%)",
           zIndex: 300,
@@ -100,27 +101,25 @@ export default function SenatorProfileCard({
           {/* ── Header: photo + name + contact + party/state ── */}
           <div style={{ display: "flex", gap: 16, marginBottom: 24 }}>
             <div
+              onClick={() => setPhotoEnlarged(v => !v)}
               style={{
-                width: 120, height: 120, borderRadius: 14,
+                width: 150, height: 150, borderRadius: 14,
                 background: "rgba(255,255,255,0.06)", flexShrink: 0,
-                position: "relative",
-                overflow: "visible",   // allow shadow to bleed outside the box
-              }}>
+                position: "relative", overflow: "hidden",
+                cursor: "zoom-in",
+                transition: "transform 0.2s, box-shadow 0.2s",
+              }}
+              onMouseEnter={e => {
+                e.currentTarget.style.transform = "scale(1.025) translateY(-4px) rotateX(1deg)";
+                e.currentTarget.style.boxShadow = "0 10px 20px rgba(0,0,0,0.3), 0 15px 30px rgba(0,0,0,0.2)";
+              }}
+              onMouseLeave={e => {
+                e.currentTarget.style.transform = "";
+                e.currentTarget.style.boxShadow = "";
+              }}
+            >
               <img src={photo} alt={name}
-                style={{
-                  width: 120, height: 120, objectFit: "cover",
-                  borderRadius: 14, display: "block",
-                  transition: "transform 0.3s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.3s ease",
-                  position: "relative", zIndex: 2,
-                }}
-                onMouseEnter={e => {
-                  e.currentTarget.style.transform = "scale(1.13) translateY(-5px)";
-                  e.currentTarget.style.boxShadow = "0 22px 55px rgba(0,0,0,0.9), 0 0 0 1.5px rgba(255,255,255,0.12)";
-                }}
-                onMouseLeave={e => {
-                  e.currentTarget.style.transform = "";
-                  e.currentTarget.style.boxShadow = "";
-                }}
+                style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
               />
             </div>
             <div style={{ flex: 1, paddingTop: 6 }}>
