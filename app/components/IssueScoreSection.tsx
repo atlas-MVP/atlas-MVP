@@ -21,11 +21,16 @@ function scoreColor(score: number, max = 100): string {
 
 // ─── Slider ───────────────────────────────────────────────────────────────────
 
-function Slider({ score, max = 100 }: { score: number; max?: number }) {
+function Slider({ score, max = 100, height = 6, dotSize = 13 }: {
+  score: number;
+  max?: number;
+  height?: number;
+  dotSize?: number;
+}) {
   const pct = Math.max(0, Math.min(100, (score / max) * 100));
-  const color = scoreColor(score);
+  const color = scoreColor(score, max);
   return (
-    <div style={{ position: "relative", height: 6, borderRadius: 999, background: "rgba(255,255,255,0.08)", flex: 1, minWidth: 0 }}>
+    <div style={{ position: "relative", height, borderRadius: 999, background: "rgba(255,255,255,0.08)", flex: 1, minWidth: 0 }}>
       <div style={{
         position: "absolute", left: 0, top: 0, bottom: 0,
         width: `${pct}%`, borderRadius: 999,
@@ -36,7 +41,7 @@ function Slider({ score, max = 100 }: { score: number; max?: number }) {
         position: "absolute",
         left: `${pct}%`, top: "50%",
         transform: "translate(-50%, -50%)",
-        width: 13, height: 13, borderRadius: "50%",
+        width: dotSize, height: dotSize, borderRadius: "50%",
         background: color,
         border: "2px solid rgba(4,6,18,0.95)",
         boxShadow: `0 0 6px ${color}70`,
@@ -129,12 +134,12 @@ function SubcategoryRow({ sub }: { sub: Subcategory }) {
 
   return (
     <div style={{ marginBottom: 2 }}>
-      {/* Clickable header: label left, large score right */}
+      {/* Clickable header */}
       <div
         onClick={() => setOpen(o => !o)}
         style={{
           display: "flex", alignItems: "center",
-          justifyContent: "space-between",
+          gap: 10,
           padding: "8px 12px 8px 16px",
           cursor: "pointer",
           borderRadius: 8,
@@ -145,14 +150,21 @@ function SubcategoryRow({ sub }: { sub: Subcategory }) {
         <span style={{
           fontSize: 9, fontFamily: "monospace", letterSpacing: "0.09em",
           textTransform: "uppercase", color: "rgba(255,255,255,0.45)",
+          flexShrink: 0,
         }}>
           {sub.label}
         </span>
 
+        {/* Mini slider */}
+        <div style={{ flex: 1, display: "flex", alignItems: "center" }}>
+          <Slider score={score} max={100} height={4} dotSize={9} />
+        </div>
+
         <span style={{
-          fontSize: 30, fontWeight: 700, lineHeight: 1,
+          fontSize: 22, fontWeight: 700, lineHeight: 1,
           color, letterSpacing: "-0.03em",
-          textShadow: `0 0 20px ${color}50`,
+          textShadow: `0 0 16px ${color}50`,
+          flexShrink: 0,
         }}>
           {score}
         </span>
@@ -188,18 +200,15 @@ function CategoryBlock({ cat }: { cat: IssueCategory }) {
       borderBottom: "1px solid rgba(255,255,255,0.05)",
       paddingBottom: open ? 8 : 0,
     }}>
-      {/* Always-visible header: label + slider + score */}
+      {/* Always-visible header */}
       <div
         onClick={() => setOpen(o => !o)}
-        style={{
-          padding: "12px 12px 10px",
-          cursor: "pointer",
-        }}
+        style={{ padding: "12px 12px 10px", cursor: "pointer" }}
       >
-        {/* Label row */}
+        {/* Label + chevron */}
         <div style={{
           display: "flex", alignItems: "center", justifyContent: "space-between",
-          marginBottom: 8,
+          marginBottom: 6,
         }}>
           <span style={{
             fontSize: 10, fontFamily: "monospace", letterSpacing: "0.1em",
@@ -218,13 +227,17 @@ function CategoryBlock({ cat }: { cat: IssueCategory }) {
           }}>▼</span>
         </div>
 
-        {/* Score only — slider removed */}
-        <span style={{
-          fontSize: 16, fontWeight: 700,
-          color, letterSpacing: "-0.02em", fontVariantNumeric: "tabular-nums",
-        }}>
-          {score}
-        </span>
+        {/* Score + slider on same row */}
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <span style={{
+            fontSize: 16, fontWeight: 700,
+            color, letterSpacing: "-0.02em", fontVariantNumeric: "tabular-nums",
+            flexShrink: 0,
+          }}>
+            {score}
+          </span>
+          <Slider score={score} max={67} height={5} dotSize={11} />
+        </div>
       </div>
 
       {/* Subcategories */}
@@ -242,36 +255,13 @@ function CategoryBlock({ cat }: { cat: IssueCategory }) {
   );
 }
 
-// ─── Section divider ──────────────────────────────────────────────────────────
-
-function SectionDivider({ label }: { label: string }) {
-  return (
-    <div style={{
-      display: "flex", alignItems: "center", gap: 10,
-      padding: "10px 12px 4px",
-    }}>
-      <div style={{ flex: 1, height: 1, background: "rgba(255,255,255,0.06)" }} />
-      <span style={{
-        fontSize: 8, fontFamily: "monospace", letterSpacing: "0.22em",
-        color: "rgba(255,255,255,0.2)", textTransform: "uppercase",
-        whiteSpace: "nowrap", flexShrink: 0,
-      }}>
-        {label}
-      </span>
-      <div style={{ flex: 1, height: 1, background: "rgba(255,255,255,0.06)" }} />
-    </div>
-  );
-}
-
 // ─── Main component ───────────────────────────────────────────────────────────
 
 export default function IssueScoreSection({
-  globalIssues,
-  domesticIssues,
+  categories,
   overall,
 }: {
-  globalIssues: IssueCategory[];
-  domesticIssues: IssueCategory[];
+  categories: IssueCategory[];
   overall: number;   // weighted 0–67 from score engine
 }) {
   return (
@@ -281,7 +271,7 @@ export default function IssueScoreSection({
       borderRadius: 12,
       overflow: "hidden",
     }}>
-      {/* Single overall alignment slider */}
+      {/* Overall alignment header */}
       <div style={{ padding: "16px 12px 12px", borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
           <span style={{ fontSize: 9, fontFamily: "monospace", letterSpacing: "0.12em", textTransform: "uppercase", color: "rgba(255,255,255,0.4)" }}>
@@ -294,11 +284,8 @@ export default function IssueScoreSection({
         <Slider score={overall} max={67} />
       </div>
 
-      <SectionDivider label="Global Issues" />
-      {globalIssues.map(cat => <CategoryBlock key={cat.id} cat={cat} />)}
-
-      <SectionDivider label="Domestic Issues" />
-      {domesticIssues.map(cat => <CategoryBlock key={cat.id} cat={cat} />)}
+      {/* All categories — top 5 visible above fold, rest scroll */}
+      {categories.map(cat => <CategoryBlock key={cat.id} cat={cat} />)}
     </div>
   );
 }

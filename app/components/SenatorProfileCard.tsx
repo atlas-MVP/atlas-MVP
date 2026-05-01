@@ -187,8 +187,7 @@ export default function SenatorProfileCard({
             </div>
           ) : data ? (
             <IssueScoreSection
-              globalIssues={data.globalIssues}
-              domesticIssues={data.domesticIssues}
+              categories={data.categories}
               overall={data.overall}
             />
           ) : (

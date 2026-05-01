@@ -8,8 +8,7 @@ import {
   type SenatorInfo,
 } from "../../../lib/congressApi";
 import {
-  GLOBAL_ISSUES,
-  DOMESTIC_ISSUES,
+  ISSUE_CATEGORIES,
   type BillDef,
   type IssueCategoryDef,
 } from "../../../lib/billRegistry";
@@ -51,8 +50,7 @@ export interface SenatorScorecard {
   bioguide: string;
   name: string;
   overall: number;        // weighted overall 0–67
-  globalIssues: IssueCategory[];
-  domesticIssues: IssueCategory[];
+  categories: IssueCategory[];  // ordered by AP-NORC weight, top 5 above the fold
 }
 
 // ─── Vote resolution for display bills ───────────────────────────────────────
@@ -203,25 +201,17 @@ export async function GET(
   const voteCache: VoteMapCache = new Map();
   const csCache: CosponsorCache = new Map();
 
-  const [globalIssues, domesticIssues] = await Promise.all([
-    Promise.all(
-      GLOBAL_ISSUES.map((cat) =>
-        resolveCategory(cat, voteCache, csCache, senator, byCat),
-      ),
+  const categories = await Promise.all(
+    ISSUE_CATEGORIES.map((cat) =>
+      resolveCategory(cat, voteCache, csCache, senator, byCat),
     ),
-    Promise.all(
-      DOMESTIC_ISSUES.map((cat) =>
-        resolveCategory(cat, voteCache, csCache, senator, byCat),
-      ),
-    ),
-  ]);
+  );
 
   const scorecard: SenatorScorecard = {
     bioguide,
     name: senator.displayName,
     overall,
-    globalIssues,
-    domesticIssues,
+    categories,
   };
 
   return NextResponse.json(scorecard, {

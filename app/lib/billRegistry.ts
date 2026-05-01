@@ -40,9 +40,347 @@ export interface IssueCategoryDef {
   subcategories: SubcategoryDef[];
 }
 
-// ─── Global Issues ────────────────────────────────────────────────────────────
+// ─── Issue Categories — ordered by AP-NORC weight ─────────────────────────────
+// 1. Immigration (44)  2. Wealth Gap (economy 22+)  3. Civil Liberties (crime 12)
+// 4. Environment (12)  5. Healthcare (8+)
+// 6. War / Foreign Policy  7. Corruption  8. Gun Policy
 
-export const GLOBAL_ISSUES: IssueCategoryDef[] = [
+export const ISSUE_CATEGORIES: IssueCategoryDef[] = [
+  // ── 1. Immigration ──────────────────────────────────────────────────────────
+  {
+    id: "immigration",
+    label: "Immigration",
+    subcategories: [
+      {
+        id: "border-security",
+        label: "Border Security",
+        bills: [
+          {
+            id: "bipartisan-border-act-2024",
+            title: "Bipartisan Border Act 2024",
+            description:
+              "A bipartisan compromise tightening asylum standards and granting emergency deportation authority; failed after Republican senators killed it under pressure from Trump, despite Schumer's support.",
+            date: "February 7, 2024",
+            congress_url:
+              "https://www.congress.gov/bill/118th-congress/senate-bill/4",
+            roll: { congress: 118, billType: "s", billNumber: 4, index: -1, alignedVote: "Nay" },
+            mockMemberVote: "Yes",
+            mockAligned: false,
+          },
+        ],
+      },
+      {
+        id: "pathways-citizenship",
+        label: "Pathways to Citizenship",
+        bills: [
+          {
+            id: "dream-act-2021",
+            title: "Dream Act of 2021",
+            description:
+              "Would have provided a pathway to permanent residency and citizenship for 2.1 million undocumented immigrants brought to the U.S. as children — polling at 74% approval including 54% of Republicans.",
+            date: "July 27, 2021",
+            congress_url:
+              "https://www.congress.gov/bill/117th-congress/senate-bill/264",
+            mockMemberVote: "Yes",
+            mockAligned: true,
+          },
+        ],
+      },
+      {
+        id: "humanitarian-relief",
+        label: "Humanitarian Relief",
+        bills: [
+          {
+            id: "afghan-adjustment-act-2021",
+            title: "Afghan Adjustment Act",
+            description:
+              "Would have provided Afghan refugees evacuated during the 2021 Taliban takeover a direct pathway to legal permanent residence, bypassing immigration courts with years-long backlogs.",
+            date: "September 23, 2021",
+            mockMemberVote: "Yes",
+            mockAligned: true,
+          },
+        ],
+      },
+    ],
+  },
+
+  // ── 2. Wealth Gap ────────────────────────────────────────────────────────────
+  {
+    id: "wealth-gap",
+    label: "Wealth Gap",
+    subcategories: [
+      {
+        id: "tax-policy",
+        label: "Tax Policy",
+        bills: [
+          {
+            id: "billionaire-minimum-tax-2023",
+            title: "Billionaire Minimum Income Tax Act",
+            description:
+              "Proposed a 20% minimum tax on total income including unrealized capital gains for households worth over $100 million, targeting roughly 700 ultra-wealthy households who currently pay effective rates below middle-class workers.",
+            date: "March 9, 2023",
+            mockMemberVote: "Yes",
+            mockAligned: true,
+          },
+          {
+            id: "corporate-tax-restoration-2022",
+            title: "Build Back Better: Corporate Tax Rate",
+            description:
+              "Would have raised the corporate tax rate from 21% to 26.5%, partially reversing the 2017 Tax Cuts and Jobs Act — a change 67% of Americans support according to Gallup polling.",
+            date: "November 19, 2021",
+            mockMemberVote: "Yes",
+            mockAligned: true,
+          },
+        ],
+      },
+      {
+        id: "labor-wages",
+        label: "Labor & Wages",
+        bills: [
+          {
+            id: "raise-the-wage-act-2021",
+            title: "Raise the Wage Act",
+            description:
+              "Would have gradually raised the federal minimum wage from $7.25 to $15 per hour by 2025, benefiting an estimated 27 million workers who have seen no federal increase since 2009.",
+            date: "February 25, 2021",
+            congress_url:
+              "https://www.congress.gov/bill/117th-congress/senate-bill/53",
+            mockMemberVote: "Yes",
+            mockAligned: true,
+          },
+        ],
+      },
+      {
+        id: "corporate-accountability",
+        label: "Corporate Accountability",
+        bills: [
+          {
+            id: "stock-buyback-excise-tax-2022",
+            title: "Stock Buyback Excise Tax (IRA)",
+            description:
+              "Established a 1% excise tax on corporate stock buybacks, discouraging the practice of returning profits to shareholders instead of reinvesting in workers — supported by 65% of Americans.",
+            date: "August 7, 2022",
+            roll: { congress: 117, billType: "hr", billNumber: 5376, index: -1, alignedVote: "Yea" },
+            mockMemberVote: "Yes",
+            mockAligned: true,
+          },
+        ],
+      },
+    ],
+  },
+
+  // ── 3. Civil Liberties ───────────────────────────────────────────────────────
+  {
+    id: "civil-liberties",
+    label: "Civil Liberties",
+    subcategories: [
+      {
+        id: "voting-rights",
+        label: "Voting Rights",
+        bills: [
+          {
+            id: "john-lewis-voting-rights-2022",
+            title: "John R. Lewis Voting Rights Act",
+            description:
+              "Would have restored key provisions of the Voting Rights Act gutted by the Supreme Court in 2013, requiring states with discriminatory histories to obtain federal approval before changing election laws.",
+            date: "January 19, 2022",
+            congress_url:
+              "https://www.congress.gov/bill/117th-congress/house-bill/4",
+            roll: { congress: 117, billType: "hr", billNumber: 4, index: -1, alignedVote: "Yea" },
+            mockMemberVote: "Yes",
+            mockAligned: true,
+          },
+          {
+            id: "freedom-to-vote-act-2022",
+            title: "Freedom to Vote Act",
+            description:
+              "Established national standards for voter registration, expanded early voting and vote-by-mail, and banned partisan gerrymandering in congressional elections — supported by 70% of Americans.",
+            date: "January 19, 2022",
+            congress_url:
+              "https://www.congress.gov/bill/117th-congress/senate-bill/2747",
+            roll: { congress: 117, billType: "s", billNumber: 2747, index: -1, alignedVote: "Yea" },
+            mockMemberVote: "Yes",
+            mockAligned: true,
+          },
+        ],
+      },
+      {
+        id: "privacy-surveillance",
+        label: "Privacy & Surveillance",
+        bills: [
+          {
+            id: "fisa-reauthorization-2024",
+            title: "FISA Reauthorization Act 2024",
+            description:
+              "Reauthorized Section 702 warrantless surveillance with limited oversight — civil liberties groups called it insufficient. Schumer voted yes, misaligned with 67% of Americans who want stronger privacy protections.",
+            date: "April 19, 2024",
+            congress_url:
+              "https://www.congress.gov/bill/118th-congress/house-bill/7888",
+            roll: { congress: 118, billType: "hr", billNumber: 7888, index: -1, alignedVote: "Nay" },
+            mockMemberVote: "Yes",
+            mockAligned: false,
+          },
+        ],
+      },
+      {
+        id: "civil-rights",
+        label: "Civil Rights",
+        bills: [
+          {
+            id: "equality-act-2021",
+            title: "Equality Act",
+            description:
+              "Would have amended the Civil Rights Act to explicitly prohibit discrimination based on sexual orientation and gender identity in employment, housing, and public accommodations — supported by 70% of Americans.",
+            date: "February 25, 2021",
+            congress_url:
+              "https://www.congress.gov/bill/117th-congress/house-bill/5",
+            mockMemberVote: "Yes",
+            mockAligned: true,
+          },
+        ],
+      },
+    ],
+  },
+
+  // ── 4. Environment ───────────────────────────────────────────────────────────
+  {
+    id: "environment",
+    label: "Environment",
+    subcategories: [
+      {
+        id: "climate",
+        label: "Climate",
+        bills: [
+          {
+            id: "inflation-reduction-act-climate-2022",
+            title: "Inflation Reduction Act — Climate Provisions",
+            description:
+              "The largest climate investment in U.S. history, allocating $369 billion for clean energy tax credits, EV incentives, and methane reduction programs projected to cut U.S. emissions roughly 40% by 2030.",
+            date: "August 7, 2022",
+            congress_url:
+              "https://www.congress.gov/bill/117th-congress/house-bill/5376",
+            roll: { congress: 117, billType: "hr", billNumber: 5376, index: -1, alignedVote: "Yea" },
+            mockMemberVote: "Yes",
+            mockAligned: true,
+          },
+          {
+            id: "paris-agreement-recommitment-2021",
+            title: "Paris Agreement Recommitment Resolution",
+            description:
+              "A Senate resolution endorsing U.S. re-entry into the Paris Climate Accord, supporting internationally binding emissions targets after the prior administration's withdrawal in 2017.",
+            date: "February 18, 2021",
+            mockMemberVote: "Yes",
+            mockAligned: true,
+          },
+        ],
+      },
+      {
+        id: "clean-energy",
+        label: "Clean Energy",
+        bills: [
+          {
+            id: "bipartisan-infrastructure-clean-energy-2021",
+            title: "Infrastructure Law — Clean Energy Grid",
+            description:
+              "Included $73 billion to modernize the U.S. electrical grid, expand renewable transmission capacity, and fund home weatherization programs reducing energy costs for low-income families.",
+            date: "August 10, 2021",
+            congress_url:
+              "https://www.congress.gov/bill/117th-congress/house-bill/3684",
+            roll: { congress: 117, billType: "hr", billNumber: 3684, index: -1, alignedVote: "Yea" },
+            mockMemberVote: "Yes",
+            mockAligned: true,
+          },
+        ],
+      },
+      {
+        id: "environmental-regulation",
+        label: "Environmental Regulation",
+        bills: [
+          {
+            id: "clean-air-standards-protection-2023",
+            title: "EPA Clean Air Standards Protection",
+            description:
+              "Voted against a Republican resolution to overturn new EPA fine-particle pollution standards that public health experts say prevent thousands of premature deaths annually.",
+            date: "May 16, 2023",
+            mockMemberVote: "No",
+            mockAligned: true,
+          },
+        ],
+      },
+    ],
+  },
+
+  // ── 5. Healthcare ────────────────────────────────────────────────────────────
+  {
+    id: "healthcare",
+    label: "Healthcare",
+    subcategories: [
+      {
+        id: "drug-pricing",
+        label: "Drug Pricing",
+        bills: [
+          {
+            id: "ira-drug-pricing-2022",
+            title: "IRA: Medicare Drug Price Negotiation",
+            description:
+              "Authorized Medicare to directly negotiate prescription drug prices for the first time in the program's history, starting with 10 high-cost drugs in 2026 — a power 89% of Americans support.",
+            date: "August 7, 2022",
+            congress_url:
+              "https://www.congress.gov/bill/117th-congress/house-bill/5376",
+            roll: { congress: 117, billType: "hr", billNumber: 5376, index: -1, alignedVote: "Yea" },
+            mockMemberVote: "Yes",
+            mockAligned: true,
+          },
+          {
+            id: "insulin-cost-cap-2023",
+            title: "Affordable Insulin Now Act",
+            description:
+              "Capped insulin out-of-pocket costs at $35/month for Medicare recipients and proposed extending the cap to private insurance, benefiting 3.3 million insulin-dependent Americans facing life-threatening rationing.",
+            date: "March 24, 2022",
+            congress_url:
+              "https://www.congress.gov/bill/117th-congress/senate-bill/4460",
+            mockMemberVote: "Yes",
+            mockAligned: true,
+          },
+        ],
+      },
+      {
+        id: "access-coverage",
+        label: "Access & Coverage",
+        bills: [
+          {
+            id: "aca-subsidy-extension-2022",
+            title: "ACA Premium Subsidy Extension",
+            description:
+              "Extended enhanced Affordable Care Act premium subsidies through 2025, preventing a coverage cliff that would have eliminated insurance for an estimated 3 million Americans who gained coverage during the pandemic.",
+            date: "August 7, 2022",
+            congress_url:
+              "https://www.congress.gov/bill/117th-congress/house-bill/5376",
+            roll: { congress: 117, billType: "hr", billNumber: 5376, index: -1, alignedVote: "Yea" },
+            mockMemberVote: "Yes",
+            mockAligned: true,
+          },
+        ],
+      },
+      {
+        id: "medicare-medicaid",
+        label: "Medicare & Medicaid",
+        bills: [
+          {
+            id: "medicare-dental-vision-hearing-2023",
+            title: "Medicare Dental, Vision & Hearing Act",
+            description:
+              "Would have expanded Medicare to include dental, vision, and hearing benefits for 60 million beneficiaries — a benefit 83% of Americans support regardless of party affiliation.",
+            date: "June 22, 2023",
+            mockMemberVote: "Yes",
+            mockAligned: true,
+          },
+        ],
+      },
+    ],
+  },
+
+  // ── 6. War / Foreign Policy ──────────────────────────────────────────────────
   {
     id: "war-foreign-policy",
     label: "War / Foreign Policy",
@@ -136,209 +474,8 @@ export const GLOBAL_ISSUES: IssueCategoryDef[] = [
       },
     ],
   },
-  {
-    id: "environment",
-    label: "Environment",
-    subcategories: [
-      {
-        id: "climate",
-        label: "Climate",
-        bills: [
-          {
-            id: "inflation-reduction-act-climate-2022",
-            title: "Inflation Reduction Act — Climate Provisions",
-            description:
-              "The largest climate investment in U.S. history, allocating $369 billion for clean energy tax credits, EV incentives, and methane reduction programs projected to cut U.S. emissions roughly 40% by 2030.",
-            date: "August 7, 2022",
-            congress_url:
-              "https://www.congress.gov/bill/117th-congress/house-bill/5376",
-            roll: { congress: 117, billType: "hr", billNumber: 5376, index: -1, alignedVote: "Yea" },
-            mockMemberVote: "Yes",
-            mockAligned: true,
-          },
-          {
-            id: "paris-agreement-recommitment-2021",
-            title: "Paris Agreement Recommitment Resolution",
-            description:
-              "A Senate resolution endorsing U.S. re-entry into the Paris Climate Accord, supporting internationally binding emissions targets after the prior administration's withdrawal in 2017.",
-            date: "February 18, 2021",
-            mockMemberVote: "Yes",
-            mockAligned: true,
-          },
-        ],
-      },
-      {
-        id: "clean-energy",
-        label: "Clean Energy",
-        bills: [
-          {
-            id: "bipartisan-infrastructure-clean-energy-2021",
-            title: "Infrastructure Law — Clean Energy Grid",
-            description:
-              "Included $73 billion to modernize the U.S. electrical grid, expand renewable transmission capacity, and fund home weatherization programs reducing energy costs for low-income families.",
-            date: "August 10, 2021",
-            congress_url:
-              "https://www.congress.gov/bill/117th-congress/house-bill/3684",
-            roll: { congress: 117, billType: "hr", billNumber: 3684, index: -1, alignedVote: "Yea" },
-            mockMemberVote: "Yes",
-            mockAligned: true,
-          },
-        ],
-      },
-      {
-        id: "environmental-regulation",
-        label: "Environmental Regulation",
-        bills: [
-          {
-            id: "clean-air-standards-protection-2023",
-            title: "EPA Clean Air Standards Protection",
-            description:
-              "Voted against a Republican resolution to overturn new EPA fine-particle pollution standards that public health experts say prevent thousands of premature deaths annually.",
-            date: "May 16, 2023",
-            mockMemberVote: "No",
-            mockAligned: true,
-          },
-        ],
-      },
-    ],
-  },
-];
 
-// ─── Domestic Issues ──────────────────────────────────────────────────────────
-
-export const DOMESTIC_ISSUES: IssueCategoryDef[] = [
-  {
-    id: "healthcare",
-    label: "Healthcare",
-    subcategories: [
-      {
-        id: "drug-pricing",
-        label: "Drug Pricing",
-        bills: [
-          {
-            id: "ira-drug-pricing-2022",
-            title: "IRA: Medicare Drug Price Negotiation",
-            description:
-              "Authorized Medicare to directly negotiate prescription drug prices for the first time in the program's history, starting with 10 high-cost drugs in 2026 — a power 89% of Americans support.",
-            date: "August 7, 2022",
-            congress_url:
-              "https://www.congress.gov/bill/117th-congress/house-bill/5376",
-            // Same underlying vote as the IRA climate provisions
-            roll: { congress: 117, billType: "hr", billNumber: 5376, index: -1, alignedVote: "Yea" },
-            mockMemberVote: "Yes",
-            mockAligned: true,
-          },
-          {
-            id: "insulin-cost-cap-2023",
-            title: "Affordable Insulin Now Act",
-            description:
-              "Capped insulin out-of-pocket costs at $35/month for Medicare recipients and proposed extending the cap to private insurance, benefiting 3.3 million insulin-dependent Americans facing life-threatening rationing.",
-            date: "March 24, 2022",
-            congress_url:
-              "https://www.congress.gov/bill/117th-congress/senate-bill/4460",
-            mockMemberVote: "Yes",
-            mockAligned: true,
-          },
-        ],
-      },
-      {
-        id: "access-coverage",
-        label: "Access & Coverage",
-        bills: [
-          {
-            id: "aca-subsidy-extension-2022",
-            title: "ACA Premium Subsidy Extension",
-            description:
-              "Extended enhanced Affordable Care Act premium subsidies through 2025, preventing a coverage cliff that would have eliminated insurance for an estimated 3 million Americans who gained coverage during the pandemic.",
-            date: "August 7, 2022",
-            congress_url:
-              "https://www.congress.gov/bill/117th-congress/house-bill/5376",
-            roll: { congress: 117, billType: "hr", billNumber: 5376, index: -1, alignedVote: "Yea" },
-            mockMemberVote: "Yes",
-            mockAligned: true,
-          },
-        ],
-      },
-      {
-        id: "medicare-medicaid",
-        label: "Medicare & Medicaid",
-        bills: [
-          {
-            id: "medicare-dental-vision-hearing-2023",
-            title: "Medicare Dental, Vision & Hearing Act",
-            description:
-              "Would have expanded Medicare to include dental, vision, and hearing benefits for 60 million beneficiaries — a benefit 83% of Americans support regardless of party affiliation.",
-            date: "June 22, 2023",
-            mockMemberVote: "Yes",
-            mockAligned: true,
-          },
-        ],
-      },
-    ],
-  },
-  {
-    id: "wealth-gap",
-    label: "Wealth Gap",
-    subcategories: [
-      {
-        id: "tax-policy",
-        label: "Tax Policy",
-        bills: [
-          {
-            id: "billionaire-minimum-tax-2023",
-            title: "Billionaire Minimum Income Tax Act",
-            description:
-              "Proposed a 20% minimum tax on total income including unrealized capital gains for households worth over $100 million, targeting roughly 700 ultra-wealthy households who currently pay effective rates below middle-class workers.",
-            date: "March 9, 2023",
-            mockMemberVote: "Yes",
-            mockAligned: true,
-          },
-          {
-            id: "corporate-tax-restoration-2022",
-            title: "Build Back Better: Corporate Tax Rate",
-            description:
-              "Would have raised the corporate tax rate from 21% to 26.5%, partially reversing the 2017 Tax Cuts and Jobs Act — a change 67% of Americans support according to Gallup polling.",
-            date: "November 19, 2021",
-            mockMemberVote: "Yes",
-            mockAligned: true,
-          },
-        ],
-      },
-      {
-        id: "labor-wages",
-        label: "Labor & Wages",
-        bills: [
-          {
-            id: "raise-the-wage-act-2021",
-            title: "Raise the Wage Act",
-            description:
-              "Would have gradually raised the federal minimum wage from $7.25 to $15 per hour by 2025, benefiting an estimated 27 million workers who have seen no federal increase since 2009.",
-            date: "February 25, 2021",
-            congress_url:
-              "https://www.congress.gov/bill/117th-congress/senate-bill/53",
-            mockMemberVote: "Yes",
-            mockAligned: true,
-          },
-        ],
-      },
-      {
-        id: "corporate-accountability",
-        label: "Corporate Accountability",
-        bills: [
-          {
-            id: "stock-buyback-excise-tax-2022",
-            title: "Stock Buyback Excise Tax (IRA)",
-            description:
-              "Established a 1% excise tax on corporate stock buybacks, discouraging the practice of returning profits to shareholders instead of reinvesting in workers — supported by 65% of Americans.",
-            date: "August 7, 2022",
-            roll: { congress: 117, billType: "hr", billNumber: 5376, index: -1, alignedVote: "Yea" },
-            mockMemberVote: "Yes",
-            mockAligned: true,
-          },
-        ],
-      },
-    ],
-  },
+  // ── 7. Corruption ────────────────────────────────────────────────────────────
   {
     id: "corruption",
     label: "Corruption",
@@ -407,78 +544,8 @@ export const DOMESTIC_ISSUES: IssueCategoryDef[] = [
       },
     ],
   },
-  {
-    id: "civil-liberties",
-    label: "Civil Liberties",
-    subcategories: [
-      {
-        id: "voting-rights",
-        label: "Voting Rights",
-        bills: [
-          {
-            id: "john-lewis-voting-rights-2022",
-            title: "John R. Lewis Voting Rights Act",
-            description:
-              "Would have restored key provisions of the Voting Rights Act gutted by the Supreme Court in 2013, requiring states with discriminatory histories to obtain federal approval before changing election laws.",
-            date: "January 19, 2022",
-            congress_url:
-              "https://www.congress.gov/bill/117th-congress/house-bill/4",
-            roll: { congress: 117, billType: "hr", billNumber: 4, index: -1, alignedVote: "Yea" },
-            mockMemberVote: "Yes",
-            mockAligned: true,
-          },
-          {
-            id: "freedom-to-vote-act-2022",
-            title: "Freedom to Vote Act",
-            description:
-              "Established national standards for voter registration, expanded early voting and vote-by-mail, and banned partisan gerrymandering in congressional elections — supported by 70% of Americans.",
-            date: "January 19, 2022",
-            congress_url:
-              "https://www.congress.gov/bill/117th-congress/senate-bill/2747",
-            roll: { congress: 117, billType: "s", billNumber: 2747, index: -1, alignedVote: "Yea" },
-            mockMemberVote: "Yes",
-            mockAligned: true,
-          },
-        ],
-      },
-      {
-        id: "privacy-surveillance",
-        label: "Privacy & Surveillance",
-        bills: [
-          {
-            id: "fisa-reauthorization-2024",
-            title: "FISA Reauthorization Act 2024",
-            description:
-              "Reauthorized Section 702 warrantless surveillance with limited oversight — civil liberties groups called it insufficient. Schumer voted yes, misaligned with 67% of Americans who want stronger privacy protections.",
-            date: "April 19, 2024",
-            congress_url:
-              "https://www.congress.gov/bill/118th-congress/house-bill/7888",
-            // "Nay" = oppose mass surveillance = aligned with the people
-            roll: { congress: 118, billType: "hr", billNumber: 7888, index: -1, alignedVote: "Nay" },
-            mockMemberVote: "Yes",
-            mockAligned: false,
-          },
-        ],
-      },
-      {
-        id: "civil-rights",
-        label: "Civil Rights",
-        bills: [
-          {
-            id: "equality-act-2021",
-            title: "Equality Act",
-            description:
-              "Would have amended the Civil Rights Act to explicitly prohibit discrimination based on sexual orientation and gender identity in employment, housing, and public accommodations — supported by 70% of Americans.",
-            date: "February 25, 2021",
-            congress_url:
-              "https://www.congress.gov/bill/117th-congress/house-bill/5",
-            mockMemberVote: "Yes",
-            mockAligned: true,
-          },
-        ],
-      },
-    ],
-  },
+
+  // ── 8. Gun Policy ────────────────────────────────────────────────────────────
   {
     id: "gun-policy",
     label: "Gun Policy",
@@ -544,61 +611,14 @@ export const DOMESTIC_ISSUES: IssueCategoryDef[] = [
       },
     ],
   },
-  {
-    id: "immigration",
-    label: "Immigration",
-    subcategories: [
-      {
-        id: "border-security",
-        label: "Border Security",
-        bills: [
-          {
-            id: "bipartisan-border-act-2024",
-            title: "Bipartisan Border Act 2024",
-            description:
-              "A bipartisan compromise tightening asylum standards and granting emergency deportation authority; failed after Republican senators killed it under pressure from Trump, despite Schumer's support.",
-            date: "February 7, 2024",
-            congress_url:
-              "https://www.congress.gov/bill/118th-congress/senate-bill/4",
-            // Voting to advance stricter asylum rules = not aligned; "Nay" = people's position
-            roll: { congress: 118, billType: "s", billNumber: 4, index: -1, alignedVote: "Nay" },
-            mockMemberVote: "Yes",
-            mockAligned: false,
-          },
-        ],
-      },
-      {
-        id: "pathways-citizenship",
-        label: "Pathways to Citizenship",
-        bills: [
-          {
-            id: "dream-act-2021",
-            title: "Dream Act of 2021",
-            description:
-              "Would have provided a pathway to permanent residency and citizenship for 2.1 million undocumented immigrants brought to the U.S. as children — polling at 74% approval including 54% of Republicans.",
-            date: "July 27, 2021",
-            congress_url:
-              "https://www.congress.gov/bill/117th-congress/senate-bill/264",
-            mockMemberVote: "Yes",
-            mockAligned: true,
-          },
-        ],
-      },
-      {
-        id: "humanitarian-relief",
-        label: "Humanitarian Relief",
-        bills: [
-          {
-            id: "afghan-adjustment-act-2021",
-            title: "Afghan Adjustment Act",
-            description:
-              "Would have provided Afghan refugees evacuated during the 2021 Taliban takeover a direct pathway to legal permanent residence, bypassing immigration courts with years-long backlogs.",
-            date: "September 23, 2021",
-            mockMemberVote: "Yes",
-            mockAligned: true,
-          },
-        ],
-      },
-    ],
-  },
+];
+
+// Backwards-compatible aliases for any consumers that still reference the old split
+export const GLOBAL_ISSUES = ISSUE_CATEGORIES.slice(3, 6);   // environment, healthcare, war-fp
+export const DOMESTIC_ISSUES = [
+  ISSUE_CATEGORIES[0], // immigration
+  ISSUE_CATEGORIES[1], // wealth-gap
+  ISSUE_CATEGORIES[2], // civil-liberties
+  ISSUE_CATEGORIES[6], // corruption
+  ISSUE_CATEGORIES[7], // gun-policy
 ];
