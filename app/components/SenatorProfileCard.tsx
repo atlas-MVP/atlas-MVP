@@ -98,23 +98,24 @@ export default function SenatorProfileCard({
         <div style={{ flex: 1, overflowY: "auto", padding: "20px 20px 28px" }}>
 
           {/* ── Header: photo + name + contact + party/state ── */}
-          <div style={{ display: "flex", gap: 16, marginBottom: 16 }}>
+          <div style={{ display: "flex", gap: 16, marginBottom: 24 }}>
             <div
-              onClick={() => setPhotoEnlarged(v => !v)}
               style={{
-                width: 86, height: 86, borderRadius: 12,
+                width: 120, height: 120, borderRadius: 14,
                 background: "rgba(255,255,255,0.06)", flexShrink: 0,
-                position: "relative", cursor: "zoom-in",
+                position: "relative",
+                overflow: "visible",   // allow shadow to bleed outside the box
               }}>
               <img src={photo} alt={name}
                 style={{
-                  width: "100%", height: "100%", objectFit: "cover",
-                  borderRadius: 12, position: "relative", zIndex: 1,
+                  width: 120, height: 120, objectFit: "cover",
+                  borderRadius: 14, display: "block",
                   transition: "transform 0.3s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.3s ease",
+                  position: "relative", zIndex: 2,
                 }}
                 onMouseEnter={e => {
-                  e.currentTarget.style.transform = "scale(1.4) translateY(-6px)";
-                  e.currentTarget.style.boxShadow = "0 20px 50px rgba(0,0,0,0.85), 0 0 0 1px rgba(255,255,255,0.08)";
+                  e.currentTarget.style.transform = "scale(1.13) translateY(-5px)";
+                  e.currentTarget.style.boxShadow = "0 22px 55px rgba(0,0,0,0.9), 0 0 0 1.5px rgba(255,255,255,0.12)";
                 }}
                 onMouseLeave={e => {
                   e.currentTarget.style.transform = "";
@@ -122,10 +123,13 @@ export default function SenatorProfileCard({
                 }}
               />
             </div>
-            <div style={{ flex: 1, paddingTop: 4 }}>
+            <div style={{ flex: 1, paddingTop: 6 }}>
               {/* Name + inline contact pill */}
               <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", marginBottom: 5 }}>
-                <span style={{ fontSize: 21, fontWeight: 700, color: "rgba(255,255,255,0.95)", lineHeight: 1.2 }}>
+                <span style={{
+                  fontSize: 21, fontWeight: 700, color: "rgba(255,255,255,0.95)", lineHeight: 1.2,
+                  fontFamily: bioguide === "S000148" ? "'PT Serif', serif" : "inherit",
+                }}>
                   {name}
                 </span>
                 <a
