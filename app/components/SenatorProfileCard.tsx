@@ -37,6 +37,7 @@ export default function SenatorProfileCard({
 }: Props) {
   const [data, setData] = useState<SenatorScorecard | null>(null);
   const [loading, setLoading] = useState(true);
+  const [photoEnlarged, setPhotoEnlarged] = useState(false);
 
   useEffect(() => {
     fetch(`/api/senator-alignment/${bioguide}`)
@@ -98,11 +99,28 @@ export default function SenatorProfileCard({
 
           {/* ── Header: photo + name + contact + party/state ── */}
           <div style={{ display: "flex", gap: 16, marginBottom: 16 }}>
-            <div style={{
-              width: 86, height: 86, borderRadius: 12, overflow: "hidden",
-              background: "rgba(255,255,255,0.06)", flexShrink: 0,
-            }}>
-              <img src={photo} alt={name} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+            <div
+              onClick={() => setPhotoEnlarged(v => !v)}
+              style={{
+                width: 86, height: 86, borderRadius: 12,
+                background: "rgba(255,255,255,0.06)", flexShrink: 0,
+                position: "relative", cursor: "zoom-in",
+              }}>
+              <img src={photo} alt={name}
+                style={{
+                  width: "100%", height: "100%", objectFit: "cover",
+                  borderRadius: 12, position: "relative", zIndex: 1,
+                  transition: "transform 0.3s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.3s ease",
+                }}
+                onMouseEnter={e => {
+                  e.currentTarget.style.transform = "scale(1.4) translateY(-6px)";
+                  e.currentTarget.style.boxShadow = "0 20px 50px rgba(0,0,0,0.85), 0 0 0 1px rgba(255,255,255,0.08)";
+                }}
+                onMouseLeave={e => {
+                  e.currentTarget.style.transform = "";
+                  e.currentTarget.style.boxShadow = "";
+                }}
+              />
             </div>
             <div style={{ flex: 1, paddingTop: 4 }}>
               {/* Name + inline contact pill */}
@@ -185,10 +203,10 @@ export default function SenatorProfileCard({
                 loading…
               </span>
             </div>
-          ) : data ? (
+          ) : data?.categories ? (
             <IssueScoreSection
               categories={data.categories}
-              overall={data.overall}
+              overall={data.overall ?? 0}
             />
           ) : (
             <div style={{
@@ -205,6 +223,25 @@ export default function SenatorProfileCard({
 
         </div>
       </div>
+
+      {photoEnlarged && (
+        <div
+          onClick={() => setPhotoEnlarged(false)}
+          style={{
+            position: "fixed", inset: 0, zIndex: 400,
+            background: "rgba(0,0,0,0.75)", backdropFilter: "blur(6px)",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            cursor: "zoom-out",
+          }}
+        >
+          <div style={{
+            width: 520, height: 520, borderRadius: 16,
+            overflow: "hidden", boxShadow: "0 24px 80px rgba(0,0,0,0.7)",
+          }}>
+            <img src={photo} alt={name} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+          </div>
+        </div>
+      )}
     </>
   );
 }

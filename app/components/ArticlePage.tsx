@@ -529,12 +529,26 @@ export default function ArticlePage({
                   onClick={(e) => { e.stopPropagation(); setPhotoEnlarged(v => !v); }}
                   style={{
                     width: 100, height: 100, borderRadius: 12,
-                    overflow: "hidden", background: "rgba(255,255,255,0.05)", flexShrink: 0,
+                    background: "rgba(255,255,255,0.05)", flexShrink: 0,
                     cursor: photoEnlarged ? "zoom-out" : "zoom-in",
                     pointerEvents: "auto",
+                    position: "relative",
                   }}>
                   <img src={bio.photo} alt={bio.name}
-                    style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                    style={{
+                      width: "100%", height: "100%", objectFit: "cover",
+                      borderRadius: 12, position: "relative", zIndex: 1,
+                      transition: "transform 0.3s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.3s ease",
+                    }}
+                    onMouseEnter={e => {
+                      e.currentTarget.style.transform = "scale(1.4) translateY(-6px)";
+                      e.currentTarget.style.boxShadow = "0 20px 50px rgba(0,0,0,0.85), 0 0 0 1px rgba(255,255,255,0.08)";
+                    }}
+                    onMouseLeave={e => {
+                      e.currentTarget.style.transform = "";
+                      e.currentTarget.style.boxShadow = "";
+                    }}
+                  />
                 </div>
 
                 <div style={{ flex: 1 }}>
@@ -762,13 +776,26 @@ export default function ArticlePage({
                         onClick={(e) => { e.stopPropagation(); setPhotoEnlarged(v => !v); }}
                         style={{
                           width: 120, height: 120, borderRadius: 12,
-                          overflow: "hidden", background: "rgba(255,255,255,0.05)",
+                          background: "rgba(255,255,255,0.05)",
                           flexShrink: 0, cursor: photoEnlarged ? "zoom-out" : "zoom-in",
                           position: "relative",
                         }}
                       >
                         <img src={bio.photo} alt={bio.name}
-                          style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                          style={{
+                            width: "100%", height: "100%", objectFit: "cover",
+                            borderRadius: 12, position: "relative", zIndex: 1,
+                            transition: "transform 0.3s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.3s ease",
+                          }}
+                          onMouseEnter={e => {
+                            e.currentTarget.style.transform = "scale(1.4) translateY(-6px)";
+                            e.currentTarget.style.boxShadow = "0 20px 50px rgba(0,0,0,0.85), 0 0 0 1px rgba(255,255,255,0.08)";
+                          }}
+                          onMouseLeave={e => {
+                            e.currentTarget.style.transform = "";
+                            e.currentTarget.style.boxShadow = "";
+                          }}
+                        />
                       </div>
                     )}
 
