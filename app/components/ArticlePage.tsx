@@ -653,10 +653,11 @@ export default function ArticlePage({
               hideTooltip={true}
               onSenatorHover={setHoveredSenator}
               onSenatorClick={(senator) => {
-                if (lockedSenator?.name === senator.name) {
-                  setLockedSenator(null);
+                const bio = SENATOR_DATA[senator.name];
+                if (bio) {
+                  setProfileSenator({ ...bio, vote: senator.vote });
                 } else {
-                  setLockedSenator(senator);
+                  setLockedSenator(lockedSenator?.name === senator.name ? null : senator);
                 }
               }}
             />
