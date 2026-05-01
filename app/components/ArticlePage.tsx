@@ -475,6 +475,12 @@ export default function ArticlePage({
                   <SenateVoteVisualization
                     title="SENATE"
                     senators={senators}
+                    onSenatorClick={(senator) => {
+                      const bio = SENATOR_DATA[senator.name];
+                      if (bio) {
+                        setProfileSenator({ ...bio, vote: senator.vote });
+                      }
+                    }}
                   />
                 </div>
               </div>

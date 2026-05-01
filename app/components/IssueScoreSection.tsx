@@ -223,17 +223,13 @@ function CategoryBlock({ cat }: { cat: IssueCategory }) {
           }}>▼</span>
         </div>
 
-        {/* Slider + score */}
-        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <Slider score={score} />
-          <span style={{
-            width: 28, fontSize: 16, fontWeight: 700,
-            color, textAlign: "right", flexShrink: 0,
-            letterSpacing: "-0.02em", fontVariantNumeric: "tabular-nums",
-          }}>
-            {score}
-          </span>
-        </div>
+        {/* Score only — slider removed */}
+        <span style={{
+          fontSize: 16, fontWeight: 700,
+          color, letterSpacing: "-0.02em", fontVariantNumeric: "tabular-nums",
+        }}>
+          {score}
+        </span>
       </div>
 
       {/* Subcategories */}
@@ -281,6 +277,11 @@ export default function IssueScoreSection({
   globalIssues: IssueCategory[];
   domesticIssues: IssueCategory[];
 }) {
+  const allCats = [...globalIssues, ...domesticIssues];
+  const overallScore = allCats.length
+    ? Math.round(allCats.reduce((s, c) => s + computeCatScore(c), 0) / allCats.length)
+    : 0;
+
   return (
     <div style={{
       background: "rgba(255,255,255,0.03)",
@@ -288,6 +289,19 @@ export default function IssueScoreSection({
       borderRadius: 12,
       overflow: "hidden",
     }}>
+      {/* Single overall alignment slider */}
+      <div style={{ padding: "16px 12px 12px", borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
+          <span style={{ fontSize: 9, fontFamily: "monospace", letterSpacing: "0.12em", textTransform: "uppercase", color: "rgba(255,255,255,0.4)" }}>
+            Overall Alignment
+          </span>
+          <span style={{ fontSize: 20, fontWeight: 700, color: scoreColor(overallScore), letterSpacing: "-0.02em" }}>
+            {overallScore}
+          </span>
+        </div>
+        <Slider score={overallScore} />
+      </div>
+
       <SectionDivider label="Global Issues" />
       {globalIssues.map(cat => <CategoryBlock key={cat.id} cat={cat} />)}
 
